@@ -1,0 +1,17 @@
+# iOS Configuration
+automationName=XCUITest
+deviceName=iPhone 15
+platformVersion=17.0
+udid=YOUR_IOS_DEVICE_UDID
+
+# Application Setup
+app=apps/YourApp.app
+browserstackApp=bs://YOUR_IOS_APP_ID
+
+# Bundle ID
+bundleId=com.your.app.bundleid
+
+# Session Behaviors
+noReset=false
+fullReset=false
+newCommandTimeout=120

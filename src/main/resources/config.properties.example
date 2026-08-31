@@ -1,0 +1,25 @@
+# Platform Configuration
+platform=android
+
+# Execution Provider (local or browserstack)
+executionProvider=local
+
+# Appium Server URL (for local execution)
+appiumServerUrl=http://127.0.0.1:4723
+
+# Default Credentials (update with your credentials)
+username=your_username
+password=your_password
+
+# BrowserStack Configuration
+browserstackHubUrl=https://hub-cloud.browserstack.com/wd/hub
+browserstackUserName=YOUR_BROWSERSTACK_USERNAME
+browserstackAccessKey=YOUR_BROWSERSTACK_ACCESS_KEY
+browserstackProjectName=EEN Mobile Automation
+browserstackBuildName=Local Debug Build
+browserstackSessionName=
+
+# BrowserStack Options
+browserstackDebug=true
+browserstackNetworkLogs=true
+browserstackIdleTimeout=120

@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Create testData.json from secrets
+        run: |
+          mkdir -p src/test/resources
+          cat > src/test/resources/testData.json << 'EOF'
+          {
+            "credentials": {
+              "reseller_user_creds": {
+                "username": "${{ secrets.RESELLER_USERNAME }}",
+                "password": "${{ secrets.RESELLER_PASSWORD }}",
+                "bridge-account-name": "Gdynia-End-User-QA",
+                "custromer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
+                "inavlidEmailFormatText": "inavalidemailformattext",
+                "existingUserInSystemButNotExistingInCurrentLogin": "seetham.c+reseller@brivo.com",
+                "attchId": "${{ secrets.ATTACH_ID }}"
+              },
+              "enduser_user_creds": {
+                "username": "${{ secrets.ENDUSER_USERNAME }}",
+                "password": "${{ secrets.ENDUSER_PASSWORD }}"
+              }
+            }
+          }
+          EOF
+
+      - name: Create config.properties from secrets
+        run: |
+          mkdir -p src/main/resources
+          cat > src/main/resources/config.properties << 'EOF'
+          platform=android
+          executionProvider=browserstack
+          appiumServerUrl=http://127.0.0.1:4723
+          browserstackHubUrl=https://hub-cloud.browserstack.com/wd/hub
+          browserstackUserName=${{ secrets.BROWSERSTACK_USERNAME }}
+          browserstackAccessKey=${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          browserstackProjectName=EEN Mobile Automation
+          browserstackBuildName=CI Build ${{ github.run_number }}
+          browserstackDebug=true
+          browserstackNetworkLogs=true
+          EOF
+
+      - name: Compile and package
+        run: mvn -B -DskipTests package
+
+      - name: Run tests
+        run: mvn test -Dplatform=android -DexecutionProvider=browserstack
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            target/surefire-reports/
+            test-output/
+          if-no-files-found: warn
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-build
+          path: target/
+          if-no-files-found: warn

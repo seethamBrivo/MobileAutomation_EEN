@@ -1,0 +1,28 @@
+# Server & Engine Capabilities
+automationName=UiAutomator2
+platformName=Android
+
+# Platform Version
+platformVersion=15
+
+# Device Configuration
+deviceName=YOUR_DEVICE_NAME
+udid=YOUR_DEVICE_UDID
+
+# Application Setup
+# For local execution - update with your APK path
+app=C:\\path\\to\\your\\app.apk
+
+# BrowserStack App ID (upload your app to BrowserStack and get the bs:// URL)
+browserstackApp=bs://YOUR_APP_ID
+
+# App Package & Activity
+appPackage=com.your.package.name
+appActivity=com.your.package.MainActivity
+
+# Session & Execution Behaviors
+noReset=true
+fullReset=false
+dontStopAppOnReset=false
+newCommandTimeout=3600
+connectHardwareKeyboard=true

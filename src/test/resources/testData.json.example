@@ -1,0 +1,38 @@
+{
+  "credentials": {
+    "reseller_user_creds": {
+      "username": "your_reseller_email@example.com",
+      "password": "YourPassword123",
+      "bridge-account-name": "Your-Account-Name",
+      "custromer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
+      "inavlidEmailFormatText": "invalidemailtext",
+      "existingUserInSystemButNotExistingInCurrentLogin": "existing_user@example.com",
+      "attchId": "XXXX-XXXX-XXXX-XXXX"
+    },
+    "enduser_user_creds": {
+      "username": "your_enduser_email@example.com",
+      "password": "YourPassword123"
+    }
+  },
+  "checkoutData": {
+    "standard_checkout": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "zipCode": "12345",
+      "confirmationMessage": "THANK YOU FOR YOUR ORDER"
+    },
+    "alt_checkout": {
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "zipCode": "67890",
+      "confirmationMessage": "THANK YOU FOR YOUR ORDER"
+    }
+  },
+  "shopScenarios": [
+    {
+      "credentialsKey": "standard_user_creds",
+      "productName": "Sauce Labs Backpack",
+      "checkoutKey": "standard_checkout"
+    }
+  ]
+}
