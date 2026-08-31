@@ -43,11 +43,14 @@ node_modules/
 
 # Test Reports
 *.html
-*.xml
 extent-reports/
 surefire-reports/
 allure-results/
 screenshots/
+
+# Allow essential project files
+!pom.xml
+!testng.xml
 
 # Sensitive Data (DO NOT COMMIT)
 **/config.properties
