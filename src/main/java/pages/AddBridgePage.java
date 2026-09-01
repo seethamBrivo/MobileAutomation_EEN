@@ -19,7 +19,10 @@ public class AddBridgePage {
     private final By bridgeNameField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.widget.EditText");
     private final By attachIdField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
     private final By addBridgeButton= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.Button");
-    private final By userNavigatedToOriginScreen= AppiumBy.xpath("//android.widget.TextView[@text=\\\"All devices\\\"]");
+    private final By userNavigatedToOriginScreen= AppiumBy.xpath("//android.widget.TextView[@text='All devices']");
+
+    // Error message for duplicate bridge
+    private final By conflictErrorMessage= AppiumBy.xpath("//android.widget.TextView[contains(@text, 'There is a conflict in the operation')]");
    
 
     public AddBridgePage(AppiumDriver driver) {
@@ -49,14 +52,21 @@ public class AddBridgePage {
    public void clickAddBridgeOption() {
 	   	 WaitUtils.waitForVisibility(driver, addBridgeOption).click();
 	   }
+    public void waitForBridgeNameFieldToLoad() {
+        WaitUtils.waitForVisibility(driver, bridgeNameField);
+    }
     public void enterBridgeName(String bridgeName) {
-        WaitUtils.waitForVisibility(driver, bridgeNameField).sendKeys(bridgeName);
+        var bridgeNameInput = WaitUtils.waitForVisibility(driver, bridgeNameField);
+        bridgeNameInput.clear();
+        bridgeNameInput.sendKeys(bridgeName);
     }
     public boolean isAddBridgeButtonDisabled() {
 	  	 return !WaitUtils.waitForVisibility(driver, addBridgeButton).isEnabled();
 	    }
     public void enterAttachId(String attachId) {
-        WaitUtils.waitForVisibility(driver, attachIdField).sendKeys(attachId);
+        var attachIdInput = WaitUtils.waitForVisibility(driver, attachIdField);
+        attachIdInput.clear();
+        attachIdInput.sendKeys(attachId);
     }
     public boolean isAddBridgeButtonEnabled() {
 	  	 return WaitUtils.waitForVisibility(driver, addBridgeButton).isEnabled();
@@ -67,9 +77,13 @@ public class AddBridgePage {
     public boolean isUserNavigatedToOriginScreen() {
       	 return WaitUtils.waitForVisibility(driver, userNavigatedToOriginScreen).isDisplayed();
         }
-  
-  
-    
+
+    public boolean isConflictErrorMessageDisplayed() {
+        return WaitUtils.waitForVisibility(driver, conflictErrorMessage).isDisplayed();
+    }
+
+
+
 //    public void clickUsersAddIconAtTheTopRightCorner() {
 //      	 WaitUtils.waitForVisibility(driver, usersAddIconAtTheTopRightCorner).click();
 //      }

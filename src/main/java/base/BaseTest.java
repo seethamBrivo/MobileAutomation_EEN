@@ -33,33 +33,70 @@ public abstract class BaseTest {
 
     private void handleNotificationPermission() {
         try {
-            // Wait a bit for popup to appear
-            Thread.sleep(2000);
+            // Wait for popup to appear (give it more time on BrowserStack)
+            Thread.sleep(5000);
 
-            // Try different locators for "Allow" button
-            try {
-                // Try 1: Using resource-id (most common)
-                driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button")).click();
-                logger.info("Clicked 'Allow' on notification permission popup (using resource-id)");
-            } catch (Exception e1) {
+            // Try different locators for "Allow" button with multiple attempts
+            boolean handled = false;
+
+            // Try 1: Using resource-id (most common for Android)
+            if (!handled) {
                 try {
-                    // Try 2: Using text "Allow"
-                    driver.findElement(io.appium.java_client.AppiumBy.xpath("//android.widget.Button[@text='Allow']")).click();
-                    logger.info("Clicked 'Allow' on notification permission popup (using text)");
-                } catch (Exception e2) {
-                    try {
-                        // Try 3: Using text "ALLOW" (uppercase)
-                        driver.findElement(io.appium.java_client.AppiumBy.xpath("//android.widget.Button[@text='ALLOW']")).click();
-                        logger.info("Clicked 'Allow' on notification permission popup (using uppercase text)");
-                    } catch (Exception e3) {
-                        // No permission popup appeared or already handled
-                        logger.info("No notification permission popup found (might be already handled or not shown)");
-                    }
+                    driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button")).click();
+                    logger.info("✓ Clicked 'Allow' on notification permission (resource-id)");
+                    handled = true;
+                } catch (Exception e) {
+                    logger.debug("Resource-id locator not found, trying next strategy");
                 }
             }
+
+            // Try 2: Using UiAutomator selector with text
+            if (!handled) {
+                try {
+                    driver.findElement(io.appium.java_client.AppiumBy.androidUIAutomator(
+                        "new UiSelector().text(\"Allow\").className(\"android.widget.Button\")"
+                    )).click();
+                    logger.info("✓ Clicked 'Allow' on notification permission (UiSelector text)");
+                    handled = true;
+                } catch (Exception e) {
+                    logger.debug("UiSelector text locator not found, trying next strategy");
+                }
+            }
+
+            // Try 3: Using XPath with text
+            if (!handled) {
+                try {
+                    driver.findElement(io.appium.java_client.AppiumBy.xpath("//android.widget.Button[@text='Allow']")).click();
+                    logger.info("✓ Clicked 'Allow' on notification permission (XPath)");
+                    handled = true;
+                } catch (Exception e) {
+                    logger.debug("XPath locator not found, trying next strategy");
+                }
+            }
+
+            // Try 4: Using resource-id with alternative ID
+            if (!handled) {
+                try {
+                    driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button")).click();
+                    logger.info("✓ Clicked 'Allow' on notification permission (alternative resource-id)");
+                    handled = true;
+                } catch (Exception e) {
+                    logger.debug("Alternative resource-id not found");
+                }
+            }
+
+            if (!handled) {
+                logger.info("No notification permission popup found or already handled");
+            }
+
+            // Small wait after handling permission
+            Thread.sleep(2000);
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.warn("Sleep interrupted while waiting for permission popup");
+            logger.warn("Sleep interrupted while handling permission popup");
+        } catch (Exception e) {
+            logger.warn("Error handling notification permission: {}", e.getMessage());
         }
     }
     

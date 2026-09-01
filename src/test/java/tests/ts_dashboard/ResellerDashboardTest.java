@@ -1,4 +1,4 @@
-package tests;
+package tests.ts_dashboard;
 
 import base.BaseTest;
 import org.openqa.selenium.Point;

@@ -107,16 +107,27 @@ public final class DriverManager {
         String appPackage = ConfigReader.getProperty("appPackage");
         String appActivity = ConfigReader.getProperty("appActivity");
 
-        if (!appPackage.isBlank()) {
-            options.setAppPackage(appPackage);
+        // For BrowserStack: Don't set appActivity/appWaitActivity - let app launch naturally
+        // For Local: Set both appPackage and appActivity for faster launch
+        if (isBrowserStackExecution()) {
+            // BrowserStack: Only set package, let it launch naturally without waiting for specific activity
+            if (!appPackage.isBlank()) {
+                options.setAppPackage(appPackage);
+            }
+            // Don't set appActivity or appWaitActivity - permission popups can block activity detection
+        } else {
+            // Local execution: Set both for targeted launch
+            if (!appPackage.isBlank()) {
+                options.setAppPackage(appPackage);
+            }
+            if (!appActivity.isBlank()) {
+                options.setAppActivity(appActivity);
+                options.setAppWaitActivity(appActivity);
+            }
+            // Android 15 workaround: Force app to stop and restart for each session
+            options.amend("forceAppLaunch", true);
+            options.amend("shouldTerminateApp", true);
         }
-        if (!appActivity.isBlank()) {
-            options.setAppWaitActivity(appActivity);
-        }
-
-        // Android 15 workaround: Force app to stop and restart for each session
-        options.amend("forceAppLaunch", true);
-        options.amend("shouldTerminateApp", true);
 
         return new AndroidDriver(getServerUrl(), options);
     }
@@ -149,14 +160,24 @@ public final class DriverManager {
         String fullReset = ConfigReader.getProperty("fullReset");
         String newCommandTimeout = ConfigReader.getProperty("newCommandTimeout");
 
+        // For BrowserStack: Use noReset to keep app installed and speed up tests
+        // For Local: Use noReset due to Android 15 security restrictions
+        if (isBrowserStackExecution()) {
+            options.setNoReset(true);
+            options.amend("fullReset", false);
+            LOGGER.info("BrowserStack: Using noReset=true to keep app installed between tests (faster execution)");
+        } else {
+            // Local execution follows config file settings
+            if (!noReset.isBlank()) {
+                options.setNoReset(Boolean.parseBoolean(noReset));
+            }
+            if (!fullReset.isBlank()) {
+                options.amend("fullReset", Boolean.parseBoolean(fullReset));
+            }
+        }
+
         if (!newCommandTimeout.isBlank()) {
             options.amend("newCommandTimeout", Integer.parseInt(newCommandTimeout));
-        }
-        if (!noReset.isBlank()) {
-            options.amend("noReset", Boolean.parseBoolean(noReset));
-        }
-        if (!fullReset.isBlank()) {
-            options.amend("fullReset", Boolean.parseBoolean(fullReset));
         }
     }
 

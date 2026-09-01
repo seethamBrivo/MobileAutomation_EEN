@@ -47,7 +47,59 @@ public class LoginPage {
         return this;
     }
     public LoginPage tapNoThanksOptionInBiometricsAuthenticationPopup() {
-        WaitUtils.waitForVisibility(driver, noThanksOptionInBiometricsAuthenticationPopUp).click();
+        try {
+            // Wait longer for the popup to appear after login (BrowserStack is slower)
+            Thread.sleep(3000);
+
+            // Try multiple strategies to find and click the Allow/No Thanks button
+            boolean clicked = false;
+
+            // Strategy 1: Using the positive_button resource-id with custom longer wait
+            if (!clicked) {
+                try {
+                    org.openqa.selenium.support.ui.WebDriverWait wait =
+                        new org.openqa.selenium.support.ui.WebDriverWait(driver, java.time.Duration.ofSeconds(30));
+                    wait.until(org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated(
+                        noThanksOptionInBiometricsAuthenticationPopUp)).click();
+                    System.out.println("✓ Clicked Allow button (positive_button resource-id)");
+                    clicked = true;
+                } catch (Exception e) {
+                    System.out.println("Strategy 1 failed, trying alternative...");
+                }
+            }
+
+            // Strategy 2: Find by text "Allow"
+            if (!clicked) {
+                try {
+                    driver.findElement(AppiumBy.xpath("//android.widget.Button[@text='Allow']")).click();
+                    System.out.println("✓ Clicked Allow button (text xpath)");
+                    clicked = true;
+                } catch (Exception e) {
+                    System.out.println("Strategy 2 failed, trying alternative...");
+                }
+            }
+
+            // Strategy 3: Find by text "NO THANKS" or "No Thanks"
+            if (!clicked) {
+                try {
+                    driver.findElement(AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks')]")).click();
+                    System.out.println("✓ Clicked No Thanks button");
+                    clicked = true;
+                } catch (Exception e) {
+                    System.out.println("Strategy 3 failed - popup may not have appeared");
+                }
+            }
+
+            if (!clicked) {
+                System.out.println("⚠ Biometrics popup did not appear or was already dismissed");
+            }
+
+            // Small wait after clicking
+            Thread.sleep(2000);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         return this;
     }
 

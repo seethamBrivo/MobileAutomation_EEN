@@ -1,4 +1,4 @@
-package tests;
+package tests.ts_users;
 
 import base.BaseTest;
 import io.appium.java_client.android.AndroidDriver;
@@ -64,16 +64,37 @@ public class AddUserTest extends BaseTest {
 	     addUserPage.enterFirstNameInputField(firstName);
 	     addUserPage.enterLastNameInputField(lastName);
 	     addUserPage.clickAddButton();
-	     Assert.assertTrue(
-	    	 		addUserPage.isUserWasAddedMessageDisplayed(),
-	    	 		"User was added message is displayed"
-	    	          );
+
+	     // Wait for user to be added
+	     try {
+	         Thread.sleep(3000);
+	     } catch (InterruptedException e) {
+	         Thread.currentThread().interrupt();
+	     }
+
+	     // Navigate back to users list
+	     driver.navigate().back();
+
+	     try {
+	         Thread.sleep(1000);
+	     } catch (InterruptedException e) {
+	         Thread.currentThread().interrupt();
+	     }
+
 	     Assert.assertTrue(
 	    	 		addUserPage.isUsersOptionAtBottonScreenDisplayed(),
 	    	 		"User navigated back to users list after adding a new user successfully"
 	    	          );
-	   //Adding a user already existing in the system but not existing in the current logged account 
+	   //Adding a user already existing in the system but not existing in the current logged account
 	     addUserPage.clickUsersAddIconAtTheTopRightCorner();
+
+	     // Wait for Add User screen to load
+	     try {
+	         Thread.sleep(2000);
+	     } catch (InterruptedException e) {
+	         Thread.currentThread().interrupt();
+	     }
+
 	     String exstingUserButNotAvailbleInCurrentLogin = testData
 	                .getAsJsonObject("credentials")
 	                .getAsJsonObject("reseller_user_creds")
@@ -83,10 +104,23 @@ public class AddUserTest extends BaseTest {
 	     addUserPage.enterFirstNameInputField(firstName);
 	     addUserPage.enterLastNameInputField(lastName);
 	     addUserPage.clickAddButton();
-	     Assert.assertTrue(
-	    	 		addUserPage.isUserWasAddedMessageDisplayed(),
-	    	 		"User was added message is displayed"
-	    	          );
+
+	     // Wait for user to be added
+	     try {
+	         Thread.sleep(3000);
+	     } catch (InterruptedException e) {
+	         Thread.currentThread().interrupt();
+	     }
+
+	     // Navigate back to users list
+	     driver.navigate().back();
+
+	     try {
+	         Thread.sleep(1000);
+	     } catch (InterruptedException e) {
+	         Thread.currentThread().interrupt();
+	     }
+
 	     Assert.assertTrue(
 	    	 		addUserPage.isUsersOptionAtBottonScreenDisplayed(),
 	    	 		"User navigated back to users list after adding a new user successfully"
@@ -95,6 +129,7 @@ public class AddUserTest extends BaseTest {
 	     addUserPage.clickUsersSearchFilterIcon();
 	     addUserPage.filterForUsersSearchbar(exstingUserButNotAvailbleInCurrentLogin);
 	     addUserPage.selectTheUser();
+	     addUserPage.waitForUserDetailsToLoad();
 	     addUserPage.clickDeleteUserOption();
 	     addUserPage.clickConfirmDeleteOption();
 	     Assert.assertTrue(

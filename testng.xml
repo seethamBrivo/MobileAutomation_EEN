@@ -1,24 +1,48 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Mobile Automation Suite" parallel="false">
+<suite name="Mobile Automation Suite" parallel="tests" thread-count="3">
     <listeners>
         <listener class-name="listeners.TestListener"/>
     </listeners>
 
     <test name="Reseller Dashboard Tests">
         <classes>
-            <class name="tests.ResellerDashboardTest"/>
+            <class name="tests.ts_dashboard.ResellerDashboardTest"/>
         </classes>
     </test>
 
     <test name="Add User Tests">
         <classes>
-            <class name="tests.AddUserTest"/>
+            <class name="tests.ts_users.AddUserTest"/>
         </classes>
     </test>
 
     <test name="Add Bridge Tests">
         <classes>
-            <class name="tests.AddBridgeTest"/>
+            <class name="tests.ts_bridges.AddBridgeTest"/>
+        </classes>
+    </test>
+
+    <test name="Delete Bridge Tests">
+        <classes>
+            <class name="tests.ts_bridges.DeleteBridgeTest"/>
+        </classes>
+    </test>
+
+    <test name="Bridges List Tests">
+        <classes>
+            <class name="tests.ts_bridges.BridgesListTest"/>
+        </classes>
+    </test>
+
+    <test name="Filter Bridges Tests">
+        <classes>
+            <class name="tests.ts_bridges.FilterBridgesTest"/>
+        </classes>
+    </test>
+
+    <test name="Bridge Context Menu Tests">
+        <classes>
+            <class name="tests.ts_bridges.BridgeContextMenuTest"/>
         </classes>
     </test>
 </suite>

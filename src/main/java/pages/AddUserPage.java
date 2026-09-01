@@ -23,8 +23,8 @@ public class AddUserPage {
     private final By usersSearchFilterIcon=AppiumBy.id("com.een.vms.android:id/img_search");
     private final By filterForUsersSearchbar=AppiumBy.id("com.een.vms.android:id/search_bar");
     private final By selectTheUser=AppiumBy.xpath("(//android.widget.ImageView[@content-desc=\"_user_details_container_end_icon\"])[1]");
-    private final By deleteUserOption=AppiumBy.xpath("//android.widget.TextView[@content-desc=\"delete_header\"]");
-    private final By confirmDeleteUserOption=AppiumBy.accessibilityId("negative_button");
+    private final By deleteUserOption=AppiumBy.xpath("//android.view.ViewGroup[@content-desc=\"delete_header_content\"]");
+    private final By confirmDeleteUserOption=AppiumBy.xpath("//android.widget.Button[@content-desc=\"negative_button\"]");
     
     
     public AddUserPage(AppiumDriver driver) {
@@ -43,7 +43,9 @@ public class AddUserPage {
     	return !WaitUtils.waitForVisibility(driver, addButton).isEnabled();
       }
     public void enterEmailAtTheInputField(String email) {
-     	  WaitUtils.waitForVisibility(driver, emailTextInputField).sendKeys(email);
+        var emailField = WaitUtils.waitForVisibility(driver, emailTextInputField);
+        emailField.clear();
+        emailField.sendKeys(email);
      }
     public void clickAddButton() {
       	 WaitUtils.waitForVisibility(driver, addButton).click();
@@ -59,10 +61,14 @@ public class AddUserPage {
    	 return WaitUtils.waitForVisibility(driver, addButton).isEnabled();
    }
     public void enterFirstNameInputField(String firstName) {
-   	  WaitUtils.waitForVisibility(driver, firstNameTextField).sendKeys(firstName);
+        var firstNameField = WaitUtils.waitForVisibility(driver, firstNameTextField);
+        firstNameField.clear();
+        firstNameField.sendKeys(firstName);
    }
     public void enterLastNameInputField(String lastName) {
-     	  WaitUtils.waitForVisibility(driver, lastNameTextField).sendKeys(lastName);
+        var lastNameField = WaitUtils.waitForVisibility(driver, lastNameTextField);
+        lastNameField.clear();
+        lastNameField.sendKeys(lastName);
      }
     public boolean isMaxCharactersReachedErrorMessageDisplayed() {
     	 return WaitUtils.waitForVisibility(driver, reachedMaxCharactersErrorMessage).isDisplayed();
@@ -82,6 +88,14 @@ public class AddUserPage {
     public void selectTheUser() {
    	  WaitUtils.waitForVisibility(driver, selectTheUser).click();
    }
+    public void waitForUserDetailsToLoad() {
+        // Wait for user details screen to load after selecting user
+        try {
+            Thread.sleep(2000); // Give time for screen transition
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
     public void clickDeleteUserOption() {
      	  WaitUtils.waitForVisibility(driver, deleteUserOption).click();
      }
