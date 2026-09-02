@@ -29,7 +29,7 @@ public class DeleteBridgePage {
 
     // Delete confirmation dialog elements
     private final By deleteConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Are you sure you want to remove this bridge')]");
-    private final By deleteButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button']");
+    private final By deleteButton = AppiumBy.xpath("//android.widget.TextView[@text='DELETE']");
     private final By cancelButton = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
 
     // Success message
@@ -104,7 +104,21 @@ public class DeleteBridgePage {
     }
 
     public void clickDeleteButton() {
+        // Wait for confirmation popup to appear
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         WaitUtils.waitForVisibility(driver, deleteButton).click();
+
+        // Wait for delete to complete
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void clickCancelButton() {
