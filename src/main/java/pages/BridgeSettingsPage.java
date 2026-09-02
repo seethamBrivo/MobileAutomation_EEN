@@ -15,7 +15,7 @@ public class BridgeSettingsPage {
     // Restart Bridge elements
     private final By restartBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
     private final By restartConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
-    private final By confirmRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button']");
+    private final By confirmRestartButton = AppiumBy.xpath("//android.widget.TextView[@text='RESTART']");
     private final By cancelRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
 
     // Success/Error messages

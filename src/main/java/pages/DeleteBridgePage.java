@@ -127,7 +127,12 @@ public class DeleteBridgePage {
 
     // Verification methods
     public boolean isBridgeDeletedMessageDisplayed() {
-        return WaitUtils.waitForVisibility(driver, bridgeDeletedMessage).isDisplayed();
+        try {
+            return WaitUtils.waitForVisibility(driver, bridgeDeletedMessage).isDisplayed();
+        } catch (Exception e) {
+            // Success message may not appear on demo accounts or disappear quickly
+            return false;
+        }
     }
 
     public boolean isUserNavigatedBackToBridgesTab() {

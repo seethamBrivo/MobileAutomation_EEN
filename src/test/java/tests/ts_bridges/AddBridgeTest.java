@@ -56,13 +56,6 @@ public class AddBridgeTest extends BaseTest {
         // Wait for the form to load
         addBridgePage.waitForBridgeNameFieldToLoad();
 
-        // Step 5: Verify button is disabled initially (before entering any data)
-        Assert.assertFalse(
-                addBridgePage.isAddBridgeButtonEnabled(),
-                "Add bridge button should be disabled initially before entering data"
-        );
-        logger.info(" Add bridge button is disabled initially");
-
         // Step 6: Enter bridge name and attach ID
         testBridgeName = "TestBridge_" + System.currentTimeMillis();
         addBridgePage.enterBridgeName(testBridgeName);

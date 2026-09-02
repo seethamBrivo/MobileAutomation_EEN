@@ -24,7 +24,7 @@ public class AddUserPage {
     private final By filterForUsersSearchbar=AppiumBy.id("com.een.vms.android:id/search_bar");
     private final By selectTheUser=AppiumBy.xpath("(//android.widget.ImageView[@content-desc=\"_user_details_container_end_icon\"])[1]");
     private final By deleteUserOption=AppiumBy.xpath("//android.view.ViewGroup[@content-desc=\"delete_header_content\"]");
-    private final By confirmDeleteUserOption=AppiumBy.xpath("//android.widget.Button[@content-desc=\"positive_button\"]");
+    private final By confirmDeleteUserOption=AppiumBy.xpath("//android.widget.Button[@content-desc=\"negative_button\"]");
     
     
     public AddUserPage(AppiumDriver driver) {

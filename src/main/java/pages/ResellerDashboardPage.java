@@ -39,7 +39,7 @@ public class ResellerDashboardPage {
 
     //Logout Section locators
     private final By logoutOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
-    private final By confirmLogoutButton= AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button']");
+    private final By confirmLogoutButton= AppiumBy.xpath("//android.widget.TextView[@text=\"YES\"]");
 
     //Add Account Section locators
     private final By accountNameField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
