@@ -102,51 +102,30 @@ public class BridgesListPage {
     }
 
     public boolean isBridgeIconDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, bridgeIcon).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        // Use findElements to avoid slow wait on false
+        return !driver.findElements(bridgeIcon).isEmpty();
     }
 
     public boolean isBridgeNameDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, bridgeName).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        // Use findElements to avoid slow wait on false
+        return !driver.findElements(bridgeName).isEmpty();
     }
 
     public boolean isBridgeStatusDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, bridgeStatus).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        // Use findElements to avoid slow wait on false
+        return !driver.findElements(bridgeStatus).isEmpty();
     }
 
     public boolean isOnlineStatusDisplayed() {
-        try {
-            return driver.findElement(onlineStatus).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        return !driver.findElements(onlineStatus).isEmpty();
     }
 
     public boolean isOfflineStatusDisplayed() {
-        try {
-            return driver.findElement(offlineStatus).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        return !driver.findElements(offlineStatus).isEmpty();
     }
 
     public boolean isLoadingIndicatorDisplayed() {
-        try {
-            return driver.findElement(loadingIndicator).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        return !driver.findElements(loadingIndicator).isEmpty();
     }
 
     public void clickThreeDotMenu() {

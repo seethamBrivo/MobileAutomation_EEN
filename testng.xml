@@ -1,5 +1,6 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Mobile Automation Suite" parallel="tests" thread-count="3">
+<!-- parallel="false" because bridge tests share same attach ID and local device -->
+<suite name="Mobile Automation Suite" parallel="false">
     <listeners>
         <listener class-name="listeners.TestListener"/>
     </listeners>
@@ -43,6 +44,18 @@
     <test name="Bridge Context Menu Tests">
         <classes>
             <class name="tests.ts_bridges.BridgeContextMenuTest"/>
+        </classes>
+    </test>
+
+    <test name="Restart Bridge Tests">
+        <classes>
+            <class name="tests.ts_bridges.RestartBridgeTest"/>
+        </classes>
+    </test>
+
+    <test name="Edit Bridge Name and Status Tests">
+        <classes>
+            <class name="tests.ts_bridges.EditBridgeNameAndStatusTest"/>
         </classes>
     </test>
 </suite>

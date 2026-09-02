@@ -121,12 +121,9 @@ public class DeleteBridgePage {
     }
 
     public boolean areStatusIndicatorsDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, greenDotStatus).isDisplayed() ||
-                   WaitUtils.waitForVisibility(driver, redDotStatus).isDisplayed() ||
-                   WaitUtils.waitForVisibility(driver, yellowDotStatus).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        // Use findElements to avoid slow chained waits (30s on false)
+        return !driver.findElements(greenDotStatus).isEmpty() ||
+               !driver.findElements(redDotStatus).isEmpty() ||
+               !driver.findElements(yellowDotStatus).isEmpty();
     }
 }
