@@ -58,7 +58,8 @@ public class LoginPage {
         if (!clicked) {
             try {
                 org.openqa.selenium.support.ui.WebDriverWait wait =
-                    new org.openqa.selenium.support.ui.WebDriverWait(driver, FrameworkConstants.EXPLICIT_WAIT);
+                    new org.openqa.selenium.support.ui.WebDriverWait(driver,
+                        java.time.Duration.ofSeconds(FrameworkConstants.EXPLICIT_WAIT_SECONDS));
                 wait.until(org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated(
                     noThanksOptionInBiometricsAuthenticationPopUp)).click();
                 logger.info("Clicked Allow button (positive_button resource-id)");
