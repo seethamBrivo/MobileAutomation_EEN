@@ -61,12 +61,12 @@ public class AddBridgeTest extends BaseTest {
                 addBridgePage.isAddBridgeButtonEnabled(),
                 "Add bridge button should be disabled initially before entering data"
         );
-        System.out.println("✓ Add bridge button is disabled initially");
+        logger.info(" Add bridge button is disabled initially");
 
         // Step 6: Enter bridge name and attach ID
         testBridgeName = "TestBridge_" + System.currentTimeMillis();
         addBridgePage.enterBridgeName(testBridgeName);
-        System.out.println("✓ Entered bridge name: " + testBridgeName);
+        logger.info(" Entered bridge name: " + testBridgeName);
 
         JsonObject testData = JsonDataReader.readJsonObject("testData.json");
         String attachId = testData
@@ -75,7 +75,7 @@ public class AddBridgeTest extends BaseTest {
                 .get("attchId")
                 .getAsString();
         addBridgePage.enterAttachId(attachId);
-        System.out.println("✓ Entered attach ID");
+        logger.info(" Entered attach ID");
 
         // Verify button is enabled after entering all required data
         Assert.assertTrue(
@@ -85,7 +85,7 @@ public class AddBridgeTest extends BaseTest {
 
         // Step 7: Click Add Bridge button
         addBridgePage.clickAddBridgeButton();
-        System.out.println("✓ Clicked Add Bridge button");
+        logger.info(" Clicked Add Bridge button");
 
         // Verify user navigated back to origin screen
         Assert.assertTrue(
@@ -93,10 +93,10 @@ public class AddBridgeTest extends BaseTest {
                 "User navigated back to origin screen after adding a new bridge successfully"
         );
         bridgeAdded = true;
-        System.out.println("✓ Bridge added successfully: " + testBridgeName);
+        logger.info(" Bridge added successfully: " + testBridgeName);
 
         // Step 8: Try to add the same bridge again with same attach ID to verify conflict error
-        System.out.println("\n=== Testing Duplicate Bridge Addition ===");
+        logger.info("\n=== Testing Duplicate Bridge Addition ===");
 
         // Wait for screen to load
         try {
@@ -112,15 +112,15 @@ public class AddBridgeTest extends BaseTest {
 
         String duplicateBridgeName = "DuplicateBridge_" + System.currentTimeMillis();
         addBridgePage.enterBridgeName(duplicateBridgeName);
-        System.out.println("✓ Entered duplicate bridge name: " + duplicateBridgeName);
+        logger.info(" Entered duplicate bridge name: " + duplicateBridgeName);
 
         // Use the SAME attach ID
         addBridgePage.enterAttachId(attachId);
-        System.out.println("✓ Entered same attach ID again");
+        logger.info(" Entered same attach ID again");
 
         // Click Add Bridge button
         addBridgePage.clickAddBridgeButton();
-        System.out.println("✓ Clicked Add Bridge button (expecting error)");
+        logger.info(" Clicked Add Bridge button (expecting error)");
 
         // Wait for error message to appear
         try {
@@ -134,11 +134,11 @@ public class AddBridgeTest extends BaseTest {
                 addBridgePage.isConflictErrorMessageDisplayed(),
                 "Conflict error message 'There is a conflict in the operation.' should be displayed when adding duplicate attach ID"
         );
-        System.out.println("✓ Conflict error message verified: 'There is a conflict in the operation.'");
+        logger.info(" Conflict error message verified: 'There is a conflict in the operation.'");
 
         // Navigate back to dashboard (press back button twice: once from error, once from add bridge form)
         driver.navigate().back();
-        System.out.println("✓ Pressed back from error screen");
+        logger.info(" Pressed back from error screen");
 
         try {
             Thread.sleep(1000);
@@ -147,7 +147,7 @@ public class AddBridgeTest extends BaseTest {
         }
 
         driver.navigate().back();
-        System.out.println("✓ Pressed back from add bridge form");
+        logger.info(" Pressed back from add bridge form");
 
         try {
             Thread.sleep(2000);
@@ -157,7 +157,7 @@ public class AddBridgeTest extends BaseTest {
 
         // Navigate back to dashboard/devices screen
         addBridgePage.clickDashboardOptionAtTheBottom();
-        System.out.println("✓ Navigated back to Dashboard");
+        logger.info(" Navigated back to Dashboard");
 
         try {
             Thread.sleep(2000);
@@ -166,7 +166,7 @@ public class AddBridgeTest extends BaseTest {
         }
 
         // Step 9: Now delete the bridge that was just added
-        System.out.println("\n=== Starting Bridge Deletion ===");
+        logger.info("\n=== Starting Bridge Deletion ===");
         DeleteBridgePage deleteBridgePage = new DeleteBridgePage(driver);
 
         // Navigate to Bridges tab
@@ -181,7 +181,7 @@ public class AddBridgeTest extends BaseTest {
 
         // Filter by the bridge name we just added
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        System.out.println("✓ Filtered by bridge name: " + testBridgeName);
+        logger.info(" Filtered by bridge name: " + testBridgeName);
 
         // Wait for filter results
         try {
@@ -192,7 +192,7 @@ public class AddBridgeTest extends BaseTest {
 
         // Click on the filtered bridge
         deleteBridgePage.clickFirstBridge();
-        System.out.println("✓ Clicked on bridge");
+        logger.info(" Clicked on bridge");
 
         // Wait for bridge details page to load
         try {
@@ -204,7 +204,7 @@ public class AddBridgeTest extends BaseTest {
         // Scroll down to see the "Delete Bridge" button
         utils.GestureUtils.swipeUp(driver);
         utils.GestureUtils.swipeUp(driver);
-        System.out.println("✓ Scrolled to see Delete Bridge button");
+        logger.info(" Scrolled to see Delete Bridge button");
 
         Assert.assertTrue(
                 deleteBridgePage.isDeleteBridgeButtonDisplayed(),
@@ -213,7 +213,7 @@ public class AddBridgeTest extends BaseTest {
 
         // Click Delete Bridge button
         deleteBridgePage.clickDeleteBridgeButton();
-        System.out.println("✓ Clicked Delete Bridge button");
+        logger.info(" Clicked Delete Bridge button");
 
         // Wait for confirmation popup
         try {
@@ -224,19 +224,19 @@ public class AddBridgeTest extends BaseTest {
 
         // Click "Delete" button in the popup to confirm deletion
         deleteBridgePage.clickDeleteButton();
-        System.out.println("✓ Confirmed deletion in popup");
+        logger.info(" Confirmed deletion in popup");
 
         // Verify user navigated back to Bridges tab (optional check)
         try {
             if (deleteBridgePage.isUserNavigatedBackToBridgesTab()) {
-                System.out.println("✓ Navigated back to Bridges tab");
+                logger.info(" Navigated back to Bridges tab");
             }
         } catch (Exception e) {
-            System.out.println("Note: Navigation back check skipped");
+            logger.info("Note: Navigation back check skipped");
         }
 
-        System.out.println("✓ Bridge deleted successfully!");
-        System.out.println("\n=== Add and Delete Bridge Test Completed Successfully! ===");
+        logger.info(" Bridge deleted successfully!");
+        logger.info("\n=== Add and Delete Bridge Test Completed Successfully! ===");
     }
 
     @AfterMethod
@@ -244,7 +244,7 @@ public class AddBridgeTest extends BaseTest {
         // Cleanup: Delete the test bridge if it was added
         if (bridgeAdded && testBridgeName != null && driver != null) {
             try {
-                System.out.println("\n=== @AfterMethod: Cleaning up test bridge ===");
+                logger.info("\n=== @AfterMethod: Cleaning up test bridge ===");
                 AddBridgePage addBridgePage = new AddBridgePage(driver);
                 DeleteBridgePage deleteBridgePage = new DeleteBridgePage(driver);
 
@@ -276,10 +276,10 @@ public class AddBridgeTest extends BaseTest {
                 deleteBridgePage.clickDeleteButton();
                 Thread.sleep(1000);
 
-                System.out.println("✓ Cleanup: Test bridge deleted in @AfterMethod");
+                logger.info(" Cleanup: Test bridge deleted in @AfterMethod");
                 bridgeAdded = false;
             } catch (Exception e) {
-                System.out.println("⚠️  Cleanup: Could not delete test bridge - " + e.getMessage());
+                logger.info("  Cleanup: Could not delete test bridge - " + e.getMessage());
             }
         }
     }

@@ -16,9 +16,9 @@ public class FilterBridgesTest extends BaseTest {
     public void filterBridgesBySearchTerm() {
 
         // ========== STEP 1: LOGIN ==========
-        System.out.println("\n============================================");
-        System.out.println("STEP 1: Login to VMS Application");
-        System.out.println("============================================");
+        logger.info("\n============================================");
+        logger.info("STEP 1: Login to VMS Application");
+        logger.info("============================================");
 
         loginAs("enduser_user_creds");
 
@@ -29,21 +29,21 @@ public class FilterBridgesTest extends BaseTest {
         }
 
         // VERIFICATION: User is able to login
-        System.out.println("✅ VERIFIED: User is able to login in VMS app\n");
+        logger.info(" VERIFIED: User is able to login in VMS app\n");
 
         AddBridgePage addBridgePage = new AddBridgePage(driver);
         DeleteBridgePage deleteBridgePage = new DeleteBridgePage(driver);
 
         // ========== STEP 2: NAVIGATE TO DASHBOARD ==========
-        System.out.println("============================================");
-        System.out.println("STEP 2: Tap Dashboard option using more menu");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("STEP 2: Tap Dashboard option using more menu");
+        logger.info("============================================");
 
         addBridgePage.clickMoreMenuOptionAtTheBottom();
-        System.out.println("✓ Clicked More menu");
+        logger.info(" Clicked More menu");
 
         addBridgePage.clickDashboardOptionAtTheBottom();
-        System.out.println("✓ Clicked Dashboard option");
+        logger.info(" Clicked Dashboard option");
 
         try {
             Thread.sleep(2000);
@@ -56,17 +56,17 @@ public class FilterBridgesTest extends BaseTest {
                 addBridgePage.allDevicesSectionIsDisplayed(),
                 "All devices section should be displayed"
         );
-        System.out.println("✅ VERIFIED: User navigated to Dashboard");
-        System.out.println("✅ VERIFIED: All Devices section is displayed\n");
+        logger.info(" VERIFIED: User navigated to Dashboard");
+        logger.info(" VERIFIED: All Devices section is displayed\n");
 
         // VERIFICATION: All 5 device sections are displayed
-        System.out.println("=== Verifying All Device Sections ===");
+        logger.info("=== Verifying All Device Sections ===");
 
         // 1. Bridges
         try {
             WebElement bridgesElement = driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Bridges']"));
             Assert.assertTrue(bridgesElement.isDisplayed(), "Bridges section should be displayed");
-            System.out.println("✅ VERIFIED: 1. Bridges - displayed");
+            logger.info(" VERIFIED: 1. Bridges - displayed");
         } catch (Exception e) {
             Assert.fail("Bridges section not found");
         }
@@ -75,7 +75,7 @@ public class FilterBridgesTest extends BaseTest {
         try {
             WebElement camerasElement = driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Cameras']"));
             Assert.assertTrue(camerasElement.isDisplayed(), "Cameras section should be displayed");
-            System.out.println("✅ VERIFIED: 2. Cameras - displayed");
+            logger.info(" VERIFIED: 2. Cameras - displayed");
         } catch (Exception e) {
             Assert.fail("Cameras section not found");
         }
@@ -84,7 +84,7 @@ public class FilterBridgesTest extends BaseTest {
         try {
             WebElement speakersElement = driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Speakers']"));
             Assert.assertTrue(speakersElement.isDisplayed(), "Speakers section should be displayed");
-            System.out.println("✅ VERIFIED: 3. Speakers - displayed");
+            logger.info(" VERIFIED: 3. Speakers - displayed");
         } catch (Exception e) {
             Assert.fail("Speakers section not found");
         }
@@ -93,7 +93,7 @@ public class FilterBridgesTest extends BaseTest {
         try {
             WebElement switchesElement = driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Switches']"));
             Assert.assertTrue(switchesElement.isDisplayed(), "Switches section should be displayed");
-            System.out.println("✅ VERIFIED: 4. Switches - displayed");
+            logger.info(" VERIFIED: 4. Switches - displayed");
         } catch (Exception e) {
             Assert.fail("Switches section not found");
         }
@@ -102,17 +102,17 @@ public class FilterBridgesTest extends BaseTest {
         try {
             WebElement multiCamerasElement = driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Multi-Cameras']"));
             Assert.assertTrue(multiCamerasElement.isDisplayed(), "Multi-Cameras section should be displayed");
-            System.out.println("✅ VERIFIED: 5. Multi-Cameras - displayed");
+            logger.info(" VERIFIED: 5. Multi-Cameras - displayed");
         } catch (Exception e) {
-            System.out.println("ℹ️  5. Multi-Cameras - (optional section, may not be visible)");
+            logger.info("  5. Multi-Cameras - (optional section, may not be visible)");
         }
 
-        System.out.println("✅ VERIFIED: All required device sections are displayed\n");
+        logger.info(" VERIFIED: All required device sections are displayed\n");
 
         // ========== PREPARATION: ADD TEST BRIDGE ==========
-        System.out.println("============================================");
-        System.out.println("PREPARATION: Adding test bridge for filtering");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("PREPARATION: Adding test bridge for filtering");
+        logger.info("============================================");
 
         String testBridgeName = "FilterTestBridge_" + System.currentTimeMillis();
 
@@ -135,8 +135,8 @@ public class FilterBridgesTest extends BaseTest {
         );
 
         addBridgePage.clickAddBridgeButton();
-        System.out.println("✓ Test bridge added: " + testBridgeName);
-        System.out.println("✅ VERIFIED: Bridge added successfully\n");
+        logger.info(" Test bridge added: " + testBridgeName);
+        logger.info(" VERIFIED: Bridge added successfully\n");
 
         try {
             Thread.sleep(3000);
@@ -145,12 +145,12 @@ public class FilterBridgesTest extends BaseTest {
         }
 
         // ========== STEP 3: NAVIGATE TO BRIDGES SECTION ==========
-        System.out.println("============================================");
-        System.out.println("STEP 3: Tap Bridges option");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("STEP 3: Tap Bridges option");
+        logger.info("============================================");
 
         deleteBridgePage.clickBridgesTab();
-        System.out.println("✓ Tapped Bridges option");
+        logger.info(" Tapped Bridges option");
 
         try {
             Thread.sleep(3000);
@@ -158,40 +158,40 @@ public class FilterBridgesTest extends BaseTest {
             Thread.currentThread().interrupt();
         }
 
-        System.out.println("✅ VERIFIED: User navigated to Bridges section");
-        System.out.println("✅ VERIFIED: Bridges list is displayed\n");
+        logger.info(" VERIFIED: User navigated to Bridges section");
+        logger.info(" VERIFIED: Bridges list is displayed\n");
 
         // ========== STEP 4: ACCESS FILTER FIELD ==========
-        System.out.println("============================================");
-        System.out.println("STEP 4: Access Filter/Search Field");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("STEP 4: Access Filter/Search Field");
+        logger.info("============================================");
 
         // VERIFICATION: Filter field is accessible
         try {
             WebElement filterField = driver.findElement(AppiumBy.xpath("//android.widget.EditText"));
             Assert.assertTrue(filterField.isDisplayed(), "Filter/search field should be displayed");
-            System.out.println("✅ VERIFIED: Filter/search field is displayed and accessible");
+            logger.info(" VERIFIED: Filter/search field is displayed and accessible");
 
             // Check placeholder text
             String placeholderText = filterField.getAttribute("text");
             if (placeholderText != null && !placeholderText.isEmpty()) {
-                System.out.println("✅ VERIFIED: Search field placeholder text: '" + placeholderText + "'");
+                logger.info(" VERIFIED: Search field placeholder text: '" + placeholderText + "'");
             }
         } catch (Exception e) {
-            System.out.println("ℹ️  Filter field verification: Field appears on interaction");
+            logger.info("  Filter field verification: Field appears on interaction");
         }
 
-        System.out.println();
+        logger.info("");
 
         // ========== STEP 5: FILTER BY SEARCH TERM ==========
-        System.out.println("============================================");
-        System.out.println("STEP 5: Filter bridges by search term");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("STEP 5: Filter bridges by search term");
+        logger.info("============================================");
 
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        System.out.println("✓ Entered search term: " + testBridgeName);
-        System.out.println("✅ VERIFIED: Filter field accepts input");
-        System.out.println("✅ VERIFIED: Search term entered successfully");
+        logger.info(" Entered search term: " + testBridgeName);
+        logger.info(" VERIFIED: Filter field accepts input");
+        logger.info(" VERIFIED: Search term entered successfully");
 
         try {
             Thread.sleep(2000);
@@ -199,12 +199,12 @@ public class FilterBridgesTest extends BaseTest {
             Thread.currentThread().interrupt();
         }
 
-        System.out.println("✅ VERIFIED: Filtering in progress\n");
+        logger.info(" VERIFIED: Filtering in progress\n");
 
         // ========== VERIFICATION: FILTERED RESULTS ==========
-        System.out.println("============================================");
-        System.out.println("VERIFICATION: Filtered Results");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("VERIFICATION: Filtered Results");
+        logger.info("============================================");
 
         // Verify the first bridge in filtered results
         try {
@@ -227,9 +227,9 @@ public class FilterBridgesTest extends BaseTest {
             );
             Assert.assertTrue(bridgeSettingsTitle.isDisplayed(), "Bridge settings page should open for filtered bridge");
 
-            System.out.println("✅ VERIFIED: Bridge found in filtered results: " + testBridgeName);
-            System.out.println("✅ VERIFIED: Filter is working - only matching bridges displayed");
-            System.out.println("✅ VERIFIED: User can click on filtered bridge");
+            logger.info(" VERIFIED: Bridge found in filtered results: " + testBridgeName);
+            logger.info(" VERIFIED: Filter is working - only matching bridges displayed");
+            logger.info(" VERIFIED: User can click on filtered bridge");
 
             driver.navigate().back();
             try {
@@ -241,12 +241,12 @@ public class FilterBridgesTest extends BaseTest {
             Assert.fail("Bridge not found in filtered results or filter not working: " + testBridgeName + " - " + e.getMessage());
         }
 
-        System.out.println();
+        logger.info("");
 
         // ========== ADDITIONAL TEST: PARTIAL SEARCH ==========
-        System.out.println("============================================");
-        System.out.println("ADDITIONAL: Test Partial Search");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("ADDITIONAL: Test Partial Search");
+        logger.info("============================================");
 
         deleteBridgePage.enterBridgeNameInFilter("");
         try {
@@ -257,7 +257,7 @@ public class FilterBridgesTest extends BaseTest {
 
         String partialName = testBridgeName.substring(0, Math.min(10, testBridgeName.length()));
         deleteBridgePage.enterBridgeNameInFilter(partialName);
-        System.out.println("✓ Entered partial search: " + partialName);
+        logger.info(" Entered partial search: " + partialName);
 
         try {
             Thread.sleep(2000);
@@ -267,8 +267,8 @@ public class FilterBridgesTest extends BaseTest {
 
         try {
             deleteBridgePage.clickFirstBridge();
-            System.out.println("✅ VERIFIED: Bridge found with partial search");
-            System.out.println("✅ VERIFIED: Partial filter search works correctly");
+            logger.info(" VERIFIED: Bridge found with partial search");
+            logger.info(" VERIFIED: Partial filter search works correctly");
 
             driver.navigate().back();
             try {
@@ -277,31 +277,31 @@ public class FilterBridgesTest extends BaseTest {
                 Thread.currentThread().interrupt();
             }
         } catch (Exception e) {
-            System.out.println("ℹ️  Partial search: Verification skipped");
+            logger.info("  Partial search: Verification skipped");
         }
 
-        System.out.println();
+        logger.info("");
 
         // ========== VERIFICATION: FILTER CRITERIA OPTIONS ==========
-        System.out.println("============================================");
-        System.out.println("VERIFICATION: Filter Criteria Available");
-        System.out.println("============================================");
-        System.out.println("✅ VERIFIED: Filter supports multiple criteria:");
-        System.out.println("   • Bridge ID");
-        System.out.println("   • Associated");
-        System.out.println("   • Bridge Name");
-        System.out.println("   • Bridge settings");
-        System.out.println("   • Location name");
-        System.out.println("   • Users");
-        System.out.println();
+        logger.info("============================================");
+        logger.info("VERIFICATION: Filter Criteria Available");
+        logger.info("============================================");
+        logger.info(" VERIFIED: Filter supports multiple criteria:");
+        logger.info("   • Bridge ID");
+        logger.info("   • Associated");
+        logger.info("   • Bridge Name");
+        logger.info("   • Bridge settings");
+        logger.info("   • Location name");
+        logger.info("   • Users");
+        logger.info("");
 
         // ========== CLEANUP: DELETE TEST BRIDGE ==========
-        System.out.println("============================================");
-        System.out.println("CLEANUP: Deleting Test Bridge");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("CLEANUP: Deleting Test Bridge");
+        logger.info("============================================");
 
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        System.out.println("✓ Filtered by: " + testBridgeName);
+        logger.info(" Filtered by: " + testBridgeName);
 
         try {
             Thread.sleep(2000);
@@ -310,7 +310,7 @@ public class FilterBridgesTest extends BaseTest {
         }
 
         deleteBridgePage.clickFirstBridge();
-        System.out.println("✓ Clicked on bridge");
+        logger.info(" Clicked on bridge");
 
         try {
             Thread.sleep(2000);
@@ -320,7 +320,7 @@ public class FilterBridgesTest extends BaseTest {
 
         utils.GestureUtils.swipeUp(driver);
         utils.GestureUtils.swipeUp(driver);
-        System.out.println("✓ Scrolled to Delete button");
+        logger.info(" Scrolled to Delete button");
 
         Assert.assertTrue(
                 deleteBridgePage.isDeleteBridgeButtonDisplayed(),
@@ -328,7 +328,7 @@ public class FilterBridgesTest extends BaseTest {
         );
 
         deleteBridgePage.clickDeleteBridgeButton();
-        System.out.println("✓ Clicked Delete Bridge");
+        logger.info(" Clicked Delete Bridge");
 
         try {
             Thread.sleep(3000);
@@ -337,7 +337,7 @@ public class FilterBridgesTest extends BaseTest {
         }
 
         deleteBridgePage.clickDeleteButton();
-        System.out.println("✓ Confirmed deletion");
+        logger.info(" Confirmed deletion");
 
         try {
             Thread.sleep(2000);
@@ -345,24 +345,24 @@ public class FilterBridgesTest extends BaseTest {
             Thread.currentThread().interrupt();
         }
 
-        System.out.println("✅ VERIFIED: Test bridge deleted successfully\n");
+        logger.info(" VERIFIED: Test bridge deleted successfully\n");
 
         // ========== TEST SUMMARY ==========
-        System.out.println("============================================");
-        System.out.println("✅ TEST COMPLETED SUCCESSFULLY");
-        System.out.println("============================================");
-        System.out.println("ALL VERIFICATIONS PASSED:");
-        System.out.println("✅ User login");
-        System.out.println("✅ Dashboard navigation");
-        System.out.println("✅ All 5 device sections displayed");
-        System.out.println("✅ Bridges section accessible");
-        System.out.println("✅ Filter field functional");
-        System.out.println("✅ Exact match filtering");
-        System.out.println("✅ Partial match filtering");
-        System.out.println("✅ Filtered results display");
-        System.out.println("✅ Bridge access from filtered results");
-        System.out.println("✅ Filter criteria options available");
-        System.out.println("✅ Cleanup completed");
-        System.out.println("============================================\n");
+        logger.info("============================================");
+        logger.info(" TEST COMPLETED SUCCESSFULLY");
+        logger.info("============================================");
+        logger.info("ALL VERIFICATIONS PASSED:");
+        logger.info(" User login");
+        logger.info(" Dashboard navigation");
+        logger.info(" All 5 device sections displayed");
+        logger.info(" Bridges section accessible");
+        logger.info(" Filter field functional");
+        logger.info(" Exact match filtering");
+        logger.info(" Partial match filtering");
+        logger.info(" Filtered results display");
+        logger.info(" Bridge access from filtered results");
+        logger.info(" Filter criteria options available");
+        logger.info(" Cleanup completed");
+        logger.info("============================================\n");
     }
 }

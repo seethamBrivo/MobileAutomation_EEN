@@ -48,7 +48,7 @@ public class DeleteBridgeTest extends BaseTest {
         );
 
         addBridgePage.clickAddBridgeButton();
-        System.out.println("✓ Bridge added: " + testBridgeName);
+        logger.info(" Bridge added: " + testBridgeName);
 
         // Now start the delete flow
         DeleteBridgePage deleteBridgePage = new DeleteBridgePage(driver);
@@ -64,7 +64,7 @@ public class DeleteBridgeTest extends BaseTest {
         }
 
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        System.out.println("✓ Filtered by bridge name: " + testBridgeName);
+        logger.info(" Filtered by bridge name: " + testBridgeName);
 
         // Wait for filter results
         try {
@@ -75,7 +75,7 @@ public class DeleteBridgeTest extends BaseTest {
 
         // Step 4: Click on the filtered bridge
         deleteBridgePage.clickFirstBridge();
-        System.out.println("✓ Clicked on bridge");
+        logger.info(" Clicked on bridge");
 
         // Wait for bridge details page to load
         try {
@@ -87,7 +87,7 @@ public class DeleteBridgeTest extends BaseTest {
         // Step 5: Scroll down to see the "Delete Bridge" button
         utils.GestureUtils.swipeUp(driver);
         utils.GestureUtils.swipeUp(driver);
-        System.out.println("✓ Scrolled to see Delete Bridge button");
+        logger.info(" Scrolled to see Delete Bridge button");
 
         Assert.assertTrue(
                 deleteBridgePage.isDeleteBridgeButtonDisplayed(),
@@ -96,7 +96,7 @@ public class DeleteBridgeTest extends BaseTest {
 
         // Step 6: Click Delete Bridge button
         deleteBridgePage.clickDeleteBridgeButton();
-        System.out.println("✓ Clicked Delete Bridge button");
+        logger.info(" Clicked Delete Bridge button");
 
         // Wait for confirmation popup
         try {
@@ -107,7 +107,7 @@ public class DeleteBridgeTest extends BaseTest {
 
         // Step 7: Click "Delete" button in the popup to confirm deletion
         deleteBridgePage.clickDeleteButton();
-        System.out.println("✓ Confirmed deletion in popup");
+        logger.info(" Confirmed deletion in popup");
 
         // Wait for delete operation to complete
         try {
@@ -121,16 +121,16 @@ public class DeleteBridgeTest extends BaseTest {
                 deleteBridgePage.isUserNavigatedBackToBridgesTab(),
                 "User should navigate back to Bridges tab after deletion"
         );
-        System.out.println("✓ Navigated back to Bridges tab");
+        logger.info(" Navigated back to Bridges tab");
 
         // Verify success message appeared (may not appear on demo account - soft assertion)
         if (deleteBridgePage.isBridgeDeletedMessageDisplayed()) {
-            System.out.println("✓ Success message appeared: 'Bridge was deleted'");
+            logger.info(" Success message appeared: 'Bridge was deleted'");
         } else {
-            System.out.println("Note: Success message not displayed (expected on demo account)");
+            logger.info("Note: Success message not displayed (expected on demo account)");
         }
 
-        System.out.println("✓ Bridge deletion test completed successfully!");
+        logger.info(" Bridge deletion test completed successfully!");
 
         // Note: On demo account success message is seen but bridge will not be actually deleted
         // This is expected behavior as mentioned in the test case

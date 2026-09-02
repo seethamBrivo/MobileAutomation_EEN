@@ -23,12 +23,16 @@ public class BridgesListPage {
     private final By speakersOption = AppiumBy.xpath("//android.widget.TextView[@text=\"Speakers\"]");
     private final By switchesOption = AppiumBy.xpath("//android.widget.TextView[@text=\"Switches\"]");
 
+    // TODO: UNUSED - Wire up for EEPD-TC-16502 or remove
+    // Currently BridgesListTest only uses is*OptionDisplayed methods
+    // All bridge interaction goes through DeleteBridgePage
+    /*
     // Bridge list elements
     private final By bridgesList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']");
     private final By bridgeItems = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View");
     private final By bridgeCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'bridge')]");
 
-    // Bridge item details
+    // Bridge item details - GUESSED locators never exercised
     private final By bridgeIcon = AppiumBy.xpath("//android.widget.ImageView[@content-desc='bridge_icon']");
     private final By bridgeName = AppiumBy.xpath("//android.widget.TextView[@content-desc='bridge_name']");
     private final By bridgeStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline')]");
@@ -38,7 +42,7 @@ public class BridgesListPage {
     // Camera status counters
     private final By cameraStatusCounter = AppiumBy.xpath("//android.widget.TextView[contains(@content-desc, 'camera_status')]");
 
-    // 3-dots menu
+    // 3-dots menu - GUESSED 'more_options' content-desc
     private final By threeDotMenuButton = AppiumBy.xpath("//android.widget.ImageView[@content-desc='more_options']");
     private final By bridgeSettingsOption = AppiumBy.xpath("//android.widget.TextView[@text='Bridge settings']");
     private final By bridgeInformationOption = AppiumBy.xpath("//android.widget.TextView[@text='Bridge information']");
@@ -48,6 +52,7 @@ public class BridgesListPage {
 
     // Loading indicator
     private final By loadingIndicator = AppiumBy.xpath("//android.widget.ProgressBar");
+    */
 
     public BridgesListPage(AppiumDriver driver) {
         this.driver = driver;
@@ -85,6 +90,8 @@ public class BridgesListPage {
         WaitUtils.waitForVisibility(driver, bridgesOption).click();
     }
 
+    // TODO: UNUSED METHODS - Wire up for EEPD-TC-16502 or remove
+    /*
     public boolean isBridgesListDisplayed() {
         return WaitUtils.waitForVisibility(driver, bridgesList).isDisplayed();
     }
@@ -102,17 +109,14 @@ public class BridgesListPage {
     }
 
     public boolean isBridgeIconDisplayed() {
-        // Use findElements to avoid slow wait on false
         return !driver.findElements(bridgeIcon).isEmpty();
     }
 
     public boolean isBridgeNameDisplayed() {
-        // Use findElements to avoid slow wait on false
         return !driver.findElements(bridgeName).isEmpty();
     }
 
     public boolean isBridgeStatusDisplayed() {
-        // Use findElements to avoid slow wait on false
         return !driver.findElements(bridgeStatus).isEmpty();
     }
 
@@ -151,4 +155,5 @@ public class BridgesListPage {
     public boolean isTurnOffAllCamerasOptionDisplayed() {
         return WaitUtils.waitForVisibility(driver, turnOffAllCamerasOption).isDisplayed();
     }
+    */
 }

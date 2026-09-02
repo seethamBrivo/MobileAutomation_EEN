@@ -34,6 +34,9 @@ public class ResellerDashboardPage {
     private final By businessPortalOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Business Portal\"]");
     private final By moreOption= AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]");
 
+    // Account with bridges (first account in the list with bridges)
+    private final By firstAccountWithBridges = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]");
+
     //Logout Section locators
     private final By logoutOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
     private final By confirmLogoutButton= AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
@@ -85,6 +88,14 @@ public class ResellerDashboardPage {
 
     public boolean isDashboardPageDisplayed() {
         return WaitUtils.waitForVisibility(driver, resellerDashboard).isDisplayed();
+    }
+
+    public boolean isResellerDashboardDisplayed() {
+        return WaitUtils.waitForVisibility(driver, resellerDashboard).isDisplayed();
+    }
+
+    public void clickFirstAccountWithBridges() {
+        WaitUtils.waitForClickability(driver, firstAccountWithBridges).click();
     }
     public boolean isTotalAccountsDisplayed() {
     	return WaitUtils.waitForVisibility(driver, totalAccounts).isDisplayed();

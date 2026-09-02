@@ -15,13 +15,13 @@ public class BridgesListTest extends BaseTest {
     public void verifyBridgesListInDashboard() {
         // Step 1: Login as End User with valid credentials
         loginAs("enduser_user_creds");
-        System.out.println("✓ Logged in as End User");
+        logger.info(" Logged in as End User");
 
         AddBridgePage addBridgePage = new AddBridgePage(driver);
         BridgesListPage bridgesListPage = new BridgesListPage(driver);
 
         // First, add a bridge to ensure we have at least one bridge to verify
-        System.out.println("\n=== Adding a test bridge ===");
+        logger.info("\n=== Adding a test bridge ===");
 
         addBridgePage.clickMoreMenuOptionAtTheBottom();
         addBridgePage.clickDashboardOptionAtTheBottom();
@@ -59,7 +59,7 @@ public class BridgesListTest extends BaseTest {
         );
 
         addBridgePage.clickAddBridgeButton();
-        System.out.println("✓ Bridge added: " + testBridgeName);
+        logger.info(" Bridge added: " + testBridgeName);
 
         // Wait for bridge to be added
         try {
@@ -69,44 +69,44 @@ public class BridgesListTest extends BaseTest {
         }
 
         // Step 2: Now verify the bridge appears in Bridges list
-        System.out.println("\n=== Verifying Bridges List ===");
+        logger.info("\n=== Verifying Bridges List ===");
 
         // Verify "All Devices" section is displayed
         Assert.assertTrue(
                 bridgesListPage.isAllDevicesSectionDisplayed(),
                 "All Devices section should be displayed"
         );
-        System.out.println("✓ All Devices section is displayed");
+        logger.info(" All Devices section is displayed");
 
         // Verify all device categories are displayed
         Assert.assertTrue(
                 bridgesListPage.isBridgesOptionDisplayed(),
                 "Bridges option should be displayed"
         );
-        System.out.println("  1. Bridges - ✓");
+        logger.info("  1. Bridges - ");
 
         Assert.assertTrue(
                 bridgesListPage.isCamerasOptionDisplayed(),
                 "Cameras option should be displayed"
         );
-        System.out.println("  2. Cameras - ✓");
+        logger.info("  2. Cameras - ");
 
         Assert.assertTrue(
                 bridgesListPage.isSpeakersOptionDisplayed(),
                 "Speakers option should be displayed"
         );
-        System.out.println("  3. Speakers - ✓");
+        logger.info("  3. Speakers - ");
 
         Assert.assertTrue(
                 bridgesListPage.isSwitchesOptionDisplayed(),
                 "Switches option should be displayed"
         );
-        System.out.println("  4. Switches - ✓");
+        logger.info("  4. Switches - ");
 
         // Navigate to Bridges section using the Bridges tab
         DeleteBridgePage deleteBridgePage = new DeleteBridgePage(driver);
         deleteBridgePage.clickBridgesTab();
-        System.out.println("✓ Clicked Bridges tab");
+        logger.info(" Clicked Bridges tab");
 
         // Wait for bridges list to load
         try {
@@ -117,7 +117,7 @@ public class BridgesListTest extends BaseTest {
 
         // Verify the bridge we added is in the list by filtering
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        System.out.println("✓ Filtered by bridge name: " + testBridgeName);
+        logger.info(" Filtered by bridge name: " + testBridgeName);
 
         // Wait for filter results
         try {
@@ -129,8 +129,8 @@ public class BridgesListTest extends BaseTest {
         // Try to click on the filtered bridge to verify it exists
         try {
             deleteBridgePage.clickFirstBridge();
-            System.out.println("✓ Bridge found in Bridges list: " + testBridgeName);
-            System.out.println("✓ Bridge is successfully displayed under Bridges section");
+            logger.info(" Bridge found in Bridges list: " + testBridgeName);
+            logger.info(" Bridge is successfully displayed under Bridges section");
 
             // Press back to return to bridges list
             driver.navigate().back();
@@ -144,16 +144,16 @@ public class BridgesListTest extends BaseTest {
         }
 
         // Step 3: Additional verifications on Bridges section
-        System.out.println("\n=== Additional Verifications ===");
-        System.out.println("ℹ️ Bridge counter, status, and other UI elements can be verified");
-        System.out.println("ℹ️ For complete verification, provide specific locators for these elements");
+        logger.info("\n=== Additional Verifications ===");
+        logger.info(" Bridge counter, status, and other UI elements can be verified");
+        logger.info(" For complete verification, provide specific locators for these elements");
 
         // Step 4: Clean up - Delete the bridge we added
-        System.out.println("\n=== Cleaning Up - Deleting Test Bridge ===");
+        logger.info("\n=== Cleaning Up - Deleting Test Bridge ===");
 
         // Filter by bridge name again
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        System.out.println("✓ Filtered by bridge name for deletion: " + testBridgeName);
+        logger.info(" Filtered by bridge name for deletion: " + testBridgeName);
 
         try {
             Thread.sleep(2000);
@@ -163,7 +163,7 @@ public class BridgesListTest extends BaseTest {
 
         // Click on the bridge
         deleteBridgePage.clickFirstBridge();
-        System.out.println("✓ Clicked on bridge");
+        logger.info(" Clicked on bridge");
 
         try {
             Thread.sleep(2000);
@@ -174,7 +174,7 @@ public class BridgesListTest extends BaseTest {
         // Scroll to see Delete button
         utils.GestureUtils.swipeUp(driver);
         utils.GestureUtils.swipeUp(driver);
-        System.out.println("✓ Scrolled to see Delete Bridge button");
+        logger.info(" Scrolled to see Delete Bridge button");
 
         // Verify Delete Bridge button is visible
         Assert.assertTrue(
@@ -184,7 +184,7 @@ public class BridgesListTest extends BaseTest {
 
         // Click Delete Bridge button
         deleteBridgePage.clickDeleteBridgeButton();
-        System.out.println("✓ Clicked Delete Bridge button");
+        logger.info(" Clicked Delete Bridge button");
 
         // Wait longer for confirmation popup to appear
         try {
@@ -195,7 +195,7 @@ public class BridgesListTest extends BaseTest {
 
         // Confirm deletion
         deleteBridgePage.clickDeleteButton();
-        System.out.println("✓ Confirmed deletion in popup");
+        logger.info(" Confirmed deletion in popup");
 
         // Wait for deletion to complete
         try {
@@ -204,8 +204,8 @@ public class BridgesListTest extends BaseTest {
             Thread.currentThread().interrupt();
         }
 
-        System.out.println("✓ Test bridge deleted successfully!");
+        logger.info(" Test bridge deleted successfully!");
 
-        System.out.println("\n=== Bridges List Test Completed Successfully! ===");
+        logger.info("\n=== Bridges List Test Completed Successfully! ===");
     }
 }

@@ -21,9 +21,9 @@ public class BridgeContextMenuTest extends BaseTest {
     public void verifyBridgeContextMenu() {
 
         // ========== STEP 1: LOGIN ==========
-        System.out.println("\n============================================");
-        System.out.println("STEP 1: Login to VMS Application");
-        System.out.println("============================================");
+        logger.info("\n============================================");
+        logger.info("STEP 1: Login to VMS Application");
+        logger.info("============================================");
 
         loginAs("enduser_user_creds");
 
@@ -33,21 +33,21 @@ public class BridgeContextMenuTest extends BaseTest {
             Thread.currentThread().interrupt();
         }
 
-        System.out.println("✅ VERIFIED: User is able to login in VMS app\n");
+        logger.info(" VERIFIED: User is able to login in VMS app\n");
 
         AddBridgePage addBridgePage = new AddBridgePage(driver);
         DeleteBridgePage deleteBridgePage = new DeleteBridgePage(driver);
 
         // ========== STEP 2: NAVIGATE TO DASHBOARD ==========
-        System.out.println("============================================");
-        System.out.println("STEP 2: Tap Dashboard option using more menu");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("STEP 2: Tap Dashboard option using more menu");
+        logger.info("============================================");
 
         addBridgePage.clickMoreMenuOptionAtTheBottom();
-        System.out.println("✓ Clicked More menu");
+        logger.info(" Clicked More menu");
 
         addBridgePage.clickDashboardOptionAtTheBottom();
-        System.out.println("✓ Clicked Dashboard option");
+        logger.info(" Clicked Dashboard option");
 
         try {
             Thread.sleep(2000);
@@ -60,19 +60,19 @@ public class BridgeContextMenuTest extends BaseTest {
                 addBridgePage.allDevicesSectionIsDisplayed(),
                 "All devices section should be displayed"
         );
-        System.out.println("✅ VERIFIED: User navigated to All Devices Section");
+        logger.info(" VERIFIED: User navigated to All Devices Section");
 
-        System.out.println("=== Verifying Device Sections ===");
-        System.out.println("✅ 1. Bridges");
-        System.out.println("✅ 2. Cameras");
-        System.out.println("✅ 3. Speakers");
-        System.out.println("✅ 4. Switches");
-        System.out.println("✅ 5. Multi-Cameras\n");
+        logger.info("=== Verifying Device Sections ===");
+        logger.info(" 1. Bridges");
+        logger.info(" 2. Cameras");
+        logger.info(" 3. Speakers");
+        logger.info(" 4. Switches");
+        logger.info(" 5. Multi-Cameras\n");
 
         // ========== PREPARATION: ADD TEST BRIDGE ==========
-        System.out.println("============================================");
-        System.out.println("PREPARATION: Adding test bridge");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("PREPARATION: Adding test bridge");
+        logger.info("============================================");
 
         String testBridgeName = "ContextMenuBridge_" + System.currentTimeMillis();
 
@@ -90,7 +90,7 @@ public class BridgeContextMenuTest extends BaseTest {
         addBridgePage.enterAttachId(attachId);
 
         addBridgePage.clickAddBridgeButton();
-        System.out.println("✓ Test bridge added: " + testBridgeName);
+        logger.info(" Test bridge added: " + testBridgeName);
 
         try {
             Thread.sleep(3000);
@@ -99,12 +99,12 @@ public class BridgeContextMenuTest extends BaseTest {
         }
 
         // ========== STEP 3: NAVIGATE TO BRIDGES SECTION ==========
-        System.out.println("\n============================================");
-        System.out.println("STEP 3: Tap Bridge option");
-        System.out.println("============================================");
+        logger.info("\n============================================");
+        logger.info("STEP 3: Tap Bridge option");
+        logger.info("============================================");
 
         deleteBridgePage.clickBridgesTab();
-        System.out.println("✓ Tapped Bridge option");
+        logger.info(" Tapped Bridge option");
 
         try {
             Thread.sleep(3000);
@@ -112,12 +112,12 @@ public class BridgeContextMenuTest extends BaseTest {
             Thread.currentThread().interrupt();
         }
 
-        System.out.println("✅ VERIFIED: List of bridges displayed");
-        System.out.println("✅ VERIFIED: Bridges shown with three dots and status\n");
+        logger.info(" VERIFIED: List of bridges displayed");
+        logger.info(" VERIFIED: Bridges shown with three dots and status\n");
 
         // Filter to find our test bridge
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        System.out.println("✓ Filtered to test bridge: " + testBridgeName);
+        logger.info(" Filtered to test bridge: " + testBridgeName);
 
         try {
             Thread.sleep(2000);
@@ -126,9 +126,9 @@ public class BridgeContextMenuTest extends BaseTest {
         }
 
         // ========== STEP 4: LONG PRESS ON BRIDGE ==========
-        System.out.println("\n============================================");
-        System.out.println("STEP 4: Long press on bridge to launch context menu");
-        System.out.println("============================================");
+        logger.info("\n============================================");
+        logger.info("STEP 4: Long press on bridge to launch context menu");
+        logger.info("============================================");
 
         try {
             // Find the bridge element
@@ -150,7 +150,7 @@ public class BridgeContextMenuTest extends BaseTest {
 
             driver.perform(Collections.singletonList(longPress));
 
-            System.out.println("✓ Performed long press on bridge");
+            logger.info(" Performed long press on bridge");
 
             try {
                 Thread.sleep(2000);
@@ -158,16 +158,16 @@ public class BridgeContextMenuTest extends BaseTest {
                 Thread.currentThread().interrupt();
             }
 
-            System.out.println("✅ VERIFIED: Context menu appeared in foreground");
-            System.out.println("✅ VERIFIED: Background is blurred");
+            logger.info(" VERIFIED: Context menu appeared in foreground");
+            logger.info(" VERIFIED: Background is blurred");
 
         } catch (Exception e) {
-            System.out.println("ℹ️  Long press context menu: " + e.getMessage());
-            System.out.println("   (Trying alternative approach with 3-dots button)");
+            logger.info("  Long press context menu: " + e.getMessage());
+            logger.info("   (Trying alternative approach with 3-dots button)");
         }
 
         // ========== VERIFY CONTEXT MENU OPTIONS ==========
-        System.out.println("\n=== Verifying Context Menu Options ===");
+        logger.info("\n=== Verifying Context Menu Options ===");
 
         verifyContextMenuOption("Bridge information");
         verifyContextMenuOption("Bridge settings");
@@ -182,16 +182,16 @@ public class BridgeContextMenuTest extends BaseTest {
                 AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']")
             );
             if (restartOption.isDisplayed()) {
-                System.out.println("✅ VERIFIED: Restart bridge (visible for Sub-User)");
+                logger.info(" VERIFIED: Restart bridge (visible for Sub-User)");
             }
         } catch (Exception e) {
-            System.out.println("ℹ️  Restart bridge option (not visible - user is not Sub-User)");
+            logger.info("  Restart bridge option (not visible - user is not Sub-User)");
         }
 
-        System.out.println("\n✅ VERIFIED: All context menu options displayed");
-        System.out.println("✅ VERIFIED: Context Menu shows bridge name with status");
-        System.out.println("✅ VERIFIED: Camera statuses with counters displayed");
-        System.out.println("✅ VERIFIED: User can see and interact with all options\n");
+        logger.info("\n VERIFIED: All context menu options displayed");
+        logger.info(" VERIFIED: Context Menu shows bridge name with status");
+        logger.info(" VERIFIED: Camera statuses with counters displayed");
+        logger.info(" VERIFIED: User can see and interact with all options\n");
 
         // Close context menu by pressing back
         driver.navigate().back();
@@ -202,9 +202,9 @@ public class BridgeContextMenuTest extends BaseTest {
         }
 
         // ========== STEP 5: TAP 3-DOTS BUTTON ==========
-        System.out.println("============================================");
-        System.out.println("STEP 5: Tap on 3 dots button to launch context menu");
-        System.out.println("============================================");
+        logger.info("============================================");
+        logger.info("STEP 5: Tap on 3 dots button to launch context menu");
+        logger.info("============================================");
 
         try {
             // Find and click 3-dots button with correct locator
@@ -214,7 +214,7 @@ public class BridgeContextMenuTest extends BaseTest {
 
             if (threeDotsButton.isDisplayed()) {
                 threeDotsButton.click();
-                System.out.println("✓ Tapped 3-dots button");
+                logger.info(" Tapped 3-dots button");
 
                 try {
                     Thread.sleep(2000);
@@ -222,10 +222,10 @@ public class BridgeContextMenuTest extends BaseTest {
                     Thread.currentThread().interrupt();
                 }
 
-                System.out.println("✅ VERIFIED: Context menu appeared");
+                logger.info(" VERIFIED: Context menu appeared");
 
                 // Verify same options as Step 4
-                System.out.println("\n=== Verifying Context Menu Options (via 3-dots) ===");
+                logger.info("\n=== Verifying Context Menu Options (via 3-dots) ===");
 
                 verifyContextMenuOption("Bridge information");
                 verifyContextMenuOption("Bridge settings");
@@ -234,8 +234,8 @@ public class BridgeContextMenuTest extends BaseTest {
                 verifyContextMenuOption("Turn off all cameras");
                 verifyContextMenuOption("Replace bridge");
 
-                System.out.println("\n✅ VERIFIED: All options available via 3-dots button");
-                System.out.println("✅ VERIFIED: User can interact with all options");
+                logger.info("\n VERIFIED: All options available via 3-dots button");
+                logger.info(" VERIFIED: User can interact with all options");
 
                 // Close menu
                 driver.navigate().back();
@@ -246,13 +246,13 @@ public class BridgeContextMenuTest extends BaseTest {
                 }
             }
         } catch (Exception e) {
-            System.out.println("ℹ️  3-dots button context menu: " + e.getMessage());
+            logger.info("  3-dots button context menu: " + e.getMessage());
         }
 
         // ========== CLEANUP: DELETE TEST BRIDGE ==========
-        System.out.println("\n============================================");
-        System.out.println("CLEANUP: Deleting Test Bridge");
-        System.out.println("============================================");
+        logger.info("\n============================================");
+        logger.info("CLEANUP: Deleting Test Bridge");
+        logger.info("============================================");
 
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
         try {
@@ -262,7 +262,7 @@ public class BridgeContextMenuTest extends BaseTest {
         }
 
         deleteBridgePage.clickFirstBridge();
-        System.out.println("✓ Clicked on bridge");
+        logger.info(" Clicked on bridge");
 
         try {
             Thread.sleep(2000);
@@ -272,7 +272,7 @@ public class BridgeContextMenuTest extends BaseTest {
 
         utils.GestureUtils.swipeUp(driver);
         utils.GestureUtils.swipeUp(driver);
-        System.out.println("✓ Scrolled to Delete button");
+        logger.info(" Scrolled to Delete button");
 
         // Verify Delete Bridge button is visible
         Assert.assertTrue(
@@ -281,7 +281,7 @@ public class BridgeContextMenuTest extends BaseTest {
         );
 
         deleteBridgePage.clickDeleteBridgeButton();
-        System.out.println("✓ Clicked Delete Bridge");
+        logger.info(" Clicked Delete Bridge");
 
         // Wait longer for confirmation popup to appear
         try {
@@ -291,7 +291,7 @@ public class BridgeContextMenuTest extends BaseTest {
         }
 
         deleteBridgePage.clickDeleteButton();
-        System.out.println("✓ Confirmed deletion");
+        logger.info(" Confirmed deletion");
 
         try {
             Thread.sleep(2000);
@@ -299,30 +299,30 @@ public class BridgeContextMenuTest extends BaseTest {
             Thread.currentThread().interrupt();
         }
 
-        System.out.println("✅ VERIFIED: Test bridge deleted\n");
+        logger.info(" VERIFIED: Test bridge deleted\n");
 
         // ========== TEST SUMMARY ==========
-        System.out.println("============================================");
-        System.out.println("✅ TEST COMPLETED SUCCESSFULLY");
-        System.out.println("============================================");
-        System.out.println("ALL VERIFICATIONS PASSED:");
-        System.out.println("✅ User login");
-        System.out.println("✅ Dashboard navigation with all sections");
-        System.out.println("✅ Bridges list displayed with status");
-        System.out.println("✅ Long press context menu (if supported)");
-        System.out.println("✅ 3-dots button context menu");
-        System.out.println("✅ All context menu options verified:");
-        System.out.println("   • Bridge information");
-        System.out.println("   • Bridge settings");
-        System.out.println("   • Cameras");
-        System.out.println("   • Turn on all cameras");
-        System.out.println("   • Turn off all cameras");
-        System.out.println("   • Replace bridge");
-        System.out.println("   • Restart bridge (Sub-User only)");
-        System.out.println("✅ Context menu UI verified (blurred background)");
-        System.out.println("✅ User interaction verified");
-        System.out.println("✅ Cleanup completed");
-        System.out.println("============================================\n");
+        logger.info("============================================");
+        logger.info(" TEST COMPLETED SUCCESSFULLY");
+        logger.info("============================================");
+        logger.info("ALL VERIFICATIONS PASSED:");
+        logger.info(" User login");
+        logger.info(" Dashboard navigation with all sections");
+        logger.info(" Bridges list displayed with status");
+        logger.info(" Long press context menu (if supported)");
+        logger.info(" 3-dots button context menu");
+        logger.info(" All context menu options verified:");
+        logger.info("   • Bridge information");
+        logger.info("   • Bridge settings");
+        logger.info("   • Cameras");
+        logger.info("   • Turn on all cameras");
+        logger.info("   • Turn off all cameras");
+        logger.info("   • Replace bridge");
+        logger.info("   • Restart bridge (Sub-User only)");
+        logger.info(" Context menu UI verified (blurred background)");
+        logger.info(" User interaction verified");
+        logger.info(" Cleanup completed");
+        logger.info("============================================\n");
     }
 
     /**
@@ -333,6 +333,6 @@ public class BridgeContextMenuTest extends BaseTest {
             AppiumBy.xpath("//android.widget.TextView[@text='" + optionText + "']")
         );
         Assert.assertTrue(option.isDisplayed(), optionText + " should be displayed");
-        System.out.println("✅ VERIFIED: " + optionText);
+        logger.info(" VERIFIED: " + optionText);
     }
 }
