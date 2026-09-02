@@ -336,10 +336,24 @@ public class ResellerDashboardPage {
             WaitUtils.waitForClickability(driver, logoutOption).click();
             System.out.println("  ✓ Log out button clicked");
 
+            // Wait for confirmation popup to appear
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+
             // Step 5: Click "Yes" on confirmation popup
             System.out.println("Step 5: Clicking 'Yes' on confirmation popup...");
             WaitUtils.waitForClickability(driver, confirmLogoutButton).click();
-            System.out.println("  ✓ Confirmed logout");
+            System.out.println("  ✓ Confirmed logout - clicked Yes button");
+
+            // Wait for logout to complete
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
 
             System.out.println("=== Logout Successful ===");
 
