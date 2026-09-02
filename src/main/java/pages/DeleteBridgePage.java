@@ -16,7 +16,7 @@ public class DeleteBridgePage {
 
     // Bridge list elements
     private final By bridgesTab = AppiumBy.xpath("//android.widget.TextView[@text='Bridges']");
-    private final By bridgesScreenTitle = AppiumBy.xpath("//android.widget.TextView[@text='Bridges']");
+    private final By bridgesScreenTitle = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']");
     private final By firstBridgeInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
     private final By bridgeThreeDotsIcon = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.view.View[contains(@content-desc, 'icon')]");
 

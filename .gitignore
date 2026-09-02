@@ -56,6 +56,7 @@ screenshots/
 **/config.properties
 **/android.properties
 **/ios.properties
+**/testData.json
 *.apk
 *.ipa
 *.app

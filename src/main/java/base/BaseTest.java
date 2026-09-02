@@ -32,56 +32,49 @@ public abstract class BaseTest {
     }
 
     private void handleNotificationPermission() {
-        try {
-            // Wait for popup to appear (give it more time on BrowserStack)
-            Thread.sleep(5000);
+        // Temporarily reduce implicit wait for faster permission check
+        java.time.Duration originalTimeout = driver.manage().timeouts().getImplicitWaitTimeout();
+        driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(2));
 
-            // Try different locators for "Allow" button with multiple attempts
+        try {
+            // Brief wait for popup to appear
+            Thread.sleep(1000);
+
+            // Try different locators for "Allow" button
             boolean handled = false;
 
             // Try 1: Using resource-id (most common for Android)
             if (!handled) {
                 try {
                     driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button")).click();
-                    logger.info("✓ Clicked 'Allow' on notification permission (resource-id)");
+                    logger.info("✓ Clicked Allow button (positive_button resource-id)");
                     handled = true;
                 } catch (Exception e) {
-                    logger.debug("Resource-id locator not found, trying next strategy");
+                    // Silently continue to next strategy
                 }
             }
 
-            // Try 2: Using UiAutomator selector with text
+            // Try 2: Using alternative resource-id
+            if (!handled) {
+                try {
+                    driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button")).click();
+                    logger.info("✓ Clicked Allow button (alternative resource-id)");
+                    handled = true;
+                } catch (Exception e) {
+                    // Silently continue
+                }
+            }
+
+            // Try 3: Using UiAutomator selector with text (faster than XPath)
             if (!handled) {
                 try {
                     driver.findElement(io.appium.java_client.AppiumBy.androidUIAutomator(
                         "new UiSelector().text(\"Allow\").className(\"android.widget.Button\")"
                     )).click();
-                    logger.info("✓ Clicked 'Allow' on notification permission (UiSelector text)");
+                    logger.info("✓ Clicked Allow button (UiSelector text)");
                     handled = true;
                 } catch (Exception e) {
-                    logger.debug("UiSelector text locator not found, trying next strategy");
-                }
-            }
-
-            // Try 3: Using XPath with text
-            if (!handled) {
-                try {
-                    driver.findElement(io.appium.java_client.AppiumBy.xpath("//android.widget.Button[@text='Allow']")).click();
-                    logger.info("✓ Clicked 'Allow' on notification permission (XPath)");
-                    handled = true;
-                } catch (Exception e) {
-                    logger.debug("XPath locator not found, trying next strategy");
-                }
-            }
-
-            // Try 4: Using resource-id with alternative ID
-            if (!handled) {
-                try {
-                    driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button")).click();
-                    logger.info("✓ Clicked 'Allow' on notification permission (alternative resource-id)");
-                    handled = true;
-                } catch (Exception e) {
-                    logger.debug("Alternative resource-id not found");
+                    // No more strategies
                 }
             }
 
@@ -89,14 +82,14 @@ public abstract class BaseTest {
                 logger.info("No notification permission popup found or already handled");
             }
 
-            // Small wait after handling permission
-            Thread.sleep(2000);
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.warn("Sleep interrupted while handling permission popup");
         } catch (Exception e) {
             logger.warn("Error handling notification permission: {}", e.getMessage());
+        } finally {
+            // Restore original implicit wait timeout
+            driver.manage().timeouts().implicitlyWait(originalTimeout);
         }
     }
     
@@ -140,8 +133,21 @@ public abstract class BaseTest {
 
                 // Option 2: Force stop app (Android 15 workaround)
                 try {
-                    Runtime.getRuntime().exec("adb -s 8XUW9LWWZ9MFOZ4D shell am force-stop com.een.vms.android");
-                    logger.info("App force stopped - will restart fresh for next test");
+                    String appPackage = utils.ConfigReader.getProperty("appPackage");
+                    String udid = utils.ConfigReader.getProperty("udid");
+
+                    String command = udid != null && !udid.isBlank()
+                        ? "adb -s " + udid + " shell am force-stop " + appPackage
+                        : "adb shell am force-stop " + appPackage;
+
+                    Process process = Runtime.getRuntime().exec(command);
+                    int exitCode = process.waitFor();
+
+                    if (exitCode == 0) {
+                        logger.info("App force stopped successfully - will restart fresh for next test");
+                    } else {
+                        logger.warn("Force stop command returned exit code: {}", exitCode);
+                    }
                 } catch (Exception ex) {
                     logger.warn("Could not force stop app: {}", ex.getMessage());
                 }

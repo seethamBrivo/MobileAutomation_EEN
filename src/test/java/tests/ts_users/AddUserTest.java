@@ -72,19 +72,27 @@ public class AddUserTest extends BaseTest {
 	         Thread.currentThread().interrupt();
 	     }
 
-	     // Navigate back to users list
-	     driver.navigate().back();
-
+	     // Verify user was added successfully by checking if we're back at users list
+	     // or success snackbar appears
+	     boolean userAdded = false;
 	     try {
-	         Thread.sleep(1000);
-	     } catch (InterruptedException e) {
-	         Thread.currentThread().interrupt();
+	         if (addUserPage.isUserWasAddedMessageDisplayed()) {
+	             System.out.println("✓ User creation confirmed via snackbar");
+	             userAdded = true;
+	         }
+	     } catch (Exception e) {
+	         // Snackbar may not appear or may be too quick
+	         System.out.println("Note: Snackbar not caught, checking navigation instead");
 	     }
 
-	     Assert.assertTrue(
-	    	 		addUserPage.isUsersOptionAtBottonScreenDisplayed(),
-	    	 		"User navigated back to users list after adding a new user successfully"
-	    	          );
+	     // Verify we're back at users screen (fallback verification)
+	     if (!userAdded) {
+	         Assert.assertTrue(
+	             addUserPage.isUsersOptionAtBottonScreenDisplayed(),
+	             "User should be added and returned to users list"
+	         );
+	         System.out.println("✓ User creation confirmed via navigation back to users list");
+	     }
 	   //Adding a user already existing in the system but not existing in the current logged account
 	     addUserPage.clickUsersAddIconAtTheTopRightCorner();
 
@@ -112,19 +120,27 @@ public class AddUserTest extends BaseTest {
 	         Thread.currentThread().interrupt();
 	     }
 
-	     // Navigate back to users list
-	     driver.navigate().back();
-
+	     // Verify user was added successfully by checking if we're back at users list
+	     // or success snackbar appears
+	     boolean existingUserAdded = false;
 	     try {
-	         Thread.sleep(1000);
-	     } catch (InterruptedException e) {
-	         Thread.currentThread().interrupt();
+	         if (addUserPage.isUserWasAddedMessageDisplayed()) {
+	             System.out.println("✓ Existing user creation confirmed via snackbar");
+	             existingUserAdded = true;
+	         }
+	     } catch (Exception e) {
+	         // Snackbar may not appear or may be too quick
+	         System.out.println("Note: Snackbar not caught, checking navigation instead");
 	     }
 
-	     Assert.assertTrue(
-	    	 		addUserPage.isUsersOptionAtBottonScreenDisplayed(),
-	    	 		"User navigated back to users list after adding a new user successfully"
-	    	          );
+	     // Verify we're back at users screen (fallback verification)
+	     if (!existingUserAdded) {
+	         Assert.assertTrue(
+	             addUserPage.isUsersOptionAtBottonScreenDisplayed(),
+	             "Existing user should be added and returned to users list"
+	         );
+	         System.out.println("✓ Existing user creation confirmed via navigation back to users list");
+	     }
 	     //Delete the existing user in the system who added in current logged account
 	     addUserPage.clickUsersSearchFilterIcon();
 	     addUserPage.filterForUsersSearchbar(exstingUserButNotAvailbleInCurrentLogin);

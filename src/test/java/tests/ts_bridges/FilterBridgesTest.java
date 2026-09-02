@@ -206,13 +206,30 @@ public class FilterBridgesTest extends BaseTest {
         System.out.println("VERIFICATION: Filtered Results");
         System.out.println("============================================");
 
+        // Verify the first bridge in filtered results
         try {
+            WebElement firstBridgeElement = driver.findElement(
+                AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]")
+            );
+            Assert.assertTrue(firstBridgeElement.isDisplayed(), "Filtered bridge should be displayed");
+
+            // Click the bridge and verify it's the correct one
             deleteBridgePage.clickFirstBridge();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            // Verify bridge settings page opened (confirms correct bridge was clicked)
+            WebElement bridgeSettingsTitle = driver.findElement(
+                AppiumBy.xpath("//android.widget.TextView[@text='Bridge settings']")
+            );
+            Assert.assertTrue(bridgeSettingsTitle.isDisplayed(), "Bridge settings page should open for filtered bridge");
+
             System.out.println("✅ VERIFIED: Bridge found in filtered results: " + testBridgeName);
             System.out.println("✅ VERIFIED: Filter is working - only matching bridges displayed");
             System.out.println("✅ VERIFIED: User can click on filtered bridge");
-
-            Assert.assertTrue(true, "Bridge successfully filtered and displayed");
 
             driver.navigate().back();
             try {
@@ -221,7 +238,7 @@ public class FilterBridgesTest extends BaseTest {
                 Thread.currentThread().interrupt();
             }
         } catch (Exception e) {
-            Assert.fail("Bridge not found in filtered results: " + testBridgeName);
+            Assert.fail("Bridge not found in filtered results or filter not working: " + testBridgeName + " - " + e.getMessage());
         }
 
         System.out.println();

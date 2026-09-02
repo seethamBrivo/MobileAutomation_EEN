@@ -109,22 +109,25 @@ public class DeleteBridgeTest extends BaseTest {
         deleteBridgePage.clickDeleteButton();
         System.out.println("✓ Confirmed deletion in popup");
 
-        // Verify user navigated back to Bridges tab (optional check)
+        // Wait for delete operation to complete
         try {
-            if (deleteBridgePage.isUserNavigatedBackToBridgesTab()) {
-                System.out.println("✓ Navigated back to Bridges tab");
-            }
-        } catch (Exception e) {
-            System.out.println("Note: Navigation back check skipped");
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
-        // Verify success message appeared (optional - may not appear on demo account)
-        try {
-            if (deleteBridgePage.isBridgeDeletedMessageDisplayed()) {
-                System.out.println("✓ Success message appeared: 'Bridge was deleted'");
-            }
-        } catch (Exception e) {
-            System.out.println("Note: Success message not found (expected on demo account)");
+        // Verify user navigated back to Bridges tab
+        Assert.assertTrue(
+                deleteBridgePage.isUserNavigatedBackToBridgesTab(),
+                "User should navigate back to Bridges tab after deletion"
+        );
+        System.out.println("✓ Navigated back to Bridges tab");
+
+        // Verify success message appeared (may not appear on demo account - soft assertion)
+        if (deleteBridgePage.isBridgeDeletedMessageDisplayed()) {
+            System.out.println("✓ Success message appeared: 'Bridge was deleted'");
+        } else {
+            System.out.println("Note: Success message not displayed (expected on demo account)");
         }
 
         System.out.println("✓ Bridge deletion test completed successfully!");

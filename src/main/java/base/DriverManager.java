@@ -108,7 +108,7 @@ public final class DriverManager {
         String appActivity = ConfigReader.getProperty("appActivity");
 
         // For BrowserStack: Don't set appActivity/appWaitActivity - let app launch naturally
-        // For Local: Set both appPackage and appActivity for faster launch
+        // For Local: Only set appPackage, use appWaitActivity for targeted wait (safer than appActivity)
         if (isBrowserStackExecution()) {
             // BrowserStack: Only set package, let it launch naturally without waiting for specific activity
             if (!appPackage.isBlank()) {
@@ -116,12 +116,12 @@ public final class DriverManager {
             }
             // Don't set appActivity or appWaitActivity - permission popups can block activity detection
         } else {
-            // Local execution: Set both for targeted launch
+            // Local execution: Set package and wait activity (not appActivity to avoid hard-fail)
             if (!appPackage.isBlank()) {
                 options.setAppPackage(appPackage);
             }
+            // Use appWaitActivity instead of appActivity to avoid hard-fail if activity is wrong/unexported
             if (!appActivity.isBlank()) {
-                options.setAppActivity(appActivity);
                 options.setAppWaitActivity(appActivity);
             }
             // Android 15 workaround: Force app to stop and restart for each session
@@ -160,12 +160,21 @@ public final class DriverManager {
         String fullReset = ConfigReader.getProperty("fullReset");
         String newCommandTimeout = ConfigReader.getProperty("newCommandTimeout");
 
-        // For BrowserStack: Use noReset to keep app installed and speed up tests
-        // For Local: Use noReset due to Android 15 security restrictions
+        // Both BrowserStack and Local should respect config settings
+        // Default to noReset=true for BrowserStack if not specified (keeps app installed for speed)
         if (isBrowserStackExecution()) {
-            options.setNoReset(true);
-            options.amend("fullReset", false);
-            LOGGER.info("BrowserStack: Using noReset=true to keep app installed between tests (faster execution)");
+            if (!noReset.isBlank()) {
+                options.setNoReset(Boolean.parseBoolean(noReset));
+            } else {
+                // Default for BrowserStack
+                options.setNoReset(true);
+                LOGGER.info("BrowserStack: Using default noReset=true to keep app installed between tests");
+            }
+            if (!fullReset.isBlank()) {
+                options.amend("fullReset", Boolean.parseBoolean(fullReset));
+            } else {
+                options.amend("fullReset", false);
+            }
         } else {
             // Local execution follows config file settings
             if (!noReset.isBlank()) {

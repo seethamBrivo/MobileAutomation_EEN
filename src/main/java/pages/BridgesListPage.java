@@ -24,8 +24,8 @@ public class BridgesListPage {
     private final By switchesOption = AppiumBy.xpath("//android.widget.TextView[@text=\"Switches\"]");
 
     // Bridge list elements
-    private final By bridgesList = AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView");
-    private final By bridgeItems = AppiumBy.xpath("//android.view.ViewGroup[contains(@content-desc, 'bridge')]");
+    private final By bridgesList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']");
+    private final By bridgeItems = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View");
     private final By bridgeCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'bridge')]");
 
     // Bridge item details

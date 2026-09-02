@@ -329,14 +329,10 @@ public class BridgeContextMenuTest extends BaseTest {
      * Helper method to verify context menu option
      */
     private void verifyContextMenuOption(String optionText) {
-        try {
-            WebElement option = driver.findElement(
-                AppiumBy.xpath("//android.widget.TextView[@text='" + optionText + "']")
-            );
-            Assert.assertTrue(option.isDisplayed(), optionText + " should be displayed");
-            System.out.println("✅ VERIFIED: " + optionText);
-        } catch (Exception e) {
-            System.out.println("⚠️  " + optionText + " - not found (may need locator adjustment)");
-        }
+        WebElement option = driver.findElement(
+            AppiumBy.xpath("//android.widget.TextView[@text='" + optionText + "']")
+        );
+        Assert.assertTrue(option.isDisplayed(), optionText + " should be displayed");
+        System.out.println("✅ VERIFIED: " + optionText);
     }
 }

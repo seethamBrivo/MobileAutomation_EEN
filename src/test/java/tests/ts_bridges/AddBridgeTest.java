@@ -3,12 +3,16 @@ package tests.ts_bridges;
 import base.BaseTest;
 import com.google.gson.JsonObject;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import pages.AddBridgePage;
 import pages.DeleteBridgePage;
 import utils.JsonDataReader;
 
 public class AddBridgeTest extends BaseTest {
+
+    private String testBridgeName;
+    private boolean bridgeAdded = false;
 
     @Test(description = "EEPD-TC-11276: POS-Add Bridge - Adding Bridge to the account in Dashboard in mobile VMS app")
     public void addBridgeToVMSApp() {
@@ -53,11 +57,14 @@ public class AddBridgeTest extends BaseTest {
         addBridgePage.waitForBridgeNameFieldToLoad();
 
         // Step 5: Verify button is disabled initially (before entering any data)
-        // Note: App behavior - button may be enabled by default, so making this optional
-        System.out.println("ℹ️ Note: Add bridge button state verified");
+        Assert.assertFalse(
+                addBridgePage.isAddBridgeButtonEnabled(),
+                "Add bridge button should be disabled initially before entering data"
+        );
+        System.out.println("✓ Add bridge button is disabled initially");
 
         // Step 6: Enter bridge name and attach ID
-        String testBridgeName = "TestBridge_" + System.currentTimeMillis();
+        testBridgeName = "TestBridge_" + System.currentTimeMillis();
         addBridgePage.enterBridgeName(testBridgeName);
         System.out.println("✓ Entered bridge name: " + testBridgeName);
 
@@ -85,6 +92,7 @@ public class AddBridgeTest extends BaseTest {
                 addBridgePage.isUserNavigatedToOriginScreen(),
                 "User navigated back to origin screen after adding a new bridge successfully"
         );
+        bridgeAdded = true;
         System.out.println("✓ Bridge added successfully: " + testBridgeName);
 
         // Step 8: Try to add the same bridge again with same attach ID to verify conflict error
@@ -229,5 +237,50 @@ public class AddBridgeTest extends BaseTest {
 
         System.out.println("✓ Bridge deleted successfully!");
         System.out.println("\n=== Add and Delete Bridge Test Completed Successfully! ===");
+    }
+
+    @AfterMethod
+    public void cleanupBridge() {
+        // Cleanup: Delete the test bridge if it was added
+        if (bridgeAdded && testBridgeName != null && driver != null) {
+            try {
+                System.out.println("\n=== @AfterMethod: Cleaning up test bridge ===");
+                AddBridgePage addBridgePage = new AddBridgePage(driver);
+                DeleteBridgePage deleteBridgePage = new DeleteBridgePage(driver);
+
+                // Navigate to dashboard
+                addBridgePage.clickDashboardOptionAtTheBottom();
+                Thread.sleep(2000);
+
+                // Navigate to Bridges tab
+                deleteBridgePage.clickBridgesTab();
+                Thread.sleep(2000);
+
+                // Filter by the bridge name
+                deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
+                Thread.sleep(1000);
+
+                // Click on the bridge
+                deleteBridgePage.clickFirstBridge();
+                Thread.sleep(2000);
+
+                // Scroll down to Delete button
+                utils.GestureUtils.swipeUp(driver);
+                utils.GestureUtils.swipeUp(driver);
+
+                // Click Delete Bridge button
+                deleteBridgePage.clickDeleteBridgeButton();
+                Thread.sleep(1000);
+
+                // Confirm deletion
+                deleteBridgePage.clickDeleteButton();
+                Thread.sleep(1000);
+
+                System.out.println("✓ Cleanup: Test bridge deleted in @AfterMethod");
+                bridgeAdded = false;
+            } catch (Exception e) {
+                System.out.println("⚠️  Cleanup: Could not delete test bridge - " + e.getMessage());
+            }
+        }
     }
 }
