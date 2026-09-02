@@ -188,10 +188,8 @@ public class BridgeContextMenuTest extends BaseTest {
             logger.info("  Restart bridge option (not visible - user is not Sub-User)");
         }
 
-        logger.info("\n VERIFIED: All context menu options displayed");
-        logger.info(" VERIFIED: Context Menu shows bridge name with status");
-        logger.info(" VERIFIED: Camera statuses with counters displayed");
-        logger.info(" VERIFIED: User can see and interact with all options\n");
+        logger.info("\nAll context menu options displayed");
+        // TODO: Add assertions for bridge name, status, and camera counters (EEPD-TC-16502)
 
         // Close context menu by pressing back
         driver.navigate().back();
@@ -206,47 +204,39 @@ public class BridgeContextMenuTest extends BaseTest {
         logger.info("STEP 5: Tap on 3 dots button to launch context menu");
         logger.info("============================================");
 
+        // Find and click 3-dots button - TODO: needs stable content-desc from mobile dev
+        WebElement threeDotsButton = driver.findElement(
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View/android.view.View[7]")
+        );
+
+        Assert.assertTrue(threeDotsButton.isDisplayed(), "3-dots button should be visible");
+        threeDotsButton.click();
+        logger.info("Tapped 3-dots button");
+
         try {
-            // Find and click 3-dots button with correct locator
-            WebElement threeDotsButton = driver.findElement(
-                AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View/android.view.View[7]")
-            );
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
-            if (threeDotsButton.isDisplayed()) {
-                threeDotsButton.click();
-                logger.info(" Tapped 3-dots button");
+        // Verify same options as Step 4
+        logger.info("\n=== Verifying Context Menu Options (via 3-dots) ===");
 
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+        verifyContextMenuOption("Bridge information");
+        verifyContextMenuOption("Bridge settings");
+        verifyContextMenuOption("Cameras");
+        verifyContextMenuOption("Turn on all cameras");
+        verifyContextMenuOption("Turn off all cameras");
+        verifyContextMenuOption("Replace bridge");
 
-                logger.info(" VERIFIED: Context menu appeared");
+        logger.info("\nAll options verified via 3-dots button");
 
-                // Verify same options as Step 4
-                logger.info("\n=== Verifying Context Menu Options (via 3-dots) ===");
-
-                verifyContextMenuOption("Bridge information");
-                verifyContextMenuOption("Bridge settings");
-                verifyContextMenuOption("Cameras");
-                verifyContextMenuOption("Turn on all cameras");
-                verifyContextMenuOption("Turn off all cameras");
-                verifyContextMenuOption("Replace bridge");
-
-                logger.info("\n VERIFIED: All options available via 3-dots button");
-                logger.info(" VERIFIED: User can interact with all options");
-
-                // Close menu
-                driver.navigate().back();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        } catch (Exception e) {
-            logger.info("  3-dots button context menu: " + e.getMessage());
+        // Close menu
+        driver.navigate().back();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         // ========== CLEANUP: DELETE TEST BRIDGE ==========

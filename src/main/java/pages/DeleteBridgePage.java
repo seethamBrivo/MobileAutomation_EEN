@@ -29,8 +29,8 @@ public class DeleteBridgePage {
 
     // Delete confirmation dialog elements
     private final By deleteConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Are you sure you want to remove this bridge')]");
-    private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
-    private final By cancelButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.widget.Button");
+    private final By deleteButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button']");
+    private final By cancelButton = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
 
     // Success message
     private final By bridgeDeletedMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/snackbar_text' and @text='Bridge was deleted']");

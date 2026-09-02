@@ -239,7 +239,7 @@ public class AddBridgeTest extends BaseTest {
         logger.info("\n=== Add and Delete Bridge Test Completed Successfully! ===");
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void cleanupBridge() {
         // Cleanup: Delete the test bridge if it was added
         if (bridgeAdded && testBridgeName != null && driver != null) {

@@ -168,12 +168,10 @@ public class RestartBridgeTest extends BaseTest {
         }
 
         // Optional: Check for success message (may not appear on demo accounts)
-        try {
-            if (bridgeSettingsPage.isBridgeRestartedMessageDisplayed()) {
-                logger.info(" VERIFIED: Bridge restart success message displayed");
-            }
-        } catch (Exception e) {
-            logger.info("  Note: Success message not displayed (expected on demo account)");
+        if (bridgeSettingsPage.isBridgeRestartedMessageDisplayed()) {
+            logger.info("Bridge restart success message displayed");
+        } else {
+            logger.info("Note: Success message not displayed (expected on demo account)");
         }
 
         logger.info("\n============================================");

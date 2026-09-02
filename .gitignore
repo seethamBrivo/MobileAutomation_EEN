@@ -66,6 +66,7 @@ screenshots/
 !**/config.properties.example
 !**/android.properties.example
 !**/ios.properties.example
+!**/testData.json.example
 
 # Compiled class files
 *.class
