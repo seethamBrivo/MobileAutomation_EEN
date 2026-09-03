@@ -134,10 +134,8 @@ public abstract class BaseTest {
                     // Guard against null appPackage
                     if (appPackage == null || appPackage.isBlank()) {
                         logger.warn("appPackage is not configured, skipping force stop");
-                        return;
-                    }
-
-                    // Use ProcessBuilder to prevent command injection
+                    } else {
+                        // Use ProcessBuilder to prevent command injection
                     ProcessBuilder processBuilder;
                     if (udid != null && !udid.trim().isBlank()) {
                         processBuilder = new ProcessBuilder("adb", "-s", udid.trim(), "shell", "am", "force-stop", appPackage);
@@ -148,10 +146,11 @@ public abstract class BaseTest {
                     Process process = processBuilder.start();
                     int exitCode = process.waitFor();
 
-                    if (exitCode == 0) {
-                        logger.info("App force stopped successfully - will restart fresh for next test");
-                    } else {
-                        logger.warn("Force stop command returned exit code: {}", exitCode);
+                        if (exitCode == 0) {
+                            logger.info("App force stopped successfully - will restart fresh for next test");
+                        } else {
+                            logger.warn("Force stop command returned exit code: {}", exitCode);
+                        }
                     }
                 } catch (Exception ex) {
                     logger.warn("Could not force stop app: {}", ex.getMessage());
