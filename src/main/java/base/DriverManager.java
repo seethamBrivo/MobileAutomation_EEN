@@ -96,7 +96,7 @@ public final class DriverManager {
         // For Local execution, set UDID if provided. Ignore for BrowserStack.
         if (!isBrowserStackExecution()) {
             String udid = ConfigReader.getProperty("udid");
-            if (!udid.isBlank()) {
+            if (udid != null && !udid.isBlank()) {
                 options.setUdid(udid);
             }
         }
@@ -111,17 +111,17 @@ public final class DriverManager {
         // For Local: Only set appPackage, use appWaitActivity for targeted wait (safer than appActivity)
         if (isBrowserStackExecution()) {
             // BrowserStack: Only set package, let it launch naturally without waiting for specific activity
-            if (!appPackage.isBlank()) {
+            if (appPackage != null && !appPackage.isBlank()) {
                 options.setAppPackage(appPackage);
             }
             // Don't set appActivity or appWaitActivity - permission popups can block activity detection
         } else {
             // Local execution: Set package and wait activity (not appActivity to avoid hard-fail)
-            if (!appPackage.isBlank()) {
+            if (appPackage != null && !appPackage.isBlank()) {
                 options.setAppPackage(appPackage);
             }
             // Use appWaitActivity instead of appActivity to avoid hard-fail if activity is wrong/unexported
-            if (!appActivity.isBlank()) {
+            if (appActivity != null && !appActivity.isBlank()) {
                 options.setAppWaitActivity(appActivity);
             }
             // Android 15 workaround: Force app to stop and restart for each session
@@ -143,12 +143,12 @@ public final class DriverManager {
         setCommonMobileOptions(options);
         setRemoteProviderOptions(options);
 
-        if (!udid.isBlank()) {
+        if (udid != null && !udid.isBlank()) {
             options.setUdid(udid);
         }
 
         String bundleId = ConfigReader.getProperty("bundleId");
-        if (!bundleId.isBlank()) {
+        if (bundleId != null && !bundleId.isBlank()) {
             options.setBundleId(bundleId);
         }
 
@@ -163,29 +163,29 @@ public final class DriverManager {
         // Both BrowserStack and Local should respect config settings
         // Default to noReset=true for BrowserStack if not specified (keeps app installed for speed)
         if (isBrowserStackExecution()) {
-            if (!noReset.isBlank()) {
+            if (noReset != null && !noReset.isBlank()) {
                 options.setNoReset(Boolean.parseBoolean(noReset));
             } else {
                 // Default for BrowserStack
                 options.setNoReset(true);
                 LOGGER.info("BrowserStack: Using default noReset=true to keep app installed between tests");
             }
-            if (!fullReset.isBlank()) {
+            if (fullReset != null && !fullReset.isBlank()) {
                 options.amend("fullReset", Boolean.parseBoolean(fullReset));
             } else {
                 options.amend("fullReset", false);
             }
         } else {
             // Local execution follows config file settings
-            if (!noReset.isBlank()) {
+            if (noReset != null && !noReset.isBlank()) {
                 options.setNoReset(Boolean.parseBoolean(noReset));
             }
-            if (!fullReset.isBlank()) {
+            if (fullReset != null && !fullReset.isBlank()) {
                 options.amend("fullReset", Boolean.parseBoolean(fullReset));
             }
         }
 
-        if (!newCommandTimeout.isBlank()) {
+        if (newCommandTimeout != null && !newCommandTimeout.isBlank()) {
             options.amend("newCommandTimeout", Integer.parseInt(newCommandTimeout));
         }
     }
@@ -200,32 +200,32 @@ public final class DriverManager {
         browserStackOptions.put("accessKey", requireProperty("browserstackAccessKey"));
 
         String projectName = ConfigReader.getProperty("browserstackProjectName");
-        if (!projectName.isBlank()) {
+        if (projectName != null && !projectName.isBlank()) {
             browserStackOptions.put("projectName", projectName);
         }
 
         String buildName = ConfigReader.getProperty("browserstackBuildName");
-        if (!buildName.isBlank()) {
+        if (buildName != null && !buildName.isBlank()) {
             browserStackOptions.put("buildName", buildName);
         }
 
         String sessionName = ConfigReader.getProperty("browserstackSessionName");
-        if (!sessionName.isBlank()) {
+        if (sessionName != null && !sessionName.isBlank()) {
             browserStackOptions.put("sessionName", sessionName);
         }
 
         String debug = ConfigReader.getProperty("browserstackDebug");
-        if (!debug.isBlank()) {
+        if (debug != null && !debug.isBlank()) {
             browserStackOptions.put("debug", Boolean.parseBoolean(debug));
         }
 
         String networkLogs = ConfigReader.getProperty("browserstackNetworkLogs");
-        if (!networkLogs.isBlank()) {
+        if (networkLogs != null && !networkLogs.isBlank()) {
             browserStackOptions.put("networkLogs", Boolean.parseBoolean(networkLogs));
         }
 
         String idleTimeout = ConfigReader.getProperty("browserstackIdleTimeout");
-        if (!idleTimeout.isBlank()) {
+        if (idleTimeout != null && !idleTimeout.isBlank()) {
             browserStackOptions.put("idleTimeout", Integer.parseInt(idleTimeout));
         }
 
@@ -238,9 +238,9 @@ public final class DriverManager {
 
         // If executing on BrowserStack, prioritize browserstackApp / bs:// URI
         if (isBrowserStackExecution()) {
-            if (!providerSpecificApp.isBlank()) {
+            if (providerSpecificApp != null && !providerSpecificApp.isBlank()) {
                 return providerSpecificApp;
-            } else if (configuredApp.startsWith("bs://")) {
+            } else if (configuredApp != null && configuredApp.startsWith("bs://")) {
                 return configuredApp;
             } else {
                 throw new IllegalArgumentException("BrowserStack execution requires a 'bs://' app URL specified in 'browserstackApp' or 'app'.");
@@ -248,7 +248,7 @@ public final class DriverManager {
         }
 
         // Local execution path logic
-        if (configuredApp.isBlank()) {
+        if (configuredApp == null || configuredApp.isBlank()) {
             throw new IllegalArgumentException("Missing app configuration for the selected platform");
         }
 
@@ -262,7 +262,7 @@ public final class DriverManager {
 
     private static String getExecutionProvider() {
         String provider = ConfigReader.getProperty("executionProvider");
-        return provider.isBlank() ? "local" : provider.trim().toLowerCase();
+        return (provider == null || provider.isBlank()) ? "local" : provider.trim().toLowerCase();
     }
 
     private static boolean isBrowserStackExecution() {
@@ -271,7 +271,7 @@ public final class DriverManager {
 
     private static String requireProperty(String key) {
         String value = ConfigReader.getProperty(key);
-        if (value.isBlank()) {
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Missing required configuration: " + key);
         }
         return value;

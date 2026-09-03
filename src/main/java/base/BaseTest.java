@@ -44,7 +44,6 @@ public abstract class BaseTest {
             if (!handled) {
                 try {
                     driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button")).click();
-                    logger.info("Clicked Allow button (positive_button resource-id)");
                     handled = true;
                 } catch (Exception e) {
                     // Silently continue to next strategy
@@ -55,7 +54,6 @@ public abstract class BaseTest {
             if (!handled) {
                 try {
                     driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button")).click();
-                    logger.info("Clicked Allow button (alternative resource-id)");
                     handled = true;
                 } catch (Exception e) {
                     // Silently continue
@@ -68,7 +66,6 @@ public abstract class BaseTest {
                     driver.findElement(io.appium.java_client.AppiumBy.androidUIAutomator(
                         "new UiSelector().text(\"Allow\").className(\"android.widget.Button\")"
                     )).click();
-                    logger.info("Clicked Allow button (UiSelector text)");
                     handled = true;
                 } catch (Exception e) {
                     // No more strategies
@@ -130,11 +127,15 @@ public abstract class BaseTest {
                     String appPackage = utils.ConfigReader.getProperty("appPackage");
                     String udid = utils.ConfigReader.getProperty("udid");
 
-                    String command = udid != null && !udid.isBlank()
-                        ? "adb -s " + udid + " shell am force-stop " + appPackage
-                        : "adb shell am force-stop " + appPackage;
+                    // Use ProcessBuilder to prevent command injection
+                    ProcessBuilder processBuilder;
+                    if (udid != null && !udid.trim().isBlank()) {
+                        processBuilder = new ProcessBuilder("adb", "-s", udid.trim(), "shell", "am", "force-stop", appPackage);
+                    } else {
+                        processBuilder = new ProcessBuilder("adb", "shell", "am", "force-stop", appPackage);
+                    }
 
-                    Process process = Runtime.getRuntime().exec(command);
+                    Process process = processBuilder.start();
                     int exitCode = process.waitFor();
 
                     if (exitCode == 0) {

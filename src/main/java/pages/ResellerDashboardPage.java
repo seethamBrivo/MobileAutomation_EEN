@@ -285,6 +285,8 @@ public class ResellerDashboardPage {
                 WaitUtils.waitForClickability(driver, dashboardOption).click();
             } catch (Exception e) {
                 // Press back button multiple times to get to main screen
+                // Save original timeout to restore it later
+                java.time.Duration originalTimeout = driver.manage().timeouts().getImplicitWaitTimeout();
                 for (int i = 0; i < 5; i++) {
                     try {
                         // Use short wait to check if More button is visible
@@ -295,8 +297,8 @@ public class ResellerDashboardPage {
                     } catch (Exception ex) {
                         driver.navigate().back();
                     } finally {
-                        // Restore normal implicit wait
-                        driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(10));
+                        // Restore original implicit wait
+                        driver.manage().timeouts().implicitlyWait(originalTimeout);
                     }
                 }
             }

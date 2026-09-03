@@ -84,6 +84,8 @@ jobs:
         run: mvn -B -DskipTests package
 
       - name: Run tests
+        # Note: continue-on-error removed intentionally to ensure CI fails on test failures
+        # This prevents merging broken code and ensures all tests pass before merge
         run: mvn test -Dplatform=android -DexecutionProvider=browserstack
 
       - name: Upload test results
