@@ -34,6 +34,10 @@ public abstract class BaseTest {
     private void handleNotificationPermission() {
         // Temporarily reduce implicit wait for faster permission check
         java.time.Duration originalTimeout = driver.manage().timeouts().getImplicitWaitTimeout();
+        // Guard against null timeout - use default if not set
+        if (originalTimeout == null) {
+            originalTimeout = java.time.Duration.ofSeconds(10);
+        }
         driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(2));
 
         try {
@@ -126,6 +130,12 @@ public abstract class BaseTest {
                 try {
                     String appPackage = utils.ConfigReader.getProperty("appPackage");
                     String udid = utils.ConfigReader.getProperty("udid");
+
+                    // Guard against null appPackage
+                    if (appPackage == null || appPackage.isBlank()) {
+                        logger.warn("appPackage is not configured, skipping force stop");
+                        return;
+                    }
 
                     // Use ProcessBuilder to prevent command injection
                     ProcessBuilder processBuilder;

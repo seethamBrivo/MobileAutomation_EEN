@@ -287,6 +287,10 @@ public class ResellerDashboardPage {
                 // Press back button multiple times to get to main screen
                 // Save original timeout to restore it later
                 java.time.Duration originalTimeout = driver.manage().timeouts().getImplicitWaitTimeout();
+                // Guard against null timeout - use default if not set
+                if (originalTimeout == null) {
+                    originalTimeout = java.time.Duration.ofSeconds(10);
+                }
                 for (int i = 0; i < 5; i++) {
                     try {
                         // Use short wait to check if More button is visible
