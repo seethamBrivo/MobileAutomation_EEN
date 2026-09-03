@@ -175,14 +175,13 @@ public class FilterBridgesTest extends BaseTest {
         logger.info("VERIFICATION: Filtered Results");
         logger.info("============================================");
 
-        // Verify the bridge appears in filtered results
+        // Verify filtered results are displayed
         Assert.assertTrue(deleteBridgePage.isBridgeListDisplayed(), "Filtered bridge should be displayed in results");
 
-        logger.info(" VERIFIED: Bridge found in filtered results: " + testBridgeName);
-        logger.info(" VERIFIED: Filter is working - matching bridges displayed");
-        logger.info(" VERIFIED: Bridge list updates based on filter input");
-
-        logger.info("");
+        logger.info(" VERIFIED: Bridge list displayed after filtering");
+        logger.info(" VERIFIED: Filter field accepts search term");
+        logger.info(" VERIFIED: Filtered results shown");
+        logger.info(" Note: Bridge accessibility will be verified during cleanup deletion\n");
 
         // ========== ADDITIONAL TEST: PARTIAL SEARCH ==========
         logger.info("============================================");

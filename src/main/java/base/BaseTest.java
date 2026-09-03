@@ -37,17 +37,14 @@ public abstract class BaseTest {
         driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(2));
 
         try {
-            // Brief wait for popup to appear
-            Thread.sleep(1000);
-
-            // Try different locators for "Allow" button
+            // Try different locators for "Allow" button with reduced implicit wait
             boolean handled = false;
 
             // Try 1: Using resource-id (most common for Android)
             if (!handled) {
                 try {
                     driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button")).click();
-                    logger.info("✓ Clicked Allow button (positive_button resource-id)");
+                    logger.info("Clicked Allow button (positive_button resource-id)");
                     handled = true;
                 } catch (Exception e) {
                     // Silently continue to next strategy
@@ -58,7 +55,7 @@ public abstract class BaseTest {
             if (!handled) {
                 try {
                     driver.findElement(io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button")).click();
-                    logger.info("✓ Clicked Allow button (alternative resource-id)");
+                    logger.info("Clicked Allow button (alternative resource-id)");
                     handled = true;
                 } catch (Exception e) {
                     // Silently continue
@@ -71,7 +68,7 @@ public abstract class BaseTest {
                     driver.findElement(io.appium.java_client.AppiumBy.androidUIAutomator(
                         "new UiSelector().text(\"Allow\").className(\"android.widget.Button\")"
                     )).click();
-                    logger.info("✓ Clicked Allow button (UiSelector text)");
+                    logger.info("Clicked Allow button (UiSelector text)");
                     handled = true;
                 } catch (Exception e) {
                     // No more strategies
@@ -82,9 +79,6 @@ public abstract class BaseTest {
                 logger.info("No notification permission popup found or already handled");
             }
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.warn("Sleep interrupted while handling permission popup");
         } catch (Exception e) {
             logger.warn("Error handling notification permission: {}", e.getMessage());
         } finally {

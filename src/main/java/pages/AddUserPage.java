@@ -88,15 +88,16 @@ public class AddUserPage {
     public void selectTheUser() {
    	  WaitUtils.waitForVisibility(driver, selectTheUser).click();
    }
+
+    @Deprecated
     public void waitForUserDetailsToLoad() {
-        // Wait for user details screen to load after selecting user
-        try {
-            Thread.sleep(2000); // Give time for screen transition
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // This method is deprecated - clickDeleteUserOption() already waits for the element
+        // Keeping for backward compatibility but does nothing
     }
+
     public void clickDeleteUserOption() {
+        // WaitUtils already waits for delete option to be visible
+        // This handles the screen transition wait automatically
      	  WaitUtils.waitForVisibility(driver, deleteUserOption).click();
      }
     public void clickConfirmDeleteOption() {

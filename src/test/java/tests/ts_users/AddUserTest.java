@@ -77,12 +77,10 @@ public class AddUserTest extends BaseTest {
 	     boolean userAdded = false;
 	     try {
 	         if (addUserPage.isUserWasAddedMessageDisplayed()) {
-	             System.out.println("✓ User creation confirmed via snackbar");
 	             userAdded = true;
 	         }
 	     } catch (Exception e) {
 	         // Snackbar may not appear or may be too quick
-	         System.out.println("Note: Snackbar not caught, checking navigation instead");
 	     }
 
 	     // Verify we're back at users screen (fallback verification)
@@ -91,7 +89,6 @@ public class AddUserTest extends BaseTest {
 	             addUserPage.isUsersOptionAtBottonScreenDisplayed(),
 	             "User should be added and returned to users list"
 	         );
-	         System.out.println("✓ User creation confirmed via navigation back to users list");
 	     }
 	   //Adding a user already existing in the system but not existing in the current logged account
 	     addUserPage.clickUsersAddIconAtTheTopRightCorner();
@@ -125,12 +122,10 @@ public class AddUserTest extends BaseTest {
 	     boolean existingUserAdded = false;
 	     try {
 	         if (addUserPage.isUserWasAddedMessageDisplayed()) {
-	             System.out.println("✓ Existing user creation confirmed via snackbar");
 	             existingUserAdded = true;
 	         }
 	     } catch (Exception e) {
 	         // Snackbar may not appear or may be too quick
-	         System.out.println("Note: Snackbar not caught, checking navigation instead");
 	     }
 
 	     // Verify we're back at users screen (fallback verification)
@@ -139,7 +134,6 @@ public class AddUserTest extends BaseTest {
 	             addUserPage.isUsersOptionAtBottonScreenDisplayed(),
 	             "Existing user should be added and returned to users list"
 	         );
-	         System.out.println("✓ Existing user creation confirmed via navigation back to users list");
 	     }
 	     //Delete the existing user in the system who added in current logged account
 	     addUserPage.clickUsersSearchFilterIcon();

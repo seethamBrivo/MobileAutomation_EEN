@@ -104,21 +104,8 @@ public class DeleteBridgePage {
     }
 
     public void clickDeleteButton() {
-        // Wait for confirmation popup to appear
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
+        // WaitUtils.waitForVisibility already ensures the button is ready
         WaitUtils.waitForVisibility(driver, deleteButton).click();
-
-        // Wait for delete to complete
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     public void clickCancelButton() {

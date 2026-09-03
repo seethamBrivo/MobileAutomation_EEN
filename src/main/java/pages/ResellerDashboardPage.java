@@ -280,86 +280,48 @@ public class ResellerDashboardPage {
 
     public void logout() {
         try {
-            System.out.println("=== Starting Logout Process ===");
-
             // Step 1: Navigate to main dashboard screen (where More button is visible)
-            System.out.println("Step 1: Navigating to dashboard...");
             try {
                 WaitUtils.waitForClickability(driver, dashboardOption).click();
-                System.out.println("  ✓ Clicked Dashboard button");
-                Thread.sleep(1000);
             } catch (Exception e) {
-                System.out.println("  Dashboard button not found, trying back navigation...");
                 // Press back button multiple times to get to main screen
                 for (int i = 0; i < 5; i++) {
                     try {
+                        // Use short wait to check if More button is visible
+                        driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(500));
                         if (driver.findElement(moreOption).isDisplayed()) {
-                            System.out.println("  ✓ More button now visible");
                             break;
                         }
                     } catch (Exception ex) {
-                        System.out.println("  Pressing back... (attempt " + (i+1) + ")");
                         driver.navigate().back();
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                        }
+                    } finally {
+                        // Restore normal implicit wait
+                        driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(10));
                     }
                 }
             }
 
             // Step 2: Click More button at bottom
-            System.out.println("Step 2: Clicking More button...");
             WaitUtils.waitForClickability(driver, moreOption).click();
-            System.out.println("  ✓ More button clicked");
 
             // Step 3: Scroll down to find "Log out" button (if not visible)
-            System.out.println("Step 3: Looking for 'Log out' button...");
             try {
                 // Check if logout is visible
                 driver.findElement(logoutOption);
-                System.out.println("  ✓ Log out button is visible");
             } catch (Exception e) {
                 // Not visible, scroll down to bottom
-                System.out.println("  Scrolling down to find Log out button...");
                 GestureUtils.swipeUp(driver);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                }
+                // Scroll animation is fast, next WaitUtils call will handle timing
             }
 
             // Step 4: Click "Log out" button
-            System.out.println("Step 4: Clicking 'Log out' button...");
             WaitUtils.waitForClickability(driver, logoutOption).click();
-            System.out.println("  ✓ Log out button clicked");
-
-            // Wait for confirmation popup to appear
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
 
             // Step 5: Click "Yes" on confirmation popup
-            System.out.println("Step 5: Clicking 'Yes' on confirmation popup...");
+            // WaitUtils.waitForClickability already waits for popup to appear
             WaitUtils.waitForClickability(driver, confirmLogoutButton).click();
-            System.out.println("  ✓ Confirmed logout - clicked Yes button");
-
-            // Wait for logout to complete
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-
-            System.out.println("=== Logout Successful ===");
 
         } catch (Exception e) {
-            System.out.println("=== Logout Failed ===");
-            System.out.println("Error: " + e.getMessage());
             e.printStackTrace();
             throw e;  // Re-throw to trigger fallback in BaseTest
         }

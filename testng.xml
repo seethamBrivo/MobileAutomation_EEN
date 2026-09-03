@@ -53,9 +53,12 @@
         </classes>
     </test>
 
+    <!-- DISABLED: EditBridgeNameAndStatusTest - has placeholder code that corrupts bridge names
+         TODO: Re-enable after implementing getCurrentBridgeName() in BridgeSettingsPage
     <test name="Edit Bridge Name and Status Tests">
         <classes>
             <class name="tests.ts_bridges.EditBridgeNameAndStatusTest"/>
         </classes>
     </test>
+    -->
 </suite>
