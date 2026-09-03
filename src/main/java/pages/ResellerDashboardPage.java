@@ -322,7 +322,6 @@ public class ResellerDashboardPage {
             WaitUtils.waitForClickability(driver, confirmLogoutButton).click();
 
         } catch (Exception e) {
-            e.printStackTrace();
             throw e;  // Re-throw to trigger fallback in BaseTest
         }
     }

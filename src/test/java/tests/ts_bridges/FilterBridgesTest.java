@@ -178,10 +178,15 @@ public class FilterBridgesTest extends BaseTest {
         // Verify filtered results are displayed
         Assert.assertTrue(deleteBridgePage.isBridgeListDisplayed(), "Filtered bridge should be displayed in results");
 
+        // Verify the displayed bridge name matches the search term (exact match)
+        String displayedBridgeName = deleteBridgePage.getFirstBridgeName();
+        Assert.assertEquals(displayedBridgeName, testBridgeName,
+                "Displayed bridge name should match the search term");
+
         logger.info(" VERIFIED: Bridge list displayed after filtering");
         logger.info(" VERIFIED: Filter field accepts search term");
-        logger.info(" VERIFIED: Filtered results shown");
-        logger.info(" Note: Bridge accessibility will be verified during cleanup deletion\n");
+        logger.info(" VERIFIED: Filtered results show correct bridge (exact match)");
+        logger.info(" VERIFIED: Displayed bridge name: " + displayedBridgeName + "\n");
 
         // ========== ADDITIONAL TEST: PARTIAL SEARCH ==========
         logger.info("============================================");
@@ -194,14 +199,14 @@ public class FilterBridgesTest extends BaseTest {
         deleteBridgePage.enterBridgeNameInFilter(partialName);
         logger.info(" Entered partial search: " + partialName);
 
-        try {
-            if (deleteBridgePage.isBridgeThreeDotsIconDisplayed()) {
-                logger.info(" VERIFIED: Bridge found with partial search");
-                logger.info(" VERIFIED: Partial filter search works correctly");
-            }
-        } catch (Exception e) {
-            logger.info("  Partial search: Verification skipped");
-        }
+        // Verify partial match filtering
+        String partialDisplayedName = deleteBridgePage.getFirstBridgeName();
+        Assert.assertTrue(partialDisplayedName.contains(partialName),
+                "Displayed bridge name should contain the partial search term. Expected to contain: '"
+                + partialName + "', but got: '" + partialDisplayedName + "'");
+
+        logger.info(" VERIFIED: Bridge found with partial search");
+        logger.info(" VERIFIED: Displayed bridge contains search term: " + partialDisplayedName);
 
         logger.info("");
 
@@ -256,11 +261,9 @@ public class FilterBridgesTest extends BaseTest {
         logger.info(" All 5 device sections displayed");
         logger.info(" Bridges section accessible");
         logger.info(" Filter field functional");
-        logger.info(" Exact match filtering");
-        logger.info(" Partial match filtering");
-        logger.info(" Filtered results display");
-        logger.info(" Bridge access from filtered results");
-        logger.info(" Filter criteria options available");
+        logger.info(" Exact match filtering (bridge name verified)");
+        logger.info(" Partial match filtering (bridge name verified)");
+        logger.info(" Bridge deletion from filtered results");
         logger.info(" Cleanup completed");
         logger.info("============================================\n");
     }

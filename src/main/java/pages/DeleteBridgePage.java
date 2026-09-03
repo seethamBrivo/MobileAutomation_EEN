@@ -18,6 +18,7 @@ public class DeleteBridgePage {
     private final By bridgesTab = AppiumBy.xpath("//android.widget.TextView[@text='Bridges']");
     private final By bridgesScreenTitle = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']");
     private final By firstBridgeInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
+    private final By firstBridgeNameText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.widget.TextView[1]");
     private final By bridgeThreeDotsIcon = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.view.View[contains(@content-desc, 'icon')]");
 
     // Bridge settings page elements
@@ -83,6 +84,10 @@ public class DeleteBridgePage {
 
     public boolean isBridgeThreeDotsIconDisplayed() {
         return WaitUtils.waitForVisibility(driver, bridgeThreeDotsIcon).isDisplayed();
+    }
+
+    public String getFirstBridgeName() {
+        return WaitUtils.waitForVisibility(driver, firstBridgeNameText).getText();
     }
 
     // Bridge settings page methods

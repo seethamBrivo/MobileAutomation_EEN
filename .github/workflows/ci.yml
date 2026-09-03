@@ -61,12 +61,30 @@ jobs:
           browserstackNetworkLogs=true
           EOF
 
+      - name: Create android.properties for BrowserStack
+        run: |
+          mkdir -p src/main/resources
+          cat > src/main/resources/android.properties << 'EOF'
+          appPackage=com.een.vms.android
+          appActivity=com.een.core.MainActivity
+          appWaitActivity=com.een.core.MainActivity
+          automationName=UiAutomator2
+          platformName=ANDROID
+          platformVersion=15.0
+          deviceName=Google Pixel 9
+          app=${{ secrets.BROWSERSTACK_APP_URL }}
+          newCommandTimeout=3600
+          noReset=true
+          fullReset=false
+          shouldTerminateApp=true
+          forceAppLaunch=true
+          EOF
+
       - name: Compile and package
         run: mvn -B -DskipTests package
 
       - name: Run tests
         run: mvn test -Dplatform=android -DexecutionProvider=browserstack
-        continue-on-error: true
 
       - name: Upload test results
         if: always()

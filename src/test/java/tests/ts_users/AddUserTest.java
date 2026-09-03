@@ -139,7 +139,6 @@ public class AddUserTest extends BaseTest {
 	     addUserPage.clickUsersSearchFilterIcon();
 	     addUserPage.filterForUsersSearchbar(exstingUserButNotAvailbleInCurrentLogin);
 	     addUserPage.selectTheUser();
-	     addUserPage.waitForUserDetailsToLoad();
 	     addUserPage.clickDeleteUserOption();
 	     addUserPage.clickConfirmDeleteOption();
 	     Assert.assertTrue(
