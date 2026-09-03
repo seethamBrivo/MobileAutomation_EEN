@@ -67,6 +67,10 @@ public class DeleteBridgePage {
         var filterField = WaitUtils.waitForVisibility(driver, filterSearchField);
         filterField.clear();
         filterField.sendKeys(bridgeName);
+
+        // Wait for filter to apply and list to refresh - use explicit wait for first bridge to appear
+        // This ensures the filtered list is ready before proceeding
+        WaitUtils.waitForVisibility(driver, firstBridgeInList);
     }
 
     // Bridge selection methods

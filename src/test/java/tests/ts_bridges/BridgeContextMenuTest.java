@@ -27,12 +27,6 @@ public class BridgeContextMenuTest extends BaseTest {
 
         loginAs("enduser_user_creds");
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         logger.info(" VERIFIED: User is able to login in VMS app\n");
 
         AddBridgePage addBridgePage = new AddBridgePage(driver);
@@ -48,12 +42,6 @@ public class BridgeContextMenuTest extends BaseTest {
 
         addBridgePage.clickDashboardOptionAtTheBottom();
         logger.info(" Clicked Dashboard option");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // VERIFICATION: All 5 device sections
         Assert.assertTrue(
@@ -92,12 +80,6 @@ public class BridgeContextMenuTest extends BaseTest {
         addBridgePage.clickAddBridgeButton();
         logger.info(" Test bridge added: " + testBridgeName);
 
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // ========== STEP 3: NAVIGATE TO BRIDGES SECTION ==========
         logger.info("\n============================================");
         logger.info("STEP 3: Tap Bridge option");
@@ -106,24 +88,12 @@ public class BridgeContextMenuTest extends BaseTest {
         deleteBridgePage.clickBridgesTab();
         logger.info(" Tapped Bridge option");
 
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         logger.info(" VERIFIED: List of bridges displayed");
         logger.info(" VERIFIED: Bridges shown with three dots and status\n");
 
         // Filter to find our test bridge
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
         logger.info(" Filtered to test bridge: " + testBridgeName);
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // ========== STEP 4: LONG PRESS ON BRIDGE ==========
         logger.info("\n============================================");
@@ -151,12 +121,6 @@ public class BridgeContextMenuTest extends BaseTest {
             driver.perform(Collections.singletonList(longPress));
 
             logger.info(" Performed long press on bridge");
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
 
             logger.info(" VERIFIED: Context menu appeared in foreground");
             logger.info(" VERIFIED: Background is blurred");
@@ -193,11 +157,6 @@ public class BridgeContextMenuTest extends BaseTest {
 
         // Close context menu by pressing back
         driver.navigate().back();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // ========== STEP 5: TAP 3-DOTS BUTTON ==========
         logger.info("============================================");
@@ -213,12 +172,6 @@ public class BridgeContextMenuTest extends BaseTest {
         threeDotsButton.click();
         logger.info("Tapped 3-dots button");
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Verify same options as Step 4
         logger.info("\n=== Verifying Context Menu Options (via 3-dots) ===");
 
@@ -233,11 +186,6 @@ public class BridgeContextMenuTest extends BaseTest {
 
         // Close menu
         driver.navigate().back();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // ========== CLEANUP: DELETE TEST BRIDGE ==========
         logger.info("\n============================================");
@@ -245,20 +193,9 @@ public class BridgeContextMenuTest extends BaseTest {
         logger.info("============================================");
 
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         deleteBridgePage.clickFirstBridge();
         logger.info(" Clicked on bridge");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         utils.GestureUtils.swipeUp(driver);
         utils.GestureUtils.swipeUp(driver);
@@ -273,21 +210,8 @@ public class BridgeContextMenuTest extends BaseTest {
         deleteBridgePage.clickDeleteBridgeButton();
         logger.info(" Clicked Delete Bridge");
 
-        // Wait longer for confirmation popup to appear
-        try {
-            Thread.sleep(4000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         deleteBridgePage.clickDeleteButton();
         logger.info(" Confirmed deletion");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         logger.info(" VERIFIED: Test bridge deleted\n");
 

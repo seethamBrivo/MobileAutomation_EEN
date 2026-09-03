@@ -144,12 +144,18 @@ public abstract class BaseTest {
                     }
 
                     Process process = processBuilder.start();
-                    int exitCode = process.waitFor();
+                    boolean completed = process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
 
-                        if (exitCode == 0) {
-                            logger.info("App force stopped successfully - will restart fresh for next test");
+                        if (!completed) {
+                            process.destroyForcibly();
+                            logger.warn("Force stop command timed out after 10s, process terminated");
                         } else {
-                            logger.warn("Force stop command returned exit code: {}", exitCode);
+                            int exitCode = process.exitValue();
+                            if (exitCode == 0) {
+                                logger.info("App force stopped successfully - will restart fresh for next test");
+                            } else {
+                                logger.warn("Force stop command returned exit code: {}", exitCode);
+                            }
                         }
                     }
                 } catch (Exception ex) {

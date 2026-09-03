@@ -57,32 +57,12 @@ public class DeleteBridgeTest extends BaseTest {
         deleteBridgePage.clickBridgesTab();
 
         // Step 3: Filter by the bridge name we just added
-        try {
-            Thread.sleep(2000); // Wait for list to load
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
         logger.info(" Filtered by bridge name: " + testBridgeName);
-
-        // Wait for filter results
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Step 4: Click on the filtered bridge
         deleteBridgePage.clickFirstBridge();
         logger.info(" Clicked on bridge");
-
-        // Wait for bridge details page to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Step 5: Scroll down to see the "Delete Bridge" button
         utils.GestureUtils.swipeUp(driver);
@@ -98,23 +78,9 @@ public class DeleteBridgeTest extends BaseTest {
         deleteBridgePage.clickDeleteBridgeButton();
         logger.info(" Clicked Delete Bridge button");
 
-        // Wait for confirmation popup
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Step 7: Click "Delete" button in the popup to confirm deletion
         deleteBridgePage.clickDeleteButton();
         logger.info(" Confirmed deletion in popup");
-
-        // Wait for delete operation to complete
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Verify user navigated back to Bridges tab
         Assert.assertTrue(

@@ -291,19 +291,24 @@ public class ResellerDashboardPage {
                 if (originalTimeout == null) {
                     originalTimeout = java.time.Duration.ofSeconds(10);
                 }
-                for (int i = 0; i < 5; i++) {
-                    try {
-                        // Use short wait to check if More button is visible
-                        driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(500));
-                        if (driver.findElement(moreOption).isDisplayed()) {
-                            break;
+
+                try {
+                    // Temporarily reduce timeout for quick back navigation checks
+                    driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(500));
+
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            // Use short wait to check if More button is visible
+                            if (driver.findElement(moreOption).isDisplayed()) {
+                                break;
+                            }
+                        } catch (Exception ex) {
+                            driver.navigate().back();
                         }
-                    } catch (Exception ex) {
-                        driver.navigate().back();
-                    } finally {
-                        // Restore original implicit wait
-                        driver.manage().timeouts().implicitlyWait(originalTimeout);
                     }
+                } finally {
+                    // Restore original implicit wait once after all iterations
+                    driver.manage().timeouts().implicitlyWait(originalTimeout);
                 }
             }
 

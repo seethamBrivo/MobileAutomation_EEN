@@ -22,13 +22,6 @@ public class RestartBridgeTest extends BaseTest {
 
         ResellerDashboardPage resellerDashboardPage = new ResellerDashboardPage(driver);
 
-        // Wait for dashboard to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Verify reseller dashboard is displayed
         Assert.assertTrue(
                 resellerDashboardPage.isResellerDashboardDisplayed(),
@@ -44,13 +37,6 @@ public class RestartBridgeTest extends BaseTest {
         resellerDashboardPage.clickFirstAccountWithBridges();
         logger.info(" Clicked account with bridges");
 
-        // Wait for re-login
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         logger.info(" VERIFIED: User is able to see 'Layouts' section from sub user account after re-login");
 
         // ========== STEP 3: GO TO DASHBOARD SECTION OF THE SUB USER ==========
@@ -65,13 +51,6 @@ public class RestartBridgeTest extends BaseTest {
 
         addBridgePage.clickDashboardOptionAtTheBottom();
         logger.info(" Clicked Dashboard option");
-
-        // Wait for dashboard to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Verify "All Devices" section is displayed
         Assert.assertTrue(
@@ -94,13 +73,6 @@ public class RestartBridgeTest extends BaseTest {
         deleteBridgePage.clickBridgesTab();
         logger.info(" Tapped Bridge option");
 
-        // Wait for bridge list to load
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         logger.info(" VERIFIED: List of bridges with three dots even displayed with status");
 
         // ========== STEP 5: CHOOSE ANY BRIDGE FROM THE LIST ==========
@@ -110,13 +82,6 @@ public class RestartBridgeTest extends BaseTest {
 
         deleteBridgePage.clickFirstBridge();
         logger.info(" Clicked on a bridge");
-
-        // Wait for bridge settings page to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         BridgeSettingsPage bridgeSettingsPage = new BridgeSettingsPage(driver);
 
@@ -136,13 +101,6 @@ public class RestartBridgeTest extends BaseTest {
         bridgeSettingsPage.clickRestartBridgeButton();
         logger.info(" Clicked 'Restart Bridge' button");
 
-        // Wait for confirmation dialog
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // ========== VERIFY RESTART CONFIRMATION DIALOG ==========
         logger.info("\n============================================");
         logger.info("VERIFICATION: Restart Bridge Confirmation");
@@ -159,13 +117,6 @@ public class RestartBridgeTest extends BaseTest {
         // Confirm restart
         bridgeSettingsPage.confirmRestartBridge();
         logger.info(" Confirmed restart bridge");
-
-        // Wait for operation to complete
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Optional: Check for success message (may not appear on demo accounts)
         if (bridgeSettingsPage.isBridgeRestartedMessageDisplayed()) {

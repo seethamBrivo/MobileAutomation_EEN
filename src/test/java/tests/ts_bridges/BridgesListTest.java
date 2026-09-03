@@ -26,13 +26,6 @@ public class BridgesListTest extends BaseTest {
         addBridgePage.clickMoreMenuOptionAtTheBottom();
         addBridgePage.clickDashboardOptionAtTheBottom();
 
-        // Wait for dashboard to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         Assert.assertTrue(
                 addBridgePage.allDevicesSectionIsDisplayed(),
                 "All devices section should be displayed"
@@ -60,13 +53,6 @@ public class BridgesListTest extends BaseTest {
 
         addBridgePage.clickAddBridgeButton();
         logger.info(" Bridge added: " + testBridgeName);
-
-        // Wait for bridge to be added
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Step 2: Now verify the bridge appears in Bridges list
         logger.info("\n=== Verifying Bridges List ===");
@@ -108,23 +94,9 @@ public class BridgesListTest extends BaseTest {
         deleteBridgePage.clickBridgesTab();
         logger.info(" Clicked Bridges tab");
 
-        // Wait for bridges list to load
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Verify the bridge we added is in the list by filtering
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
         logger.info(" Filtered by bridge name: " + testBridgeName);
-
-        // Wait for filter results
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Try to click on the filtered bridge to verify it exists
         try {
@@ -134,11 +106,6 @@ public class BridgesListTest extends BaseTest {
 
             // Press back to return to bridges list
             driver.navigate().back();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
         } catch (Exception e) {
             Assert.fail("Bridge not found in Bridges list: " + testBridgeName);
         }
@@ -155,21 +122,9 @@ public class BridgesListTest extends BaseTest {
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
         logger.info(" Filtered by bridge name for deletion: " + testBridgeName);
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Click on the bridge
         deleteBridgePage.clickFirstBridge();
         logger.info(" Clicked on bridge");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Scroll to see Delete button
         utils.GestureUtils.swipeUp(driver);
@@ -186,23 +141,9 @@ public class BridgesListTest extends BaseTest {
         deleteBridgePage.clickDeleteBridgeButton();
         logger.info(" Clicked Delete Bridge button");
 
-        // Wait longer for confirmation popup to appear
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Confirm deletion
         deleteBridgePage.clickDeleteButton();
         logger.info(" Confirmed deletion in popup");
-
-        // Wait for deletion to complete
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         logger.info(" Test bridge deleted successfully!");
 

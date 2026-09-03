@@ -46,6 +46,22 @@ public final class GestureUtils {
         swipe(driver, centerX, startY, centerX, endY);
     }
 
+    public static void swipeElementRightToLeft(AppiumDriver driver, WebElement element) {
+        Point location = element.getLocation();
+        Dimension size = element.getSize();
+
+        // Calculate coordinates relative to element bounds, not screen
+        int centerY = location.y + (size.height / 2);
+        int elementRight = location.x + size.width;
+        int elementLeft = location.x;
+
+        // Start 90% to the right within element, end 10% from left edge
+        int startX = (int) (elementRight - (size.width * 0.1));
+        int endX = (int) (elementLeft + (size.width * 0.1));
+
+        swipe(driver, startX, centerY, endX, centerY);
+    }
+
     public static void swipe(AppiumDriver driver, int startX, int startY, int endX, int endY) {
         PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
         Sequence swipeSequence = new Sequence(finger, 1);

@@ -124,10 +124,11 @@ public final class DriverManager {
             if (appActivity != null && !appActivity.isBlank()) {
                 options.setAppWaitActivity(appActivity);
             }
-            // Android 15 workaround: Force app to stop and restart for each session
-            options.amend("forceAppLaunch", true);
-            options.amend("shouldTerminateApp", true);
         }
+
+        // Android 15 workaround: Force app to stop and restart for each session (applies to both BrowserStack and local)
+        options.amend("forceAppLaunch", true);
+        options.amend("shouldTerminateApp", true);
 
         return new AndroidDriver(getServerUrl(), options);
     }
@@ -160,29 +161,21 @@ public final class DriverManager {
         String fullReset = ConfigReader.getProperty("fullReset");
         String newCommandTimeout = ConfigReader.getProperty("newCommandTimeout");
 
-        // Both BrowserStack and Local should respect config settings
-        // Default to noReset=true for BrowserStack if not specified (keeps app installed for speed)
-        if (isBrowserStackExecution()) {
-            if (noReset != null && !noReset.isBlank()) {
-                options.setNoReset(Boolean.parseBoolean(noReset));
-            } else {
-                // Default for BrowserStack
-                options.setNoReset(true);
-                LOGGER.info("BrowserStack: Using default noReset=true to keep app installed between tests");
-            }
-            if (fullReset != null && !fullReset.isBlank()) {
-                options.amend("fullReset", Boolean.parseBoolean(fullReset));
-            } else {
-                options.amend("fullReset", false);
-            }
+        // Both BrowserStack and Local should use consistent defaults to avoid environment-specific behavior
+        // Default to noReset=true for both (keeps app installed, state managed via forceAppLaunch/shouldTerminateApp)
+        if (noReset != null && !noReset.isBlank()) {
+            options.setNoReset(Boolean.parseBoolean(noReset));
         } else {
-            // Local execution follows config file settings
-            if (noReset != null && !noReset.isBlank()) {
-                options.setNoReset(Boolean.parseBoolean(noReset));
-            }
-            if (fullReset != null && !fullReset.isBlank()) {
-                options.amend("fullReset", Boolean.parseBoolean(fullReset));
-            }
+            // Consistent default for both environments
+            options.setNoReset(true);
+            LOGGER.info("Using default noReset=true to keep app installed between tests (state cleared via forceAppLaunch)");
+        }
+
+        if (fullReset != null && !fullReset.isBlank()) {
+            options.amend("fullReset", Boolean.parseBoolean(fullReset));
+        } else {
+            // Consistent default for both environments
+            options.amend("fullReset", false);
         }
 
         if (newCommandTimeout != null && !newCommandTimeout.isBlank()) {
