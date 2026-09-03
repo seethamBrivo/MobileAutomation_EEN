@@ -24,13 +24,6 @@ public class EditBridgeNameAndStatusTest extends BaseTest {
 
         loginAs("enduser_user_creds");
 
-        // Wait for login to complete
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         logger.info(" VERIFIED: User is able to login in VMS app");
 
         // ========== STEP 2: GO TO DASHBOARD SECTION ==========
@@ -45,13 +38,6 @@ public class EditBridgeNameAndStatusTest extends BaseTest {
 
         addBridgePage.clickDashboardOptionAtTheBottom();
         logger.info(" Clicked Dashboard option");
-
-        // Wait for dashboard to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Verify "All Devices" section is displayed
         Assert.assertTrue(
@@ -74,13 +60,6 @@ public class EditBridgeNameAndStatusTest extends BaseTest {
         deleteBridgePage.clickBridgesTab();
         logger.info(" Tapped Bridge option");
 
-        // Wait for bridge list to load
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         logger.info(" VERIFIED: List of bridges with three dots even displayed with status");
 
         // ========== STEP 4: CHOOSE ANY BRIDGE FROM THE LIST ==========
@@ -90,13 +69,6 @@ public class EditBridgeNameAndStatusTest extends BaseTest {
 
         deleteBridgePage.clickFirstBridge();
         logger.info(" Clicked on a bridge");
-
-        // Wait for bridge settings page to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         BridgeSettingsPage bridgeSettingsPage = new BridgeSettingsPage(driver);
 
@@ -142,13 +114,6 @@ public class EditBridgeNameAndStatusTest extends BaseTest {
         bridgeSettingsPage.clickNameOption();
         logger.info(" Clicked on Name option");
 
-        // Wait for name edit field to appear
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         logger.info(" VERIFIED: User is able to go into the Name item of the bridge");
         logger.info("  Name: default");
 
@@ -170,13 +135,6 @@ public class EditBridgeNameAndStatusTest extends BaseTest {
         // Click Done on keyboard
         bridgeSettingsPage.clickDoneOnKeyboard();
         logger.info(" Clicked 'Done' on keyboard");
-
-        // Wait for save operation
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Verify success message (optional - may not appear on demo account)
         if (bridgeSettingsPage.isSavedSuccessfullyMessageDisplayed()) {
@@ -216,12 +174,10 @@ public class EditBridgeNameAndStatusTest extends BaseTest {
 
                 // Navigate back to bridge settings if needed
                 bridgeSettingsPage.clickNameOption();
-                Thread.sleep(1000);
 
                 // Restore original name
                 bridgeSettingsPage.enterNewBridgeName(originalBridgeName);
                 bridgeSettingsPage.clickDoneOnKeyboard();
-                Thread.sleep(1000);
 
                 logger.info(" Cleanup: Bridge name restored to: " + originalBridgeName);
                 nameChanged = false;

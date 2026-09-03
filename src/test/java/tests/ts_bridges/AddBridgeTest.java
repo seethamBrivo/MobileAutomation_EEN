@@ -91,13 +91,6 @@ public class AddBridgeTest extends BaseTest {
         // Step 8: Try to add the same bridge again with same attach ID to verify conflict error
         logger.info("\n=== Testing Duplicate Bridge Addition ===");
 
-        // Wait for screen to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Try to add another bridge with same attach ID
         addBridgePage.clickOnAddBridgeIcon();
         addBridgePage.clickAddBridgeOption();
@@ -115,13 +108,6 @@ public class AddBridgeTest extends BaseTest {
         addBridgePage.clickAddBridgeButton();
         logger.info(" Clicked Add Bridge button (expecting error)");
 
-        // Wait for error message to appear
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Verify conflict error message is displayed
         Assert.assertTrue(
                 addBridgePage.isConflictErrorMessageDisplayed(),
@@ -133,30 +119,12 @@ public class AddBridgeTest extends BaseTest {
         driver.navigate().back();
         logger.info(" Pressed back from error screen");
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         driver.navigate().back();
         logger.info(" Pressed back from add bridge form");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Navigate back to dashboard/devices screen
         addBridgePage.clickDashboardOptionAtTheBottom();
         logger.info(" Navigated back to Dashboard");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Step 9: Now delete the bridge that was just added
         logger.info("\n=== Starting Bridge Deletion ===");
@@ -165,34 +133,13 @@ public class AddBridgeTest extends BaseTest {
         // Navigate to Bridges tab
         deleteBridgePage.clickBridgesTab();
 
-        // Wait for list to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Filter by the bridge name we just added
         deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
         logger.info(" Filtered by bridge name: " + testBridgeName);
 
-        // Wait for filter results
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Click on the filtered bridge
         deleteBridgePage.clickFirstBridge();
         logger.info(" Clicked on bridge");
-
-        // Wait for bridge details page to load
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Scroll down to see the "Delete Bridge" button
         utils.GestureUtils.swipeUp(driver);
@@ -207,13 +154,6 @@ public class AddBridgeTest extends BaseTest {
         // Click Delete Bridge button
         deleteBridgePage.clickDeleteBridgeButton();
         logger.info(" Clicked Delete Bridge button");
-
-        // Wait for confirmation popup
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Click "Delete" button in the popup to confirm deletion
         deleteBridgePage.clickDeleteButton();
@@ -243,19 +183,15 @@ public class AddBridgeTest extends BaseTest {
 
                 // Navigate to dashboard
                 addBridgePage.clickDashboardOptionAtTheBottom();
-                Thread.sleep(2000);
 
                 // Navigate to Bridges tab
                 deleteBridgePage.clickBridgesTab();
-                Thread.sleep(2000);
 
                 // Filter by the bridge name
                 deleteBridgePage.enterBridgeNameInFilter(testBridgeName);
-                Thread.sleep(1000);
 
                 // Click on the bridge
                 deleteBridgePage.clickFirstBridge();
-                Thread.sleep(2000);
 
                 // Scroll down to Delete button
                 utils.GestureUtils.swipeUp(driver);
@@ -263,11 +199,9 @@ public class AddBridgeTest extends BaseTest {
 
                 // Click Delete Bridge button
                 deleteBridgePage.clickDeleteBridgeButton();
-                Thread.sleep(1000);
 
                 // Confirm deletion
                 deleteBridgePage.clickDeleteButton();
-                Thread.sleep(1000);
 
                 logger.info(" Cleanup: Test bridge deleted in @AfterMethod");
                 bridgeAdded = false;

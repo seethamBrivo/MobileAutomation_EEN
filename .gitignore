@@ -68,6 +68,9 @@ screenshots/
 !**/ios.properties.example
 !**/testData.json.example
 
+# Claude AI Skills (track these for team)
+# .claude/ directory contains team skills - should be committed
+
 # Compiled class files
 *.class
 

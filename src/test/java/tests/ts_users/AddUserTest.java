@@ -65,13 +65,6 @@ public class AddUserTest extends BaseTest {
 	     addUserPage.enterLastNameInputField(lastName);
 	     addUserPage.clickAddButton();
 
-	     // Wait for user to be added
-	     try {
-	         Thread.sleep(3000);
-	     } catch (InterruptedException e) {
-	         Thread.currentThread().interrupt();
-	     }
-
 	     // Verify user was added successfully by checking if we're back at users list
 	     // or success snackbar appears
 	     boolean userAdded = false;
@@ -93,13 +86,6 @@ public class AddUserTest extends BaseTest {
 	   //Adding a user already existing in the system but not existing in the current logged account
 	     addUserPage.clickUsersAddIconAtTheTopRightCorner();
 
-	     // Wait for Add User screen to load
-	     try {
-	         Thread.sleep(2000);
-	     } catch (InterruptedException e) {
-	         Thread.currentThread().interrupt();
-	     }
-
 	     String exstingUserButNotAvailbleInCurrentLogin = testData
 	                .getAsJsonObject("credentials")
 	                .getAsJsonObject("reseller_user_creds")
@@ -109,13 +95,6 @@ public class AddUserTest extends BaseTest {
 	     addUserPage.enterFirstNameInputField(firstName);
 	     addUserPage.enterLastNameInputField(lastName);
 	     addUserPage.clickAddButton();
-
-	     // Wait for user to be added
-	     try {
-	         Thread.sleep(3000);
-	     } catch (InterruptedException e) {
-	         Thread.currentThread().interrupt();
-	     }
 
 	     // Verify user was added successfully by checking if we're back at users list
 	     // or success snackbar appears

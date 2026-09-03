@@ -62,7 +62,6 @@ public class LoginPage {
                         java.time.Duration.ofSeconds(FrameworkConstants.EXPLICIT_WAIT_SECONDS));
                 wait.until(org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated(
                     noThanksOptionInBiometricsAuthenticationPopUp)).click();
-                logger.info("Clicked Allow button (positive_button resource-id)");
                 clicked = true;
             } catch (Exception e) {
                 logger.info("Strategy 1 failed, trying alternative...");
@@ -73,7 +72,6 @@ public class LoginPage {
         if (!clicked) {
             try {
                 driver.findElement(AppiumBy.xpath("//android.widget.Button[@text='Allow']")).click();
-                logger.info("Clicked Allow button (text xpath)");
                 clicked = true;
             } catch (Exception e) {
                 logger.info("Strategy 2 failed, trying alternative...");
@@ -84,7 +82,6 @@ public class LoginPage {
         if (!clicked) {
             try {
                 driver.findElement(AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks')]")).click();
-                logger.info("Clicked No Thanks button");
                 clicked = true;
             } catch (Exception e) {
                 logger.info("Strategy 3 failed - popup may not have appeared");

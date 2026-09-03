@@ -67,6 +67,13 @@ public class DeleteBridgePage {
         var filterField = WaitUtils.waitForVisibility(driver, filterSearchField);
         filterField.clear();
         filterField.sendKeys(bridgeName);
+
+        // Wait for filter to apply and list to refresh
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     // Bridge selection methods
