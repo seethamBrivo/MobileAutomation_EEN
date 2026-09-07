@@ -43,6 +43,9 @@ public class AddUserPage {
     	return !WaitUtils.waitForVisibility(driver, addButton).isEnabled();
       }
     public void enterEmailAtTheInputField(String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be null");
+        }
         var emailField = WaitUtils.waitForVisibility(driver, emailTextInputField);
         emailField.clear();
         emailField.sendKeys(email);

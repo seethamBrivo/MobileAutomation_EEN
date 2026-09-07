@@ -47,8 +47,20 @@ public final class GestureUtils {
     }
 
     public static void swipeElementRightToLeft(AppiumDriver driver, WebElement element) {
-        Point location = element.getLocation();
-        Dimension size = element.getSize();
+        if (element == null) {
+            throw new IllegalArgumentException("Element cannot be null");
+        }
+
+        Point location;
+        Dimension size;
+
+        try {
+            location = element.getLocation();
+            size = element.getSize();
+        } catch (org.openqa.selenium.StaleElementReferenceException e) {
+            throw new org.openqa.selenium.StaleElementReferenceException(
+                "Element became stale before swipe could be performed: " + e.getMessage());
+        }
 
         // Calculate coordinates relative to element bounds, not screen
         int centerY = location.y + (size.height / 2);
@@ -76,8 +88,17 @@ public final class GestureUtils {
     }
 
     private static Point getElementCenter(WebElement element) {
-        Point location = element.getLocation();
-        Dimension size = element.getSize();
-        return new Point(location.x + (size.width / 2), location.y + (size.height / 2));
+        if (element == null) {
+            throw new IllegalArgumentException("Element cannot be null");
+        }
+
+        try {
+            Point location = element.getLocation();
+            Dimension size = element.getSize();
+            return new Point(location.x + (size.width / 2), location.y + (size.height / 2));
+        } catch (org.openqa.selenium.StaleElementReferenceException e) {
+            throw new org.openqa.selenium.StaleElementReferenceException(
+                "Element became stale before center could be calculated: " + e.getMessage());
+        }
     }
 }

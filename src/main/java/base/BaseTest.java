@@ -144,7 +144,13 @@ public abstract class BaseTest {
                     }
 
                     Process process = processBuilder.start();
-                    boolean completed = process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
+
+                    // Close streams to prevent resource leak
+                    try (java.io.InputStream inputStream = process.getInputStream();
+                         java.io.InputStream errorStream = process.getErrorStream();
+                         java.io.OutputStream outputStream = process.getOutputStream()) {
+
+                        boolean completed = process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
 
                         if (!completed) {
                             process.destroyForcibly();
@@ -158,6 +164,10 @@ public abstract class BaseTest {
                             }
                         }
                     }
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt(); // Restore interrupted status
+                    logger.warn("Force stop interrupted: {}", ex.getMessage());
                 } catch (Exception ex) {
                     logger.warn("Could not force stop app: {}", ex.getMessage());
                 }

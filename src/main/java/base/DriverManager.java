@@ -179,7 +179,12 @@ public final class DriverManager {
         }
 
         if (newCommandTimeout != null && !newCommandTimeout.isBlank()) {
-            options.amend("newCommandTimeout", Integer.parseInt(newCommandTimeout));
+            try {
+                options.amend("newCommandTimeout", Integer.parseInt(newCommandTimeout));
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid newCommandTimeout value '{}', using default (600s): {}", newCommandTimeout, e.getMessage());
+                options.amend("newCommandTimeout", 600);
+            }
         }
     }
 
@@ -219,7 +224,12 @@ public final class DriverManager {
 
         String idleTimeout = ConfigReader.getProperty("browserstackIdleTimeout");
         if (idleTimeout != null && !idleTimeout.isBlank()) {
-            browserStackOptions.put("idleTimeout", Integer.parseInt(idleTimeout));
+            try {
+                browserStackOptions.put("idleTimeout", Integer.parseInt(idleTimeout));
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid browserstackIdleTimeout value '{}', using default (90s): {}", idleTimeout, e.getMessage());
+                browserStackOptions.put("idleTimeout", 90);
+            }
         }
 
         options.setCapability("bstack:options", browserStackOptions);

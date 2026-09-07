@@ -169,6 +169,7 @@ public class AddBridgeTest extends BaseTest {
         }
 
         logger.info(" Bridge deleted successfully!");
+        bridgeAdded = false; // Mark as cleaned up to prevent duplicate deletion in @AfterMethod
         logger.info("\n=== Add and Delete Bridge Test Completed Successfully! ===");
     }
 

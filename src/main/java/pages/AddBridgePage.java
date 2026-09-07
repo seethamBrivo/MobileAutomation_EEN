@@ -56,6 +56,9 @@ public class AddBridgePage {
         WaitUtils.waitForVisibility(driver, bridgeNameField);
     }
     public void enterBridgeName(String bridgeName) {
+        if (bridgeName == null) {
+            throw new IllegalArgumentException("Bridge name cannot be null");
+        }
         var bridgeNameInput = WaitUtils.waitForVisibility(driver, bridgeNameField);
         bridgeNameInput.clear();
         bridgeNameInput.sendKeys(bridgeName);
@@ -64,6 +67,9 @@ public class AddBridgePage {
 	  	 return !WaitUtils.waitForVisibility(driver, addBridgeButton).isEnabled();
 	    }
     public void enterAttachId(String attachId) {
+        if (attachId == null) {
+            throw new IllegalArgumentException("Attach ID cannot be null");
+        }
         var attachIdInput = WaitUtils.waitForVisibility(driver, attachIdField);
         attachIdInput.clear();
         attachIdInput.sendKeys(attachId);

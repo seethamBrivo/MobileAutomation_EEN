@@ -63,14 +63,28 @@ public class DeleteBridgePage {
     }
 
     // Filter methods
-    public void enterBridgeNameInFilter(String bridgeName) {
+    /**
+     * Enters bridge name in filter field and waits for results to appear.
+     * @param bridgeName The name to filter by
+     * @return true if results were found, false if filter returns empty results
+     */
+    public boolean enterBridgeNameInFilter(String bridgeName) {
+        if (bridgeName == null) {
+            throw new IllegalArgumentException("Bridge name cannot be null");
+        }
         var filterField = WaitUtils.waitForVisibility(driver, filterSearchField);
         filterField.clear();
         filterField.sendKeys(bridgeName);
 
-        // Wait for filter to apply and list to refresh - use explicit wait for first bridge to appear
-        // This ensures the filtered list is ready before proceeding
-        WaitUtils.waitForVisibility(driver, firstBridgeInList);
+        // Wait for filter to apply and list to refresh
+        // Return false if no results found instead of throwing timeout exception
+        try {
+            WaitUtils.waitForVisibility(driver, firstBridgeInList);
+            return true;
+        } catch (org.openqa.selenium.TimeoutException e) {
+            // Filter returned no results
+            return false;
+        }
     }
 
     // Bridge selection methods
