@@ -2,14 +2,14 @@ package pages;
 
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import utils.WaitUtils;
 
 public class UsersPage {
-    private static final Logger logger = LoggerFactory.getLogger(UsersPage.class);
+    private static final Logger logger = LogManager.getLogger(UsersPage.class);
     private final AppiumDriver driver;
     private final By usersOptionAtTheBottomOfTheScreen= AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]");
     private final By usersAddIconAtTheTopRightCorner= AppiumBy.id("com.een.vms.android:id/img_custom");

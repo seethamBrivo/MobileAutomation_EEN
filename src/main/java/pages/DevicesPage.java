@@ -137,18 +137,36 @@ public class DevicesPage {
         if (bridgeName == null) {
             throw new IllegalArgumentException("Bridge name cannot be null");
         }
-        try {
-            var filterField = WaitUtils.waitForVisibility(driver, filterSearchField);
-            filterField.clear();
-            filterField.sendKeys(bridgeName);
-            WaitUtils.waitForClickability(driver, firstBridgeInList);
-            return true;
-        } catch (org.openqa.selenium.TimeoutException e) {
-            return false;
-        } catch (org.openqa.selenium.InvalidElementStateException |
-                 org.openqa.selenium.StaleElementReferenceException e) {
-            return false;
+
+        // Retry logic for transient element state issues
+        int maxRetries = 2;
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                var filterField = WaitUtils.waitForVisibility(driver, filterSearchField);
+                filterField.clear();
+                filterField.sendKeys(bridgeName);
+                WaitUtils.waitForClickability(driver, firstBridgeInList);
+                return true;
+            } catch (org.openqa.selenium.TimeoutException e) {
+                // Bridge not found after filtering - this is expected when bridge doesn't exist
+                return false;
+            } catch (org.openqa.selenium.InvalidElementStateException |
+                     org.openqa.selenium.StaleElementReferenceException e) {
+                // Transient error - retry once before giving up
+                if (attempt == maxRetries - 1) {
+                    // Final attempt failed - treat as not found to avoid blocking cleanup
+                    return false;
+                }
+                // Wait briefly before retry
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
         }
+        return false;
     }
     public boolean isBridgeListDisplayed() {
         return WaitUtils.waitForVisibility(driver, firstBridgeInList).isDisplayed();

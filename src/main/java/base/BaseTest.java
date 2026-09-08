@@ -44,7 +44,7 @@ public abstract class BaseTest {
     private void handleAndroidPermission() {
         try {
             // Try multiple locator strategies for Android permission dialog
-            // Uses fast 200ms timeout to avoid wasting time when popup doesn't exist
+            // Uses 5-second timeout since dialog appears 1-3s into cold launch
             java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
                 io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button"),
                 io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button"),
@@ -53,7 +53,7 @@ public abstract class BaseTest {
                 )
             );
 
-            boolean handled = utils.WaitUtils.tryClickOptionalElement(driver, strategies);
+            boolean handled = utils.WaitUtils.tryClickOptionalElement(driver, strategies, java.time.Duration.ofSeconds(5));
             if (!handled) {
                 logger.info("No notification permission popup found or already handled");
             }
@@ -65,7 +65,7 @@ public abstract class BaseTest {
     private void handleIOSPermission() {
         try {
             // Try multiple locator strategies for iOS permission alert
-            // Uses fast 200ms timeout to avoid wasting time when popup doesn't exist
+            // Uses 5-second timeout since alert appears 1-3s into cold launch
             java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
                 io.appium.java_client.AppiumBy.iOSNsPredicateString(
                     "type == 'XCUIElementTypeButton' AND name == 'Allow'"
@@ -73,7 +73,7 @@ public abstract class BaseTest {
                 io.appium.java_client.AppiumBy.accessibilityId("Allow")
             );
 
-            boolean handled = utils.WaitUtils.tryClickOptionalElement(driver, strategies);
+            boolean handled = utils.WaitUtils.tryClickOptionalElement(driver, strategies, java.time.Duration.ofSeconds(5));
             if (!handled) {
                 logger.info("No iOS notification permission popup found or already handled");
             }

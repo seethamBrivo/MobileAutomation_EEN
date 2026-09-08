@@ -44,6 +44,7 @@ public class LoginPage {
     public LoginPage tapNoThanksOptionInBiometricsAuthenticationPopup() {
         // Try multiple locator strategies for biometric authentication popup
         // Uses 5-second timeout since popup appears after login completes (async operation)
+        // NOTE: negative_button is intentionally excluded - it's used as confirm delete in UsersPage
         java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
             // Strategy 1: Resource ID
             noThanksOptionInBiometricsAuthenticationPopUp,
@@ -51,7 +52,6 @@ public class LoginPage {
             AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks') or contains(@text, 'No thanks')]"),
             // Strategy 3: Alternative resource IDs
             AppiumBy.id("android:id/button2"),
-            AppiumBy.id("com.een.vms.android:id/negative_button"),
             // Strategy 4: UiAutomator selector
             AppiumBy.androidUIAutomator("new UiSelector().textContains(\"No\").className(\"android.widget.Button\")")
         );

@@ -23,6 +23,15 @@ public final class BridgeTestHelper {
                 logger.info("Pre-test: Bridge {} does not exist or already cleaned up", bridgeNamePattern);
                 return;
             }
+
+            // Verify the bridge name matches before deleting (prevent accidental deletion of production bridges)
+            String displayedBridgeName = deleteBridgePage.getFirstBridgeName();
+            if (!displayedBridgeName.contains(bridgeNamePattern)) {
+                logger.warn("Pre-test: Bridge name mismatch - Expected pattern: {}, Found: {}. Skipping deletion for safety.",
+                    bridgeNamePattern, displayedBridgeName);
+                return;
+            }
+
             deleteBridgePage.waitForFirstBridgeToBeClickable();
             deleteBridgePage.clickFirstBridge();
             GestureUtils.swipeUpTwice(driver);
@@ -60,6 +69,15 @@ public final class BridgeTestHelper {
                 logger.info("Cleanup: Bridge {} not found - may have been deleted in test", bridgeName);
                 return;
             }
+
+            // Verify the bridge name matches before deleting (prevent accidental deletion of production bridges)
+            String displayedBridgeName = deleteBridgePage.getFirstBridgeName();
+            if (!displayedBridgeName.equals(bridgeName)) {
+                logger.warn("Cleanup: Bridge name mismatch - Expected: {}, Found: {}. Skipping deletion for safety.",
+                    bridgeName, displayedBridgeName);
+                return;
+            }
+
             deleteBridgePage.waitForFirstBridgeToBeClickable();
             deleteBridgePage.clickFirstBridge();
             GestureUtils.swipeUpTwice(driver);

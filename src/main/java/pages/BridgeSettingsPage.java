@@ -80,12 +80,24 @@ public class BridgeSettingsPage {
         }
     }
     public String getBridgeStatus() {
-        if (isOnlineStatusDisplayed()) {
-            return "Online";
-        } else if (isOfflineStatusDisplayed()) {
-            return "Offline";
-        }
-        return "Unknown";
+        // Use reduced timeout to quickly check status without long waits
+        return WaitUtils.withReducedTimeout(driver, java.time.Duration.ofSeconds(2), () -> {
+            try {
+                if (driver.findElement(onlineStatus).isDisplayed()) {
+                    return "Online";
+                }
+            } catch (Exception e) {
+                // Not online, try offline
+            }
+            try {
+                if (driver.findElement(offlineStatus).isDisplayed()) {
+                    return "Offline";
+                }
+            } catch (Exception e) {
+                // Neither online nor offline found
+            }
+            return "Unknown";
+        });
     }
     public void clickNameOption() {
         WaitUtils.waitForClickability(driver, bridgeNameOption).click();

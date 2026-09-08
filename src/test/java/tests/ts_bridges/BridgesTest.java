@@ -21,6 +21,11 @@ public class BridgesTest extends BaseTest {
 
     @BeforeMethod
     public void setup(java.lang.reflect.Method method) {
+        // Reset state before each test
+        bridgeAdded = false;
+        testBridgeName = null;
+
+        // Test07 uses reseller login, so skip enduser login for it
         if (method.getName().equals("test07_restartBridgeFromDashboard")) {
             return;
         }
@@ -255,28 +260,42 @@ public class BridgesTest extends BaseTest {
         bridgeSettingsPage.verifyStatusSectionDisplayed();
         String bridgeStatus = bridgeSettingsPage.getBridgeStatus();
         logger.info("Bridge Status: " + bridgeStatus);
-        if (bridgeStatus.equals("Online")) {
-            bridgeSettingsPage.verifyOnlineStatusDisplayed();
-        } else if (bridgeStatus.equals("Offline")) {
-            bridgeSettingsPage.verifyOfflineStatusDisplayed();
+
+        // Verify status is determined (not "Unknown")
+        if (!bridgeStatus.equals("Unknown")) {
+            if (bridgeStatus.equals("Online")) {
+                bridgeSettingsPage.verifyOnlineStatusDisplayed();
+            } else if (bridgeStatus.equals("Offline")) {
+                bridgeSettingsPage.verifyOfflineStatusDisplayed();
+            }
+        } else {
+            logger.warn("Bridge status could not be determined - showing as Unknown");
         }
+
+        // Test bridge rename
         bridgeSettingsPage.clickNameOption();
         String originalBridgeName = bridgeSettingsPage.getCurrentBridgeNameFromEditField();
         String newBridgeName = generateBridgeName("UpdatedBridge_");
         bridgeSettingsPage.enterNewBridgeName(newBridgeName);
         bridgeSettingsPage.clickDoneOnKeyboard();
         driver.navigate().back();
+
+        // Verify rename succeeded
         boolean bridgeFoundWithNewName = devicesPage.enterBridgeNameInFilter(newBridgeName);
         if (bridgeFoundWithNewName) {
             String displayedName = devicesPage.getFirstBridgeName();
-            logger.info("Found bridge with name: " + displayedName);
-            if (!displayedName.equals(newBridgeName)) {
-                logger.info("Note: Displayed name doesn't match expected");
-            }
+            logger.info("Bridge rename verified - new name: " + displayedName);
+            devicesPage.verifyBridgeNameMatches(newBridgeName);
         } else {
-            logger.info("Note: Bridge with new name not found - checking with original name");
-            devicesPage.enterBridgeNameInFilter(originalBridgeName);
+            throw new AssertionError("Bridge rename failed - could not find bridge with new name: " + newBridgeName);
         }
+
+        // Restore original bridge name (cleanup)
+        devicesPage.clickFirstBridge();
+        bridgeSettingsPage.clickNameOption();
+        bridgeSettingsPage.enterNewBridgeName(originalBridgeName);
+        bridgeSettingsPage.clickDoneOnKeyboard();
+        logger.info("Restored original bridge name: " + originalBridgeName);
     }
 
     @Test(priority = 7, description = "EEPD-TC-8898: POS-Bridge Settings - Restart the Bridge in mobile VMS app from Dashboard section")

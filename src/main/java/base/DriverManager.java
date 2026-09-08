@@ -109,23 +109,12 @@ public final class DriverManager {
 
         // For both BrowserStack and Local: Set appPackage and appWaitActivity
         // Using appWaitActivity (instead of appActivity) allows flexible launch while still ensuring consistent starting state
-        if (isBrowserStackExecution()) {
-            // BrowserStack: Set package and wait activity for consistent app launch state
-            if (isValidProperty(appPackage)) {
-                options.setAppPackage(appPackage);
-            }
-            if (isValidProperty(appActivity)) {
-                options.setAppWaitActivity(appActivity);
-            }
-        } else {
-            // Local execution: Set package and wait activity (not appActivity to avoid hard-fail)
-            if (isValidProperty(appPackage)) {
-                options.setAppPackage(appPackage);
-            }
+        if (isValidProperty(appPackage)) {
+            options.setAppPackage(appPackage);
+        }
+        if (isValidProperty(appActivity)) {
             // Use appWaitActivity instead of appActivity to avoid hard-fail if activity is wrong/unexported
-            if (isValidProperty(appActivity)) {
-                options.setAppWaitActivity(appActivity);
-            }
+            options.setAppWaitActivity(appActivity);
         }
 
         // Android 15 workaround: Force app to stop and restart for each session (applies to both BrowserStack and local)

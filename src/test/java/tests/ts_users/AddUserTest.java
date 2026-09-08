@@ -11,6 +11,7 @@ import pages.UsersPage;
 
 public class AddUserTest extends BaseTest {
 	private String testUserEmail;
+	private String generatedUserEmail;
 
 	@Test(description = "EEPD-TC-4170: POS-Users - adding New User in mobile VMS app", groups = {"Regression"})
 	public void addNewUserToVMSApp() {
@@ -29,6 +30,7 @@ public class AddUserTest extends BaseTest {
 		addUserPage.verifyValidEmailErrorMessageDisplayed();
 		String firstName = TestDataGenerator.generateFirstName();
 		String lastName = TestDataGenerator.generateLastName();
+		generatedUserEmail = firstName + "+" + lastName + "@test.com";
 		addUserPage.enterEmailAtTheInputField(firstName + "+");
 		addUserPage.verifyEmailPlusHintDisplayed();
 		addUserPage.isAddButtonEnabled();
@@ -55,12 +57,22 @@ public class AddUserTest extends BaseTest {
 	}
 	@AfterMethod(alwaysRun = true)
 	public void cleanupTestData() {
-		if (testUserEmail != null && driver != null) {
+		if (driver != null) {
 			try {
 				UsersPage addUserPage = new UsersPage(driver);
 				addUserPage.clickUsersOptionAtTheBottom();
-				addUserPage.deleteUserIfExists(testUserEmail);
-				logger.info("AfterMethod: Cleanup completed for: {}", testUserEmail);
+
+				// Clean up the pre-existing test user
+				if (testUserEmail != null) {
+					addUserPage.deleteUserIfExists(testUserEmail);
+					logger.info("AfterMethod: Cleanup completed for: {}", testUserEmail);
+				}
+
+				// Clean up the generated user created during test
+				if (generatedUserEmail != null) {
+					addUserPage.deleteUserIfExists(generatedUserEmail);
+					logger.info("AfterMethod: Cleanup completed for generated user: {}", generatedUserEmail);
+				}
 			} catch (Exception e) {
 				logger.warn("AfterMethod: Cleanup failed: {}", e.getMessage());
 			}
