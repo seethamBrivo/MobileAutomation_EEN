@@ -35,7 +35,7 @@ jobs:
                 "custromer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
                 "inavlidEmailFormatText": "inavalidemailformattext",
                 "existingUserInSystemButNotExistingInCurrentLogin": "seetham.c+reseller@brivo.com",
-                "attchId": "${{ secrets.ATTACH_ID }}"
+                "attachId": "${{ secrets.ATTACH_ID }}"
               },
               "enduser_user_creds": {
                 "username": "${{ secrets.ENDUSER_USERNAME }}",

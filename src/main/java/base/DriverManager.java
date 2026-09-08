@@ -107,21 +107,23 @@ public final class DriverManager {
         String appPackage = ConfigReader.getProperty("appPackage");
         String appActivity = ConfigReader.getProperty("appActivity");
 
-        // For BrowserStack: Don't set appActivity/appWaitActivity - let app launch naturally
-        // For Local: Only set appPackage, use appWaitActivity for targeted wait (safer than appActivity)
+        // For both BrowserStack and Local: Set appPackage and appWaitActivity
+        // Using appWaitActivity (instead of appActivity) allows flexible launch while still ensuring consistent starting state
         if (isBrowserStackExecution()) {
-            // BrowserStack: Only set package, let it launch naturally without waiting for specific activity
-            if (appPackage != null && !appPackage.isBlank()) {
+            // BrowserStack: Set package and wait activity for consistent app launch state
+            if (isValidProperty(appPackage)) {
                 options.setAppPackage(appPackage);
             }
-            // Don't set appActivity or appWaitActivity - permission popups can block activity detection
+            if (isValidProperty(appActivity)) {
+                options.setAppWaitActivity(appActivity);
+            }
         } else {
             // Local execution: Set package and wait activity (not appActivity to avoid hard-fail)
-            if (appPackage != null && !appPackage.isBlank()) {
+            if (isValidProperty(appPackage)) {
                 options.setAppPackage(appPackage);
             }
             // Use appWaitActivity instead of appActivity to avoid hard-fail if activity is wrong/unexported
-            if (appActivity != null && !appActivity.isBlank()) {
+            if (isValidProperty(appActivity)) {
                 options.setAppWaitActivity(appActivity);
             }
         }
@@ -163,7 +165,7 @@ public final class DriverManager {
 
         // Both BrowserStack and Local should use consistent defaults to avoid environment-specific behavior
         // Default to noReset=true for both (keeps app installed, state managed via forceAppLaunch/shouldTerminateApp)
-        if (noReset != null && !noReset.isBlank()) {
+        if (isValidProperty(noReset)) {
             options.setNoReset(Boolean.parseBoolean(noReset));
         } else {
             // Consistent default for both environments
@@ -171,14 +173,14 @@ public final class DriverManager {
             LOGGER.info("Using default noReset=true to keep app installed between tests (state cleared via forceAppLaunch)");
         }
 
-        if (fullReset != null && !fullReset.isBlank()) {
+        if (isValidProperty(fullReset)) {
             options.amend("fullReset", Boolean.parseBoolean(fullReset));
         } else {
             // Consistent default for both environments
             options.amend("fullReset", false);
         }
 
-        if (newCommandTimeout != null && !newCommandTimeout.isBlank()) {
+        if (isValidProperty(newCommandTimeout)) {
             try {
                 options.amend("newCommandTimeout", Integer.parseInt(newCommandTimeout));
             } catch (NumberFormatException e) {
@@ -198,32 +200,32 @@ public final class DriverManager {
         browserStackOptions.put("accessKey", requireProperty("browserstackAccessKey"));
 
         String projectName = ConfigReader.getProperty("browserstackProjectName");
-        if (projectName != null && !projectName.isBlank()) {
+        if (isValidProperty(projectName)) {
             browserStackOptions.put("projectName", projectName);
         }
 
         String buildName = ConfigReader.getProperty("browserstackBuildName");
-        if (buildName != null && !buildName.isBlank()) {
+        if (isValidProperty(buildName)) {
             browserStackOptions.put("buildName", buildName);
         }
 
         String sessionName = ConfigReader.getProperty("browserstackSessionName");
-        if (sessionName != null && !sessionName.isBlank()) {
+        if (isValidProperty(sessionName)) {
             browserStackOptions.put("sessionName", sessionName);
         }
 
         String debug = ConfigReader.getProperty("browserstackDebug");
-        if (debug != null && !debug.isBlank()) {
+        if (isValidProperty(debug)) {
             browserStackOptions.put("debug", Boolean.parseBoolean(debug));
         }
 
         String networkLogs = ConfigReader.getProperty("browserstackNetworkLogs");
-        if (networkLogs != null && !networkLogs.isBlank()) {
+        if (isValidProperty(networkLogs)) {
             browserStackOptions.put("networkLogs", Boolean.parseBoolean(networkLogs));
         }
 
         String idleTimeout = ConfigReader.getProperty("browserstackIdleTimeout");
-        if (idleTimeout != null && !idleTimeout.isBlank()) {
+        if (isValidProperty(idleTimeout)) {
             try {
                 browserStackOptions.put("idleTimeout", Integer.parseInt(idleTimeout));
             } catch (NumberFormatException e) {
@@ -278,6 +280,16 @@ public final class DriverManager {
             throw new IllegalArgumentException("Missing required configuration: " + key);
         }
         return value;
+    }
+
+    /**
+     * Checks if a configuration property has a valid non-blank value.
+     *
+     * @param value The property value to check
+     * @return true if the value is not null and not blank, false otherwise
+     */
+    private static boolean isValidProperty(String value) {
+        return value != null && !value.isBlank();
     }
 
     private static URL getServerUrl() throws MalformedURLException {

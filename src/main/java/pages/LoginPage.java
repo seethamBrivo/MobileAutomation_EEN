@@ -5,14 +5,11 @@ import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
-import constants.FrameworkConstants;
+import constants.TimeoutConstants;
 import utils.WaitUtils;
-
 public class LoginPage {
-
     private static final Logger logger = LogManager.getLogger(LoginPage.class);
     private final AppiumDriver driver;
-
     private final By signInButton = AppiumBy.accessibilityId("sign_in_btn_button");
     private final By emailInputField = AppiumBy.className("android.widget.EditText");
     private final By nextButton = AppiumBy.xpath("//android.widget.Button[@text=\"Next\"]");
@@ -26,11 +23,8 @@ public class LoginPage {
 
     public LoginPage tapSignIn() {
         WaitUtils.waitForClickability(driver, signInButton).click();
-//        return new HomePage(driver);
-//		return null;
-		return null;
+		return this;
     }
-    
     public LoginPage enterEmail(String username) {
         WaitUtils.waitForVisibility(driver, emailInputField).sendKeys(username);
         return this;
@@ -39,62 +33,37 @@ public class LoginPage {
         WaitUtils.waitForVisibility(driver, nextButton).click();
         return this;
     }
-    
-
     public LoginPage enterPassword(String password) {
         WaitUtils.waitForVisibility(driver, passwordField).sendKeys(password);
         return this;
     }
-
     public LoginPage tapSignInButtonToLogin() {
         WaitUtils.waitForVisibility(driver, signInButtonToLogin).click();
         return this;
     }
     public LoginPage tapNoThanksOptionInBiometricsAuthenticationPopup() {
-        // Try multiple strategies to find and click the Allow/No Thanks button
-        boolean clicked = false;
+        // Try multiple locator strategies for biometric authentication popup
+        // Uses 5-second timeout since popup appears after login completes (async operation)
+        java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
+            // Strategy 1: Resource ID
+            noThanksOptionInBiometricsAuthenticationPopUp,
+            // Strategy 2: Text-based (case-insensitive variations)
+            AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks') or contains(@text, 'No thanks')]"),
+            // Strategy 3: Alternative resource IDs
+            AppiumBy.id("android:id/button2"),
+            AppiumBy.id("com.een.vms.android:id/negative_button"),
+            // Strategy 4: UiAutomator selector
+            AppiumBy.androidUIAutomator("new UiSelector().textContains(\"No\").className(\"android.widget.Button\")")
+        );
 
-        // Strategy 1: Using the positive_button resource-id
-        if (!clicked) {
-            try {
-                org.openqa.selenium.support.ui.WebDriverWait wait =
-                    new org.openqa.selenium.support.ui.WebDriverWait(driver,
-                        java.time.Duration.ofSeconds(FrameworkConstants.EXPLICIT_WAIT_SECONDS));
-                wait.until(org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated(
-                    noThanksOptionInBiometricsAuthenticationPopUp)).click();
-                clicked = true;
-            } catch (Exception e) {
-                logger.info("Strategy 1 failed, trying alternative...");
-            }
-        }
-
-        // Strategy 2: Find by text "Allow"
-        if (!clicked) {
-            try {
-                driver.findElement(AppiumBy.xpath("//android.widget.Button[@text='Allow']")).click();
-                clicked = true;
-            } catch (Exception e) {
-                logger.info("Strategy 2 failed, trying alternative...");
-            }
-        }
-
-        // Strategy 3: Find by text "NO THANKS" or "No Thanks"
-        if (!clicked) {
-            try {
-                driver.findElement(AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks')]")).click();
-                clicked = true;
-            } catch (Exception e) {
-                logger.info("Strategy 3 failed - popup may not have appeared");
-            }
-        }
-
+        boolean clicked = WaitUtils.tryClickOptionalElement(driver, strategies, TimeoutConstants.POPUP_TIMEOUT);
         if (!clicked) {
             logger.info("Biometrics popup did not appear or was already dismissed");
+        } else {
+            logger.info("Biometrics popup successfully dismissed");
         }
-
         return this;
     }
-
     public ResellerDashboardPage loginAs(String username, String password) {
         tapSignIn();
         enterEmail(username);

@@ -7,7 +7,7 @@
       "custromer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
       "inavlidEmailFormatText": "invalidemailtext",
       "existingUserInSystemButNotExistingInCurrentLogin": "existing_user@example.com",
-      "attchId": "XXXX-XXXX-XXXX-XXXX"
+      "attachId": "XXXX-XXXX-XXXX-XXXX"
     },
     "enduser_user_creds": {
       "username": "your_enduser_email@example.com",

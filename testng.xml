@@ -3,6 +3,7 @@
 <suite name="Mobile Automation Suite" parallel="false" thread-count="3">
     <listeners>
         <listener class-name="listeners.TestListener"/>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
     </listeners>
 
     <test name="Reseller Dashboard Tests">
@@ -11,54 +12,15 @@
         </classes>
     </test>
 
-    <test name="Add User Tests">
+    <test name="User Tests">
         <classes>
             <class name="tests.ts_users.AddUserTest"/>
         </classes>
     </test>
 
-    <test name="Add Bridge Tests">
+    <test name="Bridge Tests">
         <classes>
-            <class name="tests.ts_bridges.AddBridgeTest"/>
+            <class name="tests.ts_bridges.BridgesTest"/>
         </classes>
     </test>
-
-    <test name="Delete Bridge Tests">
-        <classes>
-            <class name="tests.ts_bridges.DeleteBridgeTest"/>
-        </classes>
-    </test>
-
-    <test name="Bridges List Tests">
-        <classes>
-            <class name="tests.ts_bridges.BridgesListTest"/>
-        </classes>
-    </test>
-
-    <test name="Filter Bridges Tests">
-        <classes>
-            <class name="tests.ts_bridges.FilterBridgesTest"/>
-        </classes>
-    </test>
-
-    <test name="Bridge Context Menu Tests">
-        <classes>
-            <class name="tests.ts_bridges.BridgeContextMenuTest"/>
-        </classes>
-    </test>
-
-    <test name="Restart Bridge Tests">
-        <classes>
-            <class name="tests.ts_bridges.RestartBridgeTest"/>
-        </classes>
-    </test>
-
-    <!-- DISABLED: EditBridgeNameAndStatusTest - has placeholder code that corrupts bridge names
-         TODO: Re-enable after implementing getCurrentBridgeName() in BridgeSettingsPage
-    <test name="Edit Bridge Name and Status Tests">
-        <classes>
-            <class name="tests.ts_bridges.EditBridgeNameAndStatusTest"/>
-        </classes>
-    </test>
-    -->
 </suite>
