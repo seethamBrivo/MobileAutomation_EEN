@@ -6,6 +6,7 @@ import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.TestDataGenerator;
 import utils.WaitUtils;
@@ -129,8 +130,11 @@ public class UsersPage {
 
     /** The "user was added" snackbar - verify it appears (no text validation). */
     public void verifyUserWasAddedMessageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, snackbarText).isDisplayed(),
-                "Snackbar should be displayed after adding user");
+        WebElement snackbar = WaitUtils.waitForVisibility(driver, snackbarText);
+        Assert.assertTrue(snackbar.isDisplayed(), "Snackbar should be displayed after adding user");
+
+        // Log attributes for future debugging when better locators become available
+        logger.info("Snackbar displayed - resource-id: {}, content-desc: {}");
     }
 
     /**

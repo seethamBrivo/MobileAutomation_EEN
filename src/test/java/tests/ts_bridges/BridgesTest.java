@@ -44,7 +44,8 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyAddDeviceOptionsDisplayed();
         devicesPage.clickAddBridgeOption();
         devicesPage.waitForBridgeNameFieldToLoad();
-        // Note: App behavior changed - button is now enabled by default (not disabled until fields filled)
+        // App behavior: Button is enabled by default on empty form (updated from previous version)
+        // Test validates current state - if this is a regression, mobile team will need to confirm
         devicesPage.verifyAddBridgeButtonEnabled();
         devicesPage.enterBridgeName(TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_DUPLICATE));
         devicesPage.enterAttachId(getAttachId());
@@ -149,6 +150,7 @@ public class BridgesTest extends BaseTest {
         settings.enterNewBridgeName(newName);
         settings.clickDoneOnKeyboard();
         driver.navigate().back();
+        // UI shows stale data after rename; force reload by switching tabs
         devicesPage.refreshBridgesList();
         devicesPage.verifyBridgeFoundInFilter(newName);
         devicesPage.verifyBridgeNameMatches(newName);
@@ -156,6 +158,7 @@ public class BridgesTest extends BaseTest {
         settings.verifyStatusSectionDisplayed();
         settings.renameBridge(originalName);
         driver.navigate().back();
+        // UI shows stale data after rename; force reload by switching tabs
         devicesPage.refreshBridgesList();
         devicesPage.verifyBridgeFoundInFilter(originalName);
         devicesPage.verifyBridgeNameMatches(originalName);
