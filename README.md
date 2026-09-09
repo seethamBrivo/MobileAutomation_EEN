@@ -83,8 +83,9 @@ mvn test -Dplatform=android
 
 **Specific test class:**
 ```bash
-mvn test -Dplatform=android -Dtest=AddBridgeTest
+mvn test -Dplatform=android -Dtest=BridgesTest
 mvn test -Dplatform=android -Dtest=ResellerDashboardTest
+mvn test -Dplatform=android -Dtest=AddUserTest
 ```
 
 **With TestNG XML:**
@@ -99,12 +100,31 @@ mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackBuild
 
 ## Test Cases
 
+Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
+
 | Test ID | Test Class | Description |
 |---------|------------|-------------|
-| EEPD-TC-4516 | ResellerDashboardTest | View Dashboard for Reseller |
-| EEPD-TC-40220 | ResellerDashboardTest | Verify account creation |
-| EEPD-TC-11276 | AddBridgeTest | Adding Bridge to account |
-| EEPD-TC-4170 | AddUserTest | Adding New User |
+| EEPD-TC-4516 | ts_dashboard.ResellerDashboardTest | View Dashboard for Reseller |
+| EEPD-TC-40220 | ts_dashboard.ResellerDashboardTest | Verify account creation for Admin / Account-access users |
+| EEPD-TC-4170 | ts_users.AddUserTest | Adding a new user |
+| EEPD-TC-11276 | ts_bridges.BridgesTest | Add bridge (incl. duplicate attach-ID conflict) |
+| EEPD-TC-8890 | ts_bridges.BridgesTest | Delete bridge |
+| EEPD-TC-16502 | ts_bridges.BridgesTest | Bridges list under Dashboard |
+| EEPD-TC-15441 | ts_bridges.BridgesTest | Filter bridges by search term |
+| EEPD-TC-12354 | ts_bridges.BridgesTest | Bridge context menu |
+| EEPD-TC-8881 | ts_bridges.BridgesTest | Rename bridge and check status |
+| EEPD-TC-8898 | ts_bridges.BridgeRestartTest | Restart bridge (reseller login) |
+
+### Conventions
+
+- **Waits**: the driver runs with implicit wait `0`. Every lookup goes through `utils.WaitUtils`;
+  optional elements use the short timeouts in `constants.TimeoutConstants`.
+- **Cleanup**: tests that create data record it and remove it in `@AfterMethod`. Cleanup code never
+  asserts and never throws (a throwing `@AfterMethod` skips the rest of the class in TestNG).
+- **Test data**: `testData.json` is git-ignored; copy `testData.json.example` and fill it in. CI writes
+  it from repository secrets. Key names in the workflow must match the example file.
+- **Session reset**: `noReset=true` is the default, so `BaseTest.tearDown` logs out, falling back to
+  `mobile: clearApp` when the test ended on a screen logout cannot navigate from.
 
 ## Reports
 

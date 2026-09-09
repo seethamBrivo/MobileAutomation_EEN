@@ -1,154 +1,113 @@
 package pages;
+
+import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.util.Map;
 import org.openqa.selenium.By;
 import org.testng.Assert;
+import utils.GestureUtils;
 import utils.WaitUtils;
+
+/** The screen a bridge row opens: status, name editing, restart and delete. */
 public class BridgeSettingsPage {
+
+    public static final String STATUS_ONLINE = "Online";
+    public static final String STATUS_OFFLINE = "Offline";
+    public static final String STATUS_UNKNOWN = "Unknown";
+
     private final AppiumDriver driver;
+
     private final By bridgeSettingsTitle = AppiumBy.xpath("//android.widget.TextView[@text='Bridge settings']");
-    private final By restartBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
-    private final By restartConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
-    private final By confirmRestartButton = AppiumBy.xpath("//android.widget.TextView[@text='RESTART']");
-    private final By cancelRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
-    private final By bridgeRestartedMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restarted') or contains(@text, 'rebooted')]");
-    private final By bridgeNameField = AppiumBy.xpath("//android.widget.EditText[@content-desc='bridge_name']");
-    private final By bridgeNameOption = AppiumBy.xpath("//android.widget.TextView[@text='Name']");
-    private final By bridgeNameEditField = AppiumBy.xpath("//android.widget.EditText");
-    private final By bridgeIdField = AppiumBy.xpath("//android.widget.TextView[@content-desc='bridge_id']");
-    private final By bridgeStatusIndicator = AppiumBy.xpath("//android.view.View[@content-desc='bridge_status']");
     private final By statusSection = AppiumBy.xpath("//android.widget.TextView[@text='Status']");
     private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Online')]");
     private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Offline')]");
-    private final By savedSuccessfullyMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Saved Successfully')]");
+
+    private final By bridgeNameOption = AppiumBy.xpath("//android.widget.TextView[@text='Name']");
+    // Generic: the name editor is the only EditText on its screen. No testTag available yet.
+    private final By bridgeNameEditField = AppiumBy.xpath("//android.widget.EditText");
+
+    private final By restartBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
+    private final By restartConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
+    private final By confirmRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']");
+    private final By bridgeRestartedMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restarted') or contains(@text, 'rebooted')]");
 
     public BridgeSettingsPage(AppiumDriver driver) {
         this.driver = driver;
     }
 
-    public boolean isBridgeSettingsPageDisplayed() {
-        return WaitUtils.waitForVisibility(driver, bridgeSettingsTitle).isDisplayed();
+    // ---- status ---------------------------------------------------------------------------
+
+    public void verifyBridgeSettingsPageDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeSettingsTitle).isDisplayed(), "Bridge settings page should be displayed");
     }
-    public void clickRestartBridgeButton() {
-        WaitUtils.waitForVisibility(driver, restartBridgeButton).click();
+
+    public void verifyStatusSectionDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, statusSection).isDisplayed(), "Status section should be displayed");
     }
-    public boolean isRestartBridgeConfirmationDisplayed() {
-        return WaitUtils.waitForVisibility(driver, restartConfirmationDialog).isDisplayed();
-    }
-    public void confirmRestartBridge() {
-        WaitUtils.waitForClickability(driver, confirmRestartButton).click();
-    }
-    public void cancelRestartBridge() {
-        WaitUtils.waitForClickability(driver, cancelRestartButton).click();
-    }
-    public boolean isBridgeRestartedMessageDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, bridgeRestartedMessage).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    public String getBridgeName() {
-        return WaitUtils.waitForVisibility(driver, bridgeNameField).getText();
-    }
-    public String getBridgeId() {
-        return WaitUtils.waitForVisibility(driver, bridgeIdField).getText();
-    }
-    public boolean isBridgeOnline() {
-        try {
-            String status = WaitUtils.waitForVisibility(driver, bridgeStatusIndicator).getAttribute("content-desc");
-            return status != null && status.toLowerCase().contains("online");
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    public boolean isStatusSectionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, statusSection).isDisplayed();
-    }
-    public boolean isOnlineStatusDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, onlineStatus).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    public boolean isOfflineStatusDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, offlineStatus).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
+
+    /** {@link #STATUS_ONLINE}, {@link #STATUS_OFFLINE} or {@link #STATUS_UNKNOWN}. */
     public String getBridgeStatus() {
-        // Use reduced timeout to quickly check status without long waits
-        return WaitUtils.withReducedTimeout(driver, java.time.Duration.ofSeconds(2), () -> {
-            try {
-                if (driver.findElement(onlineStatus).isDisplayed()) {
-                    return "Online";
-                }
-            } catch (Exception e) {
-                // Not online, try offline
-            }
-            try {
-                if (driver.findElement(offlineStatus).isDisplayed()) {
-                    return "Offline";
-                }
-            } catch (Exception e) {
-                // Neither online nor offline found
-            }
-            return "Unknown";
-        });
+        if (WaitUtils.isVisible(driver, onlineStatus, TimeoutConstants.SHORT_TIMEOUT)) {
+            return STATUS_ONLINE;
+        }
+        if (WaitUtils.isVisible(driver, offlineStatus, TimeoutConstants.SHORT_TIMEOUT)) {
+            return STATUS_OFFLINE;
+        }
+        return STATUS_UNKNOWN;
     }
+
+    public void verifyBridgeStatusIsKnown(String status) {
+        Assert.assertNotEquals(status, STATUS_UNKNOWN,
+                "Bridge status should be shown as Online or Offline on the settings screen");
+    }
+
+    // ---- rename ---------------------------------------------------------------------------
+
     public void clickNameOption() {
-        WaitUtils.waitForClickability(driver, bridgeNameOption).click();
+        WaitUtils.click(driver, bridgeNameOption);
     }
+
     public String getCurrentBridgeNameFromEditField() {
         return WaitUtils.waitForVisibility(driver, bridgeNameEditField).getText();
     }
-    public void clearBridgeName() {
-        var nameField = WaitUtils.waitForVisibility(driver, bridgeNameEditField);
-        nameField.clear();
-    }
+
     public void enterNewBridgeName(String newName) {
-        var nameField = WaitUtils.waitForVisibility(driver, bridgeNameEditField);
-        nameField.click(); // Click to focus the field first
-        nameField.clear();
-        nameField.sendKeys(newName);
+        WaitUtils.waitForVisibility(driver, bridgeNameEditField).click(); // focus first
+        WaitUtils.clearAndType(driver, bridgeNameEditField, newName);
     }
+
     public void clickDoneOnKeyboard() {
-        driver.executeScript("mobile: performEditorAction",
-            java.util.Map.of("action", "done"));
+        driver.executeScript("mobile: performEditorAction", Map.of("action", "done"));
     }
-    public void clickTickButtonOnKeyboard() {
-        By tickButton = AppiumBy.xpath("//android.widget.FrameLayout[@content-desc='Done']");
-        WaitUtils.waitForClickability(driver, tickButton).click();
+
+    /** Name option > type > Done. Caller decides how to leave the screen. */
+    public void renameBridge(String newName) {
+        clickNameOption();
+        enterNewBridgeName(newName);
+        clickDoneOnKeyboard();
     }
-    public boolean isSavedSuccessfullyMessageDisplayed() {
-        try {
-            return WaitUtils.waitForVisibility(driver, savedSuccessfullyMessage).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+
+    // ---- restart --------------------------------------------------------------------------
+
+    /** Scrolls the settings screen until Restart bridge is reachable, then taps it. */
+    public void clickRestartBridgeButton() {
+        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, restartBridgeButton),
+                "Restart bridge button should be reachable on the bridge settings screen");
+        WaitUtils.click(driver, restartBridgeButton);
     }
-    public void verifyBridgeSettingsPageDisplayed() {
-        Assert.assertTrue(isBridgeSettingsPageDisplayed(), "Bridge settings page should be displayed");
-    }
+
     public void verifyRestartBridgeConfirmationDisplayed() {
-        Assert.assertTrue(isRestartBridgeConfirmationDisplayed(), "Restart bridge confirmation should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, restartConfirmationDialog).isDisplayed(),
+                "Restart bridge confirmation should be displayed");
     }
+
+    public void confirmRestartBridge() {
+        WaitUtils.click(driver, confirmRestartButton);
+    }
+
     public void verifyBridgeRestartedMessageDisplayed() {
-        Assert.assertTrue(isBridgeRestartedMessageDisplayed(), "Bridge restarted message should be displayed");
-    }
-    public void verifyStatusSectionDisplayed() {
-        Assert.assertTrue(isStatusSectionDisplayed(), "Status section should be displayed");
-    }
-    public void verifyOnlineStatusDisplayed() {
-        Assert.assertTrue(isOnlineStatusDisplayed(), "Online status should be displayed");
-    }
-    public void verifyOfflineStatusDisplayed() {
-        Assert.assertTrue(isOfflineStatusDisplayed(), "Offline status should be displayed");
-    }
-    public void verifySavedSuccessfullyMessageDisplayed() {
-        Assert.assertTrue(isSavedSuccessfullyMessageDisplayed(), "Saved successfully message should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeRestartedMessage).isDisplayed(),
+                "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
 }

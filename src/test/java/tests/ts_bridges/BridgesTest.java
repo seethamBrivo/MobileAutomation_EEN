@@ -1,374 +1,231 @@
 package tests.ts_bridges;
 
 import base.BaseTest;
-import com.google.gson.JsonObject;
-import io.appium.java_client.AppiumBy;
-import org.openqa.selenium.WebElement;
+import constants.TestDataConstants;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.BridgeSettingsPage;
 import pages.DevicesPage;
 import utils.BridgeTestHelper;
-import utils.GestureUtils;
-import utils.JsonDataReader;
-import java.time.Duration;
+import utils.TestDataGenerator;
 
+/**
+ * End-user bridge tests. Every test that adds a bridge does so through {@link #createTestBridge},
+ * which records the name so {@link #cleanupBridge} can remove it whatever happens.
+ */
 public class BridgesTest extends BaseTest {
-    private String testBridgeName;
-    private boolean bridgeAdded = false;
+
     private DevicesPage devicesPage;
 
-    @BeforeMethod
-    public void setup(java.lang.reflect.Method method) {
-        // Reset state before each test
-        bridgeAdded = false;
-        testBridgeName = null;
+    /** Name of the bridge this test created and has not yet deleted, or null. */
+    private String testBridgeName;
+    /** Original name of a pre-existing bridge this test renamed and has not yet restored, or null. */
+    private String renamedBridgeOriginalName;
 
-        // Test07 uses reseller login, so skip enduser login for it
-        if (method.getName().equals("test07_restartBridgeFromDashboard")) {
-            return;
-        }
-        loginAs("enduser_user_creds");
+    @BeforeMethod
+    public void loginAndOpenDashboard() {
+        testBridgeName = null;
+        renamedBridgeOriginalName = null;
+        loginAs(TestDataConstants.ENDUSER_CREDS);
         devicesPage = new DevicesPage(driver);
+        devicesPage.navigateToDashboard();
+        devicesPage.verifyAllDevicesSectionIsDisplayed();
     }
 
     @Test(priority = 1, description = "EEPD-TC-11276: POS-Add Bridge - Adding Bridge to the account in Dashboard in mobile VMS app")
     public void test01_addBridgeToVMSApp() {
-        devicesPage.navigateToDashboard();
-        performPreTestCleanup("TestBridge_");
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        testBridgeName = generateBridgeName("TestBridge_");
-        devicesPage.addBridgeWorkflow(testBridgeName, getAttachIdFromTestData());
-        bridgeAdded = true;
+        String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.verifyUserNavigatedToOriginScreen();
 
+        // Same attach ID a second time must be rejected.
         devicesPage.clickOnAddBridgeIcon();
+        devicesPage.verifyAddDeviceOptionsDisplayed();
         devicesPage.clickAddBridgeOption();
         devicesPage.waitForBridgeNameFieldToLoad();
-        devicesPage.enterBridgeName(generateBridgeName("DuplicateBridge_"));
-        devicesPage.enterAttachId(getAttachIdFromTestData());
+        devicesPage.verifyAddBridgeButtonDisabled();
+        devicesPage.enterBridgeName(TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_DUPLICATE));
+        devicesPage.enterAttachId(getAttachId());
         devicesPage.clickAddBridgeButton();
         devicesPage.verifyConflictErrorMessageDisplayed();
 
-        driver.navigate().back();
-        driver.navigate().back();
-        devicesPage.clickDashboardOptionAtTheBottom();
+        devicesPage.recoverToDashboard();
         devicesPage.clickBridgesTab();
-        devicesPage.deleteBridgeWorkflow(testBridgeName);
-        bridgeAdded = false;
+        deleteTestBridge(bridgeName);
     }
 
     @Test(priority = 2, description = "EEPD-TC-8890: POS-Bridge Settings - delete Bridge in mobile VMS app")
     public void test02_deleteBridgeFromVMSApp() {
-        devicesPage.navigateToDashboard();
-        performPreTestCleanup("TestBridge_");
-        testBridgeName = generateBridgeName("TestBridge_");
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        devicesPage.addBridgeWorkflow(testBridgeName, getAttachIdFromTestData());
-        bridgeAdded = true;
-
+        String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.clickBridgesTab();
-        devicesPage.deleteBridgeWorkflow(testBridgeName);
+        deleteTestBridge(bridgeName);
         devicesPage.verifyUserNavigatedBackToBridgesTab();
-
-        if (!devicesPage.isBridgeDeletedMessageDisplayed()) {
-            logger.info("Note: Success message not displayed (expected on demo account)");
-        }
-        bridgeAdded = false;
+        // The outcome that matters: the bridge is gone from the list. The "Bridge was deleted"
+        // snackbar is not shown on the demo account, so it is logged rather than asserted.
+        logger.info("'Bridge was deleted' snackbar shown: {}", devicesPage.isBridgeDeletedMessageDisplayed());
+        devicesPage.verifyBridgeNotFoundInFilter(bridgeName);
     }
 
     @Test(priority = 3, description = "EEPD-TC-16502: POS-Bridges - Display list of bridges under Bridges item in Dashboard in mobile VMS app")
     public void test03_verifyBridgesListInDashboard() {
-        devicesPage.clickMoreMenuOptionAtTheBottom();
-        devicesPage.clickDashboardOptionAtTheBottom();
-        try {
-            devicesPage.clickBridgesTab();
-            BridgeTestHelper.deleteBridgeIfExists(driver, devicesPage, "TestBridge_", logger);
-            driver.navigate().back();
-        } catch (Exception e) {
-            logger.info("Pre-test: No existing bridges to cleanup or cleanup failed: {}", e.getMessage());
-            try {
-                driver.navigate().back();
-            } catch (Exception ex) {
-                logger.info("Pre-test: Could not navigate back");
-            }
-        }
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        testBridgeName = generateBridgeName("TestBridge_");
-        devicesPage.clickOnAddBridgeIcon();
-        devicesPage.clickAddBridgeOption();
-        devicesPage.waitForBridgeNameFieldToLoad();
-        devicesPage.enterBridgeName(testBridgeName);
-        devicesPage.enterAttachId(getAttachIdFromTestData());
-        devicesPage.verifyAddBridgeButtonEnabled();
-        devicesPage.clickAddBridgeButton();
-        bridgeAdded = true;
+        String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.verifyAllDevicesSectionIsDisplayed();
         devicesPage.verifyBridgesOptionDisplayed();
         devicesPage.verifyCamerasOptionDisplayed();
         devicesPage.verifySpeakersOptionDisplayed();
         devicesPage.verifySwitchesOptionDisplayed();
+
         devicesPage.clickBridgesTab();
-        devicesPage.verifyBridgeFoundInFilter(testBridgeName);
-        logger.info("Filtered by bridge name: " + testBridgeName);
-        try {
-            devicesPage.clickFirstBridge();
-            driver.navigate().back();
-        } catch (Exception e) {
-            throw new AssertionError("Bridge not found in Bridges list: " + testBridgeName);
-        }
-        devicesPage.verifyBridgeFoundInFilter(testBridgeName);
+        devicesPage.verifyBridgeFoundInFilter(bridgeName);
+        devicesPage.verifyBridgeNameMatches(bridgeName);
         devicesPage.clickFirstBridge();
-        GestureUtils.swipeUpTwice(driver);
-        devicesPage.verifyDeleteBridgeButtonDisplayed();
-        devicesPage.clickDeleteBridgeButton();
-        devicesPage.clickDeleteButton();
-        bridgeAdded = false;
+        BridgeSettingsPage settings = new BridgeSettingsPage(driver);
+        settings.verifyBridgeSettingsPageDisplayed();
+        settings.verifyStatusSectionDisplayed();
+        driver.navigate().back();
+
+        deleteTestBridge(bridgeName);
     }
 
     @Test(priority = 4, description = "EEPD-TC-15441: POS-Bridges - Filter for bridges by search term under Bridges item in Dashboard in VMS mobile app")
     public void test04_filterBridgesBySearchTerm() {
-        devicesPage.clickMoreMenuOptionAtTheBottom();
-        devicesPage.clickDashboardOptionAtTheBottom();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        try {
-            devicesPage.clickBridgesTab();
-            BridgeTestHelper.deleteBridgeIfExists(driver, devicesPage, "FilterTestBridge_", logger);
-            driver.navigate().back();
-        } catch (Exception e) {
-            logger.info("Pre-test: No existing bridges to cleanup or cleanup failed: {}", e.getMessage());
-            try {
-                driver.navigate().back();
-            } catch (Exception ex) {
-                logger.info("Pre-test: Could not navigate back");
-            }
-        }
-        testBridgeName = generateBridgeName("FilterTestBridge_");
-        devicesPage.clickOnAddBridgeIcon();
-        devicesPage.clickAddBridgeOption();
-        devicesPage.waitForBridgeNameFieldToLoad();
-        devicesPage.enterBridgeName(testBridgeName);
-        devicesPage.enterAttachId(getAttachIdFromTestData());
-        devicesPage.verifyAddBridgeButtonEnabled();
-        devicesPage.clickAddBridgeButton();
-        bridgeAdded = true;
+        String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_FILTER);
         devicesPage.clickBridgesTab();
-        try {
-            WebElement filterField = driver.findElement(AppiumBy.xpath("//android.widget.EditText"));
-            if (filterField.isDisplayed()) {
-                // Filter field exists and is displayed - validation passed
-            }
-        } catch (Exception e) {
-            logger.info("Filter field verification: Field appears on interaction");
-        }
-        devicesPage.enterBridgeNameInFilter(testBridgeName);
+
+        // Full name
+        devicesPage.verifyBridgeFoundInFilter(bridgeName);
         devicesPage.verifyBridgeListDisplayed();
-        devicesPage.verifyBridgeNameMatches(testBridgeName);
-        devicesPage.enterBridgeNameInFilter("");
-        String partialName = testBridgeName.substring(0, Math.min(10, testBridgeName.length()));
-        devicesPage.enterBridgeNameInFilter(partialName);
-        String partialDisplayedName = devicesPage.getFirstBridgeName();
-        if (!partialDisplayedName.contains(partialName)) {
-            throw new AssertionError("Displayed bridge name should contain the partial search term. Expected to contain: '"
-                + partialName + "', but got: '" + partialDisplayedName + "'");
-        }
-        devicesPage.verifyBridgeFoundInFilter(testBridgeName);
-        devicesPage.clickFirstBridge();
-        GestureUtils.swipeUpTwice(driver);
-        devicesPage.verifyDeleteBridgeButtonDisplayed();
-        devicesPage.clickDeleteBridgeButton();
-        devicesPage.clickDeleteButton();
-        bridgeAdded = false;
+        devicesPage.verifyBridgeNameMatches(bridgeName);
+
+        // Partial name
+        String partialName = bridgeName.substring(0, Math.min(10, bridgeName.length()));
+        devicesPage.verifyBridgeFoundInFilter(partialName);
+        String displayed = devicesPage.getFirstBridgeName();
+        Assert.assertTrue(displayed.contains(partialName),
+                "Displayed bridge name should contain the partial search term '" + partialName + "' but was '" + displayed + "'");
+
+        deleteTestBridge(bridgeName);
     }
 
     @Test(priority = 5, description = "EEPD-TC-12354: POS-Bridges - Display context menu of bridge item in Bridge list in Dashboard of mobile VMS app")
     public void test05_verifyBridgeContextMenu() {
-        devicesPage.clickMoreMenuOptionAtTheBottom();
-        devicesPage.clickDashboardOptionAtTheBottom();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        try {
-            devicesPage.clickBridgesTab();
-            BridgeTestHelper.deleteBridgeIfExists(driver, devicesPage, "ContextMenuBridge_", logger);
-            driver.navigate().back();
-        } catch (Exception e) {
-            logger.info("Pre-test: No existing bridges to cleanup or cleanup failed: {}", e.getMessage());
-            try {
-                driver.navigate().back();
-            } catch (Exception ex) {
-                logger.info("Pre-test: Could not navigate back");
-            }
-        }
-        testBridgeName = generateBridgeName("ContextMenuBridge_");
-        devicesPage.clickOnAddBridgeIcon();
-        devicesPage.clickAddBridgeOption();
-        devicesPage.waitForBridgeNameFieldToLoad();
-        devicesPage.enterBridgeName(testBridgeName);
-        devicesPage.enterAttachId(getAttachIdFromTestData());
-        devicesPage.clickAddBridgeButton();
-        bridgeAdded = true;
+        String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_CONTEXT_MENU);
         devicesPage.clickBridgesTab();
-        devicesPage.verifyBridgeFoundInFilter(testBridgeName);
-        try {
-            WebElement bridgeElement = driver.findElement(
-                AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]")
-            );
-            GestureUtils.longPress(driver, bridgeElement, Duration.ofMillis(2000));
-        } catch (Exception e) {
-            logger.info("Long press context menu: " + e.getMessage());
-            logger.info("(Trying alternative approach with 3-dots button)");
-            try {
-                devicesPage.clickBridgeThreeDotsButton();
-            } catch (Exception ex) {
-                logger.info("Could not click 3-dots button: " + ex.getMessage());
-            }
-        }
-        verifyContextMenuOption("Bridge information");
-        verifyContextMenuOption("Bridge settings");
-        verifyContextMenuOption("Cameras");
-        verifyContextMenuOption("Turn on all cameras");
-        verifyContextMenuOption("Turn off all cameras");
-        verifyContextMenuOption("Replace bridge");
-        try {
-            WebElement restartOption = driver.findElement(
-                AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']")
-            );
-            if (restartOption.isDisplayed()) {
-                // Optional menu item - exists only for certain user roles
-            }
-        } catch (Exception e) {
-            logger.info("Restart bridge option (not visible - user is not Sub-User)");
-        }
+        devicesPage.verifyBridgeFoundInFilter(bridgeName);
+        devicesPage.verifyBridgeNameMatches(bridgeName);
+
+        devicesPage.openFirstBridgeContextMenu();
+        devicesPage.verifyContextMenuOptionDisplayed("Bridge information");
+        devicesPage.verifyContextMenuOptionDisplayed("Bridge settings");
+        devicesPage.verifyContextMenuOptionDisplayed("Cameras");
+        devicesPage.verifyContextMenuOptionDisplayed("Turn on all cameras");
+        devicesPage.verifyContextMenuOptionDisplayed("Turn off all cameras");
+        devicesPage.verifyContextMenuOptionDisplayed("Replace bridge");
+        // Role-dependent entry; recorded, not asserted, until the TC states which roles see it.
+        logger.info("'Restart bridge' context option shown for this user: {}", devicesPage.isRestartBridgeContextOptionDisplayed());
         driver.navigate().back();
-        devicesPage.verifyBridgeFoundInFilter(testBridgeName);
-        devicesPage.clickFirstBridge();
-        GestureUtils.swipeUpTwice(driver);
-        devicesPage.verifyDeleteBridgeButtonDisplayed();
-        devicesPage.clickDeleteBridgeButton();
-        devicesPage.clickDeleteButton();
-        bridgeAdded = false;
+
+        deleteTestBridge(bridgeName);
     }
 
+    /**
+     * Uses an existing online bridge on the account (a freshly attached test bridge is not
+     * online). The rename is tracked in {@link #renamedBridgeOriginalName} so it is undone
+     * in @AfterMethod if any later step fails.
+     */
     @Test(priority = 6, description = "EEPD-TC-8881: POS-Bridge Settings - changing the name and checking status of the Bridge in mobile VMS app")
     public void test06_changeBridgeNameAndCheckStatus() {
-        devicesPage.clickMoreMenuOptionAtTheBottom();
-        devicesPage.clickDashboardOptionAtTheBottom();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
         devicesPage.clickBridgesTab();
         devicesPage.clickFirstOnlineBridge();
-        BridgeSettingsPage bridgeSettingsPage = new BridgeSettingsPage(driver);
-        bridgeSettingsPage.verifyStatusSectionDisplayed();
-        String bridgeStatus = bridgeSettingsPage.getBridgeStatus();
-        logger.info("Bridge Status: " + bridgeStatus);
+        BridgeSettingsPage settings = new BridgeSettingsPage(driver);
+        settings.verifyStatusSectionDisplayed();
+        String status = settings.getBridgeStatus();
+        logger.info("Bridge status: {}", status);
+        settings.verifyBridgeStatusIsKnown(status);
 
-        // Verify status is determined (not "Unknown")
-        if (!bridgeStatus.equals("Unknown")) {
-            if (bridgeStatus.equals("Online")) {
-                bridgeSettingsPage.verifyOnlineStatusDisplayed();
-            } else if (bridgeStatus.equals("Offline")) {
-                bridgeSettingsPage.verifyOfflineStatusDisplayed();
-            }
-        } else {
-            logger.warn("Bridge status could not be determined - showing as Unknown");
-        }
-
-        // Test bridge rename
-        bridgeSettingsPage.clickNameOption();
-        String originalBridgeName = bridgeSettingsPage.getCurrentBridgeNameFromEditField();
-        String newBridgeName = generateBridgeName("UpdatedBridge_");
-        bridgeSettingsPage.enterNewBridgeName(newBridgeName);
-        bridgeSettingsPage.clickDoneOnKeyboard();
+        settings.clickNameOption();
+        String originalName = settings.getCurrentBridgeNameFromEditField();
+        Assert.assertFalse(originalName.isBlank(), "Existing bridge should have a name to restore afterwards");
+        String newName = TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_UPDATED);
+        renamedBridgeOriginalName = originalName;
+        settings.enterNewBridgeName(newName);
+        settings.clickDoneOnKeyboard();
         driver.navigate().back();
 
-        // Verify rename succeeded
-        boolean bridgeFoundWithNewName = devicesPage.enterBridgeNameInFilter(newBridgeName);
-        if (bridgeFoundWithNewName) {
-            String displayedName = devicesPage.getFirstBridgeName();
-            logger.info("Bridge rename verified - new name: " + displayedName);
-            devicesPage.verifyBridgeNameMatches(newBridgeName);
-        } else {
-            throw new AssertionError("Bridge rename failed - could not find bridge with new name: " + newBridgeName);
-        }
+        devicesPage.verifyBridgeFoundInFilter(newName);
+        devicesPage.verifyBridgeNameMatches(newName);
 
-        // Restore original bridge name (cleanup)
         devicesPage.clickFirstBridge();
-        bridgeSettingsPage.clickNameOption();
-        bridgeSettingsPage.enterNewBridgeName(originalBridgeName);
-        bridgeSettingsPage.clickDoneOnKeyboard();
-        logger.info("Restored original bridge name: " + originalBridgeName);
+        settings.renameBridge(originalName);
+        driver.navigate().back();
+        devicesPage.verifyBridgeFoundInFilter(originalName);
+        devicesPage.verifyBridgeNameMatches(originalName);
+        renamedBridgeOriginalName = null;
     }
 
-    @Test(priority = 7, description = "EEPD-TC-8898: POS-Bridge Settings - Restart the Bridge in mobile VMS app from Dashboard section")
-    public void test07_restartBridgeFromDashboard() {
-        loginAs("reseller_user_creds");
-        pages.ResellerDashboardPage resellerDashboardPage = new pages.ResellerDashboardPage(driver);
-        resellerDashboardPage.verifyDashboardPageDisplayed();
-        resellerDashboardPage.clickFirstAccountWithBridges();
-        resellerDashboardPage.verifyLayoutsScreenDisplayed();
-        devicesPage = new DevicesPage(driver);
-        devicesPage.clickMoreMenuOptionAtTheBottom();
-        devicesPage.clickDashboardOptionAtTheBottom();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        devicesPage.clickBridgesTab();
-        devicesPage.clickFirstBridge();
-        logger.info("Clicked on a bridge");
-        BridgeSettingsPage bridgeSettingsPage = new BridgeSettingsPage(driver);
-        GestureUtils.swipeUpTwice(driver);
-        logger.info("Scrolled to bottom of bridge settings page");
-        bridgeSettingsPage.clickRestartBridgeButton();
-        bridgeSettingsPage.verifyRestartBridgeConfirmationDisplayed();
-        bridgeSettingsPage.confirmRestartBridge();
-        logger.info("Confirmed restart bridge");
-        if (bridgeSettingsPage.isBridgeRestartedMessageDisplayed()) {
-            logger.info("Bridge restart success message displayed");
-        } else {
-            logger.info("Note: Success message not displayed (expected on demo account)");
-        }
-    }
+    // ---- lifecycle helpers ----------------------------------------------------------------
+
     @AfterMethod(alwaysRun = true)
     public void cleanupBridge() {
-        if (bridgeAdded && testBridgeName != null && driver != null) {
+        if (driver == null) {
+            return;
+        }
+        // Cleanup must never throw: an exception here is a TestNG configuration failure that
+        // skips every remaining test in the class. Page verify* methods throw AssertionError,
+        // which is not an Exception, hence Throwable.
+        if (renamedBridgeOriginalName != null) {
             try {
+                devicesPage.recoverToDashboard();
                 devicesPage.clickBridgesTab();
-                devicesPage.deleteBridgeWorkflow(testBridgeName);
-                logger.info("@AfterMethod: Cleaned up bridge: {}", testBridgeName);
-                bridgeAdded = false;
-            } catch (Exception e) {
-                logger.warn("@AfterMethod: Could not cleanup bridge: {}", e.getMessage());
+                devicesPage.verifyBridgeFoundInFilter(TestDataConstants.BRIDGE_PREFIX_UPDATED);
+                devicesPage.clickFirstBridge();
+                new BridgeSettingsPage(driver).renameBridge(renamedBridgeOriginalName);
+                logger.info("@AfterMethod: restored bridge name '{}'", renamedBridgeOriginalName);
+                renamedBridgeOriginalName = null;
+            } catch (Throwable t) {
+                logger.error("@AfterMethod: could not restore bridge name '{}': {}", renamedBridgeOriginalName, t.toString());
             }
         }
-    }
-    private void verifyContextMenuOption(String optionText) {
-        WebElement option = driver.findElement(
-            AppiumBy.xpath("//android.widget.TextView[@text='" + optionText + "']")
-        );
-        if (!option.isDisplayed()) {
-            throw new AssertionError(optionText + " should be displayed");
-        }
-    }
-    private void performPreTestCleanup(String bridgePrefix) {
-        try {
-            devicesPage.clickBridgesTab();
-            BridgeTestHelper.deleteBridgeIfExists(driver, devicesPage, bridgePrefix, logger);
-            driver.navigate().back();
-        } catch (Exception e) {
-            logger.info("Pre-test: Cleanup exception - {}", e.getMessage());
+        if (testBridgeName != null) {
             try {
-                driver.navigate().back();
-            } catch (Exception ex) {
-                logger.info("Pre-test: Could not navigate back");
+                devicesPage.recoverToDashboard();
+                devicesPage.clickBridgesTab();
+                if (devicesPage.tryDeleteBridge(testBridgeName, true)) {
+                    logger.info("@AfterMethod: cleaned up bridge '{}'", testBridgeName);
+                } else {
+                    logger.warn("@AfterMethod: bridge '{}' was not found for cleanup", testBridgeName);
+                }
+                testBridgeName = null;
+            } catch (Throwable t) {
+                logger.error("@AfterMethod: could not clean up bridge '{}': {}", testBridgeName, t.toString());
             }
         }
     }
-    private String getAttachIdFromTestData() {
-        JsonObject testData = JsonDataReader.readJsonObject("testData.json");
-        return testData
-                .getAsJsonObject("credentials")
-                .getAsJsonObject("reseller_user_creds")
-                .get("attachId")
-                .getAsString();
+
+    /**
+     * From the dashboard: remove leftovers with this prefix, then add a new uniquely named
+     * bridge and record it for cleanup. Returns to the screen the add flow lands on.
+     */
+    private String createTestBridge(String prefix) {
+        devicesPage.clickBridgesTab();
+        BridgeTestHelper.deleteLeftoverBridges(devicesPage, prefix);
+        devicesPage.recoverToDashboard();
+        devicesPage.verifyAllDevicesSectionIsDisplayed();
+
+        String bridgeName = TestDataGenerator.generateUniqueName(prefix);
+        testBridgeName = bridgeName;
+        devicesPage.addBridgeWorkflow(bridgeName, getAttachId());
+        return bridgeName;
     }
-    private String generateBridgeName(String prefix) {
-        return prefix + System.currentTimeMillis();
+
+    /** From the Bridges tab: delete the test bridge and mark it as gone. */
+    private void deleteTestBridge(String bridgeName) {
+        devicesPage.deleteBridgeWorkflow(bridgeName);
+        testBridgeName = null;
+    }
+
+    private String getAttachId() {
+        return getTestDataValue("attachId");
     }
 }

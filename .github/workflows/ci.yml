@@ -23,6 +23,8 @@ jobs:
           cache: maven
 
       - name: Create testData.json from secrets
+        # Key names MUST match src/test/resources/testData.json.example. A mismatch surfaces as
+        # "testData.json is missing key ..." from JsonDataReader at test start.
         run: |
           mkdir -p src/test/resources
           cat > src/test/resources/testData.json << 'EOF'
@@ -32,9 +34,9 @@ jobs:
                 "username": "${{ secrets.RESELLER_USERNAME }}",
                 "password": "${{ secrets.RESELLER_PASSWORD }}",
                 "bridge-account-name": "Gdynia-End-User-QA",
-                "custromer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
-                "inavlidEmailFormatText": "inavalidemailformattext",
-                "existingUserInSystemButNotExistingInCurrentLogin": "seetham.c+reseller@brivo.com",
+                "customer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
+                "invalidEmailFormatText": "inavalidemailformattext",
+                "existingUserInSystemButNotExistingInCurrentLogin": "${{ secrets.EXISTING_USER_EMAIL || 'seetham.c+reseller@brivo.com' }}",
                 "attachId": "${{ secrets.ATTACH_ID }}"
               },
               "enduser_user_creds": {

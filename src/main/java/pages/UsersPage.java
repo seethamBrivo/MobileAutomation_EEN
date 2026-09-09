@@ -1,188 +1,123 @@
 package pages;
 
+import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.testng.Assert;
+import utils.TestDataGenerator;
 import utils.WaitUtils;
 
 public class UsersPage {
+
     private static final Logger logger = LogManager.getLogger(UsersPage.class);
     private final AppiumDriver driver;
-    private final By usersOptionAtTheBottomOfTheScreen= AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]");
-    private final By usersAddIconAtTheTopRightCorner= AppiumBy.id("com.een.vms.android:id/img_custom");
-    private final By newUserHeading= AppiumBy.xpath("//android.widget.TextView[@resource-id=\"com.een.vms.android:id/header\" and @text=\"New user\"]");
-    private final By emailTextInputField= AppiumBy.accessibilityId("email_text_field");
-    private final By enterValidEmailAddressErrorMessage= AppiumBy.xpath("//android.widget.TextView[@resource-id=\"com.een.vms.android:id/error_desc\" and @text=\"Enter a valid email address\"]");
-    private final By addButton= AppiumBy.id("com.een.vms.android:id/btn_text");
-    private final By firstNameTextField= AppiumBy.accessibilityId("first_name_text_field");
-    private final By lastNameTextField= AppiumBy.accessibilityId("last_name_text_field");
-    private final By reachedMaxCharactersErrorMessage= AppiumBy.id("com.een.vms.android:id/error_desc");
-    private final By emailPlusHint=AppiumBy.id("com.een.vms.android:id/emailPlusHint");
-    private final By snackbarTextUserwasAdded=AppiumBy.xpath("//android.widget.TextView[@resource-id=\"com.een.vms.android:id/snackbar_text\"]");
-    private final By usersSearchFilterIcon=AppiumBy.id("com.een.vms.android:id/img_search");
-    private final By filterForUsersSearchbar=AppiumBy.id("com.een.vms.android:id/search_bar");
-    private final By selectTheUser=AppiumBy.xpath("(//android.widget.ImageView[@content-desc=\"_user_details_container_end_icon\"])[1]");
-    private final By deleteUserOption=AppiumBy.xpath("//android.view.ViewGroup[@content-desc=\"delete_header_content\"]");
-    private final By confirmDeleteUserOption=AppiumBy.xpath("//android.widget.Button[@content-desc=\"negative_button\"]");
-    private final By backButton=AppiumBy.xpath("//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/img_back\"]");
+
+    private final By usersOptionAtTheBottomOfTheScreen = AppiumBy.xpath("//android.widget.TextView[@text='Users']");
+    private final By usersAddIconAtTheTopRightCorner = AppiumBy.id("com.een.vms.android:id/img_custom");
+    private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/header' and @text='New user']");
+    private final By emailTextInputField = AppiumBy.accessibilityId("email_text_field");
+    private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/error_desc' and @text='Enter a valid email address']");
+    private final By addButton = AppiumBy.id("com.een.vms.android:id/btn_text");
+    private final By firstNameTextField = AppiumBy.accessibilityId("first_name_text_field");
+    private final By lastNameTextField = AppiumBy.accessibilityId("last_name_text_field");
+    private final By reachedMaxCharactersErrorMessage = AppiumBy.id("com.een.vms.android:id/error_desc");
+    private final By emailPlusHint = AppiumBy.id("com.een.vms.android:id/emailPlusHint");
+    private final By snackbarText = AppiumBy.id("com.een.vms.android:id/snackbar_text");
+    private final By usersSearchFilterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
+    private final By filterForUsersSearchbar = AppiumBy.id("com.een.vms.android:id/search_bar");
+    private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']");
+    private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
+    private final By backButton = AppiumBy.id("com.een.vms.android:id/img_back");
+
+    private static final String END_ICON_DESC = "_user_details_container_end_icon";
 
     public UsersPage(AppiumDriver driver) {
         this.driver = driver;
     }
 
+    /** The list row showing exactly this e-mail. */
+    private static By userRowText(String email) {
+        return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']");
+    }
+
+    /**
+     * The end (details) icon inside the same row as {@code email}: the nearest ancestor of the
+     * e-mail label that also contains an end icon is the row itself.
+     */
+    private static By userRowEndIcon(String email) {
+        return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']"
+                + "/ancestor::*[.//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']][1]"
+                + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']");
+    }
+
+    // ---- navigation -----------------------------------------------------------------------
+
     public void clickUsersOptionAtTheBottom() {
-   	 WaitUtils.waitForVisibility(driver, usersOptionAtTheBottomOfTheScreen).click();
-   }
+        WaitUtils.click(driver, usersOptionAtTheBottomOfTheScreen);
+    }
+
     public void clickUsersAddIconAtTheTopRightCorner() {
-      	 WaitUtils.waitForVisibility(driver, usersAddIconAtTheTopRightCorner).click();
-      }
-    public  boolean isNewUserHeadingDisplayed() {
-      	 return WaitUtils.waitForVisibility(driver, newUserHeading).isDisplayed();
-      }
-    public  boolean addButtonIsInDisabledState() {
-    	return !WaitUtils.waitForVisibility(driver, addButton).isEnabled();
-      }
-    public void enterEmailAtTheInputField(String email) {
-        if (email == null) {
-            throw new IllegalArgumentException("Email cannot be null");
-        }
-        var emailField = WaitUtils.waitForVisibility(driver, emailTextInputField);
-        if (emailField.isEnabled()) {
-            emailField.clear();
-        }
-        emailField.sendKeys(email);
-     }
-    public void clickAddButton() {
-      	 WaitUtils.waitForVisibility(driver, addButton).click();
-      }
-    public  boolean isValidEmailErrorMessageDisplayed() {
-     	 return WaitUtils.waitForVisibility(driver, enterValidEmailAddressErrorMessage).isDisplayed();
-     }
-    public  boolean isEmailEnteringWithPlusDisplaysHintDisplayed() {
-    	 return WaitUtils.waitForVisibility(driver, emailPlusHint).isDisplayed();
+        WaitUtils.click(driver, usersAddIconAtTheTopRightCorner);
     }
-    public  boolean isAddButtonEnabled() {
-   	 return WaitUtils.waitForVisibility(driver, addButton).isEnabled();
-   }
-    public void enterFirstNameInputField(String firstName) {
-        var firstNameField = WaitUtils.waitForVisibility(driver, firstNameTextField);
-        if (firstNameField.isEnabled()) {
-            firstNameField.clear();
-        }
-        firstNameField.sendKeys(firstName);
-   }
-    public void enterLastNameInputField(String lastName) {
-        var lastNameField = WaitUtils.waitForVisibility(driver, lastNameTextField);
-        if (lastNameField.isEnabled()) {
-            lastNameField.clear();
-        }
-        lastNameField.sendKeys(lastName);
-     }
-    public boolean isMaxCharactersReachedErrorMessageDisplayed() {
-    	 return WaitUtils.waitForVisibility(driver, reachedMaxCharactersErrorMessage).isDisplayed();
-    }
-    public boolean isUserWasAddedMessageDisplayed() {
-   	 return WaitUtils.waitForVisibility(driver, snackbarTextUserwasAdded).isDisplayed();
-   }
-    public boolean isUsersOptionAtBottomScreenDisplayed() {
-      	 return WaitUtils.waitForVisibility(driver, usersOptionAtTheBottomOfTheScreen).isDisplayed();
-      }
-    public void clickUsersSearchFilterIcon() {
-      	 WaitUtils.waitForVisibility(driver, usersSearchFilterIcon).click();
-      }
-    public void filterForUsersSearchbar(String email) {
-     	  WaitUtils.waitForVisibility(driver, filterForUsersSearchbar).sendKeys(email);
-     }
-    public void selectTheUser() {
-   	  WaitUtils.waitForVisibility(driver, selectTheUser).click();
-   }
-    public void clickDeleteUserOption() {
-     	  WaitUtils.waitForVisibility(driver, deleteUserOption).click();
-     }
-    public void clickConfirmDeleteOption() {
-     	  WaitUtils.waitForVisibility(driver, confirmDeleteUserOption).click();
-     }
-    public boolean isSelectTheUserDisplayed() {
-        try {
-            return driver.findElement(selectTheUser).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
+
     public void clickBackButton() {
-        WaitUtils.waitForVisibility(driver, backButton).click();
+        WaitUtils.click(driver, backButton);
     }
+
     public boolean isAddIconDisplayed() {
-        try {
-            return driver.findElement(usersAddIconAtTheTopRightCorner).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        return WaitUtils.isVisible(driver, usersAddIconAtTheTopRightCorner, TimeoutConstants.SHORT_TIMEOUT);
     }
+
+    public void verifyUsersOptionAtBottomScreenDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, usersOptionAtTheBottomOfTheScreen).isDisplayed(),
+                "Users option should be displayed at the bottom of the screen");
+    }
+
+    // ---- new-user form --------------------------------------------------------------------
+
     public void verifyNewUserHeadingDisplayed() {
-        Assert.assertTrue(isNewUserHeadingDisplayed(), "New user heading should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, newUserHeading).isDisplayed(), "New user heading should be displayed");
     }
+
     public void verifyAddButtonDisabled() {
-        Assert.assertTrue(addButtonIsInDisabledState(), "Add button should be disabled");
+        Assert.assertFalse(WaitUtils.waitForVisibility(driver, addButton).isEnabled(), "Add button should be disabled");
     }
+
     public void verifyAddButtonEnabled() {
-        Assert.assertTrue(isAddButtonEnabled(), "Add button should be enabled");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, addButton).isEnabled(), "Add button should be enabled");
     }
+
+    public void enterEmailAtTheInputField(String email) {
+        WaitUtils.clearAndType(driver, emailTextInputField, email);
+    }
+
+    public void enterFirstNameInputField(String firstName) {
+        WaitUtils.clearAndType(driver, firstNameTextField, firstName);
+    }
+
+    public void enterLastNameInputField(String lastName) {
+        WaitUtils.clearAndType(driver, lastNameTextField, lastName);
+    }
+
+    public void clickAddButton() {
+        WaitUtils.click(driver, addButton);
+    }
+
     public void verifyValidEmailErrorMessageDisplayed() {
-        Assert.assertTrue(isValidEmailErrorMessageDisplayed(), "Valid email error message should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, enterValidEmailAddressErrorMessage).isDisplayed(),
+                "Valid email error message should be displayed");
     }
+
     public void verifyEmailPlusHintDisplayed() {
-        Assert.assertTrue(isEmailEnteringWithPlusDisplaysHintDisplayed(), "Email plus hint should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, emailPlusHint).isDisplayed(), "Email plus hint should be displayed");
     }
+
     public void verifyMaxCharactersErrorMessageDisplayed() {
-        Assert.assertTrue(isMaxCharactersReachedErrorMessageDisplayed(), "Max characters error message should be displayed");
-    }
-    public void verifyUserWasAddedMessageDisplayed() {
-        Assert.assertTrue(isUserWasAddedMessageDisplayed(), "User was added message should be displayed");
-    }
-
-    public void navigateToAddUserScreen() {
-        clickUsersOptionAtTheBottom();
-        clickUsersAddIconAtTheTopRightCorner();
-    }
-
-    public void searchAndDeleteUser(String email) {
-        clickUsersSearchFilterIcon();
-        filterForUsersSearchbar(email);
-        selectTheUser();
-        clickDeleteUserOption();
-        clickConfirmDeleteOption();
-    }
-
-    public void deleteUserIfExists(String email) {
-        try {
-            clickUsersSearchFilterIcon();
-            filterForUsersSearchbar(email);
-            if (isSelectTheUserDisplayed()) {
-                selectTheUser();
-                clickDeleteUserOption();
-                clickConfirmDeleteOption();
-                logger.info("Cleaned up existing test user: {}", email);
-                if (!isAddIconDisplayed()) {
-                    logger.info("Add icon not visible after deletion, clicking back");
-                    clickBackButton();
-                } else {
-                    logger.info("Add icon visible, already on correct screen");
-                }
-            } else {
-                logger.info("User {} does not exist, navigating back", email);
-                clickBackButton();
-            }
-        } catch (Exception e) {
-            logger.info("Error during cleanup for {}: {}", email, e.getMessage());
-            try {
-                clickBackButton();
-            } catch (Exception ex) {
-            }
-        }
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, reachedMaxCharactersErrorMessage).isDisplayed(),
+                "Max characters error message should be displayed");
     }
 
     public void verifyMaxCharactersValidation() {
@@ -191,12 +126,85 @@ public class UsersPage {
         enterLastNameInputField("l".repeat(55));
     }
 
-    public void addUserWithDetails(String firstName, String lastName) {
-        String email = utils.TestDataGenerator.generateEmail(firstName, lastName);
+    /** The "user was added" snackbar. Asserts on the text so an error toast cannot pass. */
+    public void verifyUserWasAddedMessageDisplayed() {
+        String text = WaitUtils.waitForVisibility(driver, snackbarText).getText();
+        Assert.assertTrue(text != null && text.toLowerCase().contains("added"),
+                "Snackbar should confirm the user was added, but said: '" + text + "'");
+    }
+
+    /**
+     * Fills the form with a generated e-mail and submits it.
+     *
+     * @return the e-mail that was actually created, so the caller can verify and clean it up
+     */
+    public String addUserWithDetails(String firstName, String lastName) {
+        String email = TestDataGenerator.generateEmail(firstName, lastName);
         enterEmailAtTheInputField(email);
         enterFirstNameInputField(firstName);
         enterLastNameInputField(lastName);
         clickAddButton();
         verifyUserWasAddedMessageDisplayed();
+        return email;
+    }
+
+    // ---- search / delete ------------------------------------------------------------------
+
+    public void clickUsersSearchFilterIcon() {
+        WaitUtils.click(driver, usersSearchFilterIcon);
+    }
+
+    public void filterForUsersSearchbar(String email) {
+        WaitUtils.clearAndType(driver, filterForUsersSearchbar, email);
+    }
+
+    /** From the users list: search for {@code email} and report whether its row is shown. */
+    public boolean searchForUser(String email) {
+        clickUsersSearchFilterIcon();
+        filterForUsersSearchbar(email);
+        return WaitUtils.isVisible(driver, userRowText(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
+    }
+
+    /** Opens the row for exactly {@code email} and deletes it. Fails if that row is not listed. */
+    public void searchAndDeleteUser(String email) {
+        Assert.assertTrue(searchForUser(email), "User should be listed before deletion: " + email);
+        deleteListedUser(email);
+    }
+
+    /**
+     * Best-effort cleanup. Deletes {@code email} only if a row with exactly that address is
+     * listed after filtering; never touches the first row blindly. Leaves the app on the
+     * users list. Never throws.
+     *
+     * @return true if the user was deleted
+     */
+    public boolean deleteUserIfExists(String email) {
+        try {
+            if (!searchForUser(email)) {
+                logger.info("User {} is not listed; nothing to clean up", email);
+                clickBackButton();
+                return false;
+            }
+            deleteListedUser(email);
+            logger.info("Deleted test user {}", email);
+            if (!isAddIconDisplayed()) {
+                clickBackButton();
+            }
+            return true;
+        } catch (Exception e) {
+            logger.warn("Cleanup for {} failed: {}", email, e.getMessage());
+            try {
+                clickBackButton();
+            } catch (Exception ignored) {
+                // already off the search screen
+            }
+            return false;
+        }
+    }
+
+    private void deleteListedUser(String email) {
+        WaitUtils.click(driver, userRowEndIcon(email));
+        WaitUtils.click(driver, deleteUserOption);
+        WaitUtils.click(driver, confirmDeleteUserOption);
     }
 }

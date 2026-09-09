@@ -1,4 +1,5 @@
 package pages;
+import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.By;
@@ -258,50 +259,23 @@ public class ResellerDashboardPage {
     public boolean isMax120CharsErrorMessageDisplayed() {
    	 return WaitUtils.waitForVisibility(driver, max120CharErrorMessage).isDisplayed();
     }
-    public void clickMoreOption() {
-        WaitUtils.waitForVisibility(driver, moreOption).click();
-    }
+    /**
+     * Logs out from wherever the test finished. Bottom navigation is reachable from most
+     * screens; nested screens/dialogs are unwound with Back first. Throws if it cannot get
+     * there so BaseTest can fall back to clearing the app.
+     */
     public void logout() {
-        try {
-            try {
-                WaitUtils.waitForClickability(driver, dashboardOption).click();
-            } catch (Exception e) {
-                java.time.Duration originalTimeout = driver.manage().timeouts().getImplicitWaitTimeout();
-                if (originalTimeout == null) {
-                    originalTimeout = java.time.Duration.ofSeconds(10);
-                }
-                try {
-                    driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(500));
-                    for (int i = 0; i < 5; i++) {
-                        try {
-                            if (driver.findElement(moreOption).isDisplayed()) {
-                                break;
-                            }
-                            // Element exists but not displayed, press back to navigate
-                            driver.navigate().back();
-                        } catch (Exception ex) {
-                            // Element not found, press back to navigate
-                            driver.navigate().back();
-                        }
-                    }
-                } finally {
-                    driver.manage().timeouts().implicitlyWait(originalTimeout);
-                }
+        if (!WaitUtils.isVisible(driver, dashboardOption, TimeoutConstants.SHORT_TIMEOUT)) {
+            for (int i = 0; i < 5 && !WaitUtils.isPresent(driver, moreOption); i++) {
+                driver.navigate().back();
             }
-            WaitUtils.waitForClickability(driver, moreOption).click();
-            try {
-                driver.findElement(logoutOption);
-            } catch (Exception e) {
-                GestureUtils.swipeUp(driver);
-            }
-            WaitUtils.waitForClickability(driver, logoutOption).click();
-            WaitUtils.waitForClickability(driver, confirmLogoutButton).click();
-        } catch (Exception e) {
-            throw e;  // Re-throw to trigger fallback in BaseTest
         }
-    }
-    public void verifyResellerDashboardDisplayed() {
-        Assert.assertTrue(isDashboardPageDisplayed(), "Reseller dashboard should be displayed");
+        WaitUtils.click(driver, moreOption);
+        if (!WaitUtils.isPresent(driver, logoutOption)) {
+            GestureUtils.swipeUp(driver);
+        }
+        WaitUtils.click(driver, logoutOption);
+        WaitUtils.click(driver, confirmLogoutButton);
     }
     public void verifyLayoutsScreenDisplayed() {
         Assert.assertTrue(isLayoutsScreenDisplayed(), "Layouts screen should be displayed");
