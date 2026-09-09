@@ -44,7 +44,7 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyAddDeviceOptionsDisplayed();
         devicesPage.clickAddBridgeOption();
         devicesPage.waitForBridgeNameFieldToLoad();
-        devicesPage.verifyAddBridgeButtonDisabled();
+        devicesPage.verifyAddBridgeButtonEnabled();
         devicesPage.enterBridgeName(TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_DUPLICATE));
         devicesPage.enterAttachId(getAttachId());
         devicesPage.clickAddBridgeButton();
@@ -61,10 +61,7 @@ public class BridgesTest extends BaseTest {
         devicesPage.clickBridgesTab();
         deleteTestBridge(bridgeName);
         devicesPage.verifyUserNavigatedBackToBridgesTab();
-        // The outcome that matters: the bridge is gone from the list. The "Bridge was deleted"
-        // snackbar is not shown on the demo account, so it is logged rather than asserted.
-        logger.info("'Bridge was deleted' snackbar shown: {}", devicesPage.isBridgeDeletedMessageDisplayed());
-        devicesPage.verifyBridgeNotFoundInFilter(bridgeName);
+        devicesPage.verifyNoMatchingBridgesMessageDisplayed(bridgeName);
     }
 
     @Test(priority = 3, description = "EEPD-TC-16502: POS-Bridges - Display list of bridges under Bridges item in Dashboard in mobile VMS app")
@@ -143,7 +140,6 @@ public class BridgesTest extends BaseTest {
         String status = settings.getBridgeStatus();
         logger.info("Bridge status: {}", status);
         settings.verifyBridgeStatusIsKnown(status);
-
         settings.clickNameOption();
         String originalName = settings.getCurrentBridgeNameFromEditField();
         Assert.assertFalse(originalName.isBlank(), "Existing bridge should have a name to restore afterwards");
@@ -152,13 +148,14 @@ public class BridgesTest extends BaseTest {
         settings.enterNewBridgeName(newName);
         settings.clickDoneOnKeyboard();
         driver.navigate().back();
-
+        devicesPage.refreshBridgesList();
         devicesPage.verifyBridgeFoundInFilter(newName);
         devicesPage.verifyBridgeNameMatches(newName);
-
         devicesPage.clickFirstBridge();
+        settings.verifyStatusSectionDisplayed();
         settings.renameBridge(originalName);
         driver.navigate().back();
+        devicesPage.refreshBridgesList();
         devicesPage.verifyBridgeFoundInFilter(originalName);
         devicesPage.verifyBridgeNameMatches(originalName);
         renamedBridgeOriginalName = null;

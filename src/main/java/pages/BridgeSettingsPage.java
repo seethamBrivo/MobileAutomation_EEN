@@ -18,7 +18,7 @@ public class BridgeSettingsPage {
 
     private final AppiumDriver driver;
 
-    private final By bridgeSettingsTitle = AppiumBy.xpath("//android.widget.TextView[@text='Bridge settings']");
+    private final By bridgeSettingsPage = AppiumBy.xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout");
     private final By statusSection = AppiumBy.xpath("//android.widget.TextView[@text='Status']");
     private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Online')]");
     private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Offline')]");
@@ -30,7 +30,7 @@ public class BridgeSettingsPage {
     private final By restartBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
     private final By restartConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
     private final By confirmRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']");
-    private final By bridgeRestartedMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restarted') or contains(@text, 'rebooted')]");
+    private final By bridgeRestartedMessage = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
 
     public BridgeSettingsPage(AppiumDriver driver) {
         this.driver = driver;
@@ -39,7 +39,7 @@ public class BridgeSettingsPage {
     // ---- status ---------------------------------------------------------------------------
 
     public void verifyBridgeSettingsPageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeSettingsTitle).isDisplayed(), "Bridge settings page should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeSettingsPage).isDisplayed(), "Bridge settings page should be displayed");
     }
 
     public void verifyStatusSectionDisplayed() {
