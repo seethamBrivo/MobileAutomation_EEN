@@ -1,14 +1,12 @@
 package pages;
-
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.By;
+import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
 
-
 public class ResellerDashboardPage {
-
     private final AppiumDriver driver;
     private final By resellerDashboard = AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]");
     private final By totalAccounts= AppiumBy.xpath("//android.widget.TextView[contains(@text, 'accounts')]");
@@ -33,12 +31,10 @@ public class ResellerDashboardPage {
     private final By usersOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]");
     private final By businessPortalOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Business Portal\"]");
     private final By moreOption= AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]");
-
-    //Logout Section locators
+    private final By firstAccountWithBridges = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]");
+    private final By layoutsScreen = AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]");
     private final By logoutOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
-    private final By confirmLogoutButton= AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
-
-    //Add Account Section locators
+    private final By confirmLogoutButton= AppiumBy.xpath("//android.widget.TextView[@text=\"YES\"]");
     private final By accountNameField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
     private final By addButton= AppiumBy.xpath("//android.widget.TextView[@text=\"Add\"]");
     private final By addCustomerIdField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.EditText");
@@ -54,14 +50,14 @@ public class ResellerDashboardPage {
     private final By thirtyDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"30 days\"]");
     private final By cloudRetentionSectionNavigationIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[7]/android.view.View");
     private final By minimumOneDayOption= AppiumBy.xpath("//android.widget.TextView[@text=\"1 day (M10)\"]");
-    private final By max5YearsRetetionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"5 years\"]");
+    private final By max5YearsRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"5 years\"]");
     private final By orientationSectionBackNavigationIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private final By minRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Min retention\"]");
     private final By fourTeenDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"14 days\"]");
     private final By minRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[8]/android.view.View");
     private final By miniumRetentionMinimumValueNone= AppiumBy.xpath("//android.widget.TextView[@text=\"None\"]");
     private final By max180DaysOption= AppiumBy.xpath("//android.widget.TextView[@text=\"180 days\"]");
-    private final By minRetetionSectionBackIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
+    private final By minRetentionSectionBackIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private final By maxRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Max retention\"]");
     private final By sixtyDaysByDafaultOptionForMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"60 days\"]");
     private final By maxRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[9]/android.view.View");
@@ -74,17 +70,19 @@ public class ResellerDashboardPage {
     private final By fullVideoResolutionDafaultValue= AppiumBy.xpath("//android.widget.TextView[@text=\"high (HD1 1280x720)\"]");
     private final By cloudPreviewOnlyoggleButton= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[12]/android.view.View/android.view.View");
     private final By max120CharErrorMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Max 120 characters\"]");
-    
-    
-    
-    
-      
+
     public ResellerDashboardPage(AppiumDriver driver) {
         this.driver = driver;
     }
 
     public boolean isDashboardPageDisplayed() {
         return WaitUtils.waitForVisibility(driver, resellerDashboard).isDisplayed();
+    }
+    public void clickFirstAccountWithBridges() {
+        WaitUtils.waitForClickability(driver, firstAccountWithBridges).click();
+    }
+    public boolean isLayoutsScreenDisplayed() {
+        return WaitUtils.waitForVisibility(driver, layoutsScreen).isDisplayed();
     }
     public boolean isTotalAccountsDisplayed() {
     	return WaitUtils.waitForVisibility(driver, totalAccounts).isDisplayed();
@@ -101,19 +99,19 @@ public class ResellerDashboardPage {
     public boolean isBridgeResourceIconDisplayed() {
     	return WaitUtils.waitForVisibility(driver, bridgeResourceIcon).isDisplayed();
     }
-    public boolean isGreenDotIsDisplayed() {
+    public boolean isGreenDotDisplayed() {
     	return WaitUtils.waitForVisibility(driver, greenDotForOnline).isDisplayed();
     }
-    public boolean isRedDotIsDisplayed() {
+    public boolean isRedDotDisplayed() {
     	return WaitUtils.waitForVisibility(driver, redDotForOffline).isDisplayed();
     }
-    public boolean isyellowDotIsDisplayed() {
+    public boolean isYellowDotDisplayed() {
     	return WaitUtils.waitForVisibility(driver, yellowDotForConnectivityIssue).isDisplayed();
     }
-    public boolean isGreyDotIsDisplayed() {
+    public boolean isGreyDotDisplayed() {
     	return WaitUtils.waitForVisibility(driver, greyDotForStatusTurnedOff).isDisplayed();
     }
-    public boolean isCameraResourceIconIsDisplayed() {
+    public boolean isCameraResourceIconDisplayed() {
     	return WaitUtils.waitForVisibility(driver, cameraResourceIcon).isDisplayed();
     }
     public  void clickThreeDotsOption() {
@@ -143,7 +141,6 @@ public class ResellerDashboardPage {
     public boolean isMoreOptionDisplayed() {
     	return WaitUtils.waitForVisibility(driver, moreOption).isDisplayed();
     }
-    //Add account section methods
     public  void clickAddAccountButton() {
    	 WaitUtils.waitForVisibility(driver, addAccountButton).click();
     }
@@ -162,7 +159,7 @@ public class ResellerDashboardPage {
     public boolean isEditionFieldDisplayed() {
     	return WaitUtils.waitForVisibility(driver, editionField).isDisplayed();
     }
-    public boolean isStandardOptionIsDisplayed() {
+    public boolean isStandardOptionDisplayed() {
     	return WaitUtils.waitForVisibility(driver, standardByDefault).isDisplayed();
     }
     public  void clickEditionSectionNavigationIcon() {
@@ -171,7 +168,7 @@ public class ResellerDashboardPage {
     public boolean isProfessionalOptionDisplayed() {
     	return WaitUtils.waitForVisibility(driver, professionalOption).isDisplayed();
     }
-    public boolean isEnterPriseOptionDisplayed() {
+    public boolean isEnterpriseOptionDisplayed() {
     	return WaitUtils.waitForVisibility(driver, enterpriseOption).isDisplayed();
     }
     public void clickEditionSectionBackNavigationIcon() {
@@ -193,7 +190,7 @@ public class ResellerDashboardPage {
     	return WaitUtils.waitForVisibility(driver, minimumOneDayOption).isDisplayed();
     }
     public boolean isMax5YearsOptionDisplayed() {
-    	return WaitUtils.waitForVisibility(driver, max5YearsRetetionOption).isDisplayed();
+    	return WaitUtils.waitForVisibility(driver, max5YearsRetentionOption).isDisplayed();
     }
     public void clickCloudRetentionSectionBackNavigationIcon() {
    	 WaitUtils.waitForVisibility(driver, orientationSectionBackNavigationIcon).click();
@@ -207,14 +204,14 @@ public class ResellerDashboardPage {
     public void clickMinRetentionSectionViewIcon() {
       	 WaitUtils.waitForVisibility(driver, minRetentionViewIcon).click();
        }
-    public boolean isMinRetetionSectionMinValueIsNoneDisplayed() {
+    public boolean isMinRetentionSectionMinValueNoneDisplayed() {
      	 return WaitUtils.waitForVisibility(driver, miniumRetentionMinimumValueNone).isDisplayed();
       }
-    public boolean isMinRetetionSectionMaxValueIs180DaysDisplayed() {
+    public boolean isMinRetentionSectionMaxValue180DaysDisplayed() {
     	 return WaitUtils.waitForVisibility(driver, max180DaysOption).isDisplayed();
      }
     public void clickMinRetentionSectionBackIcon() {
-     	 WaitUtils.waitForVisibility(driver, minRetetionSectionBackIcon).click();
+     	 WaitUtils.waitForVisibility(driver, minRetentionSectionBackIcon).click();
       }
     public boolean isMaxRetentionOptionDisplayed() {
     	 return WaitUtils.waitForVisibility(driver, maxRetentionOption).isDisplayed();
@@ -261,83 +258,194 @@ public class ResellerDashboardPage {
     public boolean isMax120CharsErrorMessageDisplayed() {
    	 return WaitUtils.waitForVisibility(driver, max120CharErrorMessage).isDisplayed();
     }
-
-    // Logout methods
     public void clickMoreOption() {
         WaitUtils.waitForVisibility(driver, moreOption).click();
     }
-
     public void logout() {
         try {
-            System.out.println("=== Starting Logout Process ===");
-
-            // Step 1: Navigate to main dashboard screen (where More button is visible)
-            System.out.println("Step 1: Navigating to dashboard...");
             try {
                 WaitUtils.waitForClickability(driver, dashboardOption).click();
-                System.out.println("  ✓ Clicked Dashboard button");
-                Thread.sleep(1000);
             } catch (Exception e) {
-                System.out.println("  Dashboard button not found, trying back navigation...");
-                // Press back button multiple times to get to main screen
-                for (int i = 0; i < 5; i++) {
-                    try {
-                        if (driver.findElement(moreOption).isDisplayed()) {
-                            System.out.println("  ✓ More button now visible");
-                            break;
-                        }
-                    } catch (Exception ex) {
-                        System.out.println("  Pressing back... (attempt " + (i+1) + ")");
-                        driver.navigate().back();
+                java.time.Duration originalTimeout = driver.manage().timeouts().getImplicitWaitTimeout();
+                if (originalTimeout == null) {
+                    originalTimeout = java.time.Duration.ofSeconds(10);
+                }
+                try {
+                    driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(500));
+                    for (int i = 0; i < 5; i++) {
                         try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
+                            if (driver.findElement(moreOption).isDisplayed()) {
+                                break;
+                            }
+                            // Element exists but not displayed, press back to navigate
+                            driver.navigate().back();
+                        } catch (Exception ex) {
+                            // Element not found, press back to navigate
+                            driver.navigate().back();
                         }
                     }
+                } finally {
+                    driver.manage().timeouts().implicitlyWait(originalTimeout);
                 }
             }
-
-            // Step 2: Click More button at bottom
-            System.out.println("Step 2: Clicking More button...");
             WaitUtils.waitForClickability(driver, moreOption).click();
-            System.out.println("  ✓ More button clicked");
-
-            // Step 3: Scroll down to find "Log out" button (if not visible)
-            System.out.println("Step 3: Looking for 'Log out' button...");
             try {
-                // Check if logout is visible
                 driver.findElement(logoutOption);
-                System.out.println("  ✓ Log out button is visible");
             } catch (Exception e) {
-                // Not visible, scroll down to bottom
-                System.out.println("  Scrolling down to find Log out button...");
                 GestureUtils.swipeUp(driver);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                }
             }
-
-            // Step 4: Click "Log out" button
-            System.out.println("Step 4: Clicking 'Log out' button...");
             WaitUtils.waitForClickability(driver, logoutOption).click();
-            System.out.println("  ✓ Log out button clicked");
-
-            // Step 5: Click "Yes" on confirmation popup
-            System.out.println("Step 5: Clicking 'Yes' on confirmation popup...");
             WaitUtils.waitForClickability(driver, confirmLogoutButton).click();
-            System.out.println("  ✓ Confirmed logout");
-
-            System.out.println("=== Logout Successful ===");
-
         } catch (Exception e) {
-            System.out.println("=== Logout Failed ===");
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
             throw e;  // Re-throw to trigger fallback in BaseTest
         }
     }
-
+    public void verifyResellerDashboardDisplayed() {
+        Assert.assertTrue(isDashboardPageDisplayed(), "Reseller dashboard should be displayed");
+    }
+    public void verifyLayoutsScreenDisplayed() {
+        Assert.assertTrue(isLayoutsScreenDisplayed(), "Layouts screen should be displayed");
+    }
+    public void verifyDashboardPageDisplayed() {
+        Assert.assertTrue(isDashboardPageDisplayed(), "Dashboard page should be visible after reseller login");
+    }
+    public void verifyTotalAccountsDisplayed() {
+        Assert.assertTrue(isTotalAccountsDisplayed(), "Total accounts with count should be visible");
+    }
+    public void verifyLargeModelTransformationIconDisplayed() {
+        Assert.assertTrue(isLargeModelTransformationIconDisplayed(), "Large model transformation icon should be visible");
+    }
+    public void verifyAccountNameDisplayed(String accountName) {
+        Assert.assertTrue(isAccountNameDisplayed(accountName), "Account name should be displayed: " + accountName);
+    }
+    public void verifyBridgeResourceIconDisplayed() {
+        Assert.assertTrue(isBridgeResourceIconDisplayed(), "Bridge resource icon should be displayed");
+    }
+    public void verifyGreenDotDisplayed() {
+        Assert.assertTrue(isGreenDotDisplayed(), "Green dot is displayed for online status");
+    }
+    public void verifyRedDotDisplayed() {
+        Assert.assertTrue(isRedDotDisplayed(), "Red dot is displayed for offline status");
+    }
+    public void verifyYellowDotDisplayed() {
+        Assert.assertTrue(isYellowDotDisplayed(), "Yellow dot is displayed for connectivity issue status");
+    }
+    public void verifyGreyDotDisplayed() {
+        Assert.assertTrue(isGreyDotDisplayed(), "Grey dot is displayed for no service status");
+    }
+    public void verifyCameraResourceIconDisplayed() {
+        Assert.assertTrue(isCameraResourceIconDisplayed(), "Camera resource icon should be displayed");
+    }
+    public void verifySettingsOptionDisplayed() {
+        Assert.assertTrue(isSettingsOptionDisplayed(), "Settings option should be displayed");
+    }
+    public void verifyDeleteAccountOptionDisplayed() {
+        Assert.assertTrue(isDeleteAccountOptionDisplayed(), "Delete account option should be displayed");
+    }
+    public void verifyFilterByAccountNameDisplayed() {
+        Assert.assertTrue(isFilterByAccountNameFilterDisplayed(), "Filter by account name should be displayed");
+    }
+    public void verifyAddAccountButtonDisplayed() {
+        Assert.assertTrue(isAddAccountButtonDisplayed(), "Add account button should be displayed");
+    }
+    public void verifyDashboardOptionDisplayed() {
+        Assert.assertTrue(isDashboardOptionDisplayed(), "Dashboard option should be displayed");
+    }
+    public void verifyUsersOptionDisplayed() {
+        Assert.assertTrue(isUsersOptionDisplayed(), "Users option should be displayed");
+    }
+    public void verifyBusinessPortalOptionDisplayed() {
+        Assert.assertTrue(isBusinessPortalOptionDisplayed(), "Business Portal option should be displayed");
+    }
+    public void verifyMoreOptionDisplayed() {
+        Assert.assertTrue(isMoreOptionDisplayed(), "More option should be displayed");
+    }
+    public void dismissContextMenu() {
+        ((io.appium.java_client.android.AndroidDriver) driver).pressKey(
+            new io.appium.java_client.android.nativekey.KeyEvent(
+                io.appium.java_client.android.nativekey.AndroidKey.BACK
+            )
+        );
+    }
+    public void verifyAccountNameFieldDisplayed() {
+        Assert.assertTrue(isAccountNameFieldDisplayed(), "Account Name field should be displayed");
+    }
+    public void verifyAddButtonDisplayed() {
+        Assert.assertTrue(isAddButtonDisplayed(), "Add button should be displayed");
+    }
+    public void verifyAddCustomerIdFieldDisplayed() {
+        Assert.assertTrue(isAddCustomerIdFieldDisplayed(), "Add customer id field should be displayed");
+    }
+    public void verifyEmailFieldDisplayed() {
+        Assert.assertTrue(isEmailFieldDisplayed(), "Email field should be displayed");
+    }
+    public void verifyEditionFieldDisplayed() {
+        Assert.assertTrue(isEditionFieldDisplayed(), "Edition field should be displayed");
+    }
+    public void verifyStandardOptionDisplayed() {
+        Assert.assertTrue(isStandardOptionDisplayed(), "Standard option should be displayed");
+    }
+    public void verifyProfessionalOptionDisplayed() {
+        Assert.assertTrue(isProfessionalOptionDisplayed(), "Professional option should be displayed");
+    }
+    public void verifyEnterpriseOptionDisplayed() {
+        Assert.assertTrue(isEnterpriseOptionDisplayed(), "Enterprise option should be displayed");
+    }
+    public void verifyCameraDefaultsSectionDisplayed() {
+        Assert.assertTrue(isCameraDefaultsSectionDisplayed(), "Camera defaults section should be displayed");
+    }
+    public void verifyCloudRetentionOptionDisplayed() {
+        Assert.assertTrue(isCloudRetentionOptionDisplayed(), "Cloud retention option should be displayed");
+    }
+    public void verifyThirtyDaysDefaultOptionDisplayed() {
+        Assert.assertTrue(isThirtyDaysDefaultOptionDisplayed(), "Thirty days default option should be displayed");
+    }
+    public void verifyMinimumOneDayOptionDisplayed() {
+        Assert.assertTrue(isMinimumOneDayOptionDisplayed(), "Minimum one day option should be displayed");
+    }
+    public void verifyMax5YearsOptionDisplayed() {
+        Assert.assertTrue(isMax5YearsOptionDisplayed(), "Max 5 years option should be displayed");
+    }
+    public void verifyMinRetentionOptionDisplayed() {
+        Assert.assertTrue(isMinRetentionOptionDisplayed(), "Min retention option should be displayed");
+    }
+    public void verify14DaysDefaultOptionDisplayed() {
+        Assert.assertTrue(is14DaysDefaultOptionDisplayed(), "14 days default option should be displayed");
+    }
+    public void verifyMinRetentionSectionMinValueNoneDisplayed() {
+        Assert.assertTrue(isMinRetentionSectionMinValueNoneDisplayed(), "Min retention section minimum value None should be displayed");
+    }
+    public void verifyMinRetentionSectionMaxValue180DaysDisplayed() {
+        Assert.assertTrue(isMinRetentionSectionMaxValue180DaysDisplayed(), "Min retention section maximum value 180 days should be displayed");
+    }
+    public void verifyMaxRetentionOptionDisplayed() {
+        Assert.assertTrue(isMaxRetentionOptionDisplayed(), "Max retention option should be displayed");
+    }
+    public void verifySixtyDaysByDefaultOptionDisplayed() {
+        Assert.assertTrue(sixtyDaysByDefaultOptionDisplayed(), "60 days by default option should be displayed");
+    }
+    public void verifyMinimumValueOptionIsNoneInMaxRetentionDisplayed() {
+        Assert.assertTrue(minimumValueOptionIsNoneInMaxRetentionDisplayed(), "Minimum value None in max retention should be displayed");
+    }
+    public void verifyMaxValueOptionIs1YearInMaxRetentionDisplayed() {
+        Assert.assertTrue(maxValueOptionIs1YearInMaxRetentionDisplayed(), "Maximum value 1 year in max retention should be displayed");
+    }
+    public void verifyPreviewResolutionOptionDisplayed() {
+        Assert.assertTrue(previewResolutionOptionIsDisplayed(), "Preview resolution option should be displayed");
+    }
+    public void verifyDefaultPreviewResolutionOptionDisplayed() {
+        Assert.assertTrue(defaultpreviewResolutionOptionIsDisplayed(), "Default preview resolution option should be displayed");
+    }
+    public void verifyFullVideoResolutionOptionDisplayed() {
+        Assert.assertTrue(fullVideoResolutionOptionIsDisplayed(), "Full video resolution option should be displayed");
+    }
+    public void verifyFullVideoResolutionDefaultValueDisplayed() {
+        Assert.assertTrue(fullVideoResolutionDefaultValueIsDisplayed(), "Full video resolution default value should be displayed");
+    }
+    public void verifyCloudPreviewOnlyToggleButtonDisplayed() {
+        Assert.assertTrue(cloudPreviewOnlyToggleButton(), "Cloud preview only toggle button should be displayed");
+    }
+    public void verifyMax120CharsErrorMessageDisplayed() {
+        Assert.assertTrue(isMax120CharsErrorMessageDisplayed(), "Max 120 characters error message should be displayed");
+    }
 }

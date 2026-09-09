@@ -4,10 +4,10 @@
       "username": "your_reseller_email@example.com",
       "password": "YourPassword123",
       "bridge-account-name": "Your-Account-Name",
-      "custromer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
-      "inavlidEmailFormatText": "invalidemailtext",
+      "customer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
+      "invalidEmailFormatText": "invalidemailtext",
       "existingUserInSystemButNotExistingInCurrentLogin": "existing_user@example.com",
-      "attchId": "XXXX-XXXX-XXXX-XXXX"
+      "attachId": "XXXX-XXXX-XXXX-XXXX"
     },
     "enduser_user_creds": {
       "username": "your_enduser_email@example.com",

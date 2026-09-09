@@ -35,7 +35,7 @@ jobs:
                 "custromer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
                 "inavlidEmailFormatText": "inavalidemailformattext",
                 "existingUserInSystemButNotExistingInCurrentLogin": "seetham.c+reseller@brivo.com",
-                "attchId": "${{ secrets.ATTACH_ID }}"
+                "attachId": "${{ secrets.ATTACH_ID }}"
               },
               "enduser_user_creds": {
                 "username": "${{ secrets.ENDUSER_USERNAME }}",
@@ -61,12 +61,32 @@ jobs:
           browserstackNetworkLogs=true
           EOF
 
+      - name: Create android.properties for BrowserStack
+        run: |
+          mkdir -p src/main/resources
+          cat > src/main/resources/android.properties << 'EOF'
+          appPackage=com.een.vms.android
+          appActivity=com.een.core.MainActivity
+          appWaitActivity=com.een.core.MainActivity
+          automationName=UiAutomator2
+          platformName=ANDROID
+          platformVersion=15.0
+          deviceName=Google Pixel 9
+          app=${{ secrets.BROWSERSTACK_APP_URL }}
+          newCommandTimeout=3600
+          noReset=true
+          fullReset=false
+          shouldTerminateApp=true
+          forceAppLaunch=true
+          EOF
+
       - name: Compile and package
         run: mvn -B -DskipTests package
 
       - name: Run tests
+        # Note: continue-on-error removed intentionally to ensure CI fails on test failures
+        # This prevents merging broken code and ensures all tests pass before merge
         run: mvn test -Dplatform=android -DexecutionProvider=browserstack
-        continue-on-error: true
 
       - name: Upload test results
         if: always()

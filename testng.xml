@@ -1,24 +1,26 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Mobile Automation Suite" parallel="false">
+<!-- parallel="false" for local (shared attach ID). For BrowserStack: set parallel="tests" thread-count="3" -->
+<suite name="Mobile Automation Suite" parallel="false" thread-count="3">
     <listeners>
         <listener class-name="listeners.TestListener"/>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
     </listeners>
 
     <test name="Reseller Dashboard Tests">
         <classes>
-            <class name="tests.ResellerDashboardTest"/>
+            <class name="tests.ts_dashboard.ResellerDashboardTest"/>
         </classes>
     </test>
 
-    <test name="Add User Tests">
+    <test name="User Tests">
         <classes>
-            <class name="tests.AddUserTest"/>
+            <class name="tests.ts_users.AddUserTest"/>
         </classes>
     </test>
 
-    <test name="Add Bridge Tests">
+    <test name="Bridge Tests">
         <classes>
-            <class name="tests.AddBridgeTest"/>
+            <class name="tests.ts_bridges.BridgesTest"/>
         </classes>
     </test>
 </suite>

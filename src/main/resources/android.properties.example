@@ -7,6 +7,8 @@ platformVersion=15
 
 # Device Configuration
 deviceName=YOUR_DEVICE_NAME
+# REQUIRED for local execution: Device UDID (run 'adb devices' to find it)
+# Can be left empty for BrowserStack execution
 udid=YOUR_DEVICE_UDID
 
 # Application Setup
@@ -17,7 +19,10 @@ app=C:\\path\\to\\your\\app.apk
 browserstackApp=bs://YOUR_APP_ID
 
 # App Package & Activity
+# REQUIRED: App package name (e.g., com.een.vms.android)
+# Used for both local and BrowserStack execution
 appPackage=com.your.package.name
+# App activity (optional for BrowserStack, used for local execution)
 appActivity=com.your.package.MainActivity
 
 # Session & Execution Behaviors
