@@ -15,3 +15,5 @@ bundleId=com.your.app.bundleid
 noReset=false
 fullReset=false
 newCommandTimeout=120
+# NOTE: when noReset is omitted the framework defaults to noReset=true (Appium's own default is
+# false). BaseTest.tearDown logs out or terminates the app (needs bundleId) between tests.

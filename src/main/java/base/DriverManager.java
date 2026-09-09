@@ -16,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriverException;
 import utils.BrowserStackSessionNameHelper;
 import utils.ConfigReader;
 
@@ -57,6 +58,7 @@ public final class DriverManager {
             } else {
                 throw new IllegalArgumentException("Unsupported platform: " + platform);
             }
+            // Zero: WaitUtils owns all polling. See FrameworkConstants.IMPLICIT_WAIT.
             DRIVER.get().manage().timeouts().implicitlyWait(FrameworkConstants.IMPLICIT_WAIT);
             LOGGER.info("Appium driver initialized for platform: {} using provider: {} with session name: {}",
                     platform, provider, browserStackSessionName);
@@ -77,12 +79,23 @@ public final class DriverManager {
         return ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.BYTES);
     }
 
+    /**
+     * Ends the session. The ThreadLocal is always cleared, even when quit() throws
+     * (BrowserStack idle timeout, session already gone); otherwise the dead driver would be
+     * handed to every following test on this thread.
+     */
     public static void quitDriver() {
         AppiumDriver driver = DRIVER.get();
-        if (driver != null) {
+        if (driver == null) {
+            return;
+        }
+        try {
             driver.quit();
-            DRIVER.remove();
             LOGGER.info("Appium driver session ended");
+        } catch (WebDriverException e) {
+            LOGGER.warn("driver.quit() failed, discarding session anyway: {}", e.getMessage());
+        } finally {
+            DRIVER.remove();
         }
     }
 
@@ -96,7 +109,7 @@ public final class DriverManager {
         // For Local execution, set UDID if provided. Ignore for BrowserStack.
         if (!isBrowserStackExecution()) {
             String udid = ConfigReader.getProperty("udid");
-            if (udid != null && !udid.isBlank()) {
+            if (isValidProperty(udid)) {
                 options.setUdid(udid);
             }
         }
@@ -135,12 +148,12 @@ public final class DriverManager {
         setCommonMobileOptions(options);
         setRemoteProviderOptions(options);
 
-        if (udid != null && !udid.isBlank()) {
+        if (isValidProperty(udid)) {
             options.setUdid(udid);
         }
 
         String bundleId = ConfigReader.getProperty("bundleId");
-        if (bundleId != null && !bundleId.isBlank()) {
+        if (isValidProperty(bundleId)) {
             options.setBundleId(bundleId);
         }
 
@@ -152,8 +165,9 @@ public final class DriverManager {
         String fullReset = ConfigReader.getProperty("fullReset");
         String newCommandTimeout = ConfigReader.getProperty("newCommandTimeout");
 
-        // Both BrowserStack and Local should use consistent defaults to avoid environment-specific behavior
-        // Default to noReset=true for both (keeps app installed, state managed via forceAppLaunch/shouldTerminateApp)
+        // Default is noReset=true when the property is absent. This differs from Appium's own default
+        // (false). Login state therefore survives between sessions unless BaseTest.tearDown logs out
+        // or clears the app, which it does. Documented in the *.properties.example files.
         if (isValidProperty(noReset)) {
             options.setNoReset(Boolean.parseBoolean(noReset));
         } else {
@@ -232,7 +246,7 @@ public final class DriverManager {
 
         // If executing on BrowserStack, prioritize browserstackApp / bs:// URI
         if (isBrowserStackExecution()) {
-            if (providerSpecificApp != null && !providerSpecificApp.isBlank()) {
+            if (isValidProperty(providerSpecificApp)) {
                 return providerSpecificApp;
             } else if (configuredApp != null && configuredApp.startsWith("bs://")) {
                 return configuredApp;
@@ -242,7 +256,7 @@ public final class DriverManager {
         }
 
         // Local execution path logic
-        if (configuredApp == null || configuredApp.isBlank()) {
+        if (!isValidProperty(configuredApp)) {
             throw new IllegalArgumentException("Missing app configuration for the selected platform");
         }
 
@@ -256,7 +270,7 @@ public final class DriverManager {
 
     private static String getExecutionProvider() {
         String provider = ConfigReader.getProperty("executionProvider");
-        return (provider == null || provider.isBlank()) ? "local" : provider.trim().toLowerCase();
+        return isValidProperty(provider) ? provider.trim().toLowerCase() : "local";
     }
 
     private static boolean isBrowserStackExecution() {
@@ -265,18 +279,13 @@ public final class DriverManager {
 
     private static String requireProperty(String key) {
         String value = ConfigReader.getProperty(key);
-        if (value == null || value.isBlank()) {
+        if (!isValidProperty(value)) {
             throw new IllegalArgumentException("Missing required configuration: " + key);
         }
         return value;
     }
 
-    /**
-     * Checks if a configuration property has a valid non-blank value.
-     *
-     * @param value The property value to check
-     * @return true if the value is not null and not blank, false otherwise
-     */
+    /** ConfigReader never returns null (missing keys come back as ""), so blank is the only "unset". */
     private static boolean isValidProperty(String value) {
         return value != null && !value.isBlank();
     }

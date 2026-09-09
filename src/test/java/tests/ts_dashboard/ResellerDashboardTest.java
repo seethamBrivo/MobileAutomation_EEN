@@ -2,20 +2,17 @@ package tests.ts_dashboard;
 
 import base.BaseTest;
 import org.testng.annotations.Test;
-import com.google.gson.JsonObject;
 import utils.GestureUtils;
-import utils.JsonDataReader;
 import pages.ResellerDashboardPage;
 
 public class ResellerDashboardTest extends BaseTest {
 	@Test(description = "EEPD-TC-4516: POS-Reseller Dashboard - (View Dashboard for Reseller) in mobile VMS app")
 	public void verifyResellerDashboard() {
-		ResellerDashboardPage resellerDashboardPage = loginAs("reseller_user_creds");
+		ResellerDashboardPage resellerDashboardPage = loginAs(constants.TestDataConstants.RESELLER_CREDS);
 		resellerDashboardPage.verifyDashboardPageDisplayed();
 		resellerDashboardPage.verifyTotalAccountsDisplayed();
 		resellerDashboardPage.verifyLargeModelTransformationIconDisplayed();
-		JsonObject testData = JsonDataReader.readJsonObject("testData.json");
-		String bridgeAccountName = getTestDataValue(testData, "bridge-account-name");
+		String bridgeAccountName = getTestDataValue("bridge-account-name");
 		resellerDashboardPage.verifyAccountNameDisplayed(bridgeAccountName);
 		resellerDashboardPage.verifyBridgeResourceIconDisplayed();
 		resellerDashboardPage.verifyGreenDotDisplayed();
@@ -37,7 +34,7 @@ public class ResellerDashboardTest extends BaseTest {
 
 	@Test(description = "EEPD-TC-40220: POS-Reseller Dashboard - Verify the account creation for Admin OR Account access users")
 	public void verifyAccountCreationForAdminOrAccountAccessUsers() {
-		ResellerDashboardPage resellerDashboardPage = loginAs("reseller_user_creds");
+		ResellerDashboardPage resellerDashboardPage = loginAs(constants.TestDataConstants.RESELLER_CREDS);
 		resellerDashboardPage.verifyDashboardPageDisplayed();
 		resellerDashboardPage.verifyAddAccountButtonDisplayed();
 		resellerDashboardPage.clickAddAccountButton();
@@ -78,8 +75,7 @@ public class ResellerDashboardTest extends BaseTest {
 		resellerDashboardPage.verifyFullVideoResolutionOptionDisplayed();
 		resellerDashboardPage.verifyFullVideoResolutionDefaultValueDisplayed();
 		resellerDashboardPage.verifyCloudPreviewOnlyToggleButtonDisplayed();
-		JsonObject testData = JsonDataReader.readJsonObject("testData.json");
-		String customer_ID = getTestDataValue(testData, "customer_Id_Above_120_Characters");
+		String customer_ID = getTestDataValue("customer_Id_Above_120_Characters");
 		resellerDashboardPage.enterCustomerIdMoreThan120Characters(customer_ID);
 		resellerDashboardPage.enterAccountName("NewAccountNia");
 		resellerDashboardPage.clickAddOption();

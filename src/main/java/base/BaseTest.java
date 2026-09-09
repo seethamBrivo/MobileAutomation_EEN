@@ -1,17 +1,24 @@
 package base;
 
+import constants.TestDataConstants;
+import constants.TimeoutConstants;
+import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
-import com.google.gson.JsonObject;
-import pages.ResellerDashboardPage;
-import pages.LoginPage;
-import utils.JsonDataReader;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import pages.LoginPage;
+import pages.ResellerDashboardPage;
+import utils.ConfigReader;
+import utils.JsonDataReader;
+import utils.WaitUtils;
 
 public abstract class BaseTest {
 
@@ -26,175 +33,107 @@ public abstract class BaseTest {
                 testResult.getParameters());
         driver = DriverManager.getDriver();
         logger.info("Test setup completed for {}.{}", method.getDeclaringClass().getSimpleName(), method.getName());
-
-        // Handle notification permission popup (platform-aware)
         handleNotificationPermission();
     }
 
-    private void handleNotificationPermission() {
-        String platform = utils.ConfigReader.getPlatform();
+    // ---- login / test data ---------------------------------------------------------------
 
-        if ("android".equalsIgnoreCase(platform)) {
-            handleAndroidPermission();
-        } else if ("ios".equalsIgnoreCase(platform)) {
-            handleIOSPermission();
-        }
+    protected ResellerDashboardPage loginAs(String accountType) {
+        String username = JsonDataReader.getCredentialValue(accountType, "username");
+        String password = JsonDataReader.getCredentialValue(accountType, "password");
+        logger.info("Logging in using account type: {}", accountType);
+        return new LoginPage(driver).loginAs(username, password);
     }
 
-    private void handleAndroidPermission() {
-        try {
-            // Try multiple locator strategies for Android permission dialog
-            // Uses 5-second timeout since dialog appears 1-3s into cold launch
-            java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
-                io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button"),
-                io.appium.java_client.AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button"),
-                io.appium.java_client.AppiumBy.androidUIAutomator(
-                    "new UiSelector().text(\"Allow\").className(\"android.widget.Button\")"
-                )
-            );
+    /** A value from the reseller credentials block of testData.json. */
+    protected String getTestDataValue(String key) {
+        return JsonDataReader.getCredentialValue(TestDataConstants.RESELLER_CREDS, key);
+    }
 
-            boolean handled = utils.WaitUtils.tryClickOptionalElement(driver, strategies, java.time.Duration.ofSeconds(5));
-            if (!handled) {
-                logger.info("No notification permission popup found or already handled");
-            }
+    // ---- optional system popups ----------------------------------------------------------
+
+    private void handleNotificationPermission() {
+        String platform = ConfigReader.getPlatform();
+        List<By> strategies;
+        if ("android".equalsIgnoreCase(platform)) {
+            strategies = List.of(
+                    AppiumBy.id("com.android.permissioncontroller:id/permission_allow_button"),
+                    AppiumBy.id("com.android.permissioncontroller:id/permission_allow_foreground_only_button"),
+                    AppiumBy.androidUIAutomator("new UiSelector().text(\"Allow\").className(\"android.widget.Button\")"));
+        } else if ("ios".equalsIgnoreCase(platform)) {
+            strategies = List.of(
+                    AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Allow'"),
+                    AppiumBy.accessibilityId("Allow"));
+        } else {
+            return;
+        }
+        try {
+            // One shared budget across all strategies: the popup either shows up within
+            // POPUP_TIMEOUT or it does not exist on this session.
+            boolean handled = WaitUtils.tryClickOptionalElement(driver, strategies, TimeoutConstants.POPUP_TIMEOUT);
+            logger.info(handled ? "Notification permission popup dismissed"
+                                : "No notification permission popup within {}", TimeoutConstants.POPUP_TIMEOUT);
         } catch (Exception e) {
             logger.warn("Error handling notification permission: {}", e.getMessage());
         }
     }
 
-    private void handleIOSPermission() {
-        try {
-            // Try multiple locator strategies for iOS permission alert
-            // Uses 5-second timeout since alert appears 1-3s into cold launch
-            java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
-                io.appium.java_client.AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeButton' AND name == 'Allow'"
-                ),
-                io.appium.java_client.AppiumBy.accessibilityId("Allow")
-            );
-
-            boolean handled = utils.WaitUtils.tryClickOptionalElement(driver, strategies, java.time.Duration.ofSeconds(5));
-            if (!handled) {
-                logger.info("No iOS notification permission popup found or already handled");
-            }
-        } catch (Exception e) {
-            logger.warn("Error handling iOS notification permission: {}", e.getMessage());
-        }
-    }
-
-
-    protected ResellerDashboardPage loginAs(String accountType) {
-
-        JsonObject testData =
-                JsonDataReader.readJsonObject("testData.json");
-
-        JsonObject credentials = testData
-                .getAsJsonObject("credentials")
-                .getAsJsonObject(accountType);
-
-        String username = credentials
-                .get("username")
-                .getAsString();
-
-        String password = credentials
-                .get("password")
-                .getAsString();
-
-        logger.info("Logging in using account type: {}", accountType);
-
-        LoginPage loginPage = new LoginPage(driver);
-
-        return loginPage.loginAs(username, password);
-    }
-
-    protected String getTestDataValue(com.google.gson.JsonObject testData, String key) {
-        return testData
-            .getAsJsonObject("credentials")
-            .getAsJsonObject("reseller_user_creds")
-            .get(key)
-            .getAsString();
-    }
+    // ---- teardown ------------------------------------------------------------------------
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(ITestResult testResult) {
-        if (driver != null) {
-            // WORKAROUND: Force app restart by closing and reopening
-            // This ensures next test starts from login screen
-            try {
-                // Option 1: Try logout (if working)
-                ResellerDashboardPage dashboardPage = new ResellerDashboardPage(driver);
-                dashboardPage.logout();
-                logger.info("Successfully logged out after test");
-            } catch (Exception e) {
-                logger.warn("Logout method failed, using force restart: {}", e.getMessage());
-
-                // Option 2: Force stop app (Android 15 workaround)
-                Process process = null;
-                try {
-                    String appPackage = utils.ConfigReader.getProperty("appPackage");
-                    String udid = utils.ConfigReader.getProperty("udid");
-
-                    // Guard against null appPackage
-                    if (appPackage == null || appPackage.isBlank()) {
-                        logger.warn("appPackage is not configured, skipping force stop");
-                    } else {
-                        // Use ProcessBuilder to prevent command injection
-                    ProcessBuilder processBuilder;
-                    if (udid != null && !udid.trim().isBlank()) {
-                        processBuilder = new ProcessBuilder("adb", "-s", udid.trim(), "shell", "am", "force-stop", appPackage);
-                    } else {
-                        processBuilder = new ProcessBuilder("adb", "shell", "am", "force-stop", appPackage);
-                    }
-
-                    process = processBuilder.start();
-
-                    // Close streams to prevent resource leak
-                    try (java.io.InputStream inputStream = process.getInputStream();
-                         java.io.InputStream errorStream = process.getErrorStream();
-                         java.io.OutputStream outputStream = process.getOutputStream()) {
-
-                        boolean completed = process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
-
-                        if (!completed) {
-                            process.destroyForcibly();
-                            logger.warn("Force stop command timed out after 10s, process terminated");
-                        } else {
-                            int exitCode = process.exitValue();
-                            if (exitCode == 0) {
-                                logger.info("App force stopped successfully - will restart fresh for next test");
-                            } else {
-                                logger.warn("Force stop command returned exit code: {}", exitCode);
-                            }
-                        }
-                    }
-                    }
-                } catch (InterruptedException ex) {
-                    if (process != null) {
-                        process.destroyForcibly();
-                    }
-                    Thread.currentThread().interrupt(); // Restore interrupted status
-                    logger.warn("Force stop interrupted and process terminated: {}", ex.getMessage());
-                } catch (Exception ex) {
-                    if (process != null) {
-                        process.destroyForcibly();
-                    }
-                    logger.warn("Could not force stop app: {}", ex.getMessage());
-                }
-            }
-
-            // Only update BrowserStack status if executing on BrowserStack
+        if (driver == null) {
+            return;
+        }
+        try {
+            resetAppStateForNextTest();
             if (isBrowserStackExecution()) {
                 updateBrowserStackStatus(testResult);
             }
+        } finally {
+            DriverManager.quitDriver();
+            driver = null;
+            logger.info("Test teardown completed for {}", getClass().getSimpleName());
         }
+    }
 
-        DriverManager.quitDriver();
-        logger.info("Test teardown completed for {}", getClass().getSimpleName());
+    /**
+     * Sessions run with noReset=true, so whatever this leaves behind is what the next test
+     * starts from. Try a normal logout first; if the test died somewhere logout cannot
+     * navigate from, clear the app through the driver. That works on BrowserStack as well
+     * as locally (a local adb call would not).
+     */
+    private void resetAppStateForNextTest() {
+        try {
+            new ResellerDashboardPage(driver).logout();
+            logger.info("Logged out after test");
+            return;
+        } catch (Exception e) {
+            logger.warn("Logout failed ({}), clearing app state through the driver", e.getMessage());
+        }
+        try {
+            String platform = ConfigReader.getPlatform();
+            if ("android".equalsIgnoreCase(platform)) {
+                String appPackage = ConfigReader.getProperty("appPackage");
+                if (appPackage.isBlank()) {
+                    logger.warn("appPackage not configured; cannot clear app state. Next test may start logged in.");
+                    return;
+                }
+                driver.executeScript("mobile: clearApp", Map.of("appId", appPackage));
+                logger.info("Cleared app data for {}", appPackage);
+            } else {
+                String bundleId = ConfigReader.getProperty("bundleId");
+                if (!bundleId.isBlank()) {
+                    driver.executeScript("mobile: terminateApp", Map.of("bundleId", bundleId));
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Could not clear app state: {}", e.getMessage());
+        }
     }
 
     private boolean isBrowserStackExecution() {
-        String provider = utils.ConfigReader.getProperty("executionProvider");
-        return "browserstack".equalsIgnoreCase(provider);
+        return "browserstack".equalsIgnoreCase(ConfigReader.getProperty("executionProvider"));
     }
 
     private void updateBrowserStackStatus(ITestResult testResult) {
@@ -205,7 +144,7 @@ public abstract class BaseTest {
             } else if (testResult.getStatus() == ITestResult.FAILURE) {
                 String reason = testResult.getThrowable() != null ? testResult.getThrowable().getMessage() : "Test failed";
                 if (reason != null) {
-                    reason = reason.replaceAll("[\"\\\r\n]", " ");
+                    reason = reason.replaceAll("[\"\\\\\r\n]", " ");
                 }
                 jse.executeScript("browserstack_executor: {\"action\": \"setSessionStatus\", \"arguments\": {\"status\": \"failed\", \"reason\": \"" + reason + "\"}}");
             }
