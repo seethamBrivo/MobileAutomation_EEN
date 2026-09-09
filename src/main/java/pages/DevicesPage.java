@@ -43,6 +43,7 @@ public class DevicesPage {
     private final By conflictErrorMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'There is a conflict in the operation')]");
 
     // Bridge list
+    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes
     private final By bridgesBackButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
     private final By firstBridgeInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
     private final By firstBridgeNameText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.widget.TextView[1]");
@@ -56,6 +57,7 @@ public class DevicesPage {
 
     // Bridge settings > delete
     private final By deleteBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Delete bridge']");
+    // TODO: Replace with testTag when mobile team adds proper dialog identifiers
     // Delete confirmation popup button (Compose UI positional path)
     private final By deleteConfirmationDialog = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
     private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
@@ -97,6 +99,7 @@ public class DevicesPage {
         WaitUtils.click(driver, bridgesBackButton);
         WaitUtils.waitForVisibility(driver, allDevicesPage);
         WaitUtils.click(driver, bridgesTab);
+        WaitUtils.waitForVisibility(driver, firstBridgeInList);
     }
 
     /**

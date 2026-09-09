@@ -25,6 +25,7 @@ public class UsersPage {
     private final By lastNameTextField = AppiumBy.accessibilityId("last_name_text_field");
     private final By reachedMaxCharactersErrorMessage = AppiumBy.id("com.een.vms.android:id/error_desc");
     private final By emailPlusHint = AppiumBy.id("com.een.vms.android:id/emailPlusHint");
+    // TODO: Replace with proper resource-id or content-desc when mobile team adds snackbar identifiers
     private final By snackbarText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
     private final By usersSearchFilterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
     private final By filterForUsersSearchbar = AppiumBy.id("com.een.vms.android:id/search_bar");
@@ -134,6 +135,9 @@ public class UsersPage {
 
     /**
      * Fills the form with a generated e-mail and submits it.
+     * <p>
+     * <b>Note:</b> This method does NOT verify the success message. Caller must explicitly call
+     * {@code verifyUserWasAddedMessageDisplayed()} to confirm the user was added successfully.
      *
      * @return the e-mail that was actually created, so the caller can verify and clean it up
      */

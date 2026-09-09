@@ -44,6 +44,7 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyAddDeviceOptionsDisplayed();
         devicesPage.clickAddBridgeOption();
         devicesPage.waitForBridgeNameFieldToLoad();
+        // Note: App behavior changed - button is now enabled by default (not disabled until fields filled)
         devicesPage.verifyAddBridgeButtonEnabled();
         devicesPage.enterBridgeName(TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_DUPLICATE));
         devicesPage.enterAttachId(getAttachId());
