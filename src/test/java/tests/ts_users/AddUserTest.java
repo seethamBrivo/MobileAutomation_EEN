@@ -39,6 +39,10 @@ public class AddUserTest extends BaseTest {
 
         // Brand-new user
         generatedUserEmail = usersPage.addUserWithDetails(firstName, lastName);
+        usersPage.verifyUserWasAddedMessageDisplayed();
+
+        // Wait for app to return to users list before adding next user
+        usersPage.verifyUsersOptionAtBottomScreenDisplayed();
 
         // User that exists in the system but not in this account
         usersPage.clickUsersAddIconAtTheTopRightCorner();
@@ -47,6 +51,9 @@ public class AddUserTest extends BaseTest {
         usersPage.enterLastNameInputField(lastName);
         usersPage.clickAddButton();
         usersPage.verifyUserWasAddedMessageDisplayed();
+
+        // Ensure we're back on the users list before searching
+        usersPage.verifyUsersOptionAtBottomScreenDisplayed();
 
         usersPage.searchAndDeleteUser(existingUserEmail);
         existingUserEmail = null;

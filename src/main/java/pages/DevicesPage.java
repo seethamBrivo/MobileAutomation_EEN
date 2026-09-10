@@ -3,6 +3,7 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -20,10 +21,12 @@ public class DevicesPage {
 
     private static final Logger logger = LogManager.getLogger(DevicesPage.class);
     private final AppiumDriver driver;
+    private final BridgeSettingsPage settings;
 
     // Bottom navigation and tabs
     private final By moreMenuOption = AppiumBy.xpath("//android.widget.TextView[@text='More']");
     private final By dashboardOption = AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
+    private final By allDevicesPage = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View");
     private final By allDevicesSection = AppiumBy.xpath("//android.widget.TextView[@text='All devices']");
     private final By bridgesTab = AppiumBy.xpath("//android.widget.TextView[@text='Bridges']");
     private final By camerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
@@ -42,6 +45,8 @@ public class DevicesPage {
     private final By conflictErrorMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'There is a conflict in the operation')]");
 
     // Bridge list
+    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes
+    private final By bridgesBackButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
     private final By firstBridgeInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
     private final By firstBridgeNameText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.widget.TextView[1]");
     private final By bridgeThreeDotsButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View/android.view.View[7]");
@@ -49,17 +54,20 @@ public class DevicesPage {
     // (An unbounded ancestor:: step returns the outermost container first, which is the whole list.)
     private final By firstOnlineBridge = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By filterSearchField = AppiumBy.xpath("//android.widget.EditText");
+    private final By noMatchingBridgesMessage = AppiumBy.xpath("//android.widget.TextView[@text='No matching bridges']");
     private final By restartBridgeContextOption = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
 
     // Bridge settings > delete
     private final By deleteBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Delete bridge']");
-    private final By deleteConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Are you sure you want to remove this bridge')]");
-    // Accessibility id first (stable), visible label as a fallback for builds without it.
-    private final By deleteButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='DELETE']");
+    // TODO: Replace with testTag when mobile team adds proper dialog identifiers
+    // Delete confirmation popup button (Compose UI positional path)
+    private final By deleteConfirmationDialog = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View");
+    private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
     private final By bridgeDeletedMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/snackbar_text' and @text='Bridge was deleted']");
 
     public DevicesPage(AppiumDriver driver) {
         this.driver = driver;
+        this.settings = new BridgeSettingsPage(driver);
     }
 
     private static By contextMenuOption(String text) {
@@ -84,6 +92,20 @@ public class DevicesPage {
 
     public void clickBridgesTab() {
         WaitUtils.click(driver, bridgesTab);
+    }
+
+    /**
+     * Refresh the Bridges list by navigating back and switching to All Devices tab, then back to Bridges.
+     * Use this after operations that modify bridge data (rename, delete) to ensure the list shows current state.
+     */
+    public void refreshBridgesList() {
+        // Only navigate back if back button is visible (not already on main devices screen)
+        if (WaitUtils.isVisible(driver, bridgesBackButton, Duration.ofSeconds(1))) {
+            WaitUtils.click(driver, bridgesBackButton);
+        }
+        WaitUtils.waitForVisibility(driver, allDevicesPage);
+        WaitUtils.click(driver, bridgesTab);
+        WaitUtils.waitForVisibility(driver, firstBridgeInList);
     }
 
     /**
@@ -198,6 +220,7 @@ public class DevicesPage {
     }
 
     public void verifyBridgeFoundInFilter(String bridgeName) {
+        WaitUtils.waitForVisibility(driver, firstBridgeInList);
         Assert.assertTrue(enterBridgeNameInFilter(bridgeName), "Bridge should be found in filter: " + bridgeName);
     }
 
@@ -206,7 +229,14 @@ public class DevicesPage {
                 "Bridge should no longer be listed after deletion: " + bridgeName);
     }
 
+    public void verifyNoMatchingBridgesMessageDisplayed(String bridgeName) {
+        WaitUtils.clearAndType(driver, filterSearchField, bridgeName);
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, noMatchingBridgesMessage).isDisplayed(),
+                "No matching bridges message should be displayed after deleting bridge: " + bridgeName);
+    }
+
     public void verifyBridgeListDisplayed() {
+        WaitUtils.waitForVisibility(driver, firstBridgeInList);
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstBridgeInList).isDisplayed(), "Bridge list should be displayed");
     }
 
@@ -215,6 +245,7 @@ public class DevicesPage {
     }
 
     public void verifyBridgeNameMatches(String expectedName) {
+        WaitUtils.waitForVisibility(driver, firstBridgeNameText);
         Assert.assertEquals(getFirstBridgeName(), expectedName, "Bridge name should match");
     }
 
@@ -254,7 +285,7 @@ public class DevicesPage {
     // ---- delete bridge --------------------------------------------------------------------
 
     public void clickDeleteBridgeButton() {
-        WaitUtils.click(driver, deleteBridgeButton);
+        WaitUtils.waitForClickability(driver, deleteBridgeButton).click();
     }
 
     public boolean isDeleteConfirmationDialogDisplayed() {
@@ -269,14 +300,18 @@ public class DevicesPage {
         return WaitUtils.isVisible(driver, bridgeDeletedMessage, TimeoutConstants.SHORT_TIMEOUT);
     }
 
+    public String getTextFromFilterSearchField() {
+        return WaitUtils.waitForVisibility(driver, filterSearchField).getText();
+    }
+
     /**
      * From the Bridges tab: filter by name, open the row, scroll to Delete bridge, confirm.
      * Asserts at each step, so use it inside tests only. Cleanup uses {@link #tryDeleteBridge}.
      */
     public void deleteBridgeWorkflow(String bridgeName) {
         verifyBridgeFoundInFilter(bridgeName);
-        verifyBridgeNameMatches(bridgeName);
-        clickFirstBridge();
+        WaitUtils.waitForVisibility(driver, firstBridgeInList).click();
+        settings.waitForDeleteBridgeSettingsPage();
         Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, deleteBridgeButton),
                 "Delete bridge button should be reachable on the bridge settings screen");
         clickDeleteBridgeButton();
