@@ -165,6 +165,30 @@ public class BridgesTest extends BaseTest {
         renamedBridgeOriginalName = null;
     }
 
+    @Test(priority = 7, description = "EEPD-TC-8859: POS-Bridge Settings- turn on/turn off cameras in mobile VMS app")
+    public void test07_turnOnOffAllCamerasInBridge() {
+        BridgeSettingsPage settings = new BridgeSettingsPage(driver);
+        devicesPage.clickBridgesTab();
+        devicesPage.clickFirstOnlineBridge();
+        settings.verifyBridgeSettingsPageDisplayed();
+        settings.clickTurnOffAllCamerasButton();
+        settings.clickCameraControlConfirmButton();
+        settings.verifyCamerasTurnedOffMessageDisplayed();
+        settings.clickTurnOnAllCamerasButton();
+        settings.verifyTurnOnConfirmationAlert();
+        settings.clickCameraControlConfirmButton();
+        settings.verifyCamerasTurnedOnMessageDisplayed();
+        settings.clickTurnOnAllCamerasButton();
+        settings.clickTurnOffAllCamerasButton();
+        settings.verifyTurnOffConfirmationAlert();
+        settings.clickCameraControlConfirmButton();
+        settings.verifyCamerasTurnedOffMessageDisplayed();
+        settings.clickTurnOffAllCamerasButton();
+        settings.clickCameraControlConfirmButton();
+        settings.verifyCamerasTurnedOffMessageDisplayed();
+
+    }
+
     // ---- lifecycle helpers ----------------------------------------------------------------
 
     @AfterMethod(alwaysRun = true)

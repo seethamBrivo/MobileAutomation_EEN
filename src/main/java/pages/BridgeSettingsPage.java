@@ -32,6 +32,14 @@ public class BridgeSettingsPage {
     private final By confirmRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']");
     private final By bridgeRestartedMessage = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
 
+    private final By turnOnAllCamerasButton = AppiumBy.xpath("//android.widget.TextView[@text='Turn on all cameras']");
+    private final By turnOnAllConfirmationAlert = AppiumBy.xpath("//android.widget.TextView[@text=\"Turn on all cameras\"]");
+    private final By turnOffAllConfirmationAlert = AppiumBy.xpath("//android.widget.TextView[@text=\"Turn off all cameras\"]");
+    private final By turnOffAllCamerasButton = AppiumBy.xpath("//android.widget.TextView[@text='Turn off all cameras']");
+    private final By cameraControlConfirmButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
+    private final By camerasStatusMessage = AppiumBy.xpath("//android.widget.TextView[starts-with(@text, 'All cameras')]");
+    private final By camerasAlreadyOnMessage = AppiumBy.xpath("//android.widget.TextView[@text='All cameras have already been turned on']");
+
     public BridgeSettingsPage(AppiumDriver driver) {
         this.driver = driver;
     }
@@ -110,6 +118,47 @@ public class BridgeSettingsPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeRestartedMessage).isDisplayed(),
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
+
+    public void clickTurnOnAllCamerasButton() {
+        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOnAllCamerasButton),
+                "Turn on all cameras button should be reachable on the bridge settings screen");
+        WaitUtils.click(driver, turnOnAllCamerasButton);
+    }
+    public void verifyTurnOnConfirmationAlert() {
+        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOnAllConfirmationAlert),
+                "Turn on all cameras confirmation alert should be reachable on the bridge settings screen");
+    }
+    public void verifyTurnOffConfirmationAlert() {
+        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOffAllConfirmationAlert),
+                "Turn off all cameras confirmation alert should be reachable on the bridge settings screen");
+    }
+
+    public void clickTurnOffAllCamerasButton() {
+        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOffAllCamerasButton),
+                "Turn off all cameras button should be reachable on the bridge settings screen");
+        WaitUtils.click(driver, turnOffAllCamerasButton);
+    }
+
+    public void clickCameraControlConfirmButton() {
+        WaitUtils.click(driver, cameraControlConfirmButton);
+    }
+
+    public void verifyCamerasTurnedOnMessageDisplayed() {
+        String messageText = WaitUtils.waitForVisibility(driver, camerasStatusMessage).getText();
+        Assert.assertTrue(messageText.toLowerCase().contains("turned on") || messageText.toLowerCase().contains("all cameras have already been turned on"),
+                "Cameras turned on confirmation message should be displayed. Actual message: " + messageText);
+    }
+
+    public void verifyCamerasTurnedOffMessageDisplayed() {
+        String messageText = WaitUtils.waitForVisibility(driver, camerasStatusMessage).getText();
+        Assert.assertTrue(messageText.toLowerCase().contains("turned off") || messageText.toLowerCase().contains("all cameras have already been turned off"),
+                "Cameras turned off confirmation message should be displayed. Actual message: " + messageText);
+    }
+
+    public boolean isCamerasAlreadyOnMessageDisplayed() {
+        return WaitUtils.isVisible(driver, camerasAlreadyOnMessage, TimeoutConstants.SHORT_TIMEOUT);
+    }
+
     public void waitForDeleteBridgeSettingsPage() {
         WaitUtils.waitForVisibility(driver, bridgeSettingsPage);
     }
