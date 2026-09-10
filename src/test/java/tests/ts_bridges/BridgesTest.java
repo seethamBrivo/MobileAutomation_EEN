@@ -172,13 +172,14 @@ public class BridgesTest extends BaseTest {
         devicesPage.clickFirstOnlineBridge();
         settings.verifyBridgeSettingsPageDisplayed();
         settings.clickTurnOffAllCamerasButton();
-        settings.clickCameraControlConfirmButton();
+        settings.clickCameraControlConfirmButtonIfPresent();
         settings.verifyCamerasTurnedOffMessageDisplayed();
         settings.clickTurnOnAllCamerasButton();
         settings.verifyTurnOnConfirmationAlert();
-        settings.clickCameraControlConfirmButton();
+        settings.clickCameraControlConfirmButtonIfPresent();
         settings.verifyCamerasTurnedOnMessageDisplayed();
         settings.clickTurnOnAllCamerasButton();
+        settings.verifyCamerasAlreadyOnMessageDisplayed();
         settings.clickTurnOffAllCamerasButton();
         settings.verifyTurnOffConfirmationAlert();
         settings.clickCameraControlConfirmButton();
@@ -186,7 +187,6 @@ public class BridgesTest extends BaseTest {
         settings.clickTurnOffAllCamerasButton();
         settings.clickCameraControlConfirmButton();
         settings.verifyCamerasTurnedOffMessageDisplayed();
-
     }
 
     // ---- lifecycle helpers ----------------------------------------------------------------

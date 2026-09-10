@@ -16,6 +16,9 @@ public class BridgeSettingsPage {
     public static final String STATUS_OFFLINE = "Offline";
     public static final String STATUS_UNKNOWN = "Unknown";
 
+    public static final String MSG_CAMERAS_TURNED_ON = "All cameras were turned on";
+    public static final String MSG_CAMERAS_TURNED_OFF = "All cameras were turned off";
+
     private final AppiumDriver driver;
 
     private final By bridgeSettingsPage = AppiumBy.xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout");
@@ -143,6 +146,12 @@ public class BridgeSettingsPage {
         WaitUtils.click(driver, cameraControlConfirmButton);
     }
 
+    public void clickCameraControlConfirmButtonIfPresent() {
+        if (WaitUtils.isVisible(driver, cameraControlConfirmButton, TimeoutConstants.SHORT_TIMEOUT)) {
+            WaitUtils.click(driver, cameraControlConfirmButton);
+        }
+    }
+
     public void verifyCamerasTurnedOnMessageDisplayed() {
         String messageText = WaitUtils.waitForVisibility(driver, camerasStatusMessage).getText();
         Assert.assertTrue(messageText.toLowerCase().contains("turned on") || messageText.toLowerCase().contains("all cameras have already been turned on"),
@@ -157,6 +166,11 @@ public class BridgeSettingsPage {
 
     public boolean isCamerasAlreadyOnMessageDisplayed() {
         return WaitUtils.isVisible(driver, camerasAlreadyOnMessage, TimeoutConstants.SHORT_TIMEOUT);
+    }
+
+    public void verifyCamerasAlreadyOnMessageDisplayed() {
+        Assert.assertTrue(isCamerasAlreadyOnMessageDisplayed(),
+                "Expected 'All cameras have already been turned on' message when cameras are already on");
     }
 
     public void waitForDeleteBridgeSettingsPage() {
