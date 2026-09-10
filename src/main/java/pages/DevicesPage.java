@@ -3,6 +3,7 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -20,6 +21,7 @@ public class DevicesPage {
 
     private static final Logger logger = LogManager.getLogger(DevicesPage.class);
     private final AppiumDriver driver;
+    private final BridgeSettingsPage settings;
 
     // Bottom navigation and tabs
     private final By moreMenuOption = AppiumBy.xpath("//android.widget.TextView[@text='More']");
@@ -59,12 +61,13 @@ public class DevicesPage {
     private final By deleteBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Delete bridge']");
     // TODO: Replace with testTag when mobile team adds proper dialog identifiers
     // Delete confirmation popup button (Compose UI positional path)
-    private final By deleteConfirmationDialog = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
+    private final By deleteConfirmationDialog = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View");
     private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
     private final By bridgeDeletedMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/snackbar_text' and @text='Bridge was deleted']");
 
     public DevicesPage(AppiumDriver driver) {
         this.driver = driver;
+        this.settings = new BridgeSettingsPage(driver);
     }
 
     private static By contextMenuOption(String text) {
@@ -96,7 +99,10 @@ public class DevicesPage {
      * Use this after operations that modify bridge data (rename, delete) to ensure the list shows current state.
      */
     public void refreshBridgesList() {
-        WaitUtils.click(driver, bridgesBackButton);
+        // Only navigate back if back button is visible (not already on main devices screen)
+        if (WaitUtils.isVisible(driver, bridgesBackButton, Duration.ofSeconds(1))) {
+            WaitUtils.click(driver, bridgesBackButton);
+        }
         WaitUtils.waitForVisibility(driver, allDevicesPage);
         WaitUtils.click(driver, bridgesTab);
         WaitUtils.waitForVisibility(driver, firstBridgeInList);
@@ -305,6 +311,7 @@ public class DevicesPage {
     public void deleteBridgeWorkflow(String bridgeName) {
         verifyBridgeFoundInFilter(bridgeName);
         WaitUtils.waitForVisibility(driver, firstBridgeInList).click();
+        settings.waitForDeleteBridgeSettingsPage();
         Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, deleteBridgeButton),
                 "Delete bridge button should be reachable on the bridge settings screen");
         clickDeleteBridgeButton();

@@ -139,18 +139,31 @@ public class UsersPage {
 
     /**
      * Fills the form with a generated e-mail and submits it.
-     * <p>
-     * <b>Note:</b> This method does NOT verify the success message. Caller must explicitly call
-     * {@code verifyUserWasAddedMessageDisplayed()} to confirm the user was added successfully.
+     * Defaults to verifying the success message.
      *
      * @return the e-mail that was actually created, so the caller can verify and clean it up
      */
     public String addUserWithDetails(String firstName, String lastName) {
+        return addUserWithDetails(firstName, lastName, false);
+    }
+
+    /**
+     * Fills the form with a generated e-mail and submits it.
+     *
+     * @param firstName user's first name
+     * @param lastName user's last name
+     * @param verify if true, verifies the success snackbar appears
+     * @return the e-mail that was actually created, so the caller can verify and clean it up
+     */
+    public String addUserWithDetails(String firstName, String lastName, boolean verify) {
         String email = TestDataGenerator.generateEmail(firstName, lastName);
         enterEmailAtTheInputField(email);
         enterFirstNameInputField(firstName);
         enterLastNameInputField(lastName);
         clickAddButton();
+        if (verify) {
+            verifyUserWasAddedMessageDisplayed();
+        }
         return email;
     }
 

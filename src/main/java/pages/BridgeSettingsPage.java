@@ -110,4 +110,7 @@ public class BridgeSettingsPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeRestartedMessage).isDisplayed(),
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
+    public void waitForDeleteBridgeSettingsPage() {
+        WaitUtils.waitForVisibility(driver, bridgeSettingsPage);
+    }
 }
