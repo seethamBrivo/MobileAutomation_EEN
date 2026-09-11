@@ -179,6 +179,7 @@ public class BridgesTest extends BaseTest {
         settings.clickCameraControlConfirmButtonIfPresent();
         settings.verifyCamerasTurnedOnMessageDisplayed();
         settings.clickTurnOnAllCamerasButton();
+        settings.clickCameraControlConfirmButtonIfPresent();
         settings.verifyCamerasAlreadyOnMessageDisplayed();
         settings.clickTurnOffAllCamerasButton();
         settings.verifyTurnOffConfirmationAlert();

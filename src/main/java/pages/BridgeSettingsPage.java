@@ -18,6 +18,7 @@ public class BridgeSettingsPage {
 
     public static final String MSG_CAMERAS_TURNED_ON = "All cameras were turned on";
     public static final String MSG_CAMERAS_TURNED_OFF = "All cameras were turned off";
+    public static final String MSG_CAMERAS_ALREADY_ON = "All cameras have already been turned on";
 
     private final AppiumDriver driver;
 
@@ -123,23 +124,23 @@ public class BridgeSettingsPage {
     }
 
     public void clickTurnOnAllCamerasButton() {
-        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOnAllCamerasButton),
-                "Turn on all cameras button should be reachable on the bridge settings screen");
+        GestureUtils.scrollUntilPresent(driver, turnOnAllCamerasButton);
         WaitUtils.click(driver, turnOnAllCamerasButton);
-    }
-    public void verifyTurnOnConfirmationAlert() {
-        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOnAllConfirmationAlert),
-                "Turn on all cameras confirmation alert should be reachable on the bridge settings screen");
-    }
-    public void verifyTurnOffConfirmationAlert() {
-        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOffAllConfirmationAlert),
-                "Turn off all cameras confirmation alert should be reachable on the bridge settings screen");
     }
 
     public void clickTurnOffAllCamerasButton() {
-        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, turnOffAllCamerasButton),
-                "Turn off all cameras button should be reachable on the bridge settings screen");
+        GestureUtils.scrollUntilPresent(driver, turnOffAllCamerasButton);
         WaitUtils.click(driver, turnOffAllCamerasButton);
+    }
+
+    public void verifyTurnOnConfirmationAlert() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, turnOnAllConfirmationAlert).isDisplayed(),
+                "Turn on all cameras confirmation alert should be displayed");
+    }
+
+    public void verifyTurnOffConfirmationAlert() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, turnOffAllConfirmationAlert).isDisplayed(),
+                "Turn off all cameras confirmation alert should be displayed");
     }
 
     public void clickCameraControlConfirmButton() {
@@ -153,15 +154,18 @@ public class BridgeSettingsPage {
     }
 
     public void verifyCamerasTurnedOnMessageDisplayed() {
-        String messageText = WaitUtils.waitForVisibility(driver, camerasStatusMessage).getText();
-        Assert.assertTrue(messageText.toLowerCase().contains("turned on") || messageText.toLowerCase().contains("all cameras have already been turned on"),
-                "Cameras turned on confirmation message should be displayed. Actual message: " + messageText);
+        String actualMessage = WaitUtils.waitForVisibility(driver, camerasStatusMessage).getText();
+        boolean isValidMessage = actualMessage.equals(MSG_CAMERAS_TURNED_ON) ||
+                                 actualMessage.equals(MSG_CAMERAS_ALREADY_ON);
+        Assert.assertTrue(isValidMessage,
+                "Expected cameras turned on or already on message. Actual: " + actualMessage);
     }
 
     public void verifyCamerasTurnedOffMessageDisplayed() {
-        String messageText = WaitUtils.waitForVisibility(driver, camerasStatusMessage).getText();
-        Assert.assertTrue(messageText.toLowerCase().contains("turned off") || messageText.toLowerCase().contains("all cameras have already been turned off"),
-                "Cameras turned off confirmation message should be displayed. Actual message: " + messageText);
+        String actualMessage = WaitUtils.waitForVisibility(driver, camerasStatusMessage).getText();
+        boolean isValidMessage = actualMessage.equals(MSG_CAMERAS_TURNED_OFF);
+        Assert.assertTrue(isValidMessage,
+                "Expected cameras turned off message. Actual: " + actualMessage);
     }
 
     public boolean isCamerasAlreadyOnMessageDisplayed() {
