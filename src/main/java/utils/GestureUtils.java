@@ -41,6 +41,20 @@ public final class GestureUtils {
         swipe(driver, centerX, startY, centerX, endY);
     }
 
+    public static void swipeDown(AppiumDriver driver) {
+        Dimension size = driver.manage().window().getSize();
+        int centerX = size.width / 2;
+        int startY = (int) (size.height * GestureConstants.SWIPE_END_PERCENT_VERTICAL);
+        int endY = (int) (size.height * GestureConstants.SWIPE_START_PERCENT_VERTICAL);
+        swipe(driver, centerX, startY, centerX, endY);
+    }
+
+    public static void scrollToTop(AppiumDriver driver) {
+        for (int i = 0; i < GestureConstants.MAX_SCROLL_SWIPES; i++) {
+            swipeDown(driver);
+        }
+    }
+
     /**
      * Swipes up until {@code locator} is present, at most {@link GestureConstants#MAX_SCROLL_SWIPES}
      * times. Does nothing if it is already on screen. Returns whether it was found.

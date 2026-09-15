@@ -92,12 +92,9 @@ public class CamerasPage {
     }
 
     public void verifyOnlineCameraFound() {
-        boolean found = WaitUtils.isVisible(driver, firstOnlineCamera, TimeoutConstants.SHORT_TIMEOUT);
-        if (!found) {
-            clickCamerasItem();
-            found = scrollToOnlineCamera();
-        }
-        Assert.assertTrue(found, "Could not find an online camera even after scrolling");
+        GestureUtils.scrollToTop(driver);
+        Assert.assertTrue(scrollToOnlineCamera(),
+                "Could not find an online camera even after scrolling");
     }
 
     public void longPressOnOnlineCamera() {
