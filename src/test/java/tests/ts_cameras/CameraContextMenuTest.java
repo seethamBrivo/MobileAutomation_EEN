@@ -35,6 +35,7 @@ public class CameraContextMenuTest extends BaseTest {
         camerasPage.dismissContextMenu();
         camerasPage.verifyOnlineCameraFound();
         camerasPage.longPressOnOnlineCamera();
+        camerasPage.verifyContextMenuDisplayed();
         camerasPage.verifyTimestampDisplayed();
     }
 

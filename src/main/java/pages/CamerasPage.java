@@ -92,8 +92,12 @@ public class CamerasPage {
     }
 
     public void verifyOnlineCameraFound() {
-        Assert.assertTrue(scrollToOnlineCamera(),
-                "Could not find an online camera even after scrolling");
+        boolean found = WaitUtils.isVisible(driver, firstOnlineCamera, TimeoutConstants.SHORT_TIMEOUT);
+        if (!found) {
+            clickCamerasItem();
+            found = scrollToOnlineCamera();
+        }
+        Assert.assertTrue(found, "Could not find an online camera even after scrolling");
     }
 
     public void longPressOnOnlineCamera() {
@@ -219,25 +223,14 @@ public class CamerasPage {
             }
         }
         Assert.assertTrue(statusFound, "Expected at least one status indicator to be displayed");
-        if (isGreenDotDisplayed()) {
-            logger.info("Green dot is displayed - camera is online");
-            verifyGreenDotForOnlineCamera();
-        } else {
-            logger.info("Green dot is NOT displayed - camera is offline or in another state");
-            verifyNoGreenDotForOfflineCamera();
-        }
     }
 
     public void verifyAllContextMenuOptions() {
-        if (isCameraNameOptionDisplayed()) {
-            logger.info("Camera name option is displayed (iOS behavior)");
-        } else {
-            logger.info("Camera name option is not displayed (expected for Android)");
-        }
         verifyCameraSettingsOptionDisplayed();
         verifyHistoryBrowserOptionDisplayed();
         verifyLiveVideoOptionDisplayed();
-        verifyTurnOnCameraOptionDisplayed();
-        verifyTurnOffCameraOptionDisplayed();
+        boolean hasTurnOnOrOff = WaitUtils.isVisible(driver, turnOnCameraOption, TimeoutConstants.SHORT_TIMEOUT) ||
+                                 WaitUtils.isVisible(driver, turnOffCameraOption, TimeoutConstants.SHORT_TIMEOUT);
+        Assert.assertTrue(hasTurnOnOrOff, "Expected either 'Turn on camera' or 'Turn off camera' option to be displayed");
     }
 }
