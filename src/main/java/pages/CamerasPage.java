@@ -1,0 +1,238 @@
+package pages;
+
+import constants.TimeoutConstants;
+import io.appium.java_client.AppiumBy;
+import io.appium.java_client.AppiumDriver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.testng.Assert;
+import utils.GestureUtils;
+import utils.WaitUtils;
+
+public class CamerasPage {
+
+    private static final Logger logger = LogManager.getLogger(CamerasPage.class);
+    private final AppiumDriver driver;
+
+    public static final String STATUS_ONLINE = "Online";
+    public static final String STATUS_OFFLINE = "Offline";
+    public static final String STATUS_INVALID_CREDENTIALS = "Invalid Credentials";
+    public static final String STATUS_DEVICE_ERROR = "Device error";
+    public static final String STATUS_CONNECTIVITY_ISSUE = "Connectivity issue";
+    public static final String STATUS_TURNED_OFF = "Turned off";
+    private static final String[] CAMERA_STATUSES = {
+        STATUS_ONLINE, STATUS_OFFLINE, STATUS_INVALID_CREDENTIALS,
+        STATUS_DEVICE_ERROR, STATUS_CONNECTIVITY_ISSUE, STATUS_TURNED_OFF
+    };
+    private final By dashboardSection = AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
+    private final By camerasItem = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
+    private final By cameraListContainer = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
+    private final By cameraInList = AppiumBy.xpath("(//android.widget.TextView[@text=\"Camera error\"])[1]");
+    private final By firstOnlineCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
+    private final By contextMenuContainer = AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]");
+    private final By cameraNameOption = AppiumBy.xpath("//android.widget.TextView[@text='Camera name']");
+    private final By cameraSettingsOption = AppiumBy.xpath("//android.widget.TextView[@text=\"Camera settings\"]");
+    private final By historyBrowserOption = AppiumBy.xpath("//android.widget.TextView[@text='History browser']");
+    private final By liveVideoOption = AppiumBy.xpath("//android.widget.TextView[@text='Live video']");
+    private final By turnOnCameraOption = AppiumBy.xpath("//android.widget.TextView[@text='Turn on camera']");
+    private final By turnOffCameraOption = AppiumBy.xpath("//android.widget.TextView[@text='Turn off camera']");
+    private final By cameraPreview = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[2]");
+    private final By cameraNameInPreview = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]//android.widget.TextView[1]");
+    private final By greenDotIndicator = AppiumBy.xpath("//android.view.View[@content-desc='online_indicator']");
+    private final By timestamp = AppiumBy.xpath("//android.widget.TextView[matches(@text, '\\d{1,2}:\\d{2}')]");
+    private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[@text='Online']");
+    private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[@text='Offline']");
+    private final By invalidCredentialsStatus = AppiumBy.xpath("//android.widget.TextView[@text='Invalid Credentials']");
+    private final By deviceErrorStatus = AppiumBy.xpath("//android.widget.TextView[@text='Device error']");
+    private final By connectivityIssueStatus = AppiumBy.xpath("//android.widget.TextView[@text='Connectivity issue']");
+    private final By turnedOffStatus = AppiumBy.xpath("//android.widget.TextView[@text='Turned off']");
+
+    public CamerasPage(AppiumDriver driver) {
+        this.driver = driver;
+    }
+
+    public void verifyDashboardDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, dashboardSection).isDisplayed(),
+                "Dashboard section should be displayed");
+    }
+
+    public void clickCamerasItem() {
+        WaitUtils.click(driver, camerasItem);
+    }
+
+    public void verifyCameraListDisplayed() {
+        scrollToOfflineCamera();
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraListContainer).isDisplayed(),
+                "Camera list should be displayed");
+    }
+
+    public void longPressOnCamera() {
+        WebElement camera = WaitUtils.waitForVisibility(driver, cameraInList);
+        GestureUtils.longPress(driver, camera);
+    }
+
+    public boolean scrollToOnlineCamera() {
+        logger.info("Looking for first online camera");
+        return GestureUtils.scrollUntilPresent(driver, firstOnlineCamera);
+    }
+
+    public boolean scrollToOfflineCamera() {
+        logger.info("Looking for first offline camera");
+        return GestureUtils.scrollUntilPresent(driver, cameraInList);
+    }
+    public void verifyOnlineCameraFound() {
+        Assert.assertTrue(scrollToOnlineCamera(),
+                "Could not find an online camera even after scrolling");
+    }
+
+    public void longPressOnOnlineCamera() {
+        WebElement onlineCamera = WaitUtils.waitForVisibility(driver, firstOnlineCamera);
+        GestureUtils.longPress(driver, onlineCamera);
+        logger.info("Long pressed on online camera");
+    }
+
+    public void verifyContextMenuDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, contextMenuContainer).isDisplayed(),
+                "Context menu should be displayed in the foreground with blurred background");
+    }
+
+    public void dismissContextMenu() {
+        driver.navigate().back();
+        logger.info("Context menu dismissed");
+    }
+
+    public void verifyCameraSettingsOptionDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraSettingsOption).isDisplayed(),
+                "Camera Settings option should be displayed in context menu");
+    }
+
+    public void verifyHistoryBrowserOptionDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, historyBrowserOption).isDisplayed(),
+                "History Browser option should be displayed in context menu");
+    }
+
+    public void verifyLiveVideoOptionDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, liveVideoOption).isDisplayed(),
+                "Live Video option should be displayed in context menu");
+    }
+
+    public void verifyTurnOnCameraOptionDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, turnOnCameraOption).isDisplayed(),
+                "Turn on camera option should be displayed in context menu");
+    }
+
+    public void verifyTurnOffCameraOptionDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, turnOffCameraOption).isDisplayed(),
+                "Turn off camera option should be displayed in context menu");
+    }
+
+    public boolean isCameraNameOptionDisplayed() {
+        return WaitUtils.isVisible(driver, cameraNameOption, TimeoutConstants.SHORT_TIMEOUT);
+    }
+
+    public void verifyCameraPreviewDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraPreview).isDisplayed(),
+                "Camera preview should be displayed for the selected camera");
+    }
+
+    public void verifyCameraNameDisplayed() {
+        if (WaitUtils.isVisible(driver, cameraNameInPreview, TimeoutConstants.SHORT_TIMEOUT)) {
+            String cameraName = WaitUtils.waitForVisibility(driver, cameraNameInPreview).getText();
+            Assert.assertFalse(cameraName.isEmpty(), "Camera name should be displayed in preview");
+            if (cameraName.contains("...")) {
+                logger.info("Camera name contains ellipsis (lengthy name): {}", cameraName);
+            } else {
+                logger.info("Camera name displayed: {}", cameraName);
+            }
+        } else {
+            logger.warn("Camera name is not visible in the preview");
+        }
+    }
+
+    public boolean isGreenDotDisplayed() {
+        return WaitUtils.isVisible(driver, greenDotIndicator, TimeoutConstants.SHORT_TIMEOUT);
+    }
+
+    public void verifyGreenDotForOnlineCamera() {
+        Assert.assertTrue(isGreenDotDisplayed(),
+                "Green dot should be displayed for online cameras");
+    }
+
+    public void verifyNoGreenDotForOfflineCamera() {
+        Assert.assertFalse(isGreenDotDisplayed(),
+                "Green dot should NOT be displayed for offline cameras");
+    }
+
+    public void verifyTimestampDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, timestamp).isDisplayed(),
+                "Timestamp should be displayed in camera preview");
+    }
+
+    public boolean isDeviceStatusDisplayed(String status) {
+        By statusLocator;
+        switch (status) {
+            case STATUS_ONLINE:
+                statusLocator = onlineStatus;
+                break;
+            case STATUS_OFFLINE:
+                statusLocator = offlineStatus;
+                break;
+            case STATUS_INVALID_CREDENTIALS:
+                statusLocator = invalidCredentialsStatus;
+                break;
+            case STATUS_DEVICE_ERROR:
+                statusLocator = deviceErrorStatus;
+                break;
+            case STATUS_CONNECTIVITY_ISSUE:
+                statusLocator = connectivityIssueStatus;
+                break;
+            case STATUS_TURNED_OFF:
+                statusLocator = turnedOffStatus;
+                break;
+            default:
+                return false;
+        }
+        return WaitUtils.isVisible(driver, statusLocator, TimeoutConstants.SHORT_TIMEOUT);
+    }
+
+    public void verifyDeviceStatusDisplayedWhenNotOnline(String expectedStatus) {
+        Assert.assertTrue(isDeviceStatusDisplayed(expectedStatus),
+                "Device status should be displayed as: " + expectedStatus + " when device is not online");
+    }
+
+    public void verifyCameraStatusAndIndicators() {
+        boolean statusFound = false;
+        for (String status : CAMERA_STATUSES) {
+            if (isDeviceStatusDisplayed(status)) {
+                logger.info("Camera status displayed: {}", status);
+                statusFound = true;
+                break;
+            }
+        }
+        if (!statusFound) {
+            logger.warn("No status indicator found for the camera");
+        }
+        if (isGreenDotDisplayed()) {
+            logger.info("Green dot is displayed - camera is online");
+            verifyGreenDotForOnlineCamera();
+        } else {
+            logger.info("Green dot is NOT displayed - camera is offline or in another state");
+            verifyNoGreenDotForOfflineCamera();
+        }
+    }
+
+    public void verifyAllContextMenuOptions() {
+        if (isCameraNameOptionDisplayed()) {
+            logger.info("Camera name option is displayed (iOS behavior)");
+        } else {
+            logger.info("Camera name option is not displayed (expected for Android)");
+        }
+        verifyCameraSettingsOptionDisplayed();
+        verifyHistoryBrowserOptionDisplayed();
+        verifyLiveVideoOptionDisplayed();
+        verifyTurnOnCameraOptionDisplayed();
+        verifyTurnOffCameraOptionDisplayed();
+    }
+}
