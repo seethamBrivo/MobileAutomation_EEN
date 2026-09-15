@@ -25,4 +25,10 @@
             <class name="tests.ts_bridges.BridgeRestartTest"/>
         </classes>
     </test>
+
+    <test name="Camera Tests">
+        <classes>
+            <class name="tests.ts_cameras.CameraContextMenuTest"/>
+        </classes>
+    </test>
 </suite>

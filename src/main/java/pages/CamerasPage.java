@@ -29,7 +29,8 @@ public class CamerasPage {
     private final By dashboardSection = AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
     private final By camerasItem = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     private final By cameraListContainer = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
-    private final By cameraInList = AppiumBy.xpath("(//android.widget.TextView[@text=\"Camera error\"])[1]");
+    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView])[1]");
+    private final By firstOfflineOrErrorCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By firstOnlineCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By contextMenuContainer = AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]");
     private final By cameraNameOption = AppiumBy.xpath("//android.widget.TextView[@text='Camera name']");
@@ -41,7 +42,7 @@ public class CamerasPage {
     private final By cameraPreview = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[2]");
     private final By cameraNameInPreview = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]//android.widget.TextView[1]");
     private final By greenDotIndicator = AppiumBy.xpath("//android.view.View[@content-desc='online_indicator']");
-    private final By timestamp = AppiumBy.xpath("//android.widget.TextView[matches(@text, '\\d{1,2}:\\d{2}')]");
+    private final By timestamp = AppiumBy.xpath("//android.widget.TextView[contains(@text, ':')]");
     private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[@text='Online']");
     private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[@text='Offline']");
     private final By invalidCredentialsStatus = AppiumBy.xpath("//android.widget.TextView[@text='Invalid Credentials']");
@@ -63,14 +64,22 @@ public class CamerasPage {
     }
 
     public void verifyCameraListDisplayed() {
-        scrollToOfflineCamera();
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraListContainer).isDisplayed(),
                 "Camera list should be displayed");
+        Assert.assertTrue(scrollToFirstCamera(), "Could not find any camera in the list");
+    }
+
+    public boolean scrollToOfflineOrErrorCamera() {
+        logger.info("Looking for first offline or error camera");
+        return GestureUtils.scrollUntilPresent(driver, firstOfflineOrErrorCamera);
     }
 
     public void longPressOnCamera() {
-        WebElement camera = WaitUtils.waitForVisibility(driver, cameraInList);
+        boolean found = scrollToOfflineOrErrorCamera();
+        Assert.assertTrue(found, "Could not find an offline or error camera even after scrolling");
+        WebElement camera = WaitUtils.waitForVisibility(driver, firstOfflineOrErrorCamera);
         GestureUtils.longPress(driver, camera);
+        logger.info("Long pressed on offline/error camera");
     }
 
     public boolean scrollToOnlineCamera() {
@@ -78,10 +87,10 @@ public class CamerasPage {
         return GestureUtils.scrollUntilPresent(driver, firstOnlineCamera);
     }
 
-    public boolean scrollToOfflineCamera() {
-        logger.info("Looking for first offline camera");
-        return GestureUtils.scrollUntilPresent(driver, cameraInList);
+    public boolean scrollToFirstCamera() {
+        return GestureUtils.scrollUntilPresent(driver, firstCameraInList);
     }
+
     public void verifyOnlineCameraFound() {
         Assert.assertTrue(scrollToOnlineCamera(),
                 "Could not find an online camera even after scrolling");
@@ -138,16 +147,14 @@ public class CamerasPage {
     }
 
     public void verifyCameraNameDisplayed() {
-        if (WaitUtils.isVisible(driver, cameraNameInPreview, TimeoutConstants.SHORT_TIMEOUT)) {
-            String cameraName = WaitUtils.waitForVisibility(driver, cameraNameInPreview).getText();
-            Assert.assertFalse(cameraName.isEmpty(), "Camera name should be displayed in preview");
-            if (cameraName.contains("...")) {
-                logger.info("Camera name contains ellipsis (lengthy name): {}", cameraName);
-            } else {
-                logger.info("Camera name displayed: {}", cameraName);
-            }
+        Assert.assertTrue(WaitUtils.isVisible(driver, cameraNameInPreview, TimeoutConstants.SHORT_TIMEOUT),
+                "Camera name should be visible in the preview");
+        String cameraName = WaitUtils.waitForVisibility(driver, cameraNameInPreview).getText();
+        Assert.assertFalse(cameraName.isEmpty(), "Camera name should not be empty");
+        if (cameraName.contains("...")) {
+            logger.info("Camera name contains ellipsis (lengthy name): {}", cameraName);
         } else {
-            logger.warn("Camera name is not visible in the preview");
+            logger.info("Camera name displayed: {}", cameraName);
         }
     }
 
@@ -211,9 +218,7 @@ public class CamerasPage {
                 break;
             }
         }
-        if (!statusFound) {
-            logger.warn("No status indicator found for the camera");
-        }
+        Assert.assertTrue(statusFound, "Expected at least one status indicator to be displayed");
         if (isGreenDotDisplayed()) {
             logger.info("Green dot is displayed - camera is online");
             verifyGreenDotForOnlineCamera();
