@@ -29,7 +29,7 @@ public class CamerasPage {
     private final By dashboardSection = AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
     private final By camerasItem = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     private final By cameraListContainer = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
-    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView])[1]");
+    private final By firstCameraInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
     private final By firstOfflineOrErrorCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By firstOnlineCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By contextMenuContainer = AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]");
@@ -49,6 +49,10 @@ public class CamerasPage {
     private final By deviceErrorStatus = AppiumBy.xpath("//android.widget.TextView[@text='Device error']");
     private final By connectivityIssueStatus = AppiumBy.xpath("//android.widget.TextView[@text='Connectivity issue']");
     private final By turnedOffStatus = AppiumBy.xpath("//android.widget.TextView[@text='Turned off']");
+    private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
+    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by camera\"]");
+    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, ' camera') and not(contains(@text, 'Filter'))]");
+    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"No matching cameras\"]");
 
     public CamerasPage(AppiumDriver driver) {
         this.driver = driver;
@@ -229,5 +233,112 @@ public class CamerasPage {
         boolean hasTurnOnOrOff = WaitUtils.isVisible(driver, turnOnCameraOption, TimeoutConstants.SHORT_TIMEOUT) ||
                                  WaitUtils.isVisible(driver, turnOffCameraOption, TimeoutConstants.SHORT_TIMEOUT);
         Assert.assertTrue(hasTurnOnOrOff, "Expected either 'Turn on camera' or 'Turn off camera' option to be displayed");
+    }
+
+    public void clickSearchBar() {
+        WaitUtils.click(driver, searchBar);
+    }
+
+    public void verifySearchPlaceholderDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, searchPlaceholder).isDisplayed(),
+                "Search placeholder 'Filter by camera' should be displayed");
+    }
+
+    public void verifySearchFieldEditable() {
+        WebElement searchField = WaitUtils.waitForVisibility(driver, searchBar);
+        Assert.assertTrue(searchField.isDisplayed() && searchField.isEnabled(),
+                "Search field should be editable");
+    }
+
+    public void enterSearchTerm(String searchTerm) {
+        WaitUtils.clearAndType(driver, searchBar, searchTerm);
+    }
+
+    public boolean isCameraFoundInFilter() {
+        return WaitUtils.isVisible(driver, firstCameraInList, TimeoutConstants.FILTER_RESULT_TIMEOUT);
+    }
+
+    public void verifyCameraFoundInFilter(String searchTerm) {
+        Assert.assertTrue(isCameraFoundInFilter(),
+                "Camera should be found in filter results for: " + searchTerm);
+    }
+
+    public void verifyFilteredListDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstCameraInList).isDisplayed(),
+                "Filtered camera list should be displayed");
+    }
+
+    public void verifyCameraCounterDisplayed() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, cameraCounter, TimeoutConstants.SHORT_TIMEOUT),
+                "Camera counter should be displayed");
+    }
+
+    public String getCameraCounterText() {
+        return WaitUtils.waitForVisibility(driver, cameraCounter).getText();
+    }
+
+    public void clearSearchIfNeeded() {
+        WebElement searchField = WaitUtils.waitForVisibility(driver, searchBar);
+        String currentText = searchField.getText();
+
+        if (currentText != null && !currentText.isEmpty()) {
+            By clearIcon = AppiumBy.xpath(
+                "//android.widget.EditText[@text=\"" + currentText + "\"]/android.view.View[3]/android.view.View"
+            );
+            WaitUtils.click(driver, clearIcon);
+            logger.info("Cleared search term: {}", currentText);
+        } else {
+            logger.info("Search field is already empty");
+        }
+    }
+
+    public void verifyDefaultCameraListRestored() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstCameraInList).isDisplayed(),
+                "Default camera list should be restored after clearing search");
+    }
+
+    public void validateCounterFormat(String counterText) {
+        Assert.assertTrue(counterText.matches("\\d+ [Cc]ameras?"),
+                "Counter should show format like '10 cameras' but was: " + counterText);
+    }
+
+    public int extractCountFromCounterText(String counterText) {
+        String numberOnly = counterText.replaceAll("\\D+", "");
+        Assert.assertFalse(numberOnly.isEmpty(),
+                "Counter text should contain a numeric value: " + counterText);
+
+        return Integer.parseInt(numberOnly);
+    }
+
+    public void verifyFilteredCountLessThanOrEqualInitial(String filteredCount, String initialCount) {
+        int filteredNum = extractCountFromCounterText(filteredCount);
+        int initialNum = extractCountFromCounterText(initialCount);
+        Assert.assertTrue(filteredNum <= initialNum,
+                "Filtered count (" + filteredNum + ") should be <= initial count (" + initialNum + ")");
+    }
+
+    public void verifyCountersMatch(String actualCount, String expectedCount) {
+        Assert.assertEquals(actualCount, expectedCount,
+                "Counter should restore to initial value");
+    }
+
+    public void longPressFirstCamera() {
+        WebElement camera = WaitUtils.waitForVisibility(driver, firstCameraInList);
+        GestureUtils.longPress(driver, camera);
+    }
+
+    public void verifyCanInteractWithFilteredCamera() {
+        longPressFirstCamera();
+        verifyContextMenuDisplayed();
+        dismissContextMenu();
+    }
+
+    public boolean isEmptyStateDisplayed() {
+        return WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.SHORT_TIMEOUT);
+    }
+
+    public void verifyEmptyStateDisplayed() {
+        Assert.assertTrue(isEmptyStateDisplayed(),
+                "Empty state message should be displayed when no cameras match search");
     }
 }
