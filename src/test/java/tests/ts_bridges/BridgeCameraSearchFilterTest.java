@@ -60,7 +60,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.validateCounterFormat(emptyStateCount);
         bridgeCamerasPage.clearSearchIfNeeded();
         bridgeCamerasPage.verifyDefaultCameraListRestored();
-        // Navigate back: first from cameras view, then from bridge context menu
+        // Navigate back: back button returns to bridge list, then dismiss any context menu
         bridgeCamerasPage.clickBackButton();
         driver.navigate().back();
         devicesPage.verifyBridgeListDisplayed();
@@ -68,15 +68,13 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
 
     @AfterMethod(alwaysRun = true)
     public void cleanup() {
+        // Test already handles navigation back to bridge list, cleanup only needed on test failure
         try {
             if (driver != null && bridgeCamerasPage != null) {
                 bridgeCamerasPage.clearSearchIfNeeded();
-                // Navigate back: first from cameras view, then from bridge context menu
-                bridgeCamerasPage.clickBackButton();
-                driver.navigate().back();
             }
         } catch (Exception e) {
-            logger.debug("Cleanup: already at bridge list or navigation not needed: {}", e.getMessage());
+            logger.debug("Cleanup: could not clear search: {}", e.getMessage());
         }
     }
 }

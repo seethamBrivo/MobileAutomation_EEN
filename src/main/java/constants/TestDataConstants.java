@@ -22,4 +22,9 @@ public final class TestDataConstants {
     public static final String TEST_DATA_FILE = "testData.json";
     public static final String RESELLER_CREDS = "reseller_user_creds";
     public static final String ENDUSER_CREDS = "enduser_user_creds";
+
+    // Test-data JSON keys (search_filter block).
+    public static final String SEARCH_FILTER = "search_filter";
+    public static final String VALID_SEARCH_TERM = "valid_search_term";
+    public static final String INVALID_SEARCH_TERM = "invalid_search_term";
 }

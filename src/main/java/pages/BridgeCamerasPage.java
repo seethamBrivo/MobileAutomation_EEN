@@ -20,7 +20,7 @@ public class BridgeCamerasPage {
     private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
     private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
     private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by camera\"]");
-    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, ' camera') and not(contains(@text, 'Filter'))]");
+    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, ' camera') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
     private final By firstCameraInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
     private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"No matching cameras\"]");
 
@@ -141,6 +141,9 @@ public class BridgeCamerasPage {
 
     public void verifyCanInteractWithFilteredCamera() {
         longPressFirstCamera();
+        // Verify context menu opened (same pattern as CamerasPage)
+        Assert.assertTrue(WaitUtils.isVisible(driver, AppiumBy.xpath("//android.widget.TextView[@text='Camera settings']"), TimeoutConstants.SHORT_TIMEOUT),
+                "Context menu should be displayed after long press");
         dismissContextMenu();
     }
 

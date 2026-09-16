@@ -51,7 +51,7 @@ public class CamerasPage {
     private final By turnedOffStatus = AppiumBy.xpath("//android.widget.TextView[@text='Turned off']");
     private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
     private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by camera\"]");
-    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, ' camera') and not(contains(@text, 'Filter'))]");
+    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, ' camera') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
     private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"No matching cameras\"]");
 
     public CamerasPage(AppiumDriver driver) {
