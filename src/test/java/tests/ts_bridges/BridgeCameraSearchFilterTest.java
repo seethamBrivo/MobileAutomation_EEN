@@ -31,8 +31,8 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
 
     @Test(description = "EEPD-TC-53382: POS-Bridges - Filter for respective bridge cameras by search term in Dashboard in VMS mobile app")
     public void verifyBridgeCameraSearchFilterFunctionality() {
-        String validSearchTerm = JsonDataReader.getTestData().getAsJsonObject("search_filter").get("valid_search_term").getAsString();
-        String invalidSearchTerm = JsonDataReader.getTestData().getAsJsonObject("search_filter").get("invalid_search_term").getAsString();
+        String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.VALID_SEARCH_TERM);
+        String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
 
         String initialCount = bridgeCamerasPage.getCameraCounterText();
         bridgeCamerasPage.validateCounterFormat(initialCount);
@@ -60,7 +60,6 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.validateCounterFormat(emptyStateCount);
         bridgeCamerasPage.clearSearchIfNeeded();
         bridgeCamerasPage.verifyDefaultCameraListRestored();
-        // Navigate back: back button returns to bridge list, then dismiss any context menu
         bridgeCamerasPage.clickBackButton();
         driver.navigate().back();
         devicesPage.verifyBridgeListDisplayed();

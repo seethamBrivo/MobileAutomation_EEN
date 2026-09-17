@@ -1,5 +1,6 @@
 package pages;
 
+import constants.TestDataConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
@@ -19,10 +20,10 @@ public class BridgeCamerasPage {
     private final By camerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
     private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
-    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by camera\"]");
-    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, ' camera') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
+    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + TestDataConstants.SEARCH_PLACEHOLDER + "\"]");
+    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + TestDataConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
     private final By firstCameraInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
-    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"No matching cameras\"]");
+    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + TestDataConstants.EMPTY_STATE_MESSAGE + "\"]");
 
     public BridgeCamerasPage(AppiumDriver driver) {
         this.driver = driver;
@@ -48,7 +49,7 @@ public class BridgeCamerasPage {
 
     public void verifySearchPlaceholderDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, searchPlaceholder).isDisplayed(),
-                "Search placeholder 'Filter by camera' should be displayed");
+                "Search placeholder '" + TestDataConstants.SEARCH_PLACEHOLDER + "' should be displayed");
     }
 
     public void verifySearchFieldEditable() {

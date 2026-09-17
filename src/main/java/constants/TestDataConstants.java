@@ -27,4 +27,9 @@ public final class TestDataConstants {
     public static final String SEARCH_FILTER = "search_filter";
     public static final String VALID_SEARCH_TERM = "valid_search_term";
     public static final String INVALID_SEARCH_TERM = "invalid_search_term";
+
+    // UI text constants for camera search/filter.
+    public static final String SEARCH_PLACEHOLDER = "Filter by camera";
+    public static final String EMPTY_STATE_MESSAGE = "No matching cameras";
+    public static final String CAMERA_COUNTER_TEXT = " camera";
 }
