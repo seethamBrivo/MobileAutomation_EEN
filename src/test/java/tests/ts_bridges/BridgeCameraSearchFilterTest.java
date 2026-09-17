@@ -2,6 +2,7 @@ package tests.ts_bridges;
 
 import base.BaseTest;
 import constants.TestDataConstants;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -22,7 +23,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         devicesPage.verifyAllDevicesSectionIsDisplayed();
         devicesPage.clickBridgesTab();
         devicesPage.verifyBridgeListDisplayed();
-        devicesPage.openFirstBridgeContextMenu();
+        devicesPage.clickBridgeThreeDotsButton();
         bridgeCamerasPage = new BridgeCamerasPage(driver);
         bridgeCamerasPage.verifyCamerasOptionDisplayed();
         bridgeCamerasPage.clickCamerasOption();
@@ -58,10 +59,11 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.verifyCameraCounterDisplayed();
         String emptyStateCount = bridgeCamerasPage.getCameraCounterText();
         bridgeCamerasPage.validateCounterFormat(emptyStateCount);
+        int emptyCount = bridgeCamerasPage.extractCountFromCounterText(emptyStateCount);
+        Assert.assertEquals(emptyCount, 0, "Counter should show 0 cameras when no matches found");
         bridgeCamerasPage.clearSearchIfNeeded();
         bridgeCamerasPage.verifyDefaultCameraListRestored();
         bridgeCamerasPage.clickBackButton();
-        driver.navigate().back();
         devicesPage.verifyBridgeListDisplayed();
     }
 
@@ -73,7 +75,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
                 bridgeCamerasPage.clearSearchIfNeeded();
             }
         } catch (Exception e) {
-            logger.debug("Cleanup: could not clear search: {}", e.getMessage());
+            logger.warn("Cleanup: could not clear search: {}", e.getMessage());
         }
     }
 }

@@ -2,6 +2,7 @@ package tests.ts_cameras;
 
 import base.BaseTest;
 import constants.TestDataConstants;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -54,6 +55,8 @@ public class CameraSearchFilterTest extends BaseTest {
         camerasPage.verifyCameraCounterDisplayed();
         String emptyStateCount = camerasPage.getCameraCounterText();
         camerasPage.validateCounterFormat(emptyStateCount);
+        int emptyCount = camerasPage.extractCountFromCounterText(emptyStateCount);
+        Assert.assertEquals(emptyCount, 0, "Counter should show 0 cameras when no matches found");
         camerasPage.clearSearchIfNeeded();
         camerasPage.verifyDefaultCameraListRestored();
     }
@@ -65,7 +68,7 @@ public class CameraSearchFilterTest extends BaseTest {
                 camerasPage.clearSearchIfNeeded();
             }
         } catch (Exception e) {
-            logger.debug("Cleanup: could not clear search: {}", e.getMessage());
+            logger.warn("Cleanup: could not clear search: {}", e.getMessage());
         }
     }
 }

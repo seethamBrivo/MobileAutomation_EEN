@@ -1,32 +1,39 @@
 package pages;
 
-import constants.TestDataConstants;
 import constants.TimeoutConstants;
+import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
 import org.testng.Assert;
-import utils.GestureUtils;
 import utils.WaitUtils;
 
 public class BridgeCamerasPage {
 
     private static final Logger logger = LogManager.getLogger(BridgeCamerasPage.class);
     private final AppiumDriver driver;
+    private final CameraSearchHelper searchHelper;
 
     private final By camerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
     private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
-    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + TestDataConstants.SEARCH_PLACEHOLDER + "\"]");
-    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + TestDataConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
+    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.SEARCH_PLACEHOLDER + "\"]");
+    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + UiTextConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
     private final By firstCameraInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
-    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + TestDataConstants.EMPTY_STATE_MESSAGE + "\"]");
+    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]");
 
     public BridgeCamerasPage(AppiumDriver driver) {
         this.driver = driver;
+        this.searchHelper = new CameraSearchHelper(
+            driver,
+            searchBar,
+            searchPlaceholder,
+            cameraCounter,
+            firstCameraInList,
+            emptyStateMessage
+        );
     }
 
     public void clickCamerasOption() {
@@ -44,95 +51,67 @@ public class BridgeCamerasPage {
     }
 
     public void clickSearchBar() {
-        WaitUtils.click(driver, searchBar);
+        searchHelper.clickSearchBar();
     }
 
     public void verifySearchPlaceholderDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, searchPlaceholder).isDisplayed(),
-                "Search placeholder '" + TestDataConstants.SEARCH_PLACEHOLDER + "' should be displayed");
+        searchHelper.verifySearchPlaceholderDisplayed();
     }
 
     public void verifySearchFieldEditable() {
-        WebElement searchField = WaitUtils.waitForVisibility(driver, searchBar);
-        Assert.assertTrue(searchField.isDisplayed() && searchField.isEnabled(),
-                "Search field should be editable");
+        searchHelper.verifySearchFieldEditable();
     }
 
     public void enterSearchTerm(String searchTerm) {
-        WaitUtils.clearAndType(driver, searchBar, searchTerm);
+        searchHelper.enterSearchTerm(searchTerm);
     }
 
     public boolean isCameraFoundInFilter() {
-        return WaitUtils.isVisible(driver, firstCameraInList, TimeoutConstants.FILTER_RESULT_TIMEOUT);
+        return searchHelper.isCameraFoundInFilter();
     }
 
     public void verifyCameraFoundInFilter(String searchTerm) {
-        Assert.assertTrue(isCameraFoundInFilter(),
-                "Camera should be found in filter results for: " + searchTerm);
+        searchHelper.verifyCameraFoundInFilter(searchTerm);
     }
 
     public void verifyFilteredListDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstCameraInList).isDisplayed(),
-                "Filtered camera list should be displayed");
+        searchHelper.verifyFilteredListDisplayed();
     }
 
     public void verifyCameraCounterDisplayed() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, cameraCounter, TimeoutConstants.SHORT_TIMEOUT),
-                "Camera counter should be displayed");
+        searchHelper.verifyCameraCounterDisplayed();
     }
 
     public String getCameraCounterText() {
-        return WaitUtils.waitForVisibility(driver, cameraCounter).getText();
+        return searchHelper.getCameraCounterText();
     }
 
     public void clearSearchIfNeeded() {
-        WebElement searchField = WaitUtils.waitForVisibility(driver, searchBar);
-        String currentText = searchField.getText();
-
-        if (currentText != null && !currentText.isEmpty()) {
-            By clearIcon = AppiumBy.xpath(
-                "//android.widget.EditText[@text=\"" + currentText + "\"]/android.view.View[3]/android.view.View"
-            );
-            WaitUtils.click(driver, clearIcon);
-            logger.info("Cleared search term: {}", currentText);
-        } else {
-            logger.info("Search field is already empty");
-        }
+        searchHelper.clearSearchIfNeeded();
     }
 
     public void verifyDefaultCameraListRestored() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstCameraInList).isDisplayed(),
-                "Default camera list should be restored after clearing search");
+        searchHelper.verifyDefaultCameraListRestored();
     }
 
     public void validateCounterFormat(String counterText) {
-        Assert.assertTrue(counterText.matches("\\d+ [Cc]ameras?"),
-                "Counter should show format like '10 cameras' but was: " + counterText);
+        searchHelper.validateCounterFormat(counterText);
     }
 
     public int extractCountFromCounterText(String counterText) {
-        String numberOnly = counterText.replaceAll("\\D+", "");
-        Assert.assertFalse(numberOnly.isEmpty(),
-                "Counter text should contain a numeric value: " + counterText);
-
-        return Integer.parseInt(numberOnly);
+        return searchHelper.extractCountFromCounterText(counterText);
     }
 
     public void verifyFilteredCountLessThanOrEqualInitial(String filteredCount, String initialCount) {
-        int filteredNum = extractCountFromCounterText(filteredCount);
-        int initialNum = extractCountFromCounterText(initialCount);
-        Assert.assertTrue(filteredNum <= initialNum,
-                "Filtered count (" + filteredNum + ") should be <= initial count (" + initialNum + ")");
+        searchHelper.verifyFilteredCountLessThanOrEqualInitial(filteredCount, initialCount);
     }
 
     public void verifyCountersMatch(String actualCount, String expectedCount) {
-        Assert.assertEquals(actualCount, expectedCount,
-                "Counter should restore to initial value");
+        searchHelper.verifyCountersMatch(actualCount, expectedCount);
     }
 
     public void longPressFirstCamera() {
-        WebElement camera = WaitUtils.waitForVisibility(driver, firstCameraInList);
-        GestureUtils.longPress(driver, camera);
+        searchHelper.longPressFirstCamera();
     }
 
     public void dismissContextMenu() {
@@ -149,12 +128,11 @@ public class BridgeCamerasPage {
     }
 
     public boolean isEmptyStateDisplayed() {
-        return WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.SHORT_TIMEOUT);
+        return searchHelper.isEmptyStateDisplayed();
     }
 
     public void verifyEmptyStateDisplayed() {
-        Assert.assertTrue(isEmptyStateDisplayed(),
-                "Empty state message should be displayed when no cameras match search");
+        searchHelper.verifyEmptyStateDisplayed();
     }
 
     public void clickBackButton() {
