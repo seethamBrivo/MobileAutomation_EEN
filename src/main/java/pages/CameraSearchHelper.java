@@ -18,6 +18,7 @@ import utils.WaitUtils;
 public class CameraSearchHelper {
 
     private static final Logger logger = LogManager.getLogger(CameraSearchHelper.class);
+    private static final java.util.regex.Pattern COUNTER_PATTERN = java.util.regex.Pattern.compile("^(\\d+)\\s+[Cc]ameras?");
     private final AppiumDriver driver;
     private final By searchBar;
     private final By searchPlaceholder;
@@ -82,17 +83,16 @@ public class CameraSearchHelper {
     }
 
     public void clearSearchIfNeeded() {
-        WebElement searchField = WaitUtils.waitForVisibility(driver, searchBar);
-        // Use getAttribute("text") to get actual field value, not placeholder
-        String fieldValue = searchField.getAttribute("text");
-
-        // Check if field has actual text
-        if (fieldValue != null && !fieldValue.isEmpty()) {
-            WaitUtils.clear(driver, searchBar);
-            logger.info("Cleared search field");
-        } else {
-            logger.info("Search field is already empty");
+        // Clear unconditionally - clearing empty field is no-op, and this avoids unguarded getAttribute() call
+        // Use clearAndType with empty string to trigger filter reset in the mobile app
+        WaitUtils.clearAndType(driver, searchBar, "");
+        // Hide keyboard to ensure filter reset is triggered
+        try {
+            driver.executeScript("mobile: hideKeyboard");
+        } catch (Exception e) {
+            // Keyboard already hidden or not present
         }
+        logger.info("Cleared search field");
     }
 
     public void verifyDefaultCameraListRestored() {
@@ -106,8 +106,7 @@ public class CameraSearchHelper {
     }
 
     public int extractCountFromCounterText(String counterText) {
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("^(\\d+)\\s+[Cc]ameras?");
-        java.util.regex.Matcher matcher = pattern.matcher(counterText);
+        java.util.regex.Matcher matcher = COUNTER_PATTERN.matcher(counterText);
 
         Assert.assertTrue(matcher.find(),
                 "Counter text should match format 'X cameras': " + counterText);

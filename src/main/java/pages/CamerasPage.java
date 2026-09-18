@@ -4,6 +4,7 @@ import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -289,11 +290,11 @@ public class CamerasPage {
 
     public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
         By allVisibleCameras = AppiumBy.xpath("//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]");
-        java.util.List<org.openqa.selenium.WebElement> cameraElements = driver.findElements(allVisibleCameras);
+        List<WebElement> cameraElements = driver.findElements(allVisibleCameras);
 
-        Assert.assertTrue(cameraElements.size() > 0, "Should have at least one visible camera");
+        Assert.assertFalse(cameraElements.isEmpty(), "Should have at least one visible camera");
 
-        for (org.openqa.selenium.WebElement element : cameraElements) {
+        for (WebElement element : cameraElements) {
             String cameraName = element.getText();
             Assert.assertTrue(cameraName.toLowerCase().contains(searchTerm.toLowerCase()),
                 "Camera name '" + cameraName + "' should contain search term '" + searchTerm + "'");
