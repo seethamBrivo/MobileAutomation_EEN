@@ -43,6 +43,9 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.enterSearchTerm(validSearchTerm);
         bridgeCamerasPage.verifyCameraFoundInFilter(validSearchTerm);
         bridgeCamerasPage.verifyFilteredListDisplayed();
+        String firstCameraName = bridgeCamerasPage.getFirstCameraName();
+        Assert.assertTrue(firstCameraName.toLowerCase().contains(validSearchTerm.toLowerCase()),
+                "First camera name '" + firstCameraName + "' should contain search term '" + validSearchTerm + "'");
         bridgeCamerasPage.verifyCameraCounterDisplayed();
         String filteredCount = bridgeCamerasPage.getCameraCounterText();
         bridgeCamerasPage.validateCounterFormat(filteredCount);

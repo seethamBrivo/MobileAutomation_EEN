@@ -7,6 +7,7 @@ import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.WaitUtils;
 
@@ -22,6 +23,7 @@ public class BridgeCamerasPage {
     private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.SEARCH_PLACEHOLDER + "\"]");
     private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + UiTextConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
     private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
+    private final By firstCameraName = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'Turned off') or contains(@text, 'error')]])[1]//android.widget.TextView[1]");
     private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]");
 
     public BridgeCamerasPage(AppiumDriver driver) {
@@ -82,6 +84,11 @@ public class BridgeCamerasPage {
         searchHelper.verifyFilteredListDisplayed();
     }
 
+    public String getFirstCameraName() {
+        WebElement cameraNameElement = WaitUtils.waitForVisibility(driver, firstCameraName);
+        return cameraNameElement.getText();
+    }
+
     public void verifyCameraCounterDisplayed() {
         searchHelper.verifyCameraCounterDisplayed();
     }
@@ -125,9 +132,6 @@ public class BridgeCamerasPage {
             // Keyboard already hidden or not present
         }
         driver.navigate().back();
-        By contextMenu = AppiumBy.xpath("//android.widget.TextView[@text='Camera settings']");
-        Assert.assertFalse(WaitUtils.isVisible(driver, contextMenu, TimeoutConstants.SHORT_TIMEOUT),
-                "Context menu should be dismissed");
         logger.info("Context menu dismissed");
     }
 

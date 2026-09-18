@@ -73,7 +73,7 @@ public class CameraSearchHelper {
     }
 
     public void verifyCameraCounterDisplayed() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, cameraCounter, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraCounter).isDisplayed(),
                 "Camera counter should be displayed");
     }
 
@@ -83,10 +83,11 @@ public class CameraSearchHelper {
 
     public void clearSearchIfNeeded() {
         WebElement searchField = WaitUtils.waitForVisibility(driver, searchBar);
-        String currentText = searchField.getText();
+        // Use getAttribute("text") to get actual field value, not placeholder
+        String fieldValue = searchField.getAttribute("text");
 
-        // Check if field has actual text (not placeholder)
-        if (currentText != null && !currentText.isEmpty() && !currentText.equals(UiTextConstants.SEARCH_PLACEHOLDER)) {
+        // Check if field has actual text
+        if (fieldValue != null && !fieldValue.isEmpty()) {
             searchField.clear();
             logger.info("Cleared search field");
         } else {

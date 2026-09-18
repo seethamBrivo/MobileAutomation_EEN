@@ -133,9 +133,12 @@ public class CamerasPage {
             // Keyboard already hidden or not present
         }
         driver.navigate().back();
+        logger.info("Context menu dismissed");
+    }
+
+    public void verifyContextMenuDismissed() {
         Assert.assertFalse(WaitUtils.isVisible(driver, contextMenuContainer, TimeoutConstants.SHORT_TIMEOUT),
                 "Context menu should be dismissed");
-        logger.info("Context menu dismissed");
     }
 
     public void verifyCameraSettingsOptionDisplayed() {
