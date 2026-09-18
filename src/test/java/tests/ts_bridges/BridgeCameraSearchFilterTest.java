@@ -69,10 +69,12 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
 
     @AfterMethod(alwaysRun = true)
     public void cleanup() {
-        // Test already handles navigation back to bridge list, cleanup only needed on test failure
         try {
             if (driver != null && bridgeCamerasPage != null) {
-                bridgeCamerasPage.clearSearchIfNeeded();
+                // Only clear if we're still on camera screen (search field visible)
+                if (bridgeCamerasPage.isOnCameraScreen()) {
+                    bridgeCamerasPage.clearSearchIfNeeded();
+                }
             }
         } catch (Exception e) {
             logger.warn("Cleanup: could not clear search: {}", e.getMessage());

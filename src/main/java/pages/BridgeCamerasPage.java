@@ -21,7 +21,7 @@ public class BridgeCamerasPage {
     private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
     private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.SEARCH_PLACEHOLDER + "\"]");
     private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + UiTextConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
-    private final By firstCameraInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
+    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
     private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]");
 
     public BridgeCamerasPage(AppiumDriver driver) {
@@ -46,6 +46,10 @@ public class BridgeCamerasPage {
     }
 
     public void verifyCameraListDisplayed() {
+        // First verify we're on camera screen (search placeholder is unique to camera screen)
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, searchPlaceholder).isDisplayed(),
+                "Camera screen should be displayed (search placeholder visible)");
+        // Then verify cameras are present
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstCameraInList).isDisplayed(),
                 "Camera list should be displayed");
     }
@@ -115,14 +119,23 @@ public class BridgeCamerasPage {
     }
 
     public void dismissContextMenu() {
+        try {
+            driver.executeScript("mobile: hideKeyboard");
+        } catch (Exception e) {
+            // Keyboard already hidden or not present
+        }
         driver.navigate().back();
+        By contextMenu = AppiumBy.xpath("//android.widget.TextView[@text='Camera settings']");
+        Assert.assertFalse(WaitUtils.isVisible(driver, contextMenu, TimeoutConstants.SHORT_TIMEOUT),
+                "Context menu should be dismissed");
         logger.info("Context menu dismissed");
     }
 
     public void verifyCanInteractWithFilteredCamera() {
         longPressFirstCamera();
-        // Verify context menu opened (same pattern as CamerasPage)
-        Assert.assertTrue(WaitUtils.isVisible(driver, AppiumBy.xpath("//android.widget.TextView[@text='Camera settings']"), TimeoutConstants.SHORT_TIMEOUT),
+        // Verify context menu opened - use normal wait, not SHORT_TIMEOUT
+        By contextMenu = AppiumBy.xpath("//android.widget.TextView[@text='Camera settings']");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, contextMenu).isDisplayed(),
                 "Context menu should be displayed after long press");
         dismissContextMenu();
     }
@@ -137,6 +150,10 @@ public class BridgeCamerasPage {
 
     public void clickBackButton() {
         WaitUtils.click(driver, backButton);
+    }
+
+    public boolean isOnCameraScreen() {
+        return WaitUtils.isVisible(driver, searchPlaceholder, TimeoutConstants.SHORT_TIMEOUT);
     }
 
 }

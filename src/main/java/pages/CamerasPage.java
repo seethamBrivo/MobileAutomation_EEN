@@ -31,7 +31,8 @@ public class CamerasPage {
     private final By dashboardSection = AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
     private final By camerasItem = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     private final By cameraListContainer = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
-    private final By firstCameraInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
+    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
+    private final By firstCameraName = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error')]])[1]//android.widget.TextView[1]");
     private final By firstOfflineOrErrorCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By firstOnlineCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By contextMenuContainer = AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]");
@@ -80,6 +81,9 @@ public class CamerasPage {
     public void verifyCameraListDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraListContainer).isDisplayed(),
                 "Camera list should be displayed");
+        // Verify we're on cameras screen (not bridges screen)
+        Assert.assertTrue(WaitUtils.isVisible(driver, camerasItem, TimeoutConstants.SHORT_TIMEOUT),
+                "Cameras tab should be selected");
         Assert.assertTrue(scrollToFirstCamera(), "Could not find any camera in the list");
     }
 
@@ -123,7 +127,14 @@ public class CamerasPage {
     }
 
     public void dismissContextMenu() {
+        try {
+            driver.executeScript("mobile: hideKeyboard");
+        } catch (Exception e) {
+            // Keyboard already hidden or not present
+        }
         driver.navigate().back();
+        Assert.assertFalse(WaitUtils.isVisible(driver, contextMenuContainer, TimeoutConstants.SHORT_TIMEOUT),
+                "Context menu should be dismissed");
         logger.info("Context menu dismissed");
     }
 
@@ -271,6 +282,11 @@ public class CamerasPage {
 
     public void verifyFilteredListDisplayed() {
         searchHelper.verifyFilteredListDisplayed();
+    }
+
+    public String getFirstCameraName() {
+        WebElement cameraNameElement = WaitUtils.waitForVisibility(driver, firstCameraName);
+        return cameraNameElement.getText();
     }
 
     public void verifyCameraCounterDisplayed() {

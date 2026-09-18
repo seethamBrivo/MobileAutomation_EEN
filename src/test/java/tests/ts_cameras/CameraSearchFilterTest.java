@@ -39,6 +39,9 @@ public class CameraSearchFilterTest extends BaseTest {
         camerasPage.enterSearchTerm(validSearchTerm);
         camerasPage.verifyCameraFoundInFilter(validSearchTerm);
         camerasPage.verifyFilteredListDisplayed();
+        String firstCameraName = camerasPage.getFirstCameraName();
+        Assert.assertTrue(firstCameraName.toLowerCase().contains(validSearchTerm.toLowerCase()),
+                "First camera name '" + firstCameraName + "' should contain search term '" + validSearchTerm + "'");
         camerasPage.verifyCameraCounterDisplayed();
         String filteredCount = camerasPage.getCameraCounterText();
         camerasPage.validateCounterFormat(filteredCount);

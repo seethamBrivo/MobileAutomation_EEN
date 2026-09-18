@@ -2,7 +2,6 @@ package pages;
 
 import constants.TimeoutConstants;
 import constants.UiTextConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -88,16 +87,8 @@ public class CameraSearchHelper {
 
         // Check if field has actual text (not placeholder)
         if (currentText != null && !currentText.isEmpty() && !currentText.equals(UiTextConstants.SEARCH_PLACEHOLDER)) {
-            // Look for clear icon without using @text attribute (which may not be set after typing)
-            By clearIcon = AppiumBy.xpath(
-                "//android.widget.EditText/android.view.View[3]/android.view.View"
-            );
-            if (WaitUtils.isVisible(driver, clearIcon, TimeoutConstants.SHORT_TIMEOUT)) {
-                WaitUtils.click(driver, clearIcon);
-                logger.info("Cleared search term: {}", currentText);
-            } else {
-                logger.info("Search field is already empty (no clear icon found)");
-            }
+            searchField.clear();
+            logger.info("Cleared search field");
         } else {
             logger.info("Search field is already empty");
         }
