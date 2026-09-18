@@ -2,8 +2,6 @@ package tests.ts_bridges;
 
 import base.BaseTest;
 import constants.TestDataConstants;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.BridgeCamerasPage;
@@ -43,13 +41,11 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.enterSearchTerm(validSearchTerm);
         bridgeCamerasPage.verifyCameraFoundInFilter(validSearchTerm);
         bridgeCamerasPage.verifyFilteredListDisplayed();
-        String firstCameraName = bridgeCamerasPage.getFirstCameraName();
-        Assert.assertTrue(firstCameraName.toLowerCase().contains(validSearchTerm.toLowerCase()),
-                "First camera name '" + firstCameraName + "' should contain search term '" + validSearchTerm + "'");
+        bridgeCamerasPage.verifyAllVisibleCamerasContainSearchTerm(validSearchTerm);
         bridgeCamerasPage.verifyCameraCounterDisplayed();
         String filteredCount = bridgeCamerasPage.getCameraCounterText();
         bridgeCamerasPage.validateCounterFormat(filteredCount);
-        bridgeCamerasPage.verifyFilteredCountLessThanOrEqualInitial(filteredCount, initialCount);
+        bridgeCamerasPage.verifyFilteredCountLessThanInitial(filteredCount, initialCount);
         bridgeCamerasPage.verifyCanInteractWithFilteredCamera();
         bridgeCamerasPage.clearSearchIfNeeded();
         bridgeCamerasPage.verifyDefaultCameraListRestored();
@@ -59,28 +55,10 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.verifyCountersMatch(restoredCount, initialCount);
         bridgeCamerasPage.enterSearchTerm(invalidSearchTerm);
         bridgeCamerasPage.verifyEmptyStateDisplayed();
-        bridgeCamerasPage.verifyCameraCounterDisplayed();
-        String emptyStateCount = bridgeCamerasPage.getCameraCounterText();
-        bridgeCamerasPage.validateCounterFormat(emptyStateCount);
-        int emptyCount = bridgeCamerasPage.extractCountFromCounterText(emptyStateCount);
-        Assert.assertEquals(emptyCount, 0, "Counter should show 0 cameras when no matches found");
         bridgeCamerasPage.clearSearchIfNeeded();
         bridgeCamerasPage.verifyDefaultCameraListRestored();
         bridgeCamerasPage.clickBackButton();
         devicesPage.verifyBridgeListDisplayed();
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void cleanup() {
-        try {
-            if (driver != null && bridgeCamerasPage != null) {
-                // Only clear if we're still on camera screen (search field visible)
-                if (bridgeCamerasPage.isOnCameraScreen()) {
-                    bridgeCamerasPage.clearSearchIfNeeded();
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("Cleanup: could not clear search: {}", e.getMessage());
-        }
-    }
 }

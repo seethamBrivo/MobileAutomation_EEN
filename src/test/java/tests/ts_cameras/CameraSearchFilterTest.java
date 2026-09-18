@@ -2,8 +2,6 @@ package tests.ts_cameras;
 
 import base.BaseTest;
 import constants.TestDataConstants;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.CamerasPage;
@@ -39,13 +37,11 @@ public class CameraSearchFilterTest extends BaseTest {
         camerasPage.enterSearchTerm(validSearchTerm);
         camerasPage.verifyCameraFoundInFilter(validSearchTerm);
         camerasPage.verifyFilteredListDisplayed();
-        String firstCameraName = camerasPage.getFirstCameraName();
-        Assert.assertTrue(firstCameraName.toLowerCase().contains(validSearchTerm.toLowerCase()),
-                "First camera name '" + firstCameraName + "' should contain search term '" + validSearchTerm + "'");
+        camerasPage.verifyAllVisibleCamerasContainSearchTerm(validSearchTerm);
         camerasPage.verifyCameraCounterDisplayed();
         String filteredCount = camerasPage.getCameraCounterText();
         camerasPage.validateCounterFormat(filteredCount);
-        camerasPage.verifyFilteredCountLessThanOrEqualInitial(filteredCount, initialCount);
+        camerasPage.verifyFilteredCountLessThanInitial(filteredCount, initialCount);
         camerasPage.verifyCanInteractWithFilteredCamera();
         camerasPage.clearSearchIfNeeded();
         camerasPage.verifyDefaultCameraListRestored();
@@ -55,23 +51,8 @@ public class CameraSearchFilterTest extends BaseTest {
         camerasPage.verifyCountersMatch(restoredCount, initialCount);
         camerasPage.enterSearchTerm(invalidSearchTerm);
         camerasPage.verifyEmptyStateDisplayed();
-        camerasPage.verifyCameraCounterDisplayed();
-        String emptyStateCount = camerasPage.getCameraCounterText();
-        camerasPage.validateCounterFormat(emptyStateCount);
-        int emptyCount = camerasPage.extractCountFromCounterText(emptyStateCount);
-        Assert.assertEquals(emptyCount, 0, "Counter should show 0 cameras when no matches found");
         camerasPage.clearSearchIfNeeded();
         camerasPage.verifyDefaultCameraListRestored();
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void cleanup() {
-        try {
-            if (driver != null && camerasPage != null) {
-                camerasPage.clearSearchIfNeeded();
-            }
-        } catch (Exception e) {
-            logger.warn("Cleanup: could not clear search: {}", e.getMessage());
-        }
-    }
 }

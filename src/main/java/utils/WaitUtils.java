@@ -46,6 +46,24 @@ public final class WaitUtils {
     }
 
     /**
+     * Waits for the field and clears it. Retries once on the transient
+     * stale/invalid-state errors Compose text fields throw while re-rendering.
+     */
+    public static void clear(AppiumDriver driver, By locator) {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                WebElement field = waitForVisibility(driver, locator);
+                field.clear();
+                return;
+            } catch (StaleElementReferenceException | InvalidElementStateException e) {
+                if (attempt == 2) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /**
      * Waits for the field, clears it and types. Retries once on the transient
      * stale/invalid-state errors Compose text fields throw while re-rendering.
      */

@@ -89,6 +89,20 @@ public class BridgeCamerasPage {
         return cameraNameElement.getText();
     }
 
+    public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
+        By allVisibleCameras = AppiumBy.xpath("//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'Turned off') or contains(@text, 'error')]]//android.widget.TextView[1]");
+        java.util.List<WebElement> cameraElements = driver.findElements(allVisibleCameras);
+
+        Assert.assertTrue(cameraElements.size() > 0, "Should have at least one visible camera");
+
+        for (WebElement element : cameraElements) {
+            String cameraName = element.getText();
+            Assert.assertTrue(cameraName.toLowerCase().contains(searchTerm.toLowerCase()),
+                "Camera name '" + cameraName + "' should contain search term '" + searchTerm + "'");
+        }
+        logger.info("Verified {} visible cameras all contain search term '{}'", cameraElements.size(), searchTerm);
+    }
+
     public void verifyCameraCounterDisplayed() {
         searchHelper.verifyCameraCounterDisplayed();
     }
@@ -113,8 +127,8 @@ public class BridgeCamerasPage {
         return searchHelper.extractCountFromCounterText(counterText);
     }
 
-    public void verifyFilteredCountLessThanOrEqualInitial(String filteredCount, String initialCount) {
-        searchHelper.verifyFilteredCountLessThanOrEqualInitial(filteredCount, initialCount);
+    public void verifyFilteredCountLessThanInitial(String filteredCount, String initialCount) {
+        searchHelper.verifyFilteredCountLessThanInitial(filteredCount, initialCount);
     }
 
     public void verifyCountersMatch(String actualCount, String expectedCount) {

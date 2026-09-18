@@ -136,11 +136,6 @@ public class CamerasPage {
         logger.info("Context menu dismissed");
     }
 
-    public void verifyContextMenuDismissed() {
-        Assert.assertFalse(WaitUtils.isVisible(driver, contextMenuContainer, TimeoutConstants.SHORT_TIMEOUT),
-                "Context menu should be dismissed");
-    }
-
     public void verifyCameraSettingsOptionDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraSettingsOption).isDisplayed(),
                 "Camera Settings option should be displayed in context menu");
@@ -292,6 +287,20 @@ public class CamerasPage {
         return cameraNameElement.getText();
     }
 
+    public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
+        By allVisibleCameras = AppiumBy.xpath("//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]");
+        java.util.List<org.openqa.selenium.WebElement> cameraElements = driver.findElements(allVisibleCameras);
+
+        Assert.assertTrue(cameraElements.size() > 0, "Should have at least one visible camera");
+
+        for (org.openqa.selenium.WebElement element : cameraElements) {
+            String cameraName = element.getText();
+            Assert.assertTrue(cameraName.toLowerCase().contains(searchTerm.toLowerCase()),
+                "Camera name '" + cameraName + "' should contain search term '" + searchTerm + "'");
+        }
+        logger.info("Verified {} visible cameras all contain search term '{}'", cameraElements.size(), searchTerm);
+    }
+
     public void verifyCameraCounterDisplayed() {
         searchHelper.verifyCameraCounterDisplayed();
     }
@@ -316,8 +325,8 @@ public class CamerasPage {
         return searchHelper.extractCountFromCounterText(counterText);
     }
 
-    public void verifyFilteredCountLessThanOrEqualInitial(String filteredCount, String initialCount) {
-        searchHelper.verifyFilteredCountLessThanOrEqualInitial(filteredCount, initialCount);
+    public void verifyFilteredCountLessThanInitial(String filteredCount, String initialCount) {
+        searchHelper.verifyFilteredCountLessThanInitial(filteredCount, initialCount);
     }
 
     public void verifyCountersMatch(String actualCount, String expectedCount) {

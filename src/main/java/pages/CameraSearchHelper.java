@@ -88,7 +88,7 @@ public class CameraSearchHelper {
 
         // Check if field has actual text
         if (fieldValue != null && !fieldValue.isEmpty()) {
-            searchField.clear();
+            WaitUtils.clear(driver, searchBar);
             logger.info("Cleared search field");
         } else {
             logger.info("Search field is already empty");
@@ -106,18 +106,22 @@ public class CameraSearchHelper {
     }
 
     public int extractCountFromCounterText(String counterText) {
-        String numberOnly = counterText.replaceAll("\\D+", "");
-        Assert.assertFalse(numberOnly.isEmpty(),
-                "Counter text should contain a numeric value: " + counterText);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("^(\\d+)\\s+[Cc]ameras?");
+        java.util.regex.Matcher matcher = pattern.matcher(counterText);
 
-        return Integer.parseInt(numberOnly);
+        Assert.assertTrue(matcher.find(),
+                "Counter text should match format 'X cameras': " + counterText);
+
+        return Integer.parseInt(matcher.group(1));
     }
 
-    public void verifyFilteredCountLessThanOrEqualInitial(String filteredCount, String initialCount) {
+    public void verifyFilteredCountLessThanInitial(String filteredCount, String initialCount) {
         int filteredNum = extractCountFromCounterText(filteredCount);
         int initialNum = extractCountFromCounterText(initialCount);
-        Assert.assertTrue(filteredNum <= initialNum,
-                "Filtered count (" + filteredNum + ") should be <= initial count (" + initialNum + ")");
+        Assert.assertTrue(filteredNum < initialNum,
+                "Filtered count (" + filteredNum + ") should be < initial count (" + initialNum + ") - filter must reduce results");
+        Assert.assertTrue(filteredNum > 0,
+                "Filtered count (" + filteredNum + ") should be > 0 - filter must find results");
     }
 
     public void verifyCountersMatch(String actualCount, String expectedCount) {
