@@ -80,6 +80,70 @@ public final class JsonDataReader {
         return value.getAsString();
     }
 
+    /**
+     * A string value from {@code layout_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static String getLayoutDataValue(String key) {
+        JsonObject layoutData = getTestData().getAsJsonObject(TestDataConstants.LAYOUT_DATA);
+        if (layoutData == null) {
+            throw new IllegalStateException(
+                    "testData.json is missing '" + TestDataConstants.LAYOUT_DATA + "' block "
+                    + "(check the CI workflow and testData.json.example have layout_data section)");
+        }
+        JsonElement value = layoutData.get(key);
+        if (value == null || value.isJsonNull()) {
+            throw new IllegalStateException(
+                    "testData.json is missing key '" + key + "' under layout_data "
+                    + "(check the CI workflow and testData.json.example use the same key names)");
+        }
+        return value.getAsString();
+    }
+
+    /**
+     * An integer value from {@code layout_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static int getLayoutDataIntValue(String key) {
+        JsonObject layoutData = getTestData().getAsJsonObject(TestDataConstants.LAYOUT_DATA);
+        if (layoutData == null) {
+            throw new IllegalStateException(
+                    "testData.json is missing '" + TestDataConstants.LAYOUT_DATA + "' block");
+        }
+        JsonElement value = layoutData.get(key);
+        if (value == null || value.isJsonNull()) {
+            throw new IllegalStateException(
+                    "testData.json is missing key '" + key + "' under layout_data");
+        }
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalStateException(
+                    "Expected integer for layout_data.'" + key + "' but got: " + value);
+        }
+        return value.getAsInt();
+    }
+
+    /**
+     * A boolean value from {@code layout_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static boolean getLayoutDataBooleanValue(String key) {
+        JsonObject layoutData = getTestData().getAsJsonObject(TestDataConstants.LAYOUT_DATA);
+        if (layoutData == null) {
+            throw new IllegalStateException(
+                    "testData.json is missing '" + TestDataConstants.LAYOUT_DATA + "' block");
+        }
+        JsonElement value = layoutData.get(key);
+        if (value == null || value.isJsonNull()) {
+            throw new IllegalStateException(
+                    "testData.json is missing key '" + key + "' under layout_data");
+        }
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean()) {
+            throw new IllegalStateException(
+                    "Expected boolean for layout_data.'" + key + "' but got: " + value);
+        }
+        return value.getAsBoolean();
+    }
+
     private static String loadResourceAsString(String resourcePath) {
         try (InputStream inputStream = Thread.currentThread()
                 .getContextClassLoader()

@@ -27,4 +27,11 @@ public final class TestDataConstants {
     public static final String SEARCH_FILTER = "search_filter";
     public static final String VALID_SEARCH_TERM = "valid_search_term";
     public static final String INVALID_SEARCH_TERM = "invalid_search_term";
+
+    // Test-data JSON keys (layout block).
+    public static final String LAYOUT_DATA = "layout_data";
+    public static final String LAYOUT_NAME = "layout_name";
+    public static final String ASPECT_RATIO = "aspect_ratio";
+    public static final String MAX_CAMERAS_PER_ROW = "max_cameras_per_row";
+    public static final String SHOW_CAMERA_TITLE_BARS = "show_camera_title_bars";
 }

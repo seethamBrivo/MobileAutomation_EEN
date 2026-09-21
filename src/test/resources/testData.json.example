@@ -18,25 +18,10 @@
     "valid_search_term": "Camera",
     "invalid_search_term": "XYZ_NO_MATCH_12345"
   },
-  "checkoutData": {
-    "standard_checkout": {
-      "firstName": "John",
-      "lastName": "Doe",
-      "zipCode": "12345",
-      "confirmationMessage": "THANK YOU FOR YOUR ORDER"
-    },
-    "alt_checkout": {
-      "firstName": "Jane",
-      "lastName": "Smith",
-      "zipCode": "67890",
-      "confirmationMessage": "THANK YOU FOR YOUR ORDER"
-    }
+  "layout_data": {
+    "layout_name": "default",
+    "aspect_ratio": "16:9",
+    "max_cameras_per_row": 2,
+    "show_camera_title_bars": true
   },
-  "shopScenarios": [
-    {
-      "credentialsKey": "standard_user_creds",
-      "productName": "Sauce Labs Backpack",
-      "checkoutKey": "standard_checkout"
-    }
-  ]
 }

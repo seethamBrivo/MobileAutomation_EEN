@@ -1,0 +1,75 @@
+package tests.ts_layouts;
+
+import base.BaseTest;
+import constants.TestDataConstants;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import pages.LayoutsPage;
+import utils.JsonDataReader;
+
+public class LayoutsTest extends BaseTest {
+
+    private LayoutsPage layoutsPage;
+    private boolean layoutCreated = false;
+
+    @BeforeMethod
+    public void loginAndVerifyLayoutsScreen() {
+        loginAs(TestDataConstants.ENDUSER_CREDS);
+        layoutsPage = new LayoutsPage(driver);
+        layoutsPage.verifyLayoutsScreenDisplayed();
+        layoutsPage.clickFirstLayoutTab();
+        layoutCreated = false;
+    }
+
+    @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app")
+    public void verifyAddNewLayoutFunctionality() {
+        String layoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
+        String aspectRatio = JsonDataReader.getLayoutDataValue(TestDataConstants.ASPECT_RATIO);
+        int maxCamerasPerRow = JsonDataReader.getLayoutDataIntValue(TestDataConstants.MAX_CAMERAS_PER_ROW);
+        boolean showCameraTitleBars = JsonDataReader.getLayoutDataBooleanValue(TestDataConstants.SHOW_CAMERA_TITLE_BARS);
+
+        layoutsPage.clickThreeDotsMenuButton();
+        layoutsPage.verifyMenuPopupDisplayed();
+        layoutsPage.verifyMenuOptions();
+        layoutsPage.clickNewLayoutOption();
+        layoutsPage.verifyNewLayoutScreenDisplayed();
+        layoutsPage.setLayoutName(layoutName);
+        layoutsPage.selectAspectRatio(aspectRatio);
+        layoutsPage.selectMaxCamerasPerRow(maxCamerasPerRow);
+        layoutsPage.toggleShowCameraTitleBars(showCameraTitleBars);
+        layoutsPage.clickAddCamerasIcon();
+        layoutsPage.selectCamera();
+        layoutsPage.clickSaveButton();
+        layoutsPage.clickAddButton();
+        layoutCreated = true;
+        layoutsPage.verifyLayoutCreatedSuccessfully();
+    }
+
+    @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app")
+    public void verifyCameraPreviewsDisplayedInLayouts() {
+        layoutsPage.waitForCameraPreviewsToLoad();
+        layoutsPage.verifyAllCameraPreviewElementsFast();
+        layoutsPage.clickAllCamerasTab();
+        layoutsPage.waitForCameraPreviewsToLoad();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() {
+        if (!layoutCreated) {
+            logger.info("No layout created in this test, skipping teardown");
+            return;
+        }
+
+        try {
+            if (driver != null && driver.getSessionId() != null) {
+                String layoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
+                layoutsPage.deleteLayout(layoutName);
+                logger.info("Successfully deleted layout '{}' in teardown", layoutName);
+            }
+        } catch (Exception e) {
+            logger.warn("Teardown failed to delete layout '{}': {}",
+                    JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME), e.getMessage());
+        }
+    }
+}
