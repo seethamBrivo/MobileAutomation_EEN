@@ -1,5 +1,6 @@
-﻿package pages;
+package pages;
 
+import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import java.util.List;
@@ -100,8 +101,7 @@ public class LayoutsPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, zoomInOption).isDisplayed(),
                 "Zoom In option should be displayed");
 
-        List<WebElement> zoomOutElements = driver.findElements(zoomOutOption);
-        if (!zoomOutElements.isEmpty() && zoomOutElements.get(0).isDisplayed()) {
+        if (WaitUtils.isVisible(driver, zoomOutOption, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.info("Zoom Out option is displayed");
         } else {
             logger.info("Zoom Out option not displayed - already in the zoom out state");
@@ -128,7 +128,11 @@ public class LayoutsPage {
         }
         By aspectRatioLocator = ratio.equals("16:9") ? aspectRatio16_9 : aspectRatio4_3;
         WaitUtils.click(driver, aspectRatioLocator);
-        driver.navigate().back();
+
+        // Check if click already returned us to New Layout screen
+        if (!WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
+            driver.navigate().back();
+        }
         WaitUtils.waitForVisibility(driver, layoutNameLabel);
     }
 
@@ -137,7 +141,11 @@ public class LayoutsPage {
             throw new IllegalArgumentException("Max cameras per row must be between 1 and 6");
         }
         WaitUtils.click(driver, camerasPerRowOption(count));
-        driver.navigate().back();
+
+        // Check if click already returned us to New Layout screen
+        if (!WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
+            driver.navigate().back();
+        }
         WaitUtils.waitForVisibility(driver, layoutNameLabel);
     }
 
@@ -155,7 +163,7 @@ public class LayoutsPage {
         WaitUtils.click(driver, addCamerasIcon);
     }
 
-    public void selectCamera() {
+    public void selectFirstCamera() {
         WaitUtils.click(driver, selectCamera);
     }
 
@@ -222,6 +230,12 @@ public class LayoutsPage {
      * Use this for smoke tests where verifying one representative element is sufficient.
      */
     public void verifyAllCameraPreviewElementsFast() {
+        waitForCameraPreviewsToLoad();
+
+        // Wait for preview images and timestamps to load, not just the card containers
+        WaitUtils.waitForVisibility(driver, cameraPreviewImages);
+        WaitUtils.waitForVisibility(driver, cameraTimestamps);
+
         List<WebElement> previewCards = driver.findElements(cameraPreviewCards);
         List<WebElement> previewImages = driver.findElements(cameraPreviewImages);
         List<WebElement> timestamps = driver.findElements(cameraTimestamps);

@@ -1,4 +1,4 @@
-﻿package tests.ts_layouts;
+package tests.ts_layouts;
 
 import base.BaseTest;
 import constants.TestDataConstants;
@@ -39,7 +39,7 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.selectMaxCamerasPerRow(maxCamerasPerRow);
         layoutsPage.toggleShowCameraTitleBars(showCameraTitleBars);
         layoutsPage.clickAddCamerasIcon();
-        layoutsPage.selectCamera();
+        layoutsPage.selectFirstCamera();
         layoutsPage.clickSaveButton();
         layoutsPage.clickAddButton();
         layoutCreated = true;
@@ -61,11 +61,11 @@ public class LayoutsTest extends BaseTest {
             return;
         }
 
+        String layoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
         try {
             if (driver != null) {
                 try {
                     driver.getSessionId();
-                    String layoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
                     layoutsPage.deleteLayout(layoutName);
                     logger.info("Successfully deleted layout '{}' in teardown", layoutName);
                 } catch (org.openqa.selenium.NoSuchSessionException e) {
@@ -73,8 +73,7 @@ public class LayoutsTest extends BaseTest {
                 }
             }
         } catch (Exception e) {
-            logger.warn("Teardown failed to delete layout '{}': {}",
-                    JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME), e.getMessage());
+            logger.warn("Teardown failed to delete layout '{}': {}", layoutName, e.getMessage());
         }
     }
 }
