@@ -31,4 +31,10 @@
             <class name="tests.ts_cameras.CameraContextMenuTest"/>
         </classes>
     </test>
+
+    <test name="Layout Tests">
+        <classes>
+            <class name="tests.ts_layouts.LayoutsTest"/>
+        </classes>
+    </test>
 </suite>
