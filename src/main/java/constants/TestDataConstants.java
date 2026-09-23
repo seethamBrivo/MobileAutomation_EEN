@@ -27,4 +27,5 @@ public final class TestDataConstants {
     public static final String SEARCH_FILTER = "search_filter";
     public static final String VALID_SEARCH_TERM = "valid_search_term";
     public static final String INVALID_SEARCH_TERM = "invalid_search_term";
+    public static final String BRIDGE_VALID_SEARCH_TERM = "bridge_valid_search_term";
 }

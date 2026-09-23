@@ -33,7 +33,6 @@ public class CamerasPage {
     private final By camerasItem = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     private final By cameraListContainer = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
     private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
-    private final By firstCameraName = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error')]])[1]//android.widget.TextView[1]");
     private final By firstOfflineOrErrorCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By firstOnlineCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By contextMenuContainer = AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]");
@@ -82,9 +81,9 @@ public class CamerasPage {
     public void verifyCameraListDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraListContainer).isDisplayed(),
                 "Camera list should be displayed");
-        // Verify we're on cameras screen (not bridges screen)
-        Assert.assertTrue(WaitUtils.isVisible(driver, camerasItem, TimeoutConstants.SHORT_TIMEOUT),
-                "Cameras tab should be selected");
+        // Verify we're on cameras screen (not bridges screen) using search placeholder
+        Assert.assertTrue(WaitUtils.isVisible(driver, searchPlaceholder, TimeoutConstants.SHORT_TIMEOUT),
+                "Camera search placeholder should be visible on cameras screen");
         Assert.assertTrue(scrollToFirstCamera(), "Could not find any camera in the list");
     }
 
@@ -128,13 +127,7 @@ public class CamerasPage {
     }
 
     public void dismissContextMenu() {
-        try {
-            driver.executeScript("mobile: hideKeyboard");
-        } catch (Exception e) {
-            // Keyboard already hidden or not present
-        }
-        driver.navigate().back();
-        logger.info("Context menu dismissed");
+        searchHelper.dismissContextMenu();
     }
 
     public void verifyCameraSettingsOptionDisplayed() {
@@ -283,23 +276,8 @@ public class CamerasPage {
         searchHelper.verifyFilteredListDisplayed();
     }
 
-    public String getFirstCameraName() {
-        WebElement cameraNameElement = WaitUtils.waitForVisibility(driver, firstCameraName);
-        return cameraNameElement.getText();
-    }
-
     public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
-        By allVisibleCameras = AppiumBy.xpath("//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]");
-        List<WebElement> cameraElements = driver.findElements(allVisibleCameras);
-
-        Assert.assertFalse(cameraElements.isEmpty(), "Should have at least one visible camera");
-
-        for (WebElement element : cameraElements) {
-            String cameraName = element.getText();
-            Assert.assertTrue(cameraName.toLowerCase().contains(searchTerm.toLowerCase()),
-                "Camera name '" + cameraName + "' should contain search term '" + searchTerm + "'");
-        }
-        logger.info("Verified {} visible cameras all contain search term '{}'", cameraElements.size(), searchTerm);
+        searchHelper.verifyAllVisibleCamerasContainSearchTerm(searchTerm);
     }
 
     public void verifyCameraCounterDisplayed() {

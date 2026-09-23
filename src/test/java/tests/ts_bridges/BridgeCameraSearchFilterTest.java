@@ -30,7 +30,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
 
     @Test(description = "EEPD-TC-53382: POS-Bridges - Filter for respective bridge cameras by search term in Dashboard in VMS mobile app")
     public void verifyBridgeCameraSearchFilterFunctionality() {
-        String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.VALID_SEARCH_TERM);
+        String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.BRIDGE_VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
 
         String initialCount = bridgeCamerasPage.getCameraCounterText();
