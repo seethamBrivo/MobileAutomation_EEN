@@ -23,12 +23,14 @@
         <classes>
             <class name="tests.ts_bridges.BridgesTest"/>
             <class name="tests.ts_bridges.BridgeRestartTest"/>
+            <class name="tests.ts_bridges.BridgeCameraSearchFilterTest"/>
         </classes>
     </test>
 
     <test name="Camera Tests">
         <classes>
             <class name="tests.ts_cameras.CameraContextMenuTest"/>
+            <class name="tests.ts_cameras.CameraSearchFilterTest"/>
         </classes>
     </test>
 

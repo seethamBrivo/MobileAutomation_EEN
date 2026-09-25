@@ -2,11 +2,14 @@ package pages;
 
 import constants.TimeoutConstants;
 import constants.UiTextConstants;
+import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
@@ -56,7 +59,18 @@ public class CameraSearchHelper {
     }
 
     public void enterSearchTerm(String searchTerm) {
+        String previousCount = getCameraCounterText();
         WaitUtils.clearAndType(driver, searchBar, searchTerm);
+        waitForCounterToChangeFrom(previousCount);
+    }
+
+    /**
+     * Waits for the camera counter to change from the previous value, indicating
+     * that the filter has been applied and the list has re-rendered.
+     */
+    private void waitForCounterToChangeFrom(String previousCount) {
+        new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
+            .until(d -> !getCameraCounterText().equals(previousCount));
     }
 
     public boolean isCameraFoundInFilter() {
@@ -85,6 +99,7 @@ public class CameraSearchHelper {
     public void clearSearchIfNeeded() {
         // Clear unconditionally - clearing empty field is no-op, and this avoids unguarded getAttribute() call
         // Use clearAndType with empty string to trigger filter reset in the mobile app
+        String previousCount = getCameraCounterText();
         WaitUtils.clearAndType(driver, searchBar, "");
         // Hide keyboard to ensure filter reset is triggered
         try {
@@ -92,6 +107,7 @@ public class CameraSearchHelper {
         } catch (Exception e) {
             // Keyboard already hidden or not present
         }
+        waitForCounterToChangeFrom(previousCount);
         logger.info("Cleared search field");
     }
 
@@ -134,11 +150,37 @@ public class CameraSearchHelper {
     }
 
     public boolean isEmptyStateDisplayed() {
-        return WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.SHORT_TIMEOUT);
+        return WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.FILTER_RESULT_TIMEOUT);
     }
 
     public void verifyEmptyStateDisplayed() {
         Assert.assertTrue(isEmptyStateDisplayed(),
                 "Empty state message should be displayed when no cameras match search");
+    }
+
+    public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
+        By allVisibleCameras = AppiumBy.xpath(
+            "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]"
+        );
+        List<WebElement> cameraElements = driver.findElements(allVisibleCameras);
+
+        Assert.assertFalse(cameraElements.isEmpty(), "Should have at least one visible camera");
+
+        for (WebElement element : cameraElements) {
+            String cameraName = element.getText();
+            Assert.assertTrue(cameraName.toLowerCase().contains(searchTerm.toLowerCase()),
+                "Camera name '" + cameraName + "' should contain search term '" + searchTerm + "'");
+        }
+        logger.info("Verified {} visible cameras all contain search term '{}'", cameraElements.size(), searchTerm);
+    }
+
+    public void dismissContextMenu() {
+        try {
+            driver.executeScript("mobile: hideKeyboard");
+        } catch (Exception e) {
+            // Keyboard already hidden or not present
+        }
+        driver.navigate().back();
+        logger.info("Context menu dismissed");
     }
 }

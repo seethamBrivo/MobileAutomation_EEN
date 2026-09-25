@@ -43,6 +43,10 @@ jobs:
                 "username": "${{ secrets.ENDUSER_USERNAME }}",
                 "password": "${{ secrets.ENDUSER_PASSWORD }}"
               }
+            },
+            "search_filter": {
+              "valid_search_term": "Camera",
+              "invalid_search_term": "XYZ_NO_MATCH_12345"
             }
           }
           EOF
