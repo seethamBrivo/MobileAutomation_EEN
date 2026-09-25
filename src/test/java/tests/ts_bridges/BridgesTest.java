@@ -87,7 +87,7 @@ public class BridgesTest extends BaseTest {
         deleteTestBridge(bridgeName);
     }
 
-    @Test(priority = 4, description = "EEPD-TC-15441: POS-Bridges - Filter for bridges by search term under Bridges item in Dashboard in VMS mobile app")
+    @Test(priority = 4, description = "EEPD-TC-15483: POS-Bridges - Filter for bridges by search term under Bridges item in Dashboard in VMS mobile app")
     public void test04_filterBridgesBySearchTerm() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_FILTER);
         devicesPage.clickBridgesTab();

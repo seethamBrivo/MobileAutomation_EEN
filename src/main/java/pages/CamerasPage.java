@@ -1,6 +1,7 @@
 package pages;
 
 import constants.TimeoutConstants;
+import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +16,7 @@ public class CamerasPage {
 
     private static final Logger logger = LogManager.getLogger(CamerasPage.class);
     private final AppiumDriver driver;
+    private final CameraSearchHelper searchHelper;
 
     public static final String STATUS_ONLINE = "Online";
     public static final String STATUS_OFFLINE = "Offline";
@@ -29,7 +31,7 @@ public class CamerasPage {
     private final By dashboardSection = AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
     private final By camerasItem = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     private final By cameraListContainer = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
-    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView])[1]");
+    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
     private final By firstOfflineOrErrorCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By firstOnlineCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
     private final By contextMenuContainer = AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]");
@@ -49,9 +51,21 @@ public class CamerasPage {
     private final By deviceErrorStatus = AppiumBy.xpath("//android.widget.TextView[@text='Device error']");
     private final By connectivityIssueStatus = AppiumBy.xpath("//android.widget.TextView[@text='Connectivity issue']");
     private final By turnedOffStatus = AppiumBy.xpath("//android.widget.TextView[@text='Turned off']");
+    private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
+    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.SEARCH_PLACEHOLDER + "\"]");
+    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + UiTextConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
+    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]");
 
     public CamerasPage(AppiumDriver driver) {
         this.driver = driver;
+        this.searchHelper = new CameraSearchHelper(
+            driver,
+            searchBar,
+            searchPlaceholder,
+            cameraCounter,
+            firstCameraInList,
+            emptyStateMessage
+        );
     }
 
     public void verifyDashboardDisplayed() {
@@ -66,6 +80,9 @@ public class CamerasPage {
     public void verifyCameraListDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, cameraListContainer).isDisplayed(),
                 "Camera list should be displayed");
+        // Verify we're on cameras screen (not bridges screen) using search placeholder
+        Assert.assertTrue(WaitUtils.isVisible(driver, searchPlaceholder, TimeoutConstants.SHORT_TIMEOUT),
+                "Camera search placeholder should be visible on cameras screen");
         Assert.assertTrue(scrollToFirstCamera(), "Could not find any camera in the list");
     }
 
@@ -109,8 +126,7 @@ public class CamerasPage {
     }
 
     public void dismissContextMenu() {
-        driver.navigate().back();
-        logger.info("Context menu dismissed");
+        searchHelper.dismissContextMenu();
     }
 
     public void verifyCameraSettingsOptionDisplayed() {
@@ -229,5 +245,87 @@ public class CamerasPage {
         boolean hasTurnOnOrOff = WaitUtils.isVisible(driver, turnOnCameraOption, TimeoutConstants.SHORT_TIMEOUT) ||
                                  WaitUtils.isVisible(driver, turnOffCameraOption, TimeoutConstants.SHORT_TIMEOUT);
         Assert.assertTrue(hasTurnOnOrOff, "Expected either 'Turn on camera' or 'Turn off camera' option to be displayed");
+    }
+
+    public void clickSearchBar() {
+        searchHelper.clickSearchBar();
+    }
+
+    public void verifySearchPlaceholderDisplayed() {
+        searchHelper.verifySearchPlaceholderDisplayed();
+    }
+
+    public void verifySearchFieldEditable() {
+        searchHelper.verifySearchFieldEditable();
+    }
+
+    public void enterSearchTerm(String searchTerm) {
+        searchHelper.enterSearchTerm(searchTerm);
+    }
+
+    public boolean isCameraFoundInFilter() {
+        return searchHelper.isCameraFoundInFilter();
+    }
+
+    public void verifyCameraFoundInFilter(String searchTerm) {
+        searchHelper.verifyCameraFoundInFilter(searchTerm);
+    }
+
+    public void verifyFilteredListDisplayed() {
+        searchHelper.verifyFilteredListDisplayed();
+    }
+
+    public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
+        searchHelper.verifyAllVisibleCamerasContainSearchTerm(searchTerm);
+    }
+
+    public void verifyCameraCounterDisplayed() {
+        searchHelper.verifyCameraCounterDisplayed();
+    }
+
+    public String getCameraCounterText() {
+        return searchHelper.getCameraCounterText();
+    }
+
+    public void clearSearchIfNeeded() {
+        searchHelper.clearSearchIfNeeded();
+    }
+
+    public void verifyDefaultCameraListRestored() {
+        searchHelper.verifyDefaultCameraListRestored();
+    }
+
+    public void validateCounterFormat(String counterText) {
+        searchHelper.validateCounterFormat(counterText);
+    }
+
+    public int extractCountFromCounterText(String counterText) {
+        return searchHelper.extractCountFromCounterText(counterText);
+    }
+
+    public void verifyFilteredCountLessThanInitial(String filteredCount, String initialCount) {
+        searchHelper.verifyFilteredCountLessThanInitial(filteredCount, initialCount);
+    }
+
+    public void verifyCountersMatch(String actualCount, String expectedCount) {
+        searchHelper.verifyCountersMatch(actualCount, expectedCount);
+    }
+
+    public void longPressFirstCamera() {
+        searchHelper.longPressFirstCamera();
+    }
+
+    public void verifyCanInteractWithFilteredCamera() {
+        longPressFirstCamera();
+        verifyContextMenuDisplayed();
+        dismissContextMenu();
+    }
+
+    public boolean isEmptyStateDisplayed() {
+        return searchHelper.isEmptyStateDisplayed();
+    }
+
+    public void verifyEmptyStateDisplayed() {
+        searchHelper.verifyEmptyStateDisplayed();
     }
 }

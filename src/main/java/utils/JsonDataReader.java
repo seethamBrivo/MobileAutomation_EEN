@@ -60,6 +60,26 @@ public final class JsonDataReader {
         return value.getAsString();
     }
 
+    /**
+     * A string value from {@code search_filter.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static String getSearchFilterValue(String key) {
+        JsonObject searchFilter = getTestData().getAsJsonObject(TestDataConstants.SEARCH_FILTER);
+        if (searchFilter == null) {
+            throw new IllegalStateException(
+                    "testData.json is missing '" + TestDataConstants.SEARCH_FILTER + "' block "
+                    + "(check the CI workflow and testData.json.example have search_filter section)");
+        }
+        JsonElement value = searchFilter.get(key);
+        if (value == null || value.isJsonNull()) {
+            throw new IllegalStateException(
+                    "testData.json is missing key '" + key + "' under search_filter "
+                    + "(check the CI workflow and testData.json.example use the same key names)");
+        }
+        return value.getAsString();
+    }
+
     private static String loadResourceAsString(String resourcePath) {
         try (InputStream inputStream = Thread.currentThread()
                 .getContextClassLoader()

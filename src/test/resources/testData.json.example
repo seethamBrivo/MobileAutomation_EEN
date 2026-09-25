@@ -14,6 +14,11 @@
       "password": "YourPassword123"
     }
   },
+  "search_filter": {
+    "valid_search_term": "Camera",
+    "invalid_search_term": "XYZ_NO_MATCH_12345",
+    "bridge_valid_search_term": "Camera"
+  },
   "checkoutData": {
     "standard_checkout": {
       "firstName": "John",
