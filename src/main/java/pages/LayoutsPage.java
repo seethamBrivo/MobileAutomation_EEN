@@ -44,8 +44,10 @@ public class LayoutsPage {
     private final By filteredLayout = AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']//androidx.cardview.widget.CardView[1]");
 
     private By layoutByName(String layoutName) {
+        // Escape single quotes to prevent XPath injection
+        String escapedName = layoutName.replace("'", "&apos;");
         return AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']"
-                + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, '" + layoutName + "')]]");
+                + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, '" + escapedName + "')]]");
     }
     private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']");
     private final By confirmButton = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
@@ -128,12 +130,7 @@ public class LayoutsPage {
         }
         By aspectRatioLocator = ratio.equals("16:9") ? aspectRatio16_9 : aspectRatio4_3;
         WaitUtils.click(driver, aspectRatioLocator);
-
-        // Check if click already returned us to New Layout screen
-        if (!WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
-            driver.navigate().back();
-        }
-        WaitUtils.waitForVisibility(driver, layoutNameLabel);
+        ensureOnNewLayoutScreen();
     }
 
     public void selectMaxCamerasPerRow(int count) {
@@ -141,17 +138,28 @@ public class LayoutsPage {
             throw new IllegalArgumentException("Max cameras per row must be between 1 and 6");
         }
         WaitUtils.click(driver, camerasPerRowOption(count));
+        ensureOnNewLayoutScreen();
+    }
 
-        // Check if click already returned us to New Layout screen
+    /**
+     * Ensures we're back on the New Layout screen after selecting an option.
+     * Some selections auto-navigate back, others require explicit back navigation.
+     */
+    private void ensureOnNewLayoutScreen() {
         if (!WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
+            logger.debug("New Layout screen not visible, navigating back");
             driver.navigate().back();
         }
         WaitUtils.waitForVisibility(driver, layoutNameLabel);
+        logger.debug("Confirmed on New Layout screen");
     }
 
     public void toggleShowCameraTitleBars(boolean enable) {
         WebElement toggle = WaitUtils.waitForVisibility(driver, showCameraTitleBarsToggle);
         String checkedAttr = toggle.getAttribute("checked");
+        if (checkedAttr == null) {
+            throw new IllegalStateException("Toggle 'checked' attribute is null - cannot determine current state");
+        }
         boolean isEnabled = Boolean.parseBoolean(checkedAttr);
 
         if (enable != isEnabled) {
@@ -229,7 +237,7 @@ public class LayoutsPage {
      * Optimized verification that checks only the first preview element to reduce test execution time.
      * Use this for smoke tests where verifying one representative element is sufficient.
      */
-    public void verifyAllCameraPreviewElementsFast() {
+    public void verifyFirstCameraPreviewElements() {
         waitForCameraPreviewsToLoad();
 
         // Wait for preview images and timestamps to load, not just the card containers
@@ -244,16 +252,21 @@ public class LayoutsPage {
                 "At least one camera preview card should be displayed");
         Assert.assertTrue(!previewImages.isEmpty(),
                 "Camera preview images should be loaded");
-        Assert.assertTrue(previewImages.get(0).isDisplayed(),
+
+        // Capture element before asserting to avoid race condition
+        WebElement firstImage = previewImages.get(0);
+        Assert.assertTrue(firstImage.isDisplayed(),
                 "Camera preview image should be visible");
-        org.openqa.selenium.Dimension size = previewImages.get(0).getSize();
+        org.openqa.selenium.Dimension size = firstImage.getSize();
         Assert.assertTrue(size.getWidth() > 0 && size.getHeight() > 0,
                 "Camera preview image should have valid dimensions");
+
         Assert.assertTrue(!timestamps.isEmpty(),
                 "Camera timestamps should be displayed");
-        String timestampText = timestamps.get(0).getText();
-        Assert.assertTrue(timestampText.contains(":"),
-                "Timestamp should contain ':' character");
+        WebElement firstTimestamp = timestamps.get(0);
+        String timestampText = firstTimestamp.getText();
+        Assert.assertTrue(timestampText.matches(".*\\d{1,2}:\\d{2}.*"),
+                "Timestamp should match time format (HH:MM), got: " + timestampText);
     }
 
 }

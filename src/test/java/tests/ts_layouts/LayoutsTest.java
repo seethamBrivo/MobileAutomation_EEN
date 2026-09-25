@@ -42,6 +42,7 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.selectFirstCamera();
         layoutsPage.clickSaveButton();
         layoutsPage.clickAddButton();
+        // Set flag after the action that creates the layout, before verification
         layoutCreated = true;
         layoutsPage.verifyLayoutCreatedSuccessfully();
     }
@@ -49,7 +50,7 @@ public class LayoutsTest extends BaseTest {
     @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app")
     public void verifyCameraPreviewsDisplayedInLayouts() {
         layoutsPage.waitForCameraPreviewsToLoad();
-        layoutsPage.verifyAllCameraPreviewElementsFast();
+        layoutsPage.verifyFirstCameraPreviewElements();
         layoutsPage.clickAllCamerasTab();
         layoutsPage.waitForCameraPreviewsToLoad();
     }
