@@ -33,5 +33,6 @@ public final class TestDataConstants {
     // Test-data JSON keys (timezone_data block).
     public static final String TIMEZONE_DATA = "timezone_data";
     public static final String VALID_TIMEZONE = "valid_timezone";
-    public static final String SEARCH_TERM = "search_term";
+    public static final String TIMEZONE_SEARCH_TERM = "search_term";
+    public static final String TIMEZONE_INVALID_SEARCH_TERM = "invalid_search_term";
 }

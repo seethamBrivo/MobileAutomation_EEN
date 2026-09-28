@@ -29,8 +29,8 @@ public class MyProfileTest extends BaseTest {
 
     @Test(description = "EEPD-TC-3920: POS-My Profile - setting 'Time zone' in VMS mobile app")
     public void verifyTimezoneSettingFunctionality() {
-        final String searchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.SEARCH_TERM);
-        final String invalidSearchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.INVALID_SEARCH_TERM);
+        final String searchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_SEARCH_TERM);
+        final String invalidSearchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_INVALID_SEARCH_TERM);
         final String testTimezone = "Calcutta"; // Specific timezone for verification
 
         myProfilePage.clickProfileSection();
