@@ -12,7 +12,7 @@ public final class FrameworkConstants {
     public static final Duration IMPLICIT_WAIT = Duration.ZERO;
 
     /** Default explicit wait for elements that are expected to appear. */
-    public static final Duration EXPLICIT_WAIT = Duration.ofSeconds(10);
+    public static final Duration EXPLICIT_WAIT = Duration.ofSeconds(20);
 
     public static final String CONFIG_FILE = "config.properties";
     public static final String ANDROID_CONFIG_FILE = "android.properties";

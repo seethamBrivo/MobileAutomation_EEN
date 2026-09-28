@@ -1,4 +1,4 @@
-﻿package tests.ts_layouts;
+package tests.ts_layouts;
 
 import base.BaseTest;
 import constants.TestDataConstants;
@@ -15,11 +15,11 @@ public class LayoutsTest extends BaseTest {
 
     @BeforeMethod
     public void loginAndVerifyLayoutsScreen() {
+        layoutCreated = false;
         loginAs(TestDataConstants.ENDUSER_CREDS);
         layoutsPage = new LayoutsPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();
         layoutsPage.clickFirstLayoutTab();
-        layoutCreated = false;
     }
 
     @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app")
@@ -75,6 +75,8 @@ public class LayoutsTest extends BaseTest {
             }
         } catch (Exception e) {
             logger.warn("Teardown failed to delete layout '{}': {}", layoutName, e.getMessage());
+        } finally {
+            layoutCreated = false;
         }
     }
 }

@@ -42,6 +42,11 @@ public class LayoutsPage {
     private final By layoutsTab = AppiumBy.xpath("//android.widget.TextView[@text='LAYOUTS']");
     private final By searchBar = AppiumBy.id("com.een.vms.android:id/search_bar");
     private final By filteredLayout = AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']//androidx.cardview.widget.CardView[1]");
+    private final By deleteButton = AppiumBy.accessibilityId("delete_header");
+    private final By confirmButton = AppiumBy.accessibilityId("negative_button");
+    private final By cameraPreviewCards = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
+    private final By cameraPreviewImages = AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']");
+    private final By cameraTimestamps = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':')]");
 
     private By layoutByName(String layoutName) {
         // XPath 1.0 doesn't support entity escaping - use concat() for quotes
@@ -73,11 +78,6 @@ public class LayoutsPage {
         result.append(")");
         return result.toString();
     }
-    private final By deleteButton = AppiumBy.accessibilityId("delete_header");
-    private final By confirmButton = AppiumBy.accessibilityId("negative_button");
-    private final By cameraPreviewCards = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
-    private final By cameraPreviewImages = AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']");
-    private final By cameraTimestamps = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':')]");
 
     private By camerasPerRowOption(int count) {
         if (count < 1 || count > 6) {
