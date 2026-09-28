@@ -46,6 +46,25 @@ public final class WaitUtils {
     }
 
     /**
+     * Waits for at least one element matching the locator to be visible, then returns all
+     * matching elements. Encapsulates driver.findElements so page objects never call driver directly.
+     */
+    public static List<WebElement> findElements(AppiumDriver driver, By locator) {
+        return findElements(driver, locator, FrameworkConstants.EXPLICIT_WAIT);
+    }
+
+    /**
+     * Waits for at least one element matching the locator to be visible (with custom timeout),
+     * then returns all matching elements.
+     */
+    public static List<WebElement> findElements(AppiumDriver driver, By locator, Duration timeout) {
+        // Wait for at least one element to be visible
+        waitForVisibility(driver, locator, timeout);
+        // Then return all matching elements
+        return driver.findElements(locator);
+    }
+
+    /**
      * Waits for the field, clears it and types. Retries once on the transient
      * stale/invalid-state errors Compose text fields throw while re-rendering.
      */

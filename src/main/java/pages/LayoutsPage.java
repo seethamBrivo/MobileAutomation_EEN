@@ -79,6 +79,10 @@ public class LayoutsPage {
         return result.toString();
     }
 
+    /**
+     * KNOWN LIMITATION: Unscoped locator (dialog has no unique container).
+     * TODO: Request testTag from app team for camera count options.
+     */
     private By camerasPerRowOption(int count) {
         if (count < 1 || count > 6) {
             throw new IllegalArgumentException("Invalid camera count for locator: " + count + " (must be 1-6)");
@@ -278,14 +282,10 @@ public class LayoutsPage {
      * Use this for smoke tests where verifying one representative element is sufficient.
      */
     public void verifyFirstCameraPreviewElements() {
-        // Wait for first card to be visible (fast - ~1-2s, doesn't wait for image data)
-        WaitUtils.waitForVisibility(driver, cameraPreviewCards);
-
-        // Safe to use findElements after explicit wait above - elements are now in DOM
-        // WaitUtils has no findElements method, so direct driver call is necessary here
-        List<WebElement> previewCards = driver.findElements(cameraPreviewCards);
-        List<WebElement> previewImages = driver.findElements(cameraPreviewImages);
-        List<WebElement> timestamps = driver.findElements(cameraTimestamps);
+        // Fetch all matching elements using WaitUtils (waits for first, then returns all)
+        List<WebElement> previewCards = WaitUtils.findElements(driver, cameraPreviewCards);
+        List<WebElement> previewImages = WaitUtils.findElements(driver, cameraPreviewImages);
+        List<WebElement> timestamps = WaitUtils.findElements(driver, cameraTimestamps);
 
         // Verify elements exist
         Assert.assertFalse(previewCards.isEmpty(),

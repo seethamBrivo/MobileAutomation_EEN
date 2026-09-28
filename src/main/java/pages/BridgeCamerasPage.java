@@ -15,6 +15,7 @@ public class BridgeCamerasPage {
 
     private final By camerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
     // Stable: Back button at fixed position [6][1] in DevicesMainScreen Compose hierarchy
+    // TODO: replace with testTag/content-desc once app exposes one for this back button
     private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
     private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
     // Inline locator for context menu - only used once in verification
