@@ -31,7 +31,7 @@ public class LayoutsPage {
     private final By layoutNameEditField = AppiumBy.accessibilityId("row_name_dj0");
     private final By aspectRatio16_9 = AppiumBy.xpath("//android.widget.TextView[@text='16:9']");
     private final By aspectRatio4_3 = AppiumBy.xpath("//android.widget.TextView[@text='4:3']");
-    private final By showCameraTitleBarsToggle = AppiumBy.xpath("//android.widget.Switch[@content-desc='row_show_cameras_title_item_switch']");
+    private final By showCameraTitleBarsToggle = AppiumBy.accessibilityId("row_show_cameras_title_item_switch");
     private final By addCamerasIcon = AppiumBy.accessibilityId("row_add_cameras_end_icon");
     // Always selects first camera (cell_at_0) as per test case requirement
     private final By selectCamera = AppiumBy.accessibilityId("cell_at_0_add_camera_check_box");
@@ -278,10 +278,11 @@ public class LayoutsPage {
      * Use this for smoke tests where verifying one representative element is sufficient.
      */
     public void verifyFirstCameraPreviewElements() {
-        // Wait only for cards (fast - ~1-2s, doesn't wait for image data from network)
+        // Wait for first card to be visible (fast - ~1-2s, doesn't wait for image data)
         WaitUtils.waitForVisibility(driver, cameraPreviewCards);
 
-        // Fetch elements - cards exist, so images and timestamps should be present in DOM
+        // Safe to use findElements after explicit wait above - elements are now in DOM
+        // WaitUtils has no findElements method, so direct driver call is necessary here
         List<WebElement> previewCards = driver.findElements(cameraPreviewCards);
         List<WebElement> previewImages = driver.findElements(cameraPreviewImages);
         List<WebElement> timestamps = driver.findElements(cameraTimestamps);

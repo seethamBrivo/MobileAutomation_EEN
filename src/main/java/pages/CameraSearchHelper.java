@@ -67,10 +67,24 @@ public class CameraSearchHelper {
     /**
      * Waits for the camera counter to change from the previous value, indicating
      * that the filter has been applied and the list has re-rendered.
+     * Returns true if counter changed, false if empty state appears or timeout.
      */
-    private void waitForCounterToChangeFrom(String previousCount) {
-        new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
-            .until(d -> !getCameraCounterText().equals(previousCount));
+    private boolean waitForCounterToChangeFrom(String previousCount) {
+        try {
+            new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
+                .until(d -> {
+                    // If empty state appears, counter is gone - that's a valid change
+                    if (WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.SHORT_TIMEOUT)) {
+                        return true;
+                    }
+                    // Otherwise check if counter changed
+                    String currentCount = getCameraCounterText();
+                    return !currentCount.equals(previousCount);
+                });
+            return true;
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
     }
 
     public boolean isCameraFoundInFilter() {
