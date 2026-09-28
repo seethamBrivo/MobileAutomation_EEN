@@ -31,7 +31,7 @@ public class LayoutsPage {
     private final By layoutNameEditField = AppiumBy.xpath("//android.widget.EditText[@content-desc=\"row_name_dj0\"]");
     private final By aspectRatio16_9 = AppiumBy.xpath("//android.widget.TextView[@text='16:9']");
     private final By aspectRatio4_3 = AppiumBy.xpath("//android.widget.TextView[@text='4:3']");
-    private final By showCameraTitleBarsToggle = AppiumBy.xpath("//android.widget.Switch");
+    private final By showCameraTitleBarsToggle = AppiumBy.xpath("//android.widget.Switch[@content-desc='row_show_cameras_title_item_switch']");
     private final By addCamerasIcon = AppiumBy.xpath("//android.widget.ImageView[@content-desc=\"row_add_cameras_end_icon\"]");
     // Always selects first camera (cell_at_0) as per test case requirement
     private final By selectCamera = AppiumBy.xpath("//android.widget.CheckBox[@content-desc=\"cell_at_0_add_camera_check_box\"]");
@@ -44,8 +44,10 @@ public class LayoutsPage {
     private final By filteredLayout = AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']//androidx.cardview.widget.CardView[1]");
 
     private By layoutByName(String layoutName) {
-        // Escape single quotes to prevent XPath injection
-        String escapedName = layoutName.replace("'", "&apos;");
+        // Escape quotes to prevent XPath injection
+        String escapedName = layoutName
+                .replace("'", "&apos;")
+                .replace("\"", "&quot;");
         return AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']"
                 + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, '" + escapedName + "')]]");
     }
@@ -56,6 +58,9 @@ public class LayoutsPage {
     private final By cameraTimestamps = AppiumBy.xpath("//android.widget.TextView[contains(@text, ':')]");
 
     private By camerasPerRowOption(int count) {
+        if (count < 1 || count > 6) {
+            throw new IllegalArgumentException("Invalid camera count for locator: " + count + " (must be 1-6)");
+        }
         return AppiumBy.xpath("//android.widget.TextView[@text='" + count + "']");
     }
 
@@ -148,7 +153,12 @@ public class LayoutsPage {
     private void ensureOnNewLayoutScreen() {
         if (!WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.debug("New Layout screen not visible, navigating back");
-            driver.navigate().back();
+            try {
+                driver.navigate().back();
+            } catch (Exception e) {
+                logger.warn("Back navigation failed: {}", e.getMessage());
+                throw new IllegalStateException("Cannot return to New Layout screen", e);
+            }
         }
         WaitUtils.waitForVisibility(driver, layoutNameLabel);
         logger.debug("Confirmed on New Layout screen");
@@ -248,9 +258,9 @@ public class LayoutsPage {
         List<WebElement> previewImages = driver.findElements(cameraPreviewImages);
         List<WebElement> timestamps = driver.findElements(cameraTimestamps);
 
-        Assert.assertTrue(!previewCards.isEmpty(),
+        Assert.assertFalse(previewCards.isEmpty(),
                 "At least one camera preview card should be displayed");
-        Assert.assertTrue(!previewImages.isEmpty(),
+        Assert.assertFalse(previewImages.isEmpty(),
                 "Camera preview images should be loaded");
 
         // Capture element before asserting to avoid race condition
@@ -261,7 +271,7 @@ public class LayoutsPage {
         Assert.assertTrue(size.getWidth() > 0 && size.getHeight() > 0,
                 "Camera preview image should have valid dimensions");
 
-        Assert.assertTrue(!timestamps.isEmpty(),
+        Assert.assertFalse(timestamps.isEmpty(),
                 "Camera timestamps should be displayed");
         WebElement firstTimestamp = timestamps.get(0);
         String timestampText = firstTimestamp.getText();

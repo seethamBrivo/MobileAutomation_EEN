@@ -19,7 +19,6 @@ public class LayoutsTest extends BaseTest {
         layoutsPage = new LayoutsPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();
         layoutsPage.clickFirstLayoutTab();
-        layoutCreated = false;
     }
 
     @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app")
