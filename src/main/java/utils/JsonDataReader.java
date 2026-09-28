@@ -80,6 +80,24 @@ public final class JsonDataReader {
         return value.getAsString();
     }
 
+    /**
+     * A string value from {@code timezone_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static String getTimezoneDataValue(String key) {
+        JsonObject timezoneData = getTestData().getAsJsonObject(TestDataConstants.TIMEZONE_DATA);
+        if (timezoneData == null) {
+            throw new IllegalStateException(
+                    "testData.json has no " + TestDataConstants.TIMEZONE_DATA + " block");
+        }
+        JsonElement value = timezoneData.get(key);
+        if (value == null || value.isJsonNull()) {
+            throw new IllegalStateException(
+                    "testData.json is missing key '" + key + "' under " + TestDataConstants.TIMEZONE_DATA);
+        }
+        return value.getAsString();
+    }
+
     private static String loadResourceAsString(String resourcePath) {
         try (InputStream inputStream = Thread.currentThread()
                 .getContextClassLoader()

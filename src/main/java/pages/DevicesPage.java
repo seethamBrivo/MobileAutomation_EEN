@@ -90,6 +90,12 @@ public class DevicesPage {
         clickDashboardOptionAtTheBottom();
     }
 
+    /** More > My Profile (click profile at top). Works from any screen that shows the bottom navigation. */
+    public MyProfilePage navigateToMyProfile() {
+        clickMoreMenuOptionAtTheBottom();
+        return new MyProfilePage(driver);
+    }
+
     public void clickBridgesTab() {
         WaitUtils.click(driver, bridgesTab);
     }

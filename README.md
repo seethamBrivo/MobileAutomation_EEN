@@ -114,6 +114,8 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-12354 | ts_bridges.BridgesTest | Bridge context menu |
 | EEPD-TC-8881 | ts_bridges.BridgesTest | Rename bridge and check status |
 | EEPD-TC-8898 | ts_bridges.BridgeRestartTest | Restart bridge (reseller login) |
+| EEPD-TC-12355 | ts_cameras.CameraContextMenuTest | Camera context menu verification |
+| EEPD-TC-3920 | ts_my_profile.MyProfileTest | POS-My Profile - setting 'Time zone' in VMS mobile app |
 
 ### Conventions
 

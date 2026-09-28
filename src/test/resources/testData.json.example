@@ -12,6 +12,10 @@
     "enduser_user_creds": {
       "username": "your_enduser_email@example.com",
       "password": "YourPassword123"
+    },
+    "ts02_user_creds": {
+      "username": "your_ts02_email@example.com",
+      "password": "YourPassword123"
     }
   },
   "search_filter": {
@@ -19,25 +23,17 @@
     "invalid_search_term": "XYZ_NO_MATCH_12345",
     "bridge_valid_search_term": "Camera"
   },
+  "timezone_data": {
+    "valid_timezone": "Alaska",
+    "search_term": "US",
+    "invalid_search_term": "XYZ_INVALID_TIMEZONE_12345"
+  },
   "checkoutData": {
     "standard_checkout": {
       "firstName": "John",
       "lastName": "Doe",
       "zipCode": "12345",
       "confirmationMessage": "THANK YOU FOR YOUR ORDER"
-    },
-    "alt_checkout": {
-      "firstName": "Jane",
-      "lastName": "Smith",
-      "zipCode": "67890",
-      "confirmationMessage": "THANK YOU FOR YOUR ORDER"
     }
-  },
-  "shopScenarios": [
-    {
-      "credentialsKey": "standard_user_creds",
-      "productName": "Sauce Labs Backpack",
-      "checkoutKey": "standard_checkout"
-    }
-  ]
+  }
 }
