@@ -114,6 +114,8 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-12354 | ts_bridges.BridgesTest | Bridge context menu |
 | EEPD-TC-8881 | ts_bridges.BridgesTest | Rename bridge and check status |
 | EEPD-TC-8898 | ts_bridges.BridgeRestartTest | Restart bridge (reseller login) |
+| EEPD-TC-9005 | ts_layouts.LayoutsTest | Add new layout in mobile VMS app |
+| EEPD-TC-9163 | ts_layouts.LayoutsTest | Show camera previews in Layouts/Tags sections |
 
 ### Conventions
 

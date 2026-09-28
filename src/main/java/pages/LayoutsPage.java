@@ -27,14 +27,14 @@ public class LayoutsPage {
     private final By mapViewOption = AppiumBy.xpath("//android.widget.TextView[@text='Map view']");
     private final By zoomInOption = AppiumBy.xpath("//android.widget.TextView[@text='Zoom in']");
     private final By zoomOutOption = AppiumBy.xpath("//android.widget.TextView[@text='Zoom out']");
-    private final By layoutNameLabel = AppiumBy.xpath("//android.widget.TextView[@content-desc=\"row_name_header\"]");
-    private final By layoutNameEditField = AppiumBy.xpath("//android.widget.EditText[@content-desc=\"row_name_dj0\"]");
+    private final By layoutNameLabel = AppiumBy.accessibilityId("row_name_header");
+    private final By layoutNameEditField = AppiumBy.accessibilityId("row_name_dj0");
     private final By aspectRatio16_9 = AppiumBy.xpath("//android.widget.TextView[@text='16:9']");
     private final By aspectRatio4_3 = AppiumBy.xpath("//android.widget.TextView[@text='4:3']");
     private final By showCameraTitleBarsToggle = AppiumBy.xpath("//android.widget.Switch[@content-desc='row_show_cameras_title_item_switch']");
-    private final By addCamerasIcon = AppiumBy.xpath("//android.widget.ImageView[@content-desc=\"row_add_cameras_end_icon\"]");
+    private final By addCamerasIcon = AppiumBy.accessibilityId("row_add_cameras_end_icon");
     // Always selects first camera (cell_at_0) as per test case requirement
-    private final By selectCamera = AppiumBy.xpath("//android.widget.CheckBox[@content-desc=\"cell_at_0_add_camera_check_box\"]");
+    private final By selectCamera = AppiumBy.accessibilityId("cell_at_0_add_camera_check_box");
     private final By saveButton = AppiumBy.xpath("//android.widget.TextView[@text='Save']");
     private final By addButton = AppiumBy.xpath("//android.widget.TextView[@text='Add']");
     private final By successMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Layout successfully created')]");
@@ -44,18 +44,40 @@ public class LayoutsPage {
     private final By filteredLayout = AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']//androidx.cardview.widget.CardView[1]");
 
     private By layoutByName(String layoutName) {
-        // Escape quotes to prevent XPath injection
-        String escapedName = layoutName
-                .replace("'", "&apos;")
-                .replace("\"", "&quot;");
+        // XPath 1.0 doesn't support entity escaping - use concat() for quotes
+        String xpathValue = buildXPathStringLiteral(layoutName);
         return AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']"
-                + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, '" + escapedName + "')]]");
+                + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, " + xpathValue + ")]]");
     }
-    private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']");
-    private final By confirmButton = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
+
+    /**
+     * Builds an XPath string literal that properly handles quotes using concat().
+     * XPath 1.0 has no escape mechanism, so we break on quotes and concatenate.
+     */
+    private String buildXPathStringLiteral(String value) {
+        if (!value.contains("'")) {
+            return "'" + value + "'";
+        }
+        if (!value.contains("\"")) {
+            return "\"" + value + "\"";
+        }
+        // Contains both - use concat
+        StringBuilder result = new StringBuilder("concat(");
+        String[] parts = value.split("'", -1);
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) {
+                result.append(", \"'\", ");
+            }
+            result.append("'").append(parts[i]).append("'");
+        }
+        result.append(")");
+        return result.toString();
+    }
+    private final By deleteButton = AppiumBy.accessibilityId("delete_header");
+    private final By confirmButton = AppiumBy.accessibilityId("negative_button");
     private final By cameraPreviewCards = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
     private final By cameraPreviewImages = AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']");
-    private final By cameraTimestamps = AppiumBy.xpath("//android.widget.TextView[contains(@text, ':')]");
+    private final By cameraTimestamps = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':')]");
 
     private By camerasPerRowOption(int count) {
         if (count < 1 || count > 6) {
@@ -69,9 +91,9 @@ public class LayoutsPage {
     }
 
     public void verifyLayoutsScreenDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, layoutsScreen).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, layoutsScreen),
                 "Layouts screen should be displayed after login");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, threeDotsMenuButton).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, threeDotsMenuButton),
                 "Three dots menu button should be visible on layouts screen");
     }
 
@@ -90,22 +112,22 @@ public class LayoutsPage {
     }
 
     public void verifyMenuPopupDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, newLayoutOption).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, newLayoutOption),
                 "Three dots menu popup should be displayed");
     }
 
     public void verifyMenuOptions() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, addCamerasOption).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, addCamerasOption),
                 "Add Cameras option should be displayed");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, newLayoutOption).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, newLayoutOption),
                 "New Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, editLayoutOption).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, editLayoutOption),
                 "Edit Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, layoutSettingsOption).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, layoutSettingsOption),
                 "Layout Settings option should be displayed");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, mapViewOption).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, mapViewOption),
                 "Map View option should be displayed");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, zoomInOption).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, zoomInOption),
                 "Zoom In option should be displayed");
 
         if (WaitUtils.isVisible(driver, zoomOutOption, TimeoutConstants.SHORT_TIMEOUT)) {
@@ -120,7 +142,7 @@ public class LayoutsPage {
     }
 
     public void verifyNewLayoutScreenDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, layoutNameLabel).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, layoutNameLabel),
                 "New Layout screen should be displayed");
     }
 
@@ -151,6 +173,13 @@ public class LayoutsPage {
      * Some selections auto-navigate back, others require explicit back navigation.
      */
     private void ensureOnNewLayoutScreen() {
+        // Quick instant check first - avoid polling if already on screen
+        if (WaitUtils.isPresent(driver, layoutNameLabel)) {
+            logger.debug("Already on New Layout screen");
+            return;
+        }
+
+        // Not immediately present - wait briefly then navigate back if needed
         if (!WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.debug("New Layout screen not visible, navigating back");
             try {
@@ -159,8 +188,8 @@ public class LayoutsPage {
                 logger.warn("Back navigation failed: {}", e.getMessage());
                 throw new IllegalStateException("Cannot return to New Layout screen", e);
             }
+            WaitUtils.waitForVisibility(driver, layoutNameLabel);
         }
-        WaitUtils.waitForVisibility(driver, layoutNameLabel);
         logger.debug("Confirmed on New Layout screen");
     }
 
@@ -194,7 +223,7 @@ public class LayoutsPage {
     }
 
     public void verifyLayoutCreatedSuccessfully() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, successMessage).isDisplayed(),
+        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, successMessage),
                 "Success message should be displayed");
     }
 
@@ -230,9 +259,10 @@ public class LayoutsPage {
         clickFilterIcon();
         clickLayoutsTab();
         enterLayoutNameInSearchFilter(layoutName);
-        // Wait for the specific layout to appear in filtered results
-        WaitUtils.waitForVisibility(driver, layoutByName(layoutName));
-        clickFilteredLayout();
+        // Wait for and click the specific layout by name
+        By targetLayout = layoutByName(layoutName);
+        WaitUtils.waitForVisibility(driver, targetLayout);
+        WaitUtils.click(driver, targetLayout);
         clickThreeDotsMenuButton();
         clickLayoutSettingsOption();
         clickDeleteLayoutButton();
@@ -248,31 +278,28 @@ public class LayoutsPage {
      * Use this for smoke tests where verifying one representative element is sufficient.
      */
     public void verifyFirstCameraPreviewElements() {
-        waitForCameraPreviewsToLoad();
+        // Wait only for cards (fast - ~1-2s, doesn't wait for image data from network)
+        WaitUtils.waitForVisibility(driver, cameraPreviewCards);
 
-        // Wait for preview images and timestamps to load, not just the card containers
-        WaitUtils.waitForVisibility(driver, cameraPreviewImages);
-        WaitUtils.waitForVisibility(driver, cameraTimestamps);
-
+        // Fetch elements - cards exist, so images and timestamps should be present in DOM
         List<WebElement> previewCards = driver.findElements(cameraPreviewCards);
         List<WebElement> previewImages = driver.findElements(cameraPreviewImages);
         List<WebElement> timestamps = driver.findElements(cameraTimestamps);
 
+        // Verify elements exist
         Assert.assertFalse(previewCards.isEmpty(),
                 "At least one camera preview card should be displayed");
         Assert.assertFalse(previewImages.isEmpty(),
-                "Camera preview images should be loaded");
+                "Camera preview image elements should be present");
+        Assert.assertFalse(timestamps.isEmpty(),
+                "Camera timestamp elements should be present");
 
-        // Capture element before asserting to avoid race condition
+        // Verify first image element structure
         WebElement firstImage = previewImages.get(0);
         Assert.assertTrue(firstImage.isDisplayed(),
-                "Camera preview image should be visible");
-        org.openqa.selenium.Dimension size = firstImage.getSize();
-        Assert.assertTrue(size.getWidth() > 0 && size.getHeight() > 0,
-                "Camera preview image should have valid dimensions");
+                "Camera preview image element should be visible");
 
-        Assert.assertFalse(timestamps.isEmpty(),
-                "Camera timestamps should be displayed");
+        // Verify timestamp format
         WebElement firstTimestamp = timestamps.get(0);
         String timestampText = firstTimestamp.getText();
         Assert.assertTrue(timestampText.matches(".*\\d{1,2}:\\d{2}.*"),

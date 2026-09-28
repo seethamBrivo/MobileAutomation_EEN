@@ -1,4 +1,4 @@
-package tests.ts_layouts;
+﻿package tests.ts_layouts;
 
 import base.BaseTest;
 import constants.TestDataConstants;
@@ -19,6 +19,7 @@ public class LayoutsTest extends BaseTest {
         layoutsPage = new LayoutsPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();
         layoutsPage.clickFirstLayoutTab();
+        layoutCreated = false;
     }
 
     @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app")
