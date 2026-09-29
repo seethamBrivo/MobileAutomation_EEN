@@ -12,6 +12,7 @@ public class LayoutsTest extends BaseTest {
 
     private LayoutsPage layoutsPage;
     private boolean layoutCreated = false;
+    private String uniqueLayoutName;
 
     @BeforeMethod
     public void loginAndVerifyLayoutsScreen() {
@@ -24,7 +25,9 @@ public class LayoutsTest extends BaseTest {
 
     @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app")
     public void verifyAddNewLayoutFunctionality() {
-        String layoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
+        String baseLayoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
+        // Append timestamp to ensure uniqueness for parallel test execution
+        uniqueLayoutName = baseLayoutName + "_" + System.currentTimeMillis();
         String aspectRatio = JsonDataReader.getLayoutDataValue(TestDataConstants.ASPECT_RATIO);
         int maxCamerasPerRow = JsonDataReader.getLayoutDataIntValue(TestDataConstants.MAX_CAMERAS_PER_ROW);
         boolean showCameraTitleBars = JsonDataReader.getLayoutDataBooleanValue(TestDataConstants.SHOW_CAMERA_TITLE_BARS);
@@ -34,7 +37,7 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.verifyMenuOptions();
         layoutsPage.clickNewLayoutOption();
         layoutsPage.verifyNewLayoutScreenDisplayed();
-        layoutsPage.setLayoutName(layoutName);
+        layoutsPage.setLayoutName(uniqueLayoutName);
         layoutsPage.selectAspectRatio(aspectRatio);
         layoutsPage.selectMaxCamerasPerRow(maxCamerasPerRow);
         layoutsPage.toggleShowCameraTitleBars(showCameraTitleBars);
@@ -42,9 +45,8 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.selectFirstCamera();
         layoutsPage.clickSaveButton();
         layoutsPage.clickAddButton();
-        // Set flag after the action that creates the layout, before verification
         layoutCreated = true;
-        layoutsPage.verifyLayoutCreatedSuccessfully();
+        layoutsPage.verifyLayoutCreatedSuccessfully(uniqueLayoutName);
     }
 
     @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app")
@@ -53,25 +55,30 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.verifyFirstCameraPreviewElements();
         layoutsPage.clickAllCamerasTab();
         layoutsPage.waitForCameraPreviewsToLoad();
+        layoutsPage.verifyFirstCameraPreviewElements();
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        if (!layoutCreated) {
+        if (!layoutCreated || uniqueLayoutName == null) {
             logger.info("No layout created in this test, skipping teardown");
             return;
         }
 
-        String layoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
         try {
             if (driver != null) {
-                layoutsPage.deleteLayout(layoutName);
-                logger.info("Successfully deleted layout '{}' in teardown", layoutName);
+                // Verify session is still valid - getSessionId() throws NoSuchSessionException if session closed
+                driver.getSessionId();
+                layoutsPage.deleteLayout(uniqueLayoutName);
+                logger.info("Successfully deleted layout '{}' in teardown", uniqueLayoutName);
             }
-        } catch (Throwable e) {
-            logger.warn("Teardown failed to delete layout '{}': {}", layoutName, e.getMessage());
+        } catch (org.openqa.selenium.NoSuchSessionException e) {
+            logger.warn("Driver session closed, skipping cleanup for layout '{}'", uniqueLayoutName);
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.warn("Teardown failed to delete layout '{}': {}", uniqueLayoutName, e.getMessage());
         } finally {
             layoutCreated = false;
+            uniqueLayoutName = null;
         }
     }
 }

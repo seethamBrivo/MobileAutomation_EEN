@@ -4,6 +4,7 @@ import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,13 +103,11 @@ public class LayoutsPage {
     }
 
     public void clickAllCamerasTab() {
-        WebElement tab = WaitUtils.waitForVisibility(driver, allCamerasTab);
-        tab.click();
+        WaitUtils.click(driver, allCamerasTab);
     }
 
     public void clickFirstLayoutTab() {
-        WebElement tab = WaitUtils.waitForVisibility(driver, firstLayoutTab);
-        tab.click();
+        WaitUtils.click(driver, firstLayoutTab);
     }
 
     public void clickThreeDotsMenuButton() {
@@ -121,31 +120,29 @@ public class LayoutsPage {
     }
 
     public void verifyMenuOptions() {
-        // Wait for first menu option to appear, then verify all expected options
         List<By> menuOptions = List.of(
                 addCamerasOption, newLayoutOption, editLayoutOption,
                 layoutSettingsOption, mapViewOption, zoomInOption
         );
 
-        // Wait for any option to appear (confirms menu is open)
         Assert.assertTrue(WaitUtils.waitForAny(driver, menuOptions, FrameworkConstants.EXPLICIT_WAIT).isPresent(),
                 "At least one menu option should be displayed");
 
-        // Now verify each expected option is visible
-        Assert.assertTrue(WaitUtils.isVisible(driver, addCamerasOption, TimeoutConstants.SHORT_TIMEOUT),
+        Duration minimalTimeout = Duration.ofMillis(100);
+        Assert.assertTrue(WaitUtils.isVisible(driver, addCamerasOption, minimalTimeout),
                 "Add Cameras option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, newLayoutOption, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, newLayoutOption, minimalTimeout),
                 "New Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, editLayoutOption, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, editLayoutOption, minimalTimeout),
                 "Edit Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, layoutSettingsOption, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, layoutSettingsOption, minimalTimeout),
                 "Layout Settings option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, mapViewOption, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, mapViewOption, minimalTimeout),
                 "Map View option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, zoomInOption, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, zoomInOption, minimalTimeout),
                 "Zoom In option should be displayed");
 
-        if (WaitUtils.isVisible(driver, zoomOutOption, TimeoutConstants.SHORT_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, zoomOutOption, minimalTimeout)) {
             logger.info("Zoom Out option is displayed");
         } else {
             logger.info("Zoom Out option not displayed - already in the zoom out state");
@@ -193,7 +190,6 @@ public class LayoutsPage {
             return;
         }
 
-        // Not visible - navigate back to New Layout screen
         logger.debug("New Layout screen not visible, navigating back");
         try {
             driver.navigate().back();
@@ -231,14 +227,21 @@ public class LayoutsPage {
         WaitUtils.click(driver, addButton);
     }
 
-    /**
-     * Verifies the layout creation success message (snackbar).
-     * Note: Snackbars are transient (auto-dismiss after ~3-5 seconds). If this becomes flaky,
-     * consider verifying the layout appears in the layouts list instead.
-     */
-    public void verifyLayoutCreatedSuccessfully() {
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, successMessage),
-                "Success message should be displayed");
+    public void verifyLayoutCreatedSuccessfully(String layoutName) {
+        if (WaitUtils.isVisible(driver, successMessage, TimeoutConstants.SHORT_TIMEOUT)) {
+            logger.info("Layout creation confirmed via snackbar message");
+            return;
+        }
+
+        logger.info("Snackbar not visible, verifying layout '{}' exists in list", layoutName);
+        clickFilterIcon();
+        clickLayoutsTab();
+        enterLayoutNameInSearchFilter(layoutName);
+
+        By targetLayout = layoutByName(layoutName);
+        Assert.assertTrue(WaitUtils.isVisible(driver, targetLayout, FrameworkConstants.EXPLICIT_WAIT),
+                "Layout '" + layoutName + "' should appear in layouts list after creation");
+        logger.info("Layout creation confirmed - '{}' found in layouts list", layoutName);
     }
 
     public void clickFilterIcon() {
@@ -269,7 +272,6 @@ public class LayoutsPage {
         clickFilterIcon();
         clickLayoutsTab();
         enterLayoutNameInSearchFilter(layoutName);
-        // Wait for and click the specific layout by name
         By targetLayout = layoutByName(layoutName);
         WaitUtils.waitForVisibility(driver, targetLayout);
         WaitUtils.click(driver, targetLayout);
@@ -288,12 +290,10 @@ public class LayoutsPage {
      * Use this for smoke tests where verifying one representative element is sufficient.
      */
     public void verifyFirstCameraPreviewElements() {
-        // Fetch all matching elements using WaitUtils (waits for first, then returns all)
         List<WebElement> previewCards = WaitUtils.findElements(driver, cameraPreviewCards);
         List<WebElement> previewImages = WaitUtils.findElements(driver, cameraPreviewImages);
         List<WebElement> timestamps = WaitUtils.findElements(driver, cameraTimestamps);
 
-        // Verify elements exist
         Assert.assertFalse(previewCards.isEmpty(),
                 "At least one camera preview card should be displayed");
         Assert.assertFalse(previewImages.isEmpty(),
@@ -301,16 +301,16 @@ public class LayoutsPage {
         Assert.assertFalse(timestamps.isEmpty(),
                 "Camera timestamp elements should be present");
 
-        // Verify first image element structure
         WebElement firstImage = previewImages.get(0);
         Assert.assertTrue(firstImage.isDisplayed(),
                 "Camera preview image element should be visible");
 
-        // Verify timestamp format
         WebElement firstTimestamp = timestamps.get(0);
         String timestampText = firstTimestamp.getText();
-        Assert.assertTrue(timestampText.matches(".*\\d{1,2}:\\d{2}.*"),
-                "Timestamp should match time format (HH:MM), got: " + timestampText);
+        boolean isValidFormat = timestampText.matches(".*\\d{1,2}:\\d{2}\\s*[AP]M.*") ||
+                                timestampText.matches(".*\\d{2}:\\d{2}.*");
+        Assert.assertTrue(isValidFormat,
+                "Timestamp should match time format (HH:MM AM/PM or HH:MM), got: " + timestampText);
     }
 
 }
