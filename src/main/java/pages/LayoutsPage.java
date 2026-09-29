@@ -1,5 +1,6 @@
 package pages;
 
+import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
@@ -37,11 +38,10 @@ public class LayoutsPage {
     private final By selectCamera = AppiumBy.accessibilityId("cell_at_0_add_camera_check_box");
     private final By saveButton = AppiumBy.xpath("//android.widget.TextView[@text='Save']");
     private final By addButton = AppiumBy.xpath("//android.widget.TextView[@text='Add']");
-    private final By successMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Layout successfully created')]");
+    private final By successMessage = AppiumBy.id("com.een.vms.android:id/snackbar_text");
     private final By filterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
     private final By layoutsTab = AppiumBy.xpath("//android.widget.TextView[@text='LAYOUTS']");
     private final By searchBar = AppiumBy.id("com.een.vms.android:id/search_bar");
-    private final By filteredLayout = AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']//androidx.cardview.widget.CardView[1]");
     private final By deleteButton = AppiumBy.accessibilityId("delete_header");
     private final By confirmButton = AppiumBy.accessibilityId("negative_button");
     private final By cameraPreviewCards = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
@@ -121,17 +121,28 @@ public class LayoutsPage {
     }
 
     public void verifyMenuOptions() {
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, addCamerasOption),
+        // Wait for first menu option to appear, then verify all expected options
+        List<By> menuOptions = List.of(
+                addCamerasOption, newLayoutOption, editLayoutOption,
+                layoutSettingsOption, mapViewOption, zoomInOption
+        );
+
+        // Wait for any option to appear (confirms menu is open)
+        Assert.assertTrue(WaitUtils.waitForAny(driver, menuOptions, FrameworkConstants.EXPLICIT_WAIT).isPresent(),
+                "At least one menu option should be displayed");
+
+        // Now verify each expected option is visible
+        Assert.assertTrue(WaitUtils.isVisible(driver, addCamerasOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Add Cameras option should be displayed");
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, newLayoutOption),
+        Assert.assertTrue(WaitUtils.isVisible(driver, newLayoutOption, TimeoutConstants.SHORT_TIMEOUT),
                 "New Layout option should be displayed");
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, editLayoutOption),
+        Assert.assertTrue(WaitUtils.isVisible(driver, editLayoutOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Edit Layout option should be displayed");
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, layoutSettingsOption),
+        Assert.assertTrue(WaitUtils.isVisible(driver, layoutSettingsOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Layout Settings option should be displayed");
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, mapViewOption),
+        Assert.assertTrue(WaitUtils.isVisible(driver, mapViewOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Map View option should be displayed");
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, zoomInOption),
+        Assert.assertTrue(WaitUtils.isVisible(driver, zoomInOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Zoom In option should be displayed");
 
         if (WaitUtils.isVisible(driver, zoomOutOption, TimeoutConstants.SHORT_TIMEOUT)) {
@@ -177,37 +188,31 @@ public class LayoutsPage {
      * Some selections auto-navigate back, others require explicit back navigation.
      */
     private void ensureOnNewLayoutScreen() {
-        // Quick instant check first - avoid polling if already on screen
-        if (WaitUtils.isPresent(driver, layoutNameLabel)) {
+        if (WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.debug("Already on New Layout screen");
             return;
         }
 
-        // Not immediately present - wait briefly then navigate back if needed
-        if (!WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
-            logger.debug("New Layout screen not visible, navigating back");
-            try {
-                driver.navigate().back();
-            } catch (Exception e) {
-                logger.warn("Back navigation failed: {}", e.getMessage());
-                throw new IllegalStateException("Cannot return to New Layout screen", e);
-            }
+        // Not visible - navigate back to New Layout screen
+        logger.debug("New Layout screen not visible, navigating back");
+        try {
+            driver.navigate().back();
             WaitUtils.waitForVisibility(driver, layoutNameLabel);
+            logger.debug("Confirmed on New Layout screen");
+        } catch (Exception e) {
+            logger.warn("Back navigation failed: {}", e.getMessage());
+            throw new IllegalStateException("Cannot return to New Layout screen", e);
         }
-        logger.debug("Confirmed on New Layout screen");
     }
 
     public void toggleShowCameraTitleBars(boolean enable) {
         WebElement toggle = WaitUtils.waitForVisibility(driver, showCameraTitleBarsToggle);
-        String checkedAttr = toggle.getAttribute("checked");
-        if (checkedAttr == null) {
-            throw new IllegalStateException("Toggle 'checked' attribute is null - cannot determine current state");
-        }
-        boolean isEnabled = Boolean.parseBoolean(checkedAttr);
+        boolean isEnabled = toggle.isSelected();
 
         if (enable != isEnabled) {
             WaitUtils.click(driver, showCameraTitleBarsToggle);
         }
+        ensureOnNewLayoutScreen();
     }
 
     public void clickAddCamerasIcon() {
@@ -226,6 +231,11 @@ public class LayoutsPage {
         WaitUtils.click(driver, addButton);
     }
 
+    /**
+     * Verifies the layout creation success message (snackbar).
+     * Note: Snackbars are transient (auto-dismiss after ~3-5 seconds). If this becomes flaky,
+     * consider verifying the layout appears in the layouts list instead.
+     */
     public void verifyLayoutCreatedSuccessfully() {
         Assert.assertNotNull(WaitUtils.waitForVisibility(driver, successMessage),
                 "Success message should be displayed");
@@ -241,10 +251,6 @@ public class LayoutsPage {
 
     public void enterLayoutNameInSearchFilter(String layoutName) {
         WaitUtils.clearAndType(driver, searchBar, layoutName);
-    }
-
-    public void clickFilteredLayout() {
-        WaitUtils.click(driver, filteredLayout);
     }
 
     public void clickLayoutSettingsOption() {

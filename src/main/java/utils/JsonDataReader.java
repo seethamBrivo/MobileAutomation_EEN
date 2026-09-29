@@ -65,19 +65,7 @@ public final class JsonDataReader {
      * instead of a bare NullPointerException when the key is missing.
      */
     public static String getSearchFilterValue(String key) {
-        JsonObject searchFilter = getTestData().getAsJsonObject(TestDataConstants.SEARCH_FILTER);
-        if (searchFilter == null) {
-            throw new IllegalStateException(
-                    "testData.json is missing '" + TestDataConstants.SEARCH_FILTER + "' block "
-                    + "(check the CI workflow and testData.json.example have search_filter section)");
-        }
-        JsonElement value = searchFilter.get(key);
-        if (value == null || value.isJsonNull()) {
-            throw new IllegalStateException(
-                    "testData.json is missing key '" + key + "' under search_filter "
-                    + "(check the CI workflow and testData.json.example use the same key names)");
-        }
-        return value.getAsString();
+        return getBlockValue(TestDataConstants.SEARCH_FILTER, "search_filter", key).getAsString();
     }
 
     /**
@@ -116,22 +104,29 @@ public final class JsonDataReader {
     }
 
     /**
-     * Helper to retrieve a layout_data element with consistent validation.
+     * Generic helper to retrieve a value from any test data block with consistent validation.
+     * Eliminates duplication across credentials, search_filter, layout_data, etc.
      */
-    private static JsonElement getLayoutDataElement(String key) {
-        JsonObject layoutData = getTestData().getAsJsonObject(TestDataConstants.LAYOUT_DATA);
-        if (layoutData == null) {
+    private static JsonElement getBlockValue(String blockConstant, String blockName, String key) {
+        JsonObject block = getTestData().getAsJsonObject(blockConstant);
+        if (block == null) {
             throw new IllegalStateException(
-                    "testData.json is missing '" + TestDataConstants.LAYOUT_DATA + "' block "
-                    + "(check the CI workflow and testData.json.example have layout_data section)");
+                    "testData.json is missing '" + blockConstant + "' block "
+                    + "(check the CI workflow and testData.json.example have " + blockName + " section)");
         }
-        JsonElement value = layoutData.get(key);
+        JsonElement value = block.get(key);
         if (value == null || value.isJsonNull()) {
             throw new IllegalStateException(
-                    "testData.json is missing key '" + key + "' under layout_data "
-                    + "(check the CI workflow and testData.json.example use the same key names)");
+                    "testData.json is missing key '" + key + "' under " + blockName);
         }
         return value;
+    }
+
+    /**
+     * Helper to retrieve a layout_data element (uses the generic getBlockValue helper).
+     */
+    private static JsonElement getLayoutDataElement(String key) {
+        return getBlockValue(TestDataConstants.LAYOUT_DATA, "layout_data", key);
     }
 
     private static String loadResourceAsString(String resourcePath) {

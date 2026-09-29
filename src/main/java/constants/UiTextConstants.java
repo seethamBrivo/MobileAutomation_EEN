@@ -14,8 +14,4 @@ public final class UiTextConstants {
     public static final String SEARCH_PLACEHOLDER = "Filter by camera";
     public static final String EMPTY_STATE_MESSAGE = "No matching cameras";
     public static final String CAMERA_COUNTER_TEXT = " camera";
-
-    // Layout menu and screen UI text
-    public static final String LAYOUT_SUCCESS_MESSAGE = "Layout successfully created";
-    public static final String NEW_LAYOUT_PLACEHOLDER = "New Layout";
 }

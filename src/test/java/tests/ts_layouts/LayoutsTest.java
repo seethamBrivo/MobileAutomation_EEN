@@ -65,15 +65,10 @@ public class LayoutsTest extends BaseTest {
         String layoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
         try {
             if (driver != null) {
-                try {
-                    driver.getSessionId();
-                    layoutsPage.deleteLayout(layoutName);
-                    logger.info("Successfully deleted layout '{}' in teardown", layoutName);
-                } catch (org.openqa.selenium.NoSuchSessionException e) {
-                    logger.warn("Driver session already closed, skipping layout deletion");
-                }
+                layoutsPage.deleteLayout(layoutName);
+                logger.info("Successfully deleted layout '{}' in teardown", layoutName);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.warn("Teardown failed to delete layout '{}': {}", layoutName, e.getMessage());
         } finally {
             layoutCreated = false;
