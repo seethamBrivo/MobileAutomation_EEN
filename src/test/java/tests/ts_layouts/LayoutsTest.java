@@ -67,15 +67,17 @@ public class LayoutsTest extends BaseTest {
 
         try {
             if (driver != null) {
-                // Verify session is still valid - getSessionId() throws NoSuchSessionException if session closed
-                driver.getSessionId();
                 layoutsPage.deleteLayout(uniqueLayoutName);
                 logger.info("Successfully deleted layout '{}' in teardown", uniqueLayoutName);
             }
-        } catch (org.openqa.selenium.NoSuchSessionException e) {
+        } catch (org.openqa.selenium.NoSuchSessionException |
+                 org.openqa.selenium.SessionNotCreatedException e) {
             logger.warn("Driver session closed, skipping cleanup for layout '{}'", uniqueLayoutName);
         } catch (org.openqa.selenium.WebDriverException e) {
             logger.warn("Teardown failed to delete layout '{}': {}", uniqueLayoutName, e.getMessage());
+        } catch (Throwable t) {
+            // Catch AssertionError and any other throwables to prevent test suite abortion
+            logger.error("Unexpected error during teardown for layout '{}': {}", uniqueLayoutName, t.getMessage());
         } finally {
             layoutCreated = false;
             uniqueLayoutName = null;
