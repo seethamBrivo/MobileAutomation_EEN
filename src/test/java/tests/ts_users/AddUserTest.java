@@ -60,7 +60,7 @@ public class AddUserTest extends BaseTest {
 
     @AfterMethod(alwaysRun = true)
     public void cleanupTestData() {
-        if (driver == null) {
+        if (driver == null || usersPage == null) {
             return;
         }
         try {

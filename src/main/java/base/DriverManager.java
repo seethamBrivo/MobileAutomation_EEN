@@ -120,6 +120,8 @@ public final class DriverManager {
         String appPackage = ConfigReader.getProperty("appPackage");
         String appActivity = ConfigReader.getProperty("appActivity");
 
+        // For both BrowserStack and Local: Set appPackage and appWaitActivity
+        // Using appWaitActivity (instead of appActivity) allows flexible launch while still ensuring consistent starting state
         if (isValidProperty(appPackage)) {
             options.setAppPackage(appPackage);
         }
