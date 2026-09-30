@@ -44,8 +44,8 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.clickAddCamerasIcon();
         layoutsPage.selectFirstCamera();
         layoutsPage.clickSaveButton();
-        layoutsPage.clickAddButton();
         layoutCreated = true;
+        layoutsPage.clickAddButton();
         layoutsPage.verifyLayoutCreatedSuccessfully(uniqueLayoutName);
     }
 

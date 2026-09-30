@@ -61,23 +61,17 @@ public class CameraSearchHelper {
     public void enterSearchTerm(String searchTerm) {
         String previousCount = getCameraCounterText();
         WaitUtils.clearAndType(driver, searchBar, searchTerm);
-        waitForCounterToChangeFrom(previousCount);
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount),
+                "Camera counter should change after entering search term '" + searchTerm + "' - filter may not have re-rendered");
     }
 
-    /**
-     * Waits for the camera counter to change from the previous value, indicating
-     * that the filter has been applied and the list has re-rendered.
-     * Returns true if counter changed, false if empty state appears or timeout.
-     */
     private boolean waitForCounterToChangeFrom(String previousCount) {
         try {
             new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
                 .until(d -> {
-                    // If empty state appears, counter is gone - that's a valid change
                     if (WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.SHORT_TIMEOUT)) {
                         return true;
                     }
-                    // Otherwise check if counter changed
                     String currentCount = getCameraCounterText();
                     return !currentCount.equals(previousCount);
                 });
@@ -111,17 +105,14 @@ public class CameraSearchHelper {
     }
 
     public void clearSearchIfNeeded() {
-        // Clear unconditionally - clearing empty field is no-op, and this avoids unguarded getAttribute() call
-        // Use clearAndType with empty string to trigger filter reset in the mobile app
         String previousCount = getCameraCounterText();
         WaitUtils.clearAndType(driver, searchBar, "");
-        // Hide keyboard to ensure filter reset is triggered
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (Exception e) {
-            // Keyboard already hidden or not present
         }
-        waitForCounterToChangeFrom(previousCount);
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount),
+                "Camera counter should change after clearing search - filter may not have reset");
         logger.info("Cleared search field");
     }
 
@@ -192,7 +183,6 @@ public class CameraSearchHelper {
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (Exception e) {
-            // Keyboard already hidden or not present
         }
         driver.navigate().back();
         logger.info("Context menu dismissed");

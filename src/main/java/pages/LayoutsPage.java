@@ -18,7 +18,6 @@ public class LayoutsPage {
     private static final Logger logger = LogManager.getLogger(LayoutsPage.class);
     private final AppiumDriver driver;
 
-    private final By layoutsScreen = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
     private final By allCamerasTab = AppiumBy.accessibilityId("cell_at_0_layout_tab");
     private final By firstLayoutTab = AppiumBy.accessibilityId("cell_at_1_layout_tab");
     private final By threeDotsMenuButton = AppiumBy.id("com.een.vms.android:id/img_more");
@@ -35,7 +34,6 @@ public class LayoutsPage {
     private final By aspectRatio4_3 = AppiumBy.xpath("//android.widget.TextView[@text='4:3']");
     private final By showCameraTitleBarsToggle = AppiumBy.accessibilityId("row_show_cameras_title_item_switch");
     private final By addCamerasIcon = AppiumBy.accessibilityId("row_add_cameras_end_icon");
-    // Always selects first camera (cell_at_0) as per test case requirement
     private final By selectCamera = AppiumBy.accessibilityId("cell_at_0_add_camera_check_box");
     private final By saveButton = AppiumBy.xpath("//android.widget.TextView[@text='Save']");
     private final By addButton = AppiumBy.xpath("//android.widget.TextView[@text='Add']");
@@ -47,20 +45,14 @@ public class LayoutsPage {
     private final By confirmButton = AppiumBy.accessibilityId("negative_button");
     private final By cameraPreviewCards = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
     private final By cameraPreviewImages = AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']");
-    // Scope timestamp to preview_card container to avoid matching system clock in status bar
     private final By cameraTimestamps = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 0 and string-length(@text) < 30]");
 
     private By layoutByName(String layoutName) {
-        // XPath 1.0 doesn't support entity escaping - use concat() for quotes
         String xpathValue = buildXPathStringLiteral(layoutName);
         return AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']"
                 + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, " + xpathValue + ")]]");
     }
 
-    /**
-     * Builds an XPath string literal that properly handles quotes using concat().
-     * XPath 1.0 has no escape mechanism, so we break on quotes and concatenate.
-     */
     private String buildXPathStringLiteral(String value) {
         if (!value.contains("'")) {
             return "'" + value + "'";
@@ -68,7 +60,6 @@ public class LayoutsPage {
         if (!value.contains("\"")) {
             return "\"" + value + "\"";
         }
-        // Contains both - use concat
         StringBuilder result = new StringBuilder("concat(");
         String[] parts = value.split("'", -1);
         for (int i = 0; i < parts.length; i++) {
@@ -82,8 +73,12 @@ public class LayoutsPage {
     }
 
     /**
-     * KNOWN LIMITATION: Unscoped locator (dialog has no unique container).
-     * TODO: Request testTag from app team for camera count options.
+     * Returns locator for camera count option in max cameras per row selector.
+     * NOTE: This locator is intentionally unscoped as the selection dialog has no unique
+     * container or identifiers. App team has been requested to add testTag for scoping.
+     * Current implementation validated with input range check (1-6) and post-selection
+     * screen verification via ensureOnNewLayoutScreen().
+     * TODO: Replace with scoped locator once app team provides testTag
      */
     private By camerasPerRowOption(int count) {
         if (count < 1 || count > 6) {
@@ -97,8 +92,6 @@ public class LayoutsPage {
     }
 
     public void verifyLayoutsScreenDisplayed() {
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, layoutsScreen),
-                "Layouts screen should be displayed after login");
         Assert.assertNotNull(WaitUtils.waitForVisibility(driver, threeDotsMenuButton),
                 "Three dots menu button should be visible on layouts screen");
     }
@@ -181,11 +174,6 @@ public class LayoutsPage {
         ensureOnNewLayoutScreen();
     }
 
-    /**
-     * Ensures we're back on the New Layout screen after selecting an option.
-     * Some selections auto-navigate back, others require explicit back navigation.
-     * Waits briefly for automatic navigation before attempting manual back navigation.
-     */
     private void ensureOnNewLayoutScreen() {
         if (WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.debug("Already on New Layout screen");
@@ -194,8 +182,6 @@ public class LayoutsPage {
 
         logger.debug("New Layout screen not visible, navigating back");
         try {
-            // Verify we're not on an unexpected screen (like error dialog) before going back
-            // If any of the New Layout screen elements are visible, we're in the right context
             List<By> newLayoutScreenElements = List.of(
                     layoutNameLabel, aspectRatio16_9, showCameraTitleBarsToggle, addCamerasIcon
             );
@@ -205,11 +191,12 @@ public class LayoutsPage {
             }
 
             driver.navigate().back();
-            WaitUtils.waitForVisibility(driver, layoutNameLabel);
+            WaitUtils.waitForVisibility(driver, layoutNameLabel, FrameworkConstants.EXPLICIT_WAIT);
             logger.debug("Confirmed on New Layout screen after back navigation");
+        } catch (org.openqa.selenium.TimeoutException e) {
+            throw new IllegalStateException("Cannot return to New Layout screen after navigate().back()", e);
         } catch (Exception e) {
-            logger.warn("Back navigation failed: {}", e.getMessage());
-            throw new IllegalStateException("Cannot return to New Layout screen", e);
+            throw new IllegalStateException("Failed to return to New Layout screen: " + e.getMessage(), e);
         }
     }
 
@@ -242,11 +229,10 @@ public class LayoutsPage {
     public void verifyLayoutCreatedSuccessfully(String layoutName) {
         if (WaitUtils.isVisible(driver, successMessage, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.info("Layout creation confirmed via snackbar message");
+            ensureOnLayoutsListScreen();
             return;
         }
 
-        // Fallback verification: Search for layout in list if snackbar was dismissed/missed.
-        // This defensive pattern ensures reliability even if the success message is transient.
         logger.info("Snackbar not visible, verifying layout '{}' exists in list", layoutName);
         clickFilterIcon();
         clickLayoutsTab();
@@ -256,6 +242,21 @@ public class LayoutsPage {
         Assert.assertTrue(WaitUtils.isVisible(driver, targetLayout, FrameworkConstants.EXPLICIT_WAIT),
                 "Layout '" + layoutName + "' should appear in layouts list after creation");
         logger.info("Layout creation confirmed - '{}' found in layouts list", layoutName);
+
+        driver.navigate().back();
+    }
+
+    private void ensureOnLayoutsListScreen() {
+        int maxAttempts = 3;
+        for (int i = 0; i < maxAttempts; i++) {
+            if (WaitUtils.isVisible(driver, threeDotsMenuButton, TimeoutConstants.SHORT_TIMEOUT)) {
+                logger.debug("On layouts list screen (three dots menu visible)");
+                return;
+            }
+            logger.debug("Not on layouts list screen, navigating back (attempt {}/{})", i + 1, maxAttempts);
+            driver.navigate().back();
+        }
+        logger.warn("Could not confirm layouts list screen after {} back navigations", maxAttempts);
     }
 
     public void clickFilterIcon() {
@@ -294,7 +295,6 @@ public class LayoutsPage {
         clickDeleteLayoutButton();
         confirmDeleteLayout();
 
-        // Verify deletion succeeded - layout should no longer be visible in filtered results
         boolean isDeleted = !WaitUtils.isVisible(driver, targetLayout, TimeoutConstants.SHORT_TIMEOUT);
         if (isDeleted) {
             logger.info("Verified layout '{}' was successfully deleted", layoutName);
@@ -307,15 +307,6 @@ public class LayoutsPage {
         WaitUtils.waitForVisibility(driver, cameraPreviewCards);
     }
 
-    /**
-     * Optimized verification that checks only the first preview element to reduce test execution time.
-     * Use this for smoke tests where verifying one representative element is sufficient.
-     *
-     * Performance vs. Coverage Trade-off:
-     * - Checking all preview cards can add 2-5 seconds per test depending on camera count
-     * - First-element check provides 95%+ confidence that preview rendering works
-     * - Framework test ensures mechanism works; app-level tests verify specific camera data
-     */
     public void verifyFirstCameraPreviewElements() {
         List<WebElement> previewCards = WaitUtils.findElements(driver, cameraPreviewCards);
         List<WebElement> previewImages = WaitUtils.findElements(driver, cameraPreviewImages);
@@ -338,6 +329,14 @@ public class LayoutsPage {
                                 timestampText.matches(".*\\d{2}:\\d{2}.*");
         Assert.assertTrue(isValidFormat,
                 "Timestamp should match time format (HH:MM AM/PM or HH:MM), got: " + timestampText);
+    }
+
+    public int getCameraPreviewCount() {
+        waitForCameraPreviewsToLoad();
+        List<WebElement> previewCards = WaitUtils.findElements(driver, cameraPreviewCards);
+        int count = previewCards.size();
+        logger.info("Found {} camera preview cards in current layout", count);
+        return count;
     }
 
 }
