@@ -26,7 +26,6 @@ public class CameraSearchFilterTest extends BaseTest {
     public void verifyCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
-
         camerasPage.clickCamerasItem();
         camerasPage.verifyCameraListDisplayed();
         String initialCount = camerasPage.getCameraCounterText();
@@ -54,5 +53,4 @@ public class CameraSearchFilterTest extends BaseTest {
         camerasPage.clearSearchIfNeeded();
         camerasPage.verifyDefaultCameraListRestored();
     }
-
 }

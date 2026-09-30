@@ -101,15 +101,17 @@ public abstract class BaseTest {
      * Sessions run with noReset=true, so whatever this leaves behind is what the next test
      * starts from. Try a normal logout first; if the test died somewhere logout cannot
      * navigate from, clear the app through the driver. That works on BrowserStack as well
-     * as locally (a local adb call would not).
+     * as locally (a local adb call would not). Catches Throwable, not Exception: this runs
+     * from @AfterMethod, and ResellerDashboardPage.logout() can reach a page verifyXxx() in
+     * the future, which throws AssertionError, not Exception.
      */
     private void resetAppStateForNextTest() {
         try {
             new ResellerDashboardPage(driver).logout();
             logger.info("Logged out after test");
             return;
-        } catch (Exception e) {
-            logger.warn("Logout failed ({}), clearing app state through the driver", e.getMessage());
+        } catch (Throwable t) {
+            logger.warn("Logout failed ({}), clearing app state through the driver", t.toString());
         }
         try {
             String platform = ConfigReader.getPlatform();
@@ -127,8 +129,8 @@ public abstract class BaseTest {
                     driver.executeScript("mobile: terminateApp", Map.of("bundleId", bundleId));
                 }
             }
-        } catch (Exception e) {
-            logger.warn("Could not clear app state: {}", e.getMessage());
+        } catch (Throwable t) {
+            logger.warn("Could not clear app state: {}", t.toString());
         }
     }
 
@@ -148,8 +150,8 @@ public abstract class BaseTest {
                 }
                 jse.executeScript("browserstack_executor: {\"action\": \"setSessionStatus\", \"arguments\": {\"status\": \"failed\", \"reason\": \"" + reason + "\"}}");
             }
-        } catch (Exception e) {
-            logger.warn("Could not update BrowserStack session status: {}", e.getMessage());
+        } catch (Throwable t) {
+            logger.warn("Could not update BrowserStack session status: {}", t.toString());
         }
     }
 }

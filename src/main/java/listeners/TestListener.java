@@ -3,6 +3,8 @@ package listeners;
 import base.DriverManager;
 import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
+import io.qameta.allure.Allure;
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.stream.Collectors;
@@ -60,7 +62,10 @@ public class TestListener implements ITestListener {
     public void onTestFailure(ITestResult result) {
         ensureTestNode(result);
         try {
-            String screenshotBase64 = Base64.getEncoder().encodeToString(DriverManager.getScreenshot());
+            byte[] screenshot = DriverManager.getScreenshot();
+            Allure.addAttachment(result.getMethod().getMethodName() + " - screenshot", "image/png",
+                    new ByteArrayInputStream(screenshot), "png");
+            String screenshotBase64 = Base64.getEncoder().encodeToString(screenshot);
             ExtentManager.getTest().fail(result.getThrowable(),
                     MediaEntityBuilder.createScreenCaptureFromBase64String(screenshotBase64, result.getMethod().getMethodName()).build());
         } catch (IllegalStateException exception) {

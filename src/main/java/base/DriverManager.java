@@ -99,7 +99,7 @@ public final class DriverManager {
         }
     }
 
-   private static AndroidDriver createAndroidDriver() throws MalformedURLException {
+    private static AndroidDriver createAndroidDriver() throws MalformedURLException {
         UiAutomator2Options options = new UiAutomator2Options()
                 .setDeviceName(ConfigReader.getProperty("deviceName"))
                 .setPlatformVersion(ConfigReader.getProperty("platformVersion"))
@@ -120,8 +120,6 @@ public final class DriverManager {
         String appPackage = ConfigReader.getProperty("appPackage");
         String appActivity = ConfigReader.getProperty("appActivity");
 
-        // For both BrowserStack and Local: Set appPackage and appWaitActivity
-        // Using appWaitActivity (instead of appActivity) allows flexible launch while still ensuring consistent starting state
         if (isValidProperty(appPackage)) {
             options.setAppPackage(appPackage);
         }
@@ -240,7 +238,7 @@ public final class DriverManager {
         options.setCapability("bstack:options", browserStackOptions);
     }
 
-   private static String resolveAppReference() {
+    private static String resolveAppReference() {
         String providerSpecificApp = ConfigReader.getProperty("browserstackApp");
         String configuredApp = ConfigReader.getProperty("app");
 
