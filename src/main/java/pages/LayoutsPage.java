@@ -181,14 +181,6 @@ public class LayoutsPage {
 
         logger.debug("New Layout screen not visible, navigating back");
         try {
-            List<By> newLayoutScreenElements = List.of(
-                    layoutNameLabel, aspectRatio16_9, showCameraTitleBarsToggle, addCamerasIcon
-            );
-
-            if (WaitUtils.waitForAny(driver, newLayoutScreenElements, Duration.ofMillis(500)).isEmpty()) {
-                logger.warn("None of the New Layout screen elements found - may be on unexpected screen");
-            }
-
             driver.navigate().back();
             WaitUtils.waitForVisibility(driver, layoutNameLabel, FrameworkConstants.EXPLICIT_WAIT);
             logger.debug("Confirmed on New Layout screen after back navigation");

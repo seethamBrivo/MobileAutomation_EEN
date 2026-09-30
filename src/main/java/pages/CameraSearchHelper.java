@@ -61,7 +61,8 @@ public class CameraSearchHelper {
     public void enterSearchTerm(String searchTerm) {
         String previousCount = getCameraCounterText();
         WaitUtils.clearAndType(driver, searchBar, searchTerm);
-        waitForCounterToChangeFrom(previousCount);
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount),
+                "Camera counter should change after entering search term '" + searchTerm + "' - filter may not have re-rendered");
     }
 
     private boolean waitForCounterToChangeFrom(String previousCount) {
@@ -109,8 +110,10 @@ public class CameraSearchHelper {
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (Exception e) {
+            // Keyboard already hidden or not present
         }
-        waitForCounterToChangeFrom(previousCount);
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount),
+                "Camera counter should change after clearing search - filter may not have reset");
         logger.info("Cleared search field");
     }
 
@@ -181,6 +184,7 @@ public class CameraSearchHelper {
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (Exception e) {
+            // Keyboard already hidden or not present
         }
         driver.navigate().back();
         logger.info("Context menu dismissed");
