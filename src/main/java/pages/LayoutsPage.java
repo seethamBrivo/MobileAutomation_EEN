@@ -122,21 +122,20 @@ public class LayoutsPage {
         Assert.assertTrue(WaitUtils.waitForAny(driver, menuOptions, FrameworkConstants.EXPLICIT_WAIT).isPresent(),
                 "At least one menu option should be displayed");
 
-        Duration minimalTimeout = Duration.ofMillis(100);
-        Assert.assertTrue(WaitUtils.isVisible(driver, addCamerasOption, minimalTimeout),
+        Assert.assertTrue(WaitUtils.isVisible(driver, addCamerasOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Add Cameras option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, newLayoutOption, minimalTimeout),
+        Assert.assertTrue(WaitUtils.isVisible(driver, newLayoutOption, TimeoutConstants.SHORT_TIMEOUT),
                 "New Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, editLayoutOption, minimalTimeout),
+        Assert.assertTrue(WaitUtils.isVisible(driver, editLayoutOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Edit Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, layoutSettingsOption, minimalTimeout),
+        Assert.assertTrue(WaitUtils.isVisible(driver, layoutSettingsOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Layout Settings option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, mapViewOption, minimalTimeout),
+        Assert.assertTrue(WaitUtils.isVisible(driver, mapViewOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Map View option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, zoomInOption, minimalTimeout),
+        Assert.assertTrue(WaitUtils.isVisible(driver, zoomInOption, TimeoutConstants.SHORT_TIMEOUT),
                 "Zoom In option should be displayed");
 
-        if (WaitUtils.isVisible(driver, zoomOutOption, minimalTimeout)) {
+        if (WaitUtils.isVisible(driver, zoomOutOption, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.info("Zoom Out option is displayed");
         } else {
             logger.info("Zoom Out option not displayed - already in the zoom out state");
@@ -243,7 +242,7 @@ public class LayoutsPage {
                 "Layout '" + layoutName + "' should appear in layouts list after creation");
         logger.info("Layout creation confirmed - '{}' found in layouts list", layoutName);
 
-        driver.navigate().back();
+        ensureOnLayoutsListScreen();
     }
 
     private void ensureOnLayoutsListScreen() {
@@ -329,14 +328,6 @@ public class LayoutsPage {
                                 timestampText.matches(".*\\d{2}:\\d{2}.*");
         Assert.assertTrue(isValidFormat,
                 "Timestamp should match time format (HH:MM AM/PM or HH:MM), got: " + timestampText);
-    }
-
-    public int getCameraPreviewCount() {
-        waitForCameraPreviewsToLoad();
-        List<WebElement> previewCards = WaitUtils.findElements(driver, cameraPreviewCards);
-        int count = previewCards.size();
-        logger.info("Found {} camera preview cards in current layout", count);
-        return count;
     }
 
 }

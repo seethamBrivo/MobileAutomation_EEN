@@ -26,8 +26,7 @@ public class LayoutsTest extends BaseTest {
     @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app")
     public void verifyAddNewLayoutFunctionality() {
         String baseLayoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
-        // Append timestamp to ensure uniqueness for parallel test execution
-        uniqueLayoutName = baseLayoutName + "_" + System.currentTimeMillis();
+        uniqueLayoutName = utils.TestDataGenerator.generateUniqueName(baseLayoutName);
         String aspectRatio = JsonDataReader.getLayoutDataValue(TestDataConstants.ASPECT_RATIO);
         int maxCamerasPerRow = JsonDataReader.getLayoutDataIntValue(TestDataConstants.MAX_CAMERAS_PER_ROW);
         boolean showCameraTitleBars = JsonDataReader.getLayoutDataBooleanValue(TestDataConstants.SHOW_CAMERA_TITLE_BARS);
@@ -44,8 +43,8 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.clickAddCamerasIcon();
         layoutsPage.selectFirstCamera();
         layoutsPage.clickSaveButton();
-        layoutCreated = true;
         layoutsPage.clickAddButton();
+        layoutCreated = true;
         layoutsPage.verifyLayoutCreatedSuccessfully(uniqueLayoutName);
     }
 
