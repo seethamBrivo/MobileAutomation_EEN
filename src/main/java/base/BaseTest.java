@@ -45,6 +45,13 @@ public abstract class BaseTest {
         return new LoginPage(driver).loginAs(username, password);
     }
 
+    /** Shared by every test class whose @BeforeMethod logs in as reseller and lands on the dashboard. */
+    protected ResellerDashboardPage loginAsResellerAndVerifyDashboard() {
+        ResellerDashboardPage resellerDashboardPage = loginAs(TestDataConstants.RESELLER_CREDS);
+        resellerDashboardPage.verifyDashboardPageDisplayed();
+        return resellerDashboardPage;
+    }
+
     /** A value from the reseller credentials block of testData.json. */
     protected String getTestDataValue(String key) {
         return JsonDataReader.getCredentialValue(TestDataConstants.RESELLER_CREDS, key);
@@ -101,17 +108,18 @@ public abstract class BaseTest {
      * Sessions run with noReset=true, so whatever this leaves behind is what the next test
      * starts from. Try a normal logout first; if the test died somewhere logout cannot
      * navigate from, clear the app through the driver. That works on BrowserStack as well
-     * as locally (a local adb call would not). Catches Throwable, not Exception: this runs
-     * from @AfterMethod, and ResellerDashboardPage.logout() can reach a page verifyXxx() in
-     * the future, which throws AssertionError, not Exception.
+     * as locally (a local adb call would not). Catches AssertionError alongside Exception,
+     * not the broader Throwable: this runs from @AfterMethod and must not let a failure here
+     * skip the rest of the class, but it also must not swallow a true JVM Error (OOM,
+     * StackOverflowError) during teardown the way a bare Throwable catch would.
      */
     private void resetAppStateForNextTest() {
         try {
             new ResellerDashboardPage(driver).logout();
             logger.info("Logged out after test");
             return;
-        } catch (Throwable t) {
-            logger.warn("Logout failed ({}), clearing app state through the driver", t.toString());
+        } catch (AssertionError | Exception e) {
+            logger.warn("Logout failed ({}), clearing app state through the driver", e.toString());
         }
         try {
             String platform = ConfigReader.getPlatform();
@@ -129,8 +137,8 @@ public abstract class BaseTest {
                     driver.executeScript("mobile: terminateApp", Map.of("bundleId", bundleId));
                 }
             }
-        } catch (Throwable t) {
-            logger.warn("Could not clear app state: {}", t.toString());
+        } catch (AssertionError | Exception e) {
+            logger.warn("Could not clear app state: {}", e.toString());
         }
     }
 
@@ -150,8 +158,8 @@ public abstract class BaseTest {
                 }
                 jse.executeScript("browserstack_executor: {\"action\": \"setSessionStatus\", \"arguments\": {\"status\": \"failed\", \"reason\": \"" + reason + "\"}}");
             }
-        } catch (Throwable t) {
-            logger.warn("Could not update BrowserStack session status: {}", t.toString());
+        } catch (Exception e) {
+            logger.warn("Could not update BrowserStack session status: {}", e.toString());
         }
     }
 }

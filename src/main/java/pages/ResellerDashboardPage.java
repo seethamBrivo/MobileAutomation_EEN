@@ -61,10 +61,12 @@ public class ResellerDashboardPage {
     private final By professionalOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Professional\"]");
     private final By enterpriseOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Enterprise\"]");
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: the generic back-chevron icon reused across every settings sub-panel;
-    // same xpath as orientationSectionBackNavigationIcon/minRetentionSectionBackIcon/
-    // maxRetentionBackIcon below, kept as separate fields per the panel that uses it.
-    private final By editionSectionBackNavigationIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
+    // Positional: the generic back-chevron icon reused across every settings sub-panel
+    // (edition, cloud retention, min retention, max retention) — same element each time,
+    // so a single field is clicked from clickEditionSectionBackNavigationIcon(),
+    // clickCloudRetentionSectionBackNavigationIcon(), clickMinRetentionSectionBackIcon()
+    // and clickMaxRetentionSectionBackIcon().
+    private final By genericBackChevron= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private final By cameraDefaultsSection= AppiumBy.xpath("//android.widget.TextView[@text=\"CAMERAS DEFAULTS\"]");
     private final By cloudRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Cloud retention\"]");
     private final By thirtyDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"30 days\"]");
@@ -73,9 +75,6 @@ public class ResellerDashboardPage {
     private final By cloudRetentionSectionNavigationIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[7]/android.view.View");
     private final By minimumOneDayOption= AppiumBy.xpath("//android.widget.TextView[@text=\"1 day (M10)\"]");
     private final By max5YearsRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"5 years\"]");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: same generic back-chevron icon as editionSectionBackNavigationIcon above.
-    private final By orientationSectionBackNavigationIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private final By minRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Min retention\"]");
     private final By fourTeenDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"14 days\"]");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
@@ -83,9 +82,6 @@ public class ResellerDashboardPage {
     private final By minRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[8]/android.view.View");
     private final By miniumRetentionMinimumValueNone= AppiumBy.xpath("//android.widget.TextView[@text=\"None\"]");
     private final By max180DaysOption= AppiumBy.xpath("//android.widget.TextView[@text=\"180 days\"]");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: same generic back-chevron icon as editionSectionBackNavigationIcon above.
-    private final By minRetentionSectionBackIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private final By maxRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Max retention\"]");
     private final By sixtyDaysByDafaultOptionForMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"60 days\"]");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
@@ -93,9 +89,6 @@ public class ResellerDashboardPage {
     private final By maxRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[9]/android.view.View");
     private final By minValueIsNoneInMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"None\"]");
     private final By maxValueIs1YearInMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"1 year\"]");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: same generic back-chevron icon as editionSectionBackNavigationIcon above.
-    private final By maxRetentionBackIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private final By previewResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Preview resolution\"]");
     private final By defaultPreviewResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"cif (SD1 320x240)\"]");
     private final By fullVideoResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Full video resolution\"]");
@@ -237,7 +230,7 @@ public class ResellerDashboardPage {
     }
 
     public void clickEditionSectionBackNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, editionSectionBackNavigationIcon).click();
+        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
     }
 
     public boolean isCameraDefaultsSectionDisplayed() {
@@ -265,7 +258,7 @@ public class ResellerDashboardPage {
     }
 
     public void clickCloudRetentionSectionBackNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, orientationSectionBackNavigationIcon).click();
+        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
     }
 
     public boolean isMinRetentionOptionDisplayed() {
@@ -286,7 +279,7 @@ public class ResellerDashboardPage {
         return WaitUtils.waitForVisibility(driver, max180DaysOption).isDisplayed();
      }
     public void clickMinRetentionSectionBackIcon() {
-        WaitUtils.waitForVisibility(driver, minRetentionSectionBackIcon).click();
+        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
       }
     public boolean isMaxRetentionOptionDisplayed() {
         return WaitUtils.waitForVisibility(driver, maxRetentionOption).isDisplayed();
@@ -305,7 +298,7 @@ public class ResellerDashboardPage {
         return WaitUtils.waitForVisibility(driver, maxValueIs1YearInMaxRetention).isDisplayed();
       }
     public void clickMaxRetentionSectionBackIcon() {
-        WaitUtils.waitForVisibility(driver, maxRetentionBackIcon).click();
+        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
     }
 
     public boolean previewResolutionOptionIsDisplayed() {

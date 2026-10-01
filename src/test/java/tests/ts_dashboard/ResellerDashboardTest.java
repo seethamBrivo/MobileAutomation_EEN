@@ -1,7 +1,6 @@
 package tests.ts_dashboard;
 
 import base.BaseTest;
-import constants.TestDataConstants;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.ResellerDashboardPage;
@@ -13,8 +12,7 @@ public class ResellerDashboardTest extends BaseTest {
 
     @BeforeMethod
     public void loginAndVerifyDashboard() {
-        resellerDashboardPage = loginAs(TestDataConstants.RESELLER_CREDS);
-        resellerDashboardPage.verifyDashboardPageDisplayed();
+        resellerDashboardPage = loginAsResellerAndVerifyDashboard();
     }
 
     @Test(description = "EEPD-TC-4516: POS-Reseller Dashboard - (View Dashboard for Reseller) in mobile VMS app")

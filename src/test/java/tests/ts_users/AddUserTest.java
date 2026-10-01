@@ -19,6 +19,9 @@ public class AddUserTest extends BaseTest {
     public void loginAndNavigateToUsers() {
         existingUserEmail = null;
         generatedUserEmail = null;
+        // Nulled before loginAs(): if it throws, usersPage must not be left pointing at a
+        // previous test's (already-quit) session for cleanupTestData()'s null guard to catch.
+        usersPage = null;
         loginAs(TestDataConstants.RESELLER_CREDS);
         usersPage = new UsersPage(driver);
         usersPage.clickUsersOptionAtTheBottom();

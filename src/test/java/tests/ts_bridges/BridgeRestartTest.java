@@ -1,7 +1,6 @@
 package tests.ts_bridges;
 
 import base.BaseTest;
-import constants.TestDataConstants;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.BridgeSettingsPage;
@@ -15,8 +14,7 @@ public class BridgeRestartTest extends BaseTest {
 
     @BeforeMethod
     public void loginAndVerifyDashboard() {
-        resellerDashboardPage = loginAs(TestDataConstants.RESELLER_CREDS);
-        resellerDashboardPage.verifyDashboardPageDisplayed();
+        resellerDashboardPage = loginAsResellerAndVerifyDashboard();
     }
 
     @Test(description = "EEPD-TC-8898: POS-Bridge Settings - Restart the Bridge in mobile VMS app from Dashboard section")
@@ -32,6 +30,8 @@ public class BridgeRestartTest extends BaseTest {
         settings.clickRestartBridgeButton();
         settings.verifyRestartBridgeConfirmationDisplayed();
         settings.confirmRestartBridge();
+        // If the demo account never shows this confirmation, the TC step should be marked
+        // not-automated rather than passed; a silent pass is what this replaces.
         settings.verifyBridgeRestartedMessageDisplayed();
     }
 }
