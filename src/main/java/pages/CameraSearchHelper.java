@@ -70,6 +70,14 @@ public class CameraSearchHelper {
                 .anyMatch(WebElement::isDisplayed);
     }
 
+    private String getCurrentCounterText() {
+        return driver.findElements(cameraCounter).stream()
+                .filter(WebElement::isDisplayed)
+                .findFirst()
+                .map(WebElement::getText)
+                .orElse("");
+    }
+
     private boolean waitForCounterToChangeFrom(String previousCount) {
         boolean wasEmptyStateVisibleInitially = isEmptyStateCurrentlyVisible();
 
@@ -82,7 +90,7 @@ public class CameraSearchHelper {
                         return true;
                     }
 
-                    String currentCount = getCameraCounterText();
+                    String currentCount = getCurrentCounterText();
                     return !currentCount.equals(previousCount);
                 });
             return true;
