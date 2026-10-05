@@ -66,12 +66,21 @@ public class CameraSearchHelper {
     }
 
     private boolean waitForCounterToChangeFrom(String previousCount) {
+        boolean wasEmptyStateVisibleInitially = driver.findElements(emptyStateMessage).stream()
+                .anyMatch(WebElement::isDisplayed);
+
         try {
             new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
                 .until(d -> {
-                    if (WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.SHORT_TIMEOUT)) {
+                    // Check if empty state is NOW visible (fast check, no nested wait)
+                    boolean isEmptyStateVisible = driver.findElements(emptyStateMessage).stream()
+                            .anyMatch(WebElement::isDisplayed);
+
+                    // Only return true if empty state wasn't visible before but is now
+                    if (isEmptyStateVisible && !wasEmptyStateVisibleInitially) {
                         return true;
                     }
+
                     String currentCount = getCameraCounterText();
                     return !currentCount.equals(previousCount);
                 });

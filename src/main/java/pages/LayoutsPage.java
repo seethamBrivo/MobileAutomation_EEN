@@ -44,7 +44,7 @@ public class LayoutsPage {
     private final By confirmButton = AppiumBy.accessibilityId("negative_button");
     private final By cameraPreviewCards = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
     private final By cameraPreviewImages = AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']");
-    private final By cameraTimestamps = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 0 and string-length(@text) < 30]");
+    private final By cameraTimestamps = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 0 and string-length(@text) < 30 and (contains(@text, 'AM') or contains(@text, 'PM') or matches(@text, '.*\\d{2}:\\d{2}.*'))]");
 
     private By layoutByName(String layoutName) {
         String xpathValue = buildXPathStringLiteral(layoutName);
@@ -246,7 +246,9 @@ public class LayoutsPage {
             logger.debug("Not on layouts list screen, navigating back (attempt {}/{})", i + 1, maxAttempts);
             driver.navigate().back();
         }
-        logger.warn("Could not confirm layouts list screen after {} back navigations", maxAttempts);
+        throw new IllegalStateException(
+                "Failed to navigate to layouts list screen after " + maxAttempts +
+                " back navigation attempts - three dots menu button not found");
     }
 
     public void clickFilterIcon() {
