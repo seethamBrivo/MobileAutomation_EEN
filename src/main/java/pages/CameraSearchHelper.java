@@ -65,18 +65,19 @@ public class CameraSearchHelper {
                 "Camera counter should change after entering search term '" + searchTerm + "' - filter may not have re-rendered");
     }
 
-    private boolean waitForCounterToChangeFrom(String previousCount) {
-        boolean wasEmptyStateVisibleInitially = driver.findElements(emptyStateMessage).stream()
+    private boolean isEmptyStateCurrentlyVisible() {
+        return driver.findElements(emptyStateMessage).stream()
                 .anyMatch(WebElement::isDisplayed);
+    }
+
+    private boolean waitForCounterToChangeFrom(String previousCount) {
+        boolean wasEmptyStateVisibleInitially = isEmptyStateCurrentlyVisible();
 
         try {
             new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
                 .until(d -> {
-                    // Check if empty state is NOW visible (fast check, no nested wait)
-                    boolean isEmptyStateVisible = driver.findElements(emptyStateMessage).stream()
-                            .anyMatch(WebElement::isDisplayed);
+                    boolean isEmptyStateVisible = isEmptyStateCurrentlyVisible();
 
-                    // Only return true if empty state wasn't visible before but is now
                     if (isEmptyStateVisible && !wasEmptyStateVisibleInitially) {
                         return true;
                     }
