@@ -58,19 +58,19 @@ public final class WaitUtils {
      * then returns all matching elements.
      */
     public static List<WebElement> findElements(AppiumDriver driver, By locator, Duration timeout) {
-        // Wait for at least one element to be visible (not just the first in DOM order)
-        wait(driver, timeout).until(d -> {
+        // Wait for at least one element to be visible and return that checked list
+        return wait(driver, timeout).until(d -> {
             List<WebElement> elements = d.findElements(locator);
-            return elements.stream().anyMatch(e -> {
+            boolean anyVisible = elements.stream().anyMatch(e -> {
                 try {
                     return e.isDisplayed();
                 } catch (StaleElementReferenceException ex) {
                     return false;
                 }
             });
+            // Return the list when at least one is visible, null to continue waiting
+            return anyVisible ? elements : null;
         });
-        // Then return all matching elements
-        return driver.findElements(locator);
     }
 
     /**

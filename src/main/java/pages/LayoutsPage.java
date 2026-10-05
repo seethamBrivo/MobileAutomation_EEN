@@ -73,11 +73,7 @@ public class LayoutsPage {
 
     /**
      * Returns locator for camera count option in max cameras per row selector.
-     * NOTE: This locator is intentionally unscoped as the selection dialog has no unique
-     * container or identifiers. App team has been requested to add testTag for scoping.
-     * Current implementation validated with input range check (1-6) and post-selection
-     * screen verification via ensureOnNewLayoutScreen().
-     * TODO: Replace with scoped locator once app team provides testTag
+     * Scoped to clickable TextView to avoid matching static on-screen digits.
      */
     private By camerasPerRowOption(int count) {
         if (count < 1 || count > 6) {
@@ -177,8 +173,7 @@ public class LayoutsPage {
             logger.debug("Already on New Layout screen");
             return;
         }
-
-        logger.debug("New Layout screen not visible, navigating back");
+        logger.debug("New Layout screen not visible, navigating back to close dialog");
         try {
             driver.navigate().back();
             WaitUtils.waitForVisibility(driver, layoutNameLabel, FrameworkConstants.EXPLICIT_WAIT);
@@ -288,11 +283,9 @@ public class LayoutsPage {
         confirmDeleteLayout();
 
         boolean isDeleted = !WaitUtils.isVisible(driver, targetLayout, TimeoutConstants.SHORT_TIMEOUT);
-        if (isDeleted) {
-            logger.info("Verified layout '{}' was successfully deleted", layoutName);
-        } else {
-            logger.warn("Layout '{}' still visible after deletion - may have failed", layoutName);
-        }
+        Assert.assertTrue(isDeleted,
+                "Layout '" + layoutName + "' should be deleted but is still visible");
+        logger.info("Verified layout '{}' was successfully deleted", layoutName);
     }
 
     public void waitForCameraPreviewsToLoad() {
