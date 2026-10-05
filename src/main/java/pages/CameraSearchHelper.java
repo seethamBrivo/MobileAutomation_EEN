@@ -66,16 +66,32 @@ public class CameraSearchHelper {
     }
 
     private boolean isEmptyStateCurrentlyVisible() {
-        return driver.findElements(emptyStateMessage).stream()
-                .anyMatch(WebElement::isDisplayed);
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return driver.findElements(emptyStateMessage).stream()
+                        .anyMatch(WebElement::isDisplayed);
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                if (attempt == 2) {
+                    return false;
+                }
+            }
+        }
     }
 
     private String getCurrentCounterText() {
-        return driver.findElements(cameraCounter).stream()
-                .filter(WebElement::isDisplayed)
-                .findFirst()
-                .map(WebElement::getText)
-                .orElse("");
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return driver.findElements(cameraCounter).stream()
+                        .filter(WebElement::isDisplayed)
+                        .findFirst()
+                        .map(WebElement::getText)
+                        .orElse(null);
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                if (attempt == 2) {
+                    return null;
+                }
+            }
+        }
     }
 
     private boolean waitForCounterToChangeFrom(String previousCount) {
@@ -91,7 +107,7 @@ public class CameraSearchHelper {
                     }
 
                     String currentCount = getCurrentCounterText();
-                    return !currentCount.equals(previousCount);
+                    return currentCount != null && !currentCount.equals(previousCount);
                 });
             return true;
         } catch (org.openqa.selenium.TimeoutException e) {

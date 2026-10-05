@@ -173,7 +173,7 @@ public class LayoutsPage {
     }
 
     private void ensureOnNewLayoutScreen() {
-        if (WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, layoutNameLabel, FrameworkConstants.EXPLICIT_WAIT)) {
             logger.debug("Already on New Layout screen");
             return;
         }
