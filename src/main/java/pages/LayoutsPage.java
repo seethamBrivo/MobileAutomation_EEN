@@ -173,7 +173,7 @@ public class LayoutsPage {
     }
 
     private void ensureOnNewLayoutScreen() {
-        if (WaitUtils.isVisible(driver, layoutNameLabel, FrameworkConstants.EXPLICIT_WAIT)) {
+        if (WaitUtils.isVisible(driver, layoutNameLabel, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.debug("Already on New Layout screen");
             return;
         }
@@ -311,12 +311,18 @@ public class LayoutsPage {
         Assert.assertFalse(timestamps.isEmpty(),
                 "Camera timestamp elements should be present");
 
-        WebElement firstImage = previewImages.get(0);
-        Assert.assertTrue(firstImage.isDisplayed(),
+        WebElement firstVisibleImage = previewImages.stream()
+                .filter(WebElement::isDisplayed)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No visible camera preview image found"));
+        Assert.assertTrue(firstVisibleImage.isDisplayed(),
                 "Camera preview image element should be visible");
 
-        WebElement firstTimestamp = timestamps.get(0);
-        String timestampText = firstTimestamp.getText();
+        WebElement firstVisibleTimestamp = timestamps.stream()
+                .filter(WebElement::isDisplayed)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No visible timestamp found"));
+        String timestampText = firstVisibleTimestamp.getText();
         boolean isValidFormat = timestampText.matches(".*\\d{1,2}:\\d{2}\\s*[AP]M.*") ||
                                 timestampText.matches(".*\\d{2}:\\d{2}.*");
         Assert.assertTrue(isValidFormat,

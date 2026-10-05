@@ -51,10 +51,18 @@ public final class JsonDataReader {
      * instead of a bare NullPointerException when the key is missing.
      */
     public static String getCredentialValue(String accountType, String key) {
-        JsonElement value = getCredentials(accountType).get(key);
+        JsonObject credentials = getCredentials(accountType);
+        return getNestedBlockValue(credentials, "credentials." + accountType, key);
+    }
+
+    /**
+     * Helper for retrieving a value from a nested block with consistent validation.
+     */
+    private static String getNestedBlockValue(JsonObject block, String blockPath, String key) {
+        JsonElement value = block.get(key);
         if (value == null || value.isJsonNull()) {
             throw new IllegalStateException(
-                    "testData.json is missing key '" + key + "' under credentials." + accountType
+                    "testData.json is missing key '" + key + "' under " + blockPath
                     + " (check the CI workflow and testData.json.example use the same key names)");
         }
         return value.getAsString();

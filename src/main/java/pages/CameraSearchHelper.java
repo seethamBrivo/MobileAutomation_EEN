@@ -60,8 +60,9 @@ public class CameraSearchHelper {
 
     public void enterSearchTerm(String searchTerm) {
         String previousCount = getCameraCounterText();
+        boolean wasEmptyStateVisible = isEmptyStateCurrentlyVisible();
         WaitUtils.clearAndType(driver, searchBar, searchTerm);
-        Assert.assertTrue(waitForCounterToChangeFrom(previousCount),
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount, wasEmptyStateVisible),
                 "Camera counter should change after entering search term '" + searchTerm + "' - filter may not have re-rendered");
     }
 
@@ -94,9 +95,7 @@ public class CameraSearchHelper {
         }
     }
 
-    private boolean waitForCounterToChangeFrom(String previousCount) {
-        boolean wasEmptyStateVisibleInitially = isEmptyStateCurrentlyVisible();
-
+    private boolean waitForCounterToChangeFrom(String previousCount, boolean wasEmptyStateVisibleInitially) {
         try {
             new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
                 .until(d -> {
@@ -140,13 +139,14 @@ public class CameraSearchHelper {
 
     public void clearSearchIfNeeded() {
         String previousCount = getCameraCounterText();
+        boolean wasEmptyStateVisible = isEmptyStateCurrentlyVisible();
         WaitUtils.clearAndType(driver, searchBar, "");
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (Exception e) {
             // Keyboard already hidden or not present
         }
-        Assert.assertTrue(waitForCounterToChangeFrom(previousCount),
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount, wasEmptyStateVisible),
                 "Camera counter should change after clearing search - filter may not have reset");
         logger.info("Cleared search field");
     }
