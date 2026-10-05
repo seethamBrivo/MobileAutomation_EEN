@@ -30,6 +30,8 @@ public class BridgeSettingsPage {
     private final By restartBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
     private final By restartConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
     private final By confirmRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']");
+    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
+    // Positional: the post-restart confirmation snackbar carries no content-desc/testTag yet.
     private final By bridgeRestartedMessage = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
 
     public BridgeSettingsPage(AppiumDriver driver) {
@@ -110,6 +112,7 @@ public class BridgeSettingsPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeRestartedMessage).isDisplayed(),
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
+
     public void waitForDeleteBridgeSettingsPage() {
         WaitUtils.waitForVisibility(driver, bridgeSettingsPage);
     }

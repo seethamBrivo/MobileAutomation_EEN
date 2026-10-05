@@ -1,14 +1,19 @@
 package utils;
+
 import constants.FrameworkConstants;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
+
 public final class ConfigReader {
+
     private static final Properties PROPERTIES = new Properties();
     private static boolean loaded;
+
     private ConfigReader() {
     }
+
     public static synchronized void loadProperties() {
         if (loaded) {
             return;
@@ -17,6 +22,7 @@ public final class ConfigReader {
         loadIntoProperties(getPlatformConfigFile());
         loaded = true;
     }
+
     public static String getProperty(String key) {
         String systemValue = System.getProperty(key, "").trim();
         if (!systemValue.isBlank()) {
@@ -25,6 +31,7 @@ public final class ConfigReader {
         loadProperties();
         return PROPERTIES.getProperty(key, "").trim();
     }
+
     public static String getPlatform() {
         String platformFromSystem = System.getProperty("platform", "").trim();
         if (!platformFromSystem.isBlank()) {
@@ -35,6 +42,7 @@ public final class ConfigReader {
         }
         return PROPERTIES.getProperty("platform", "android").trim();
     }
+
     private static String getPlatformConfigFile() {
         return switch (getPlatform().toLowerCase()) {
             case "android" -> FrameworkConstants.ANDROID_CONFIG_FILE;
@@ -42,6 +50,7 @@ public final class ConfigReader {
             default -> throw new IllegalArgumentException("Unsupported platform configured");
         };
     }
+
     private static void loadIntoProperties(String fileName) {
         try (InputStream inputStream = ConfigReader.class.getClassLoader().getResourceAsStream(fileName)) {
             if (Objects.isNull(inputStream)) {

@@ -46,8 +46,8 @@ public class CameraContextMenuTest extends BaseTest {
         }
         try {
             camerasPage.dismissContextMenu();
-        } catch (Exception e) {
-            logger.warn("Cleanup: could not dismiss context menu: {}", e.getMessage());
+        } catch (Throwable t) {
+            logger.warn("Cleanup: could not dismiss context menu: {}", t.toString());
         }
     }
 }

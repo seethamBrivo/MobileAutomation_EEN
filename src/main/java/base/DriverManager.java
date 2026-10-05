@@ -99,7 +99,7 @@ public final class DriverManager {
         }
     }
 
-   private static AndroidDriver createAndroidDriver() throws MalformedURLException {
+    private static AndroidDriver createAndroidDriver() throws MalformedURLException {
         UiAutomator2Options options = new UiAutomator2Options()
                 .setDeviceName(ConfigReader.getProperty("deviceName"))
                 .setPlatformVersion(ConfigReader.getProperty("platformVersion"))
@@ -240,7 +240,7 @@ public final class DriverManager {
         options.setCapability("bstack:options", browserStackOptions);
     }
 
-   private static String resolveAppReference() {
+    private static String resolveAppReference() {
         String providerSpecificApp = ConfigReader.getProperty("browserstackApp");
         String configuredApp = ConfigReader.getProperty("app");
 

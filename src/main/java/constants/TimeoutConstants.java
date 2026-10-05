@@ -21,6 +21,9 @@ public final class TimeoutConstants {
     /** Budget for a list to re-render after typing into its filter field. */
     public static final Duration FILTER_RESULT_TIMEOUT = Duration.ofSeconds(5);
 
+    /** Budget for "is a back button visible" probes when the screen may already be at the top. */
+    public static final Duration BACK_BUTTON_CHECK_TIMEOUT = Duration.ofSeconds(1);
+
     public static final Duration SWIPE_PAUSE = Duration.ofMillis(300);
     public static final Duration SWIPE_MOVE = Duration.ofMillis(700);
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);

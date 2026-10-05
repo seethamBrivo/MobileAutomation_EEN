@@ -1,10 +1,14 @@
 package utils;
+
 public final class BrowserStackSessionNameHelper {
+
     private BrowserStackSessionNameHelper() {
     }
+
     public static String resolveSessionName(String configuredName, String testClassName, String methodName) {
         return resolveSessionName(configuredName, testClassName, methodName, new Object[0]);
     }
+
     public static String resolveSessionName(String configuredName, String testClassName, String methodName,
                                             Object[] testParameters) {
         StringBuilder sessionName = new StringBuilder();

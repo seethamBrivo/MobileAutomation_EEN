@@ -129,10 +129,8 @@ public class CameraSearchHelper {
 
     public int extractCountFromCounterText(String counterText) {
         java.util.regex.Matcher matcher = COUNTER_PATTERN.matcher(counterText);
-
         Assert.assertTrue(matcher.find(),
                 "Counter text should match format 'X cameras': " + counterText);
-
         return Integer.parseInt(matcher.group(1));
     }
 
@@ -169,9 +167,7 @@ public class CameraSearchHelper {
             "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]"
         );
         List<WebElement> cameraElements = driver.findElements(allVisibleCameras);
-
         Assert.assertFalse(cameraElements.isEmpty(), "Should have at least one visible camera");
-
         for (WebElement element : cameraElements) {
             String cameraName = element.getText();
             Assert.assertTrue(cameraName.toLowerCase().contains(searchTerm.toLowerCase()),
