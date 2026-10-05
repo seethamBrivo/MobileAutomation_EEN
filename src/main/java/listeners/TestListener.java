@@ -3,9 +3,13 @@ package listeners;
 import base.DriverManager;
 import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
+import io.qameta.allure.Allure;
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
@@ -13,6 +17,8 @@ import reports.ExtentManager;
 import utils.ConfigReader;
 
 public class TestListener implements ITestListener {
+
+    private static final Logger logger = LogManager.getLogger(TestListener.class);
 
     private String getPlatform() {
         return ConfigReader.getPlatform();
@@ -59,14 +65,25 @@ public class TestListener implements ITestListener {
     @Override
     public void onTestFailure(ITestResult result) {
         ensureTestNode(result);
+        byte[] screenshot;
         try {
-            String screenshotBase64 = Base64.getEncoder().encodeToString(DriverManager.getScreenshot());
-            ExtentManager.getTest().fail(result.getThrowable(),
-                    MediaEntityBuilder.createScreenCaptureFromBase64String(screenshotBase64, result.getMethod().getMethodName()).build());
+            screenshot = DriverManager.getScreenshot();
         } catch (IllegalStateException exception) {
             // Driver may not be available when a configuration method fails before setup completes.
             ExtentManager.getTest().fail(result.getThrowable());
+            return;
         }
+        // Isolated from the Extent attachment below: Allure has no other usage in this codebase,
+        // so a failure here must not take down the screenshot-on-failure that Extent's report relies on.
+        try {
+            Allure.addAttachment(result.getMethod().getMethodName() + " - screenshot", "image/png",
+                    new ByteArrayInputStream(screenshot), "png");
+        } catch (RuntimeException exception) {
+            logger.warn("Could not attach screenshot to Allure: {}", exception.toString());
+        }
+        String screenshotBase64 = Base64.getEncoder().encodeToString(screenshot);
+        ExtentManager.getTest().fail(result.getThrowable(),
+                MediaEntityBuilder.createScreenCaptureFromBase64String(screenshotBase64, result.getMethod().getMethodName()).build());
     }
 
     @Override

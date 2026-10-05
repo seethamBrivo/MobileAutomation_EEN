@@ -32,7 +32,6 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
     public void verifyBridgeCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.BRIDGE_VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
-
         String initialCount = bridgeCamerasPage.getCameraCounterText();
         bridgeCamerasPage.validateCounterFormat(initialCount);
         bridgeCamerasPage.clickSearchBar();
@@ -60,5 +59,4 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.clickBackButton();
         devicesPage.verifyBridgeListDisplayed();
     }
-
 }

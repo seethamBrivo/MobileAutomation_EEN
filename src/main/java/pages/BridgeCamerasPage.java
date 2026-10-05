@@ -1,6 +1,5 @@
 package pages;
 
-import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
@@ -14,6 +13,8 @@ public class BridgeCamerasPage {
     private final CameraSearchHelper searchHelper;
 
     private final By camerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
+    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
+    // Positional: same DevicesMainScreen back button as DevicesPage.bridgesBackButton, no testTag yet.
     private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
     private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
     private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.SEARCH_PLACEHOLDER + "\"]");
@@ -46,7 +47,6 @@ public class BridgeCamerasPage {
         // First verify we're on camera screen (search placeholder is unique to camera screen)
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, searchPlaceholder).isDisplayed(),
                 "Camera screen should be displayed (search placeholder visible)");
-        // Then verify cameras are present
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstCameraInList).isDisplayed(),
                 "Camera list should be displayed");
     }
@@ -143,9 +143,4 @@ public class BridgeCamerasPage {
     public void clickBackButton() {
         WaitUtils.click(driver, backButton);
     }
-
-    public boolean isOnCameraScreen() {
-        return WaitUtils.isVisible(driver, searchPlaceholder, TimeoutConstants.SHORT_TIMEOUT);
-    }
-
 }

@@ -3,7 +3,6 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
-import java.time.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -62,8 +61,8 @@ public class DevicesPage {
     // TODO: Replace with testTag when mobile team adds proper dialog identifiers
     // Delete confirmation popup button (Compose UI positional path)
     private final By deleteConfirmationDialog = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View");
+    // TODO: Replace with testTag when mobile team adds proper dialog identifiers
     private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
-    private final By bridgeDeletedMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/snackbar_text' and @text='Bridge was deleted']");
 
     public DevicesPage(AppiumDriver driver) {
         this.driver = driver;
@@ -100,7 +99,7 @@ public class DevicesPage {
      */
     public void refreshBridgesList() {
         // Only navigate back if back button is visible (not already on main devices screen)
-        if (WaitUtils.isVisible(driver, bridgesBackButton, Duration.ofSeconds(1))) {
+        if (WaitUtils.isVisible(driver, bridgesBackButton, TimeoutConstants.BACK_BUTTON_CHECK_TIMEOUT)) {
             WaitUtils.click(driver, bridgesBackButton);
         }
         WaitUtils.waitForVisibility(driver, allDevicesPage);
@@ -182,11 +181,6 @@ public class DevicesPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, addBridgeButton).isEnabled(), "Add bridge button should be enabled");
     }
 
-    public void verifyAddBridgeButtonDisabled() {
-        Assert.assertFalse(WaitUtils.waitForVisibility(driver, addBridgeButton).isEnabled(),
-                "Add bridge button should be disabled until name and attach ID are entered");
-    }
-
     public void clickAddBridgeButton() {
         WaitUtils.click(driver, addBridgeButton);
     }
@@ -222,11 +216,6 @@ public class DevicesPage {
     public void verifyBridgeFoundInFilter(String bridgeName) {
         WaitUtils.waitForVisibility(driver, firstBridgeInList);
         Assert.assertTrue(enterBridgeNameInFilter(bridgeName), "Bridge should be found in filter: " + bridgeName);
-    }
-
-    public void verifyBridgeNotFoundInFilter(String bridgeName) {
-        Assert.assertFalse(enterBridgeNameInFilter(bridgeName),
-                "Bridge should no longer be listed after deletion: " + bridgeName);
     }
 
     public void verifyNoMatchingBridgesMessageDisplayed(String bridgeName) {
@@ -294,14 +283,6 @@ public class DevicesPage {
 
     public void clickDeleteButton() {
         WaitUtils.click(driver, deleteButton);
-    }
-
-    public boolean isBridgeDeletedMessageDisplayed() {
-        return WaitUtils.isVisible(driver, bridgeDeletedMessage, TimeoutConstants.SHORT_TIMEOUT);
-    }
-
-    public String getTextFromFilterSearchField() {
-        return WaitUtils.waitForVisibility(driver, filterSearchField).getText();
     }
 
     /**

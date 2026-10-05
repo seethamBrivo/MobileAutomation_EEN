@@ -132,9 +132,6 @@ public class UsersPage {
     public void verifyUserWasAddedMessageDisplayed() {
         WebElement snackbar = WaitUtils.waitForVisibility(driver, snackbarText);
         Assert.assertTrue(snackbar.isDisplayed(), "Snackbar should be displayed after adding user");
-
-        // Log attributes for future debugging when better locators become available
-        logger.info("Snackbar displayed - resource-id: {}, content-desc: {}");
     }
 
     /**
