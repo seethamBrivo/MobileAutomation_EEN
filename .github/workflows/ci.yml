@@ -77,8 +77,9 @@ jobs:
           mkdir -p src/main/resources
           cat > src/main/resources/android.properties << 'EOF'
           appPackage=com.een.vms.android
-          appActivity=com.een.core.MainActivity
-          appWaitActivity=com.een.core.MainActivity
+          # appActivity and appWaitActivity commented - Android 15 on BrowserStack won't launch with these set
+          # appActivity=com.een.core.MainActivity
+          # appWaitActivity=com.een.core.MainActivity
           automationName=UiAutomator2
           platformName=ANDROID
           platformVersion=15.0
@@ -87,8 +88,9 @@ jobs:
           newCommandTimeout=3600
           noReset=true
           fullReset=false
-          shouldTerminateApp=true
-          forceAppLaunch=true
+          dontStopAppOnReset=false
+          connectHardwareKeyboard=true
+          autoGrantPermissions=true
           EOF
 
       - name: Compile and package
