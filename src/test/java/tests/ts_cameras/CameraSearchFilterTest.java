@@ -13,7 +13,7 @@ public class CameraSearchFilterTest extends BaseTest {
     private DevicesPage devicesPage;
     private CamerasPage camerasPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToDashboard() {
         loginAs(TestDataConstants.ENDUSER_CREDS);
         devicesPage = new DevicesPage(driver);
@@ -22,7 +22,8 @@ public class CameraSearchFilterTest extends BaseTest {
         camerasPage = new CamerasPage(driver);
     }
 
-    @Test(description = "EEPD-TC-15581: POS-Cameras - Filter for cameras by search term under Cameras screen in Dashboard in VMS mobile app")
+    @Test(description = "EEPD-TC-15581: POS-Cameras - Filter for cameras by search term under Cameras screen in Dashboard in VMS mobile app",
+          groups = {"regression", "cameras"})
     public void verifyCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);

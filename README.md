@@ -98,6 +98,9 @@ mvn test -DsuiteXmlFile=testng.xml -Dplatform=android
 mvn test -Dplatform=android -Dgroups=regression    # all regression tests
 mvn test -Dplatform=android -Dgroups=layouts       # only layout tests
 mvn test -Dplatform=android -Dgroups=users         # only user tests
+mvn test -Dplatform=android -Dgroups=bridges       # only bridge tests
+mvn test -Dplatform=android -Dgroups=cameras       # only camera tests
+mvn test -Dplatform=android -Dgroups=dashboard     # only dashboard tests
 ```
 
 **BrowserStack execution:**

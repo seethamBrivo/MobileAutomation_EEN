@@ -13,7 +13,7 @@ public class CameraContextMenuTest extends BaseTest {
     private DevicesPage devicesPage;
     private CamerasPage camerasPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToDashboard() {
         loginAs(TestDataConstants.ENDUSER_CREDS);
         devicesPage = new DevicesPage(driver);
@@ -22,7 +22,8 @@ public class CameraContextMenuTest extends BaseTest {
         camerasPage = new CamerasPage(driver);
     }
 
-    @Test(description = "EEPD-TC-12355: POS-Cameras - display context menu after long press on camera in Dashboard in mobile VMS app")
+    @Test(description = "EEPD-TC-12355: POS-Cameras - display context menu after long press on camera in Dashboard in mobile VMS app",
+          groups = {"regression", "cameras"})
     public void verifyCameraContextMenuAfterLongPress() {
         camerasPage.clickCamerasItem();
         camerasPage.verifyCameraListDisplayed();

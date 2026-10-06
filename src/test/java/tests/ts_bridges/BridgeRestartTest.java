@@ -12,12 +12,13 @@ public class BridgeRestartTest extends BaseTest {
 
     private ResellerDashboardPage resellerDashboardPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndVerifyDashboard() {
         resellerDashboardPage = loginAsResellerAndVerifyDashboard();
     }
 
-    @Test(description = "EEPD-TC-8898: POS-Bridge Settings - Restart the Bridge in mobile VMS app from Dashboard section")
+    @Test(description = "EEPD-TC-8898: POS-Bridge Settings - Restart the Bridge in mobile VMS app from Dashboard section",
+          groups = {"regression", "bridges"})
     public void restartBridgeFromDashboard() {
         BridgeSettingsPage settings = new BridgeSettingsPage(driver);
         DevicesPage devicesPage = new DevicesPage(driver);
