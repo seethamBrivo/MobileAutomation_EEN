@@ -93,6 +93,13 @@ mvn test -Dplatform=android -Dtest=AddUserTest
 mvn test -DsuiteXmlFile=testng.xml -Dplatform=android
 ```
 
+**By test groups:**
+```bash
+mvn test -Dplatform=android -Dgroups=regression    # all regression tests
+mvn test -Dplatform=android -Dgroups=layouts       # only layout tests
+mvn test -Dplatform=android -Dgroups=users         # only user tests
+```
+
 **BrowserStack execution:**
 ```bash
 mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackBuildName="My Build"

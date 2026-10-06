@@ -14,7 +14,7 @@ public class LayoutsTest extends BaseTest {
     private boolean layoutCreated = false;
     private String uniqueLayoutName;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndVerifyLayoutsScreen() {
         layoutCreated = false;
         loginAs(TestDataConstants.ENDUSER_CREDS);
@@ -23,7 +23,10 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.clickFirstLayoutTab();
     }
 
-    @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app")
+    // TODO: Parameterize with @DataProvider to cover multiple aspect ratios (16:9, 4:3, 1:1)
+    // and cameras-per-row values. Requires teardown to track List<String> createdLayoutNames.
+    @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app",
+          groups = {"regression", "layouts"})
     public void verifyAddNewLayoutFunctionality() {
         String baseLayoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
         uniqueLayoutName = utils.TestDataGenerator.generateUniqueName(baseLayoutName);
@@ -48,7 +51,8 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.verifyLayoutCreatedSuccessfully(uniqueLayoutName);
     }
 
-    @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app")
+    @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app",
+          groups = {"regression", "layouts"})
     public void verifyCameraPreviewsDisplayedInLayouts() {
         layoutsPage.waitForCameraPreviewsToLoad();
         layoutsPage.verifyFirstCameraPreviewElements();
