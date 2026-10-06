@@ -38,7 +38,6 @@ public class BridgesTest extends BaseTest {
     public void test01_addBridgeToVMSApp() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.verifyUserNavigatedToOriginScreen();
-
         // Same attach ID a second time must be rejected.
         devicesPage.clickOnAddBridgeIcon();
         devicesPage.verifyAddDeviceOptionsDisplayed();
@@ -51,7 +50,6 @@ public class BridgesTest extends BaseTest {
         devicesPage.enterAttachId(getAttachId());
         devicesPage.clickAddBridgeButton();
         devicesPage.verifyConflictErrorMessageDisplayed();
-
         devicesPage.recoverToDashboard();
         devicesPage.clickBridgesTab();
         deleteTestBridge(bridgeName);
@@ -74,7 +72,6 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyCamerasOptionDisplayed();
         devicesPage.verifySpeakersOptionDisplayed();
         devicesPage.verifySwitchesOptionDisplayed();
-
         devicesPage.clickBridgesTab();
         devicesPage.verifyBridgeFoundInFilter(bridgeName);
         devicesPage.verifyBridgeNameMatches(bridgeName);
@@ -83,7 +80,6 @@ public class BridgesTest extends BaseTest {
         settings.verifyBridgeSettingsPageDisplayed();
         settings.verifyStatusSectionDisplayed();
         driver.navigate().back();
-
         deleteTestBridge(bridgeName);
     }
 
@@ -91,19 +87,14 @@ public class BridgesTest extends BaseTest {
     public void test04_filterBridgesBySearchTerm() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_FILTER);
         devicesPage.clickBridgesTab();
-
-        // Full name
         devicesPage.verifyBridgeFoundInFilter(bridgeName);
         devicesPage.verifyBridgeListDisplayed();
         devicesPage.verifyBridgeNameMatches(bridgeName);
-
-        // Partial name
         String partialName = bridgeName.substring(0, Math.min(10, bridgeName.length()));
         devicesPage.verifyBridgeFoundInFilter(partialName);
         String displayed = devicesPage.getFirstBridgeName();
         Assert.assertTrue(displayed.contains(partialName),
                 "Displayed bridge name should contain the partial search term '" + partialName + "' but was '" + displayed + "'");
-
         deleteTestBridge(bridgeName);
     }
 
@@ -113,7 +104,6 @@ public class BridgesTest extends BaseTest {
         devicesPage.clickBridgesTab();
         devicesPage.verifyBridgeFoundInFilter(bridgeName);
         devicesPage.verifyBridgeNameMatches(bridgeName);
-
         devicesPage.openFirstBridgeContextMenu();
         devicesPage.verifyContextMenuOptionDisplayed("Bridge information");
         devicesPage.verifyContextMenuOptionDisplayed("Bridge settings");
@@ -124,7 +114,6 @@ public class BridgesTest extends BaseTest {
         // Role-dependent entry; recorded, not asserted, until the TC states which roles see it.
         logger.info("'Restart bridge' context option shown for this user: {}", devicesPage.isRestartBridgeContextOptionDisplayed());
         driver.navigate().back();
-
         deleteTestBridge(bridgeName);
     }
 
@@ -213,7 +202,6 @@ public class BridgesTest extends BaseTest {
         BridgeTestHelper.deleteLeftoverBridges(devicesPage, prefix);
         devicesPage.recoverToDashboard();
         devicesPage.verifyAllDevicesSectionIsDisplayed();
-
         String bridgeName = TestDataGenerator.generateUniqueName(prefix);
         testBridgeName = bridgeName;
         devicesPage.addBridgeWorkflow(bridgeName, getAttachId());

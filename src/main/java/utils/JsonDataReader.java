@@ -51,10 +51,18 @@ public final class JsonDataReader {
      * instead of a bare NullPointerException when the key is missing.
      */
     public static String getCredentialValue(String accountType, String key) {
-        JsonElement value = getCredentials(accountType).get(key);
+        JsonObject credentials = getCredentials(accountType);
+        return getNestedBlockValue(credentials, "credentials." + accountType, key);
+    }
+
+    /**
+     * Helper for retrieving a value from a nested block with consistent validation.
+     */
+    private static String getNestedBlockValue(JsonObject block, String blockPath, String key) {
+        JsonElement value = block.get(key);
         if (value == null || value.isJsonNull()) {
             throw new IllegalStateException(
-                    "testData.json is missing key '" + key + "' under credentials." + accountType
+                    "testData.json is missing key '" + key + "' under " + blockPath
                     + " (check the CI workflow and testData.json.example use the same key names)");
         }
         return value.getAsString();
@@ -65,19 +73,68 @@ public final class JsonDataReader {
      * instead of a bare NullPointerException when the key is missing.
      */
     public static String getSearchFilterValue(String key) {
-        JsonObject searchFilter = getTestData().getAsJsonObject(TestDataConstants.SEARCH_FILTER);
-        if (searchFilter == null) {
+        return getBlockValue(TestDataConstants.SEARCH_FILTER, "search_filter", key).getAsString();
+    }
+
+    /**
+     * A string value from {@code layout_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static String getLayoutDataValue(String key) {
+        JsonElement value = getLayoutDataElement(key);
+        return value.getAsString();
+    }
+
+    /**
+     * An integer value from {@code layout_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static int getLayoutDataIntValue(String key) {
+        JsonElement value = getLayoutDataElement(key);
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) {
             throw new IllegalStateException(
-                    "testData.json is missing '" + TestDataConstants.SEARCH_FILTER + "' block "
-                    + "(check the CI workflow and testData.json.example have search_filter section)");
+                    "Expected integer for layout_data.'" + key + "' but got: " + value);
         }
-        JsonElement value = searchFilter.get(key);
+        return value.getAsInt();
+    }
+
+    /**
+     * A boolean value from {@code layout_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing.
+     */
+    public static boolean getLayoutDataBooleanValue(String key) {
+        JsonElement value = getLayoutDataElement(key);
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean()) {
+            throw new IllegalStateException(
+                    "Expected boolean for layout_data.'" + key + "' but got: " + value);
+        }
+        return value.getAsBoolean();
+    }
+
+    /**
+     * Generic helper to retrieve a value from any test data block with consistent validation.
+     * Eliminates duplication across credentials, search_filter, layout_data, etc.
+     */
+    private static JsonElement getBlockValue(String blockConstant, String blockName, String key) {
+        JsonObject block = getTestData().getAsJsonObject(blockConstant);
+        if (block == null) {
+            throw new IllegalStateException(
+                    "testData.json is missing '" + blockConstant + "' block "
+                    + "(check the CI workflow and testData.json.example have " + blockName + " section)");
+        }
+        JsonElement value = block.get(key);
         if (value == null || value.isJsonNull()) {
             throw new IllegalStateException(
-                    "testData.json is missing key '" + key + "' under search_filter "
-                    + "(check the CI workflow and testData.json.example use the same key names)");
+                    "testData.json is missing key '" + key + "' under " + blockName);
         }
-        return value.getAsString();
+        return value;
+    }
+
+    /**
+     * Helper to retrieve a layout_data element (uses the generic getBlockValue helper).
+     */
+    private static JsonElement getLayoutDataElement(String key) {
+        return getBlockValue(TestDataConstants.LAYOUT_DATA, "layout_data", key);
     }
 
     /**

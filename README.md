@@ -93,6 +93,13 @@ mvn test -Dplatform=android -Dtest=AddUserTest
 mvn test -DsuiteXmlFile=testng.xml -Dplatform=android
 ```
 
+**By test groups:**
+```bash
+mvn test -Dplatform=android -Dgroups=regression    # all regression tests
+mvn test -Dplatform=android -Dgroups=layouts       # only layout tests
+mvn test -Dplatform=android -Dgroups=users         # only user tests
+```
+
 **BrowserStack execution:**
 ```bash
 mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackBuildName="My Build"
@@ -110,11 +117,15 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-11276 | ts_bridges.BridgesTest | Add bridge (incl. duplicate attach-ID conflict) |
 | EEPD-TC-8890 | ts_bridges.BridgesTest | Delete bridge |
 | EEPD-TC-16502 | ts_bridges.BridgesTest | Bridges list under Dashboard |
-| EEPD-TC-15441 | ts_bridges.BridgesTest | Filter bridges by search term |
+| EEPD-TC-15483 | ts_bridges.BridgesTest | Filter bridges by search term |
 | EEPD-TC-12354 | ts_bridges.BridgesTest | Bridge context menu |
 | EEPD-TC-8881 | ts_bridges.BridgesTest | Rename bridge and check status |
 | EEPD-TC-8898 | ts_bridges.BridgeRestartTest | Restart bridge (reseller login) |
-| EEPD-TC-12355 | ts_cameras.CameraContextMenuTest | Camera context menu verification |
+| EEPD-TC-53382 | ts_bridges.BridgeCameraSearchFilterTest | Filter respective bridge cameras by search term |
+| EEPD-TC-15581 | ts_cameras.CameraSearchFilterTest | Filter cameras by search term under Cameras screen |
+| EEPD-TC-12355 | ts_cameras.CameraContextMenuTest | Display context menu after long press on camera |
+| EEPD-TC-9005 | ts_layouts.LayoutsTest | Add new layout in mobile VMS app |
+| EEPD-TC-9163 | ts_layouts.LayoutsTest | Show camera previews in Layouts/Tags sections |
 | EEPD-TC-3920 | ts_my_profile.MyProfileTest | POS-My Profile - setting 'Time zone' in VMS mobile app |
 
 ### Conventions

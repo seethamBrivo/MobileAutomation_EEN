@@ -34,6 +34,12 @@
         </classes>
     </test>
 
+    <test name="Layout Tests">
+        <classes>
+            <class name="tests.ts_layouts.LayoutsTest"/>
+        </classes>
+    </test>
+
     <test name="My Profile Tests">
         <classes>
             <class name="tests.ts_my_profile.MyProfileTest"/>
