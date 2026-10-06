@@ -33,4 +33,10 @@
             <class name="tests.ts_cameras.CameraSearchFilterTest"/>
         </classes>
     </test>
+
+    <test name="Layout Tests">
+        <classes>
+            <class name="tests.ts_layouts.LayoutsTest"/>
+        </classes>
+    </test>
 </suite>

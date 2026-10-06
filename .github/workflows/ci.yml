@@ -2,9 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+    branches: [main, master]  # Runs only when code is merged to main/master
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
@@ -46,7 +44,14 @@ jobs:
             },
             "search_filter": {
               "valid_search_term": "Camera",
-              "invalid_search_term": "XYZ_NO_MATCH_12345"
+              "invalid_search_term": "XYZ_NO_MATCH_12345",
+              "bridge_valid_search_term": "Camera"
+            },
+            "layout_data": {
+              "layout_name": "AutoTest_Layout",
+              "aspect_ratio": "16:9",
+              "max_cameras_per_row": 2,
+              "show_camera_title_bars": true
             }
           }
           EOF
@@ -72,8 +77,9 @@ jobs:
           mkdir -p src/main/resources
           cat > src/main/resources/android.properties << 'EOF'
           appPackage=com.een.vms.android
-          appActivity=com.een.core.MainActivity
-          appWaitActivity=com.een.core.MainActivity
+          # appActivity and appWaitActivity commented - Android 15 on BrowserStack won't launch with these set
+          # appActivity=com.een.core.MainActivity
+          # appWaitActivity=com.een.core.MainActivity
           automationName=UiAutomator2
           platformName=ANDROID
           platformVersion=15.0
@@ -82,8 +88,9 @@ jobs:
           newCommandTimeout=3600
           noReset=true
           fullReset=false
-          shouldTerminateApp=true
-          forceAppLaunch=true
+          dontStopAppOnReset=false
+          connectHardwareKeyboard=true
+          autoGrantPermissions=true
           EOF
 
       - name: Compile and package

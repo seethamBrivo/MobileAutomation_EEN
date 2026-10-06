@@ -59,18 +59,78 @@ public class CameraSearchHelper {
     }
 
     public void enterSearchTerm(String searchTerm) {
-        String previousCount = getCameraCounterText();
+        String previousCount = getCurrentCounterText();
+        boolean wasEmptyStateVisible = isEmptyStateCurrentlyVisible();
         WaitUtils.clearAndType(driver, searchBar, searchTerm);
-        waitForCounterToChangeFrom(previousCount);
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount, wasEmptyStateVisible, searchTerm),
+                "Camera counter should change after entering search term '" + searchTerm + "' - filter may not have re-rendered");
     }
 
-    /**
-     * Waits for the camera counter to change from the previous value, indicating
-     * that the filter has been applied and the list has re-rendered.
-     */
-    private void waitForCounterToChangeFrom(String previousCount) {
-        new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
-            .until(d -> !getCameraCounterText().equals(previousCount));
+    private boolean isEmptyStateCurrentlyVisible() {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return driver.findElements(emptyStateMessage).stream()
+                        .anyMatch(WebElement::isDisplayed);
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                if (attempt == 2) {
+                    // Throw on persistent staleness - let WebDriverWait handle retry
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private String getCurrentCounterText() {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return driver.findElements(cameraCounter).stream()
+                        .filter(WebElement::isDisplayed)
+                        .findFirst()
+                        .map(WebElement::getText)
+                        .orElse(null);
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                if (attempt == 2) {
+                    // Throw on persistent staleness - let WebDriverWait handle retry
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private boolean waitForCounterToChangeFrom(String previousCount, boolean wasEmptyStateVisibleInitially, String expectedSearchText) {
+        try {
+            new WebDriverWait(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT)
+                .until(d -> {
+                    boolean isEmptyStateVisible = isEmptyStateCurrentlyVisible();
+
+                    // Detect transition INTO empty state
+                    if (isEmptyStateVisible && !wasEmptyStateVisibleInitially) {
+                        return true;
+                    }
+
+                    // Detect counter change (non-empty results)
+                    String currentCount = getCurrentCounterText();
+                    if (currentCount != null && !currentCount.equals(previousCount)) {
+                        return true;
+                    }
+
+                    // Handle empty→empty with different search term: verify search bar updated
+                    if (isEmptyStateVisible && wasEmptyStateVisibleInitially) {
+                        WebElement searchField = d.findElement(searchBar);
+                        String currentSearchText = searchField.getText();
+                        if (currentSearchText == null) {
+                            currentSearchText = searchField.getAttribute("text");
+                        }
+                        // If search text matches what we typed, filter re-rendered
+                        return expectedSearchText.equals(currentSearchText);
+                    }
+
+                    return false;
+                });
+            return true;
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
     }
 
     public boolean isCameraFoundInFilter() {
@@ -97,17 +157,16 @@ public class CameraSearchHelper {
     }
 
     public void clearSearchIfNeeded() {
-        // Clear unconditionally - clearing empty field is no-op, and this avoids unguarded getAttribute() call
-        // Use clearAndType with empty string to trigger filter reset in the mobile app
-        String previousCount = getCameraCounterText();
+        String previousCount = getCurrentCounterText();
+        boolean wasEmptyStateVisible = isEmptyStateCurrentlyVisible();
         WaitUtils.clearAndType(driver, searchBar, "");
-        // Hide keyboard to ensure filter reset is triggered
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (Exception e) {
             // Keyboard already hidden or not present
         }
-        waitForCounterToChangeFrom(previousCount);
+        Assert.assertTrue(waitForCounterToChangeFrom(previousCount, wasEmptyStateVisible, ""),
+                "Camera counter should change after clearing search - filter may not have reset");
         logger.info("Cleared search field");
     }
 

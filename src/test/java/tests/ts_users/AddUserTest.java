@@ -15,7 +15,7 @@ public class AddUserTest extends BaseTest {
     /** E-mail actually created by the test, as returned by the page object; null until created. */
     private String generatedUserEmail;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToUsers() {
         existingUserEmail = null;
         generatedUserEmail = null;
@@ -28,7 +28,7 @@ public class AddUserTest extends BaseTest {
         usersPage.verifyUsersOptionAtBottomScreenDisplayed();
     }
 
-    @Test(description = "EEPD-TC-4170: POS-Users - adding New User in mobile VMS app", groups = {"Regression"})
+    @Test(description = "EEPD-TC-4170: POS-Users - adding New User in mobile VMS app", groups = {"regression", "users"})
     public void addNewUserToVMSApp() {
         existingUserEmail = getTestDataValue("existingUserInSystemButNotExistingInCurrentLogin");
         usersPage.deleteUserIfExists(existingUserEmail);
