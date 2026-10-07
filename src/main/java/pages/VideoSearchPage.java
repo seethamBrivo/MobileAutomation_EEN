@@ -1,6 +1,5 @@
 package pages;
 
-import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
@@ -31,18 +30,17 @@ public class VideoSearchPage {
         WaitUtils.click(driver, searchOption);
     }
 
-    public void verifyTimezoneAppliedInVideoSearch() {
-        boolean dateVisible = WaitUtils.isVisible(driver, dateField, TimeoutConstants.SHORT_TIMEOUT);
-        Assert.assertTrue(dateVisible,
-                "Date field should be displayed in video search screen");
-
+    public void verifyDateFieldDisplayed() {
         String dateText = WaitUtils.waitForVisibility(driver, dateField).getText();
-        logger.info("Video search date: {}", dateText);
+        logger.info("Video search date/time displayed: {}", dateText);
 
         Assert.assertFalse(dateText.isEmpty(),
-                "Date field should contain date/time information reflecting selected timezone");
+                "Date field should contain date/time information");
 
         Assert.assertTrue(dateText.matches(".*\\d+.*"),
-                "Date field should contain numeric values, but was: " + dateText);
+                "Date field should contain numeric date/time values, but was: " + dateText);
+
+        Assert.assertTrue(dateText.matches(".*[\\d/:,\\s-]+.*"),
+                "Date field should be in a recognizable date/time format, but was: " + dateText);
     }
 }

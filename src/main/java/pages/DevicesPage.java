@@ -89,7 +89,7 @@ public class DevicesPage {
         clickDashboardOptionAtTheBottom();
     }
 
-    /** More > My Profile (click profile at top). Works from any screen that shows the bottom navigation. */
+    /** Navigate to My Profile via bottom navigation (More > My Profile). */
     public MyProfilePage navigateToMyProfile() {
         clickMoreMenuOptionAtTheBottom();
         return new MyProfilePage(driver);

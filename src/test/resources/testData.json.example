@@ -25,6 +25,7 @@
   },
   "timezone_data": {
     "valid_timezone": "Alaska",
+    "test_timezone": "Calcutta",
     "search_term": "US",
     "invalid_search_term": "XYZ_INVALID_TIMEZONE_12345"
   },

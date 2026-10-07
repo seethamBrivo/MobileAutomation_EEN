@@ -101,6 +101,7 @@ mvn test -Dplatform=android -Dgroups=users         # only user tests
 mvn test -Dplatform=android -Dgroups=bridges       # only bridge tests
 mvn test -Dplatform=android -Dgroups=cameras       # only camera tests
 mvn test -Dplatform=android -Dgroups=dashboard     # only dashboard tests
+mvn test -Dplatform=android -Dgroups=profile       # only profile tests
 ```
 
 **BrowserStack execution:**

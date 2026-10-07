@@ -28,9 +28,10 @@ public class MyProfilePage {
         WaitUtils.click(driver, profileSection);
     }
 
-    public void scrollToTimeSection() {
+    public void scrollToTimezoneOption() {
         if (!WaitUtils.isVisible(driver, timezoneOption, TimeoutConstants.SHORT_TIMEOUT)) {
-            GestureUtils.swipeUp(driver);
+            boolean found = GestureUtils.scrollUntilPresent(driver, timezoneOption);
+            Assert.assertTrue(found, "Could not find timezone option even after scrolling");
         }
     }
 
@@ -46,7 +47,15 @@ public class MyProfilePage {
 
     public void verifyTimezoneChanged(String expectedTimezone) {
         String actualTimezone = getCurrentTimezone();
-        Assert.assertTrue(actualTimezone.contains(expectedTimezone),
-                "Timezone should be changed to " + expectedTimezone + " but was: " + actualTimezone);
+        String normalizedActual = actualTimezone.toLowerCase();
+        String normalizedExpected = expectedTimezone.toLowerCase();
+
+        // Handle deprecated timezone aliases (Calcutta/Kolkata may differ across Android versions)
+        boolean matches = normalizedActual.contains(normalizedExpected) ||
+                         (normalizedExpected.contains("calcutta") && normalizedActual.contains("kolkata")) ||
+                         (normalizedExpected.contains("kolkata") && normalizedActual.contains("calcutta"));
+
+        Assert.assertTrue(matches,
+                "Timezone should contain '" + expectedTimezone + "' (or its alias) but was: " + actualTimezone);
     }
 }

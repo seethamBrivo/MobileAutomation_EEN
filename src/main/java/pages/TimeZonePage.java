@@ -44,10 +44,14 @@ public class TimeZonePage {
 
     public void enterSearchTerm(String searchTerm) {
         WaitUtils.clearAndType(driver, searchBar, searchTerm);
+        hideKeyboard();
+    }
+
+    private void hideKeyboard() {
         try {
             driver.executeScript("mobile: hideKeyboard");
-        } catch (Exception e) {
-            logger.debug("Keyboard already hidden or not present");
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.debug("Keyboard already hidden or not present: {}", e.getMessage());
         }
     }
 
@@ -65,11 +69,9 @@ public class TimeZonePage {
 
     public void clearSearchField() {
         WaitUtils.clearAndType(driver, searchBar, "");
-        try {
-            driver.executeScript("mobile: hideKeyboard");
-        } catch (Exception e) {
-            logger.debug("Keyboard already hidden or not present");
-        }
+        hideKeyboard();
+        Assert.assertTrue(WaitUtils.isVisible(driver, firstTimezoneInList, TimeoutConstants.SHORT_TIMEOUT),
+                "Timezone list should be restored after clearing search field");
     }
 
     public void selectFirstTimezone() {
@@ -77,5 +79,21 @@ public class TimeZonePage {
         String timezoneText = firstTimezone.getText();
         WaitUtils.click(driver, firstTimezoneInList);
         logger.info("Selected first timezone: {}", timezoneText);
+    }
+
+    /**
+     * Select first timezone and verify it matches the expected search term.
+     *
+     * @param expectedSearchTerm The search term that should appear in the selected timezone
+     */
+    public void selectAndVerifyFirstTimezone(String expectedSearchTerm) {
+        WebElement firstTimezone = WaitUtils.waitForVisibility(driver, firstTimezoneInList);
+        String timezoneText = firstTimezone.getText();
+
+        Assert.assertTrue(timezoneText.toLowerCase().contains(expectedSearchTerm.toLowerCase()),
+                "First timezone should contain '" + expectedSearchTerm + "' but was: " + timezoneText);
+
+        WaitUtils.click(driver, firstTimezoneInList);
+        logger.info("Selected and verified timezone: {}", timezoneText);
     }
 }

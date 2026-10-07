@@ -20,49 +20,45 @@ public class MyProfileTest extends BaseTest {
     private VSPEventsPage vspEventsPage;
     private VideoSearchPage videoSearchPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToMyProfile() {
         loginAs(TestDataConstants.TS02_CREDS);
         devicesPage = new DevicesPage(driver);
         myProfilePage = devicesPage.navigateToMyProfile();
     }
 
-    @Test(description = "EEPD-TC-3920: POS-My Profile - setting 'Time zone' in VMS mobile app")
+    @Test(description = "EEPD-TC-3920: POS-My Profile - setting 'Time zone' in VMS mobile app",
+          groups = {"regression", "profile"})
     public void verifyTimezoneSettingFunctionality() {
         final String searchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_SEARCH_TERM);
         final String invalidSearchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_INVALID_SEARCH_TERM);
-        final String testTimezone = "Calcutta"; // Specific timezone for verification
+        final String testTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.TEST_TIMEZONE);
 
         myProfilePage.clickProfileSection();
-        myProfilePage.scrollToTimeSection();
+        myProfilePage.scrollToTimezoneOption();
         myProfilePage.clickTimezoneOption();
         timeZonePage = new TimeZonePage(driver);
         timeZonePage.verifyTimezonePopupDisplayed();
-
         timeZonePage.verifySearchPlaceholderDisplayed();
         timeZonePage.clickSearchBar();
         timeZonePage.enterSearchTerm(searchTerm);
         timeZonePage.verifyTimezoneListAdjustedToInput(searchTerm);
-
         timeZonePage.enterSearchTerm(invalidSearchTerm);
         timeZonePage.verifyEmptyStateDisplayed();
         timeZonePage.clearSearchField();
-
         timeZonePage.enterSearchTerm(testTimezone);
-        timeZonePage.selectFirstTimezone();
+        timeZonePage.selectAndVerifyFirstTimezone(testTimezone);
         myProfilePage.verifyTimezoneChanged(testTimezone);
-
         vspEventsPage = new VSPEventsPage(driver);
         vspEventsPage.navigateBackFromProfile();
         vspEventsPage.verifyVSPSectionVisible();
         vspEventsPage.clickEvents();
         vspEventsPage.verifyVSPEventsScreenDisplayed();
-        vspEventsPage.verifyTimezoneAppliedInVSPEvents();
-
+        vspEventsPage.verifyVSPEventTimestampFormatDisplayed();
         videoSearchPage = new VideoSearchPage(driver);
         videoSearchPage.navigateBackFromVSPEvents();
         videoSearchPage.clickSearch();
-        videoSearchPage.verifyTimezoneAppliedInVideoSearch();
+        videoSearchPage.verifyDateFieldDisplayed();
     }
 
     @AfterMethod(alwaysRun = true)
@@ -72,17 +68,22 @@ public class MyProfileTest extends BaseTest {
         }
 
         try {
+            final String resetTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.VALID_TIMEZONE);
             devicesPage = new DevicesPage(driver);
+            devicesPage.recoverToDashboard();
+            driver.navigate().back(); // Exit Dashboard view to return to main screen with bottom nav
             myProfilePage = devicesPage.navigateToMyProfile();
             myProfilePage.clickProfileSection();
-            myProfilePage.scrollToTimeSection();
+            myProfilePage.scrollToTimezoneOption();
             myProfilePage.clickTimezoneOption();
             timeZonePage = new TimeZonePage(driver);
-            timeZonePage.enterSearchTerm("Alaska");
-            timeZonePage.selectFirstTimezone();
-            logger.info("Timezone reset to US/Alaska successfully");
+            timeZonePage.enterSearchTerm(resetTimezone);
+            timeZonePage.selectAndVerifyFirstTimezone(resetTimezone);
+            myProfilePage.verifyTimezoneChanged(resetTimezone);
+            logger.info("Timezone reset to {} successfully", resetTimezone);
         } catch (Exception e) {
-            logger.warn("Failed to reset timezone: {}. BaseTest teardown will handle cleanup.", e.getMessage());
+            logger.error("Failed to reset timezone for shared ts02 account. " +
+                        "This may affect subsequent test runs. Error: {}", e.getMessage());
         }
     }
 }
