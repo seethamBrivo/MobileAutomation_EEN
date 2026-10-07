@@ -10,12 +10,13 @@ public class ResellerDashboardTest extends BaseTest {
 
     private ResellerDashboardPage resellerDashboardPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndVerifyDashboard() {
         resellerDashboardPage = loginAsResellerAndVerifyDashboard();
     }
 
-    @Test(description = "EEPD-TC-4516: POS-Reseller Dashboard - (View Dashboard for Reseller) in mobile VMS app")
+    @Test(description = "EEPD-TC-4516: POS-Reseller Dashboard - (View Dashboard for Reseller) in mobile VMS app",
+          groups = {"regression", "dashboard"})
     public void verifyResellerDashboard() {
         resellerDashboardPage.verifyTotalAccountsDisplayed();
         resellerDashboardPage.verifyLargeModelTransformationIconDisplayed();
@@ -39,7 +40,8 @@ public class ResellerDashboardTest extends BaseTest {
         resellerDashboardPage.verifyMoreOptionDisplayed();
     }
 
-    @Test(description = "EEPD-TC-40220: POS-Reseller Dashboard - Verify the account creation for Admin OR Account access users")
+    @Test(description = "EEPD-TC-40220: POS-Reseller Dashboard - Verify the account creation for Admin OR Account access users",
+          groups = {"regression", "dashboard"})
     public void verifyAccountCreationForAdminOrAccountAccessUsers() {
         resellerDashboardPage.verifyAddAccountButtonDisplayed();
         resellerDashboardPage.clickAddAccountButton();
