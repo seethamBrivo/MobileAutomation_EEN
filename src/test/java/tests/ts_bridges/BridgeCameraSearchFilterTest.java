@@ -13,7 +13,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
     private DevicesPage devicesPage;
     private BridgeCamerasPage bridgeCamerasPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToBridgeCameras() {
         loginAs(TestDataConstants.ENDUSER_CREDS);
         devicesPage = new DevicesPage(driver);
@@ -28,7 +28,8 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         bridgeCamerasPage.verifyCameraListDisplayed();
     }
 
-    @Test(description = "EEPD-TC-53382: POS-Bridges - Filter for respective bridge cameras by search term in Dashboard in VMS mobile app")
+    @Test(description = "EEPD-TC-53382: POS-Bridges - Filter for respective bridge cameras by search term in Dashboard in VMS mobile app",
+          groups = {"regression", "bridges"})
     public void verifyBridgeCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.BRIDGE_VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);

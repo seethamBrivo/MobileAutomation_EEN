@@ -24,7 +24,7 @@ public class BridgesTest extends BaseTest {
     /** Original name of a pre-existing bridge this test renamed and has not yet restored, or null. */
     private String renamedBridgeOriginalName;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void loginAndOpenDashboard() {
         testBridgeName = null;
         renamedBridgeOriginalName = null;
@@ -34,7 +34,8 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyAllDevicesSectionIsDisplayed();
     }
 
-    @Test(priority = 1, description = "EEPD-TC-11276: POS-Add Bridge - Adding Bridge to the account in Dashboard in mobile VMS app")
+    @Test(priority = 1, description = "EEPD-TC-11276: POS-Add Bridge - Adding Bridge to the account in Dashboard in mobile VMS app",
+          groups = {"regression", "bridges"})
     public void test01_addBridgeToVMSApp() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.verifyUserNavigatedToOriginScreen();
@@ -55,7 +56,8 @@ public class BridgesTest extends BaseTest {
         deleteTestBridge(bridgeName);
     }
 
-    @Test(priority = 2, description = "EEPD-TC-8890: POS-Bridge Settings - delete Bridge in mobile VMS app")
+    @Test(priority = 2, description = "EEPD-TC-8890: POS-Bridge Settings - delete Bridge in mobile VMS app",
+          groups = {"regression", "bridges"})
     public void test02_deleteBridgeFromVMSApp() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.clickBridgesTab();
@@ -64,7 +66,8 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyNoMatchingBridgesMessageDisplayed(bridgeName);
     }
 
-    @Test(priority = 3, description = "EEPD-TC-16502: POS-Bridges - Display list of bridges under Bridges item in Dashboard in mobile VMS app")
+    @Test(priority = 3, description = "EEPD-TC-16502: POS-Bridges - Display list of bridges under Bridges item in Dashboard in mobile VMS app",
+          groups = {"regression", "bridges"})
     public void test03_verifyBridgesListInDashboard() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.verifyAllDevicesSectionIsDisplayed();
@@ -83,7 +86,8 @@ public class BridgesTest extends BaseTest {
         deleteTestBridge(bridgeName);
     }
 
-    @Test(priority = 4, description = "EEPD-TC-15483: POS-Bridges - Filter for bridges by search term under Bridges item in Dashboard in VMS mobile app")
+    @Test(priority = 4, description = "EEPD-TC-15483: POS-Bridges - Filter for bridges by search term under Bridges item in Dashboard in VMS mobile app",
+          groups = {"regression", "bridges"})
     public void test04_filterBridgesBySearchTerm() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_FILTER);
         devicesPage.clickBridgesTab();
@@ -98,7 +102,8 @@ public class BridgesTest extends BaseTest {
         deleteTestBridge(bridgeName);
     }
 
-    @Test(priority = 5, description = "EEPD-TC-12354: POS-Bridges - Display context menu of bridge item in Bridge list in Dashboard of mobile VMS app")
+    @Test(priority = 5, description = "EEPD-TC-12354: POS-Bridges - Display context menu of bridge item in Bridge list in Dashboard of mobile VMS app",
+          groups = {"regression", "bridges"})
     public void test05_verifyBridgeContextMenu() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_CONTEXT_MENU);
         devicesPage.clickBridgesTab();
@@ -122,7 +127,8 @@ public class BridgesTest extends BaseTest {
      * online). The rename is tracked in {@link #renamedBridgeOriginalName} so it is undone
      * in @AfterMethod if any later step fails.
      */
-    @Test(priority = 6, description = "EEPD-TC-8881: POS-Bridge Settings - changing the name and checking status of the Bridge in mobile VMS app")
+    @Test(priority = 6, description = "EEPD-TC-8881: POS-Bridge Settings - changing the name and checking status of the Bridge in mobile VMS app",
+          groups = {"regression", "bridges"})
     public void test06_changeBridgeNameAndCheckStatus() {
         devicesPage.clickBridgesTab();
         devicesPage.clickFirstOnlineBridge();
