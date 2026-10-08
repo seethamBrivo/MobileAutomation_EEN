@@ -89,6 +89,12 @@ public class DevicesPage {
         clickDashboardOptionAtTheBottom();
     }
 
+    /** Navigate to My Profile via bottom navigation (More > My Profile). */
+    public MyProfilePage navigateToMyProfile() {
+        clickMoreMenuOptionAtTheBottom();
+        return new MyProfilePage(driver);
+    }
+
     public void clickBridgesTab() {
         WaitUtils.click(driver, bridgesTab);
     }

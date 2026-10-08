@@ -22,12 +22,20 @@ public final class TestDataConstants {
     public static final String TEST_DATA_FILE = "testData.json";
     public static final String RESELLER_CREDS = "reseller_user_creds";
     public static final String ENDUSER_CREDS = "enduser_user_creds";
+    public static final String TS02_CREDS = "ts02_user_creds";
 
     // Test-data JSON keys (search_filter block).
     public static final String SEARCH_FILTER = "search_filter";
     public static final String VALID_SEARCH_TERM = "valid_search_term";
     public static final String INVALID_SEARCH_TERM = "invalid_search_term";
     public static final String BRIDGE_VALID_SEARCH_TERM = "bridge_valid_search_term";
+
+    // Test-data JSON keys (timezone_data block).
+    public static final String TIMEZONE_DATA = "timezone_data";
+    public static final String VALID_TIMEZONE = "valid_timezone";
+    public static final String TEST_TIMEZONE = "test_timezone";
+    public static final String TIMEZONE_SEARCH_TERM = "search_term";
+    public static final String TIMEZONE_INVALID_SEARCH_TERM = "invalid_search_term";
 
     // Test-data JSON keys (layout block).
     public static final String LAYOUT_DATA = "layout_data";

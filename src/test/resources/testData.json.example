@@ -12,12 +12,22 @@
     "enduser_user_creds": {
       "username": "your_enduser_email@example.com",
       "password": "YourPassword123"
+    },
+    "ts02_user_creds": {
+      "username": "your_ts02_email@example.com",
+      "password": "YourPassword123"
     }
   },
   "search_filter": {
     "valid_search_term": "Camera",
     "invalid_search_term": "XYZ_NO_MATCH_12345",
     "bridge_valid_search_term": "Camera"
+  },
+  "timezone_data": {
+    "valid_timezone": "Asia/Kolkata",
+    "test_timezone": "Etc/GMT+12",
+    "search_term": "Etc",
+    "invalid_search_term": "XYZ_INVALID_TIMEZONE_12345"
   },
   "layout_data": {
     "layout_name": "AutoTest_Layout",
