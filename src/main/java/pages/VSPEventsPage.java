@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.testng.Assert;
+import org.testng.SkipException;
 import utils.WaitUtils;
 
 public class VSPEventsPage {
@@ -26,10 +27,6 @@ public class VSPEventsPage {
     // No events messages - displayed when VSP event list is empty
     private final By noEventsMessage = AppiumBy.xpath("//android.widget.TextView[@text='No license plate events yet']");
     private final By zeroEventsMessage = AppiumBy.xpath("//android.widget.TextView[@text='0 license plate events']");
-    private final By profileTimezone = AppiumBy.xpath("//android.widget.TextView[@text='Profile timezone']");
-    private final By profileTimezoneValue = AppiumBy.xpath("//android.widget.TextView[@text='Profile timezone']/following-sibling::android.widget.TextView[1]");
-    // Stable: Close button at fixed position [2] in event details modal
-    private final By closeEventDetailsButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
 
     public VSPEventsPage(AppiumDriver driver) {
         this.driver = driver;
@@ -53,7 +50,7 @@ public class VSPEventsPage {
                 "VSP Events screen heading should be displayed");
     }
 
-    public void verifyVSPEventTimestampFormatDisplayed() {
+    public String captureEventTimestamp() {
         boolean eventsExist = WaitUtils.isVisible(driver, firstEventInList, TimeoutConstants.FILTER_RESULT_TIMEOUT);
 
         if (!eventsExist) {
@@ -61,33 +58,29 @@ public class VSPEventsPage {
                                        WaitUtils.isVisible(driver, zeroEventsMessage, TimeoutConstants.SHORT_TIMEOUT);
 
             if (noEventsDisplayed) {
-                logger.warn("LIMITATION: No VSP events available - cannot verify timezone display in events list. " +
-                           "Timezone setting may still be incorrect.");
-                return;
+                logger.warn("No VSP events available - returning empty timestamp");
+                return "";
             } else {
                 Assert.fail("VSP Events screen loaded but neither events nor 'no events' message found");
+                return ""; // Unreachable, but keeps compiler happy
             }
         }
 
-        logger.info("VSP events found, verifying timezone display");
-
         String timestampText = WaitUtils.waitForVisibility(driver, timestampWithTime).getText();
-        logger.info("VSP Event timestamp displayed: {}", timestampText);
+        logger.info("Captured VSP Event timestamp: {}", timestampText);
+        return timestampText;
+    }
 
-        Assert.assertTrue(timestampText.matches("Today,\\s*\\d{1,2}:\\d{2}"),
-                "Timestamp should be in format 'Today, HH:MM' but was: " + timestampText);
+    public void verifyTimestampChangedAfterTimezoneChange(String initialTimestamp) {
+        String currentTimestamp = captureEventTimestamp();
 
-        WaitUtils.click(driver, firstEventInList);
+        if (initialTimestamp.isEmpty() || currentTimestamp.isEmpty()) {
+            throw new SkipException("SKIP: No VSP events available - cannot verify timezone change in events list. " +
+                                   "Timezone setting change is verified in profile, but event timestamp change cannot be confirmed.");
+        }
 
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, profileTimezone).isDisplayed(),
-                "Profile timezone label should be displayed in event details");
-
-        String timezoneValue = WaitUtils.waitForVisibility(driver, profileTimezoneValue).getText();
-        logger.info("Event details show profile timezone: {}", timezoneValue);
-
-        Assert.assertTrue(timezoneValue.contains("UTC") || timezoneValue.contains(":") || timezoneValue.matches(".*[+-]\\d{2}:\\d{2}.*"),
-                "Profile timezone should display UTC offset or time information, but was: " + timezoneValue);
-
-        WaitUtils.click(driver, closeEventDetailsButton);
+        Assert.assertNotEquals(currentTimestamp, initialTimestamp,
+                "VSP Event timestamp should change after timezone change. Before: " + initialTimestamp + ", After: " + currentTimestamp);
+        logger.info("Verified VSP Event timestamp changed from '{}' to '{}'", initialTimestamp, currentTimestamp);
     }
 }

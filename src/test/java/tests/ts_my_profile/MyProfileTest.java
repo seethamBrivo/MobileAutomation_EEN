@@ -2,6 +2,7 @@ package tests.ts_my_profile;
 
 import base.BaseTest;
 import constants.TestDataConstants;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -20,6 +21,9 @@ public class MyProfileTest extends BaseTest {
     private VSPEventsPage vspEventsPage;
     private VideoSearchPage videoSearchPage;
 
+    private String initialVSPTimestamp;
+    private String initialVideoSearchDate;
+
     @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToMyProfile() {
         loginAs(TestDataConstants.TS02_CREDS);
@@ -34,6 +38,24 @@ public class MyProfileTest extends BaseTest {
         final String invalidSearchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_INVALID_SEARCH_TERM);
         final String testTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.TEST_TIMEZONE);
 
+        Assert.assertEquals(testTimezone, "Etc/GMT+12",
+                "Test timezone must be Etc/GMT+12 per EEPD-TC-3920 requirements");
+        Assert.assertEquals(searchTerm, "Etc",
+                "Search term must match test timezone prefix to find Etc/GMT+12");
+
+        vspEventsPage = new VSPEventsPage(driver);
+        vspEventsPage.verifyVSPSectionVisible();
+        vspEventsPage.clickEvents();
+        vspEventsPage.verifyVSPEventsScreenDisplayed();
+        initialVSPTimestamp = vspEventsPage.captureEventTimestamp();
+        logger.info("Initial VSP timestamp (before timezone change): {}", initialVSPTimestamp);
+        videoSearchPage = new VideoSearchPage(driver);
+        videoSearchPage.navigateBackFromVSPEvents();
+        videoSearchPage.clickSearch();
+        initialVideoSearchDate = videoSearchPage.captureDateFieldText();
+        logger.info("Initial Video Search date (before timezone change): {}", initialVideoSearchDate);
+        devicesPage = new DevicesPage(driver);
+        myProfilePage = devicesPage.navigateToMyProfile();
         myProfilePage.clickProfileSection();
         myProfilePage.scrollToTimezoneOption();
         myProfilePage.clickTimezoneOption();
@@ -49,16 +71,14 @@ public class MyProfileTest extends BaseTest {
         timeZonePage.enterSearchTerm(testTimezone);
         timeZonePage.selectAndVerifyFirstTimezone(testTimezone);
         myProfilePage.verifyTimezoneChanged(testTimezone);
-        vspEventsPage = new VSPEventsPage(driver);
         vspEventsPage.navigateBackFromProfile();
         vspEventsPage.verifyVSPSectionVisible();
         vspEventsPage.clickEvents();
         vspEventsPage.verifyVSPEventsScreenDisplayed();
-        vspEventsPage.verifyVSPEventTimestampFormatDisplayed();
-        videoSearchPage = new VideoSearchPage(driver);
+        vspEventsPage.verifyTimestampChangedAfterTimezoneChange(initialVSPTimestamp);
         videoSearchPage.navigateBackFromVSPEvents();
         videoSearchPage.clickSearch();
-        videoSearchPage.verifyDateFieldDisplayed();
+        videoSearchPage.verifyDateFieldChangedAfterTimezoneChange(initialVideoSearchDate);
     }
 
     @AfterMethod(alwaysRun = true)

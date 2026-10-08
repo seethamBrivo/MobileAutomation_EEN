@@ -52,9 +52,9 @@ jobs:
               "bridge_valid_search_term": "Camera"
             },
             "timezone_data": {
-              "valid_timezone": "Alaska",
-              "test_timezone": "Calcutta",
-              "search_term": "US",
+              "valid_timezone": "Asia/Kolkata",
+              "test_timezone": "Etc/GMT+12",
+              "search_term": "Etc",
               "invalid_search_term": "XYZ_INVALID_TIMEZONE_12345"
             },
             "layout_data": {

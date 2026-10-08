@@ -30,17 +30,21 @@ public class VideoSearchPage {
         WaitUtils.click(driver, searchOption);
     }
 
-    public void verifyDateFieldDisplayed() {
+    public String captureDateFieldText() {
         String dateText = WaitUtils.waitForVisibility(driver, dateField).getText();
-        logger.info("Video search date/time displayed: {}", dateText);
 
         Assert.assertFalse(dateText.isEmpty(),
                 "Date field should contain date/time information");
 
-        Assert.assertTrue(dateText.matches(".*\\d+.*"),
-                "Date field should contain numeric date/time values, but was: " + dateText);
+        logger.info("Captured Video Search date: {}", dateText);
+        return dateText;
+    }
 
-        Assert.assertTrue(dateText.matches(".*[\\d/:,\\s-]+.*"),
-                "Date field should be in a recognizable date/time format, but was: " + dateText);
+    public void verifyDateFieldChangedAfterTimezoneChange(String initialDate) {
+        String currentDate = captureDateFieldText();
+
+        Assert.assertNotEquals(currentDate, initialDate,
+                "Video Search date should change after timezone change. Before: " + initialDate + ", After: " + currentDate);
+        logger.info("Verified Video Search date changed from '{}' to '{}'", initialDate, currentDate);
     }
 }
