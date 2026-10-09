@@ -3,6 +3,7 @@ package tests.ts_my_profile;
 import base.BaseTest;
 import constants.TestDataConstants;
 import org.testng.Assert;
+import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -82,28 +83,28 @@ public class MyProfileTest extends BaseTest {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void resetTimezone() {
-        if (driver == null) {
-            return;
-        }
-
+    public void resetTimezone(ITestResult testResult) {
         try {
-            final String resetTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.VALID_TIMEZONE);
-            devicesPage = new DevicesPage(driver);
-            devicesPage.recoverToDashboard();
-            driver.navigate().back(); // Exit Dashboard view to return to main screen with bottom nav
-            myProfilePage = devicesPage.navigateToMyProfile();
-            myProfilePage.clickProfileSection();
-            myProfilePage.scrollToTimezoneOption();
-            myProfilePage.clickTimezoneOption();
-            timeZonePage = new TimeZonePage(driver);
-            timeZonePage.enterSearchTerm(resetTimezone);
-            timeZonePage.selectAndVerifyFirstTimezone(resetTimezone);
-            myProfilePage.verifyTimezoneChanged(resetTimezone);
-            logger.info("Timezone reset to {} successfully", resetTimezone);
+            if (driver != null) {
+                final String resetTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.VALID_TIMEZONE);
+                devicesPage = new DevicesPage(driver);
+                devicesPage.recoverToDashboard();
+                driver.navigate().back(); // Exit Dashboard view to return to main screen with bottom nav
+                myProfilePage = devicesPage.navigateToMyProfile();
+                myProfilePage.clickProfileSection();
+                myProfilePage.scrollToTimezoneOption();
+                myProfilePage.clickTimezoneOption();
+                timeZonePage = new TimeZonePage(driver);
+                timeZonePage.enterSearchTerm(resetTimezone);
+                timeZonePage.selectAndVerifyFirstTimezone(resetTimezone);
+                myProfilePage.verifyTimezoneChanged(resetTimezone);
+                logger.info("Timezone reset to {} successfully", resetTimezone);
+            }
         } catch (Exception e) {
             logger.error("Failed to reset timezone for shared ts02 account. " +
                         "This may affect subsequent test runs. Error: {}", e.getMessage());
+        } finally {
+            super.tearDown(testResult);
         }
     }
 }
