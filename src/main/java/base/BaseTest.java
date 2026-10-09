@@ -94,10 +94,11 @@ public abstract class BaseTest {
         }
         try {
             resetAppStateForNextTest();
-            if (isBrowserStackExecution()) {
+        } finally {
+            // Update BrowserStack status before quitting driver - ensures status is reported even if cleanup fails
+            if (driver != null && isBrowserStackExecution()) {
                 updateBrowserStackStatus(testResult);
             }
-        } finally {
             DriverManager.quitDriver();
             driver = null;
             logger.info("Test teardown completed for {}", getClass().getSimpleName());

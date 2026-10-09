@@ -4,6 +4,7 @@ import base.BaseTest;
 import constants.TestDataConstants;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.ITestResult;
 import org.testng.annotations.Test;
 import pages.LayoutsPage;
 import utils.JsonDataReader;
@@ -62,16 +63,13 @@ public class LayoutsTest extends BaseTest {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown() {
-        if (!layoutCreated || uniqueLayoutName == null) {
-            logger.info("No layout created in this test, skipping teardown");
-            return;
-        }
-
+    public void tearDown(ITestResult testResult) {
         try {
-            if (driver != null) {
+            if (layoutCreated && uniqueLayoutName != null && driver != null) {
                 layoutsPage.deleteLayout(uniqueLayoutName);
                 logger.info("Successfully deleted layout '{}' in teardown", uniqueLayoutName);
+            } else {
+                logger.info("No layout created in this test, skipping cleanup");
             }
         } catch (org.openqa.selenium.NoSuchSessionException |
                  org.openqa.selenium.SessionNotCreatedException e) {
@@ -79,11 +77,11 @@ public class LayoutsTest extends BaseTest {
         } catch (org.openqa.selenium.WebDriverException e) {
             logger.warn("Teardown failed to delete layout '{}': {}", uniqueLayoutName, e.getMessage());
         } catch (Throwable t) {
-            // Catch AssertionError and any other throwables to prevent test suite abortion
             logger.error("Unexpected error during teardown for layout '{}': {}", uniqueLayoutName, t.getMessage());
         } finally {
             layoutCreated = false;
             uniqueLayoutName = null;
+            super.tearDown(testResult);
         }
     }
 }

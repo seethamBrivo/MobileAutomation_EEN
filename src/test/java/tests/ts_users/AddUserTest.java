@@ -3,6 +3,7 @@ package tests.ts_users;
 import base.BaseTest;
 import constants.TestDataConstants;
 import org.testng.annotations.AfterMethod;
+import org.testng.ITestResult;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.UsersPage;
@@ -62,20 +63,21 @@ public class AddUserTest extends BaseTest {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void cleanupTestData() {
-        if (driver == null || usersPage == null) {
-            return;
-        }
+    public void cleanupTestData(ITestResult testResult) {
         try {
-            usersPage.clickUsersOptionAtTheBottom();
-            if (existingUserEmail != null) {
-                usersPage.deleteUserIfExists(existingUserEmail);
-            }
-            if (generatedUserEmail != null) {
-                usersPage.deleteUserIfExists(generatedUserEmail);
+            if (driver != null && usersPage != null) {
+                usersPage.clickUsersOptionAtTheBottom();
+                if (existingUserEmail != null) {
+                    usersPage.deleteUserIfExists(existingUserEmail);
+                }
+                if (generatedUserEmail != null) {
+                    usersPage.deleteUserIfExists(generatedUserEmail);
+                }
             }
         } catch (Throwable t) {
             logger.warn("@AfterMethod: user cleanup failed: {}", t.toString());
+        } finally {
+            super.tearDown(testResult);
         }
     }
 }

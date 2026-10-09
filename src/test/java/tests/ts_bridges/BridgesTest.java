@@ -5,6 +5,7 @@ import constants.TestDataConstants;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.ITestResult;
 import org.testng.annotations.Test;
 import pages.BridgeSettingsPage;
 import pages.DevicesPage;
@@ -163,39 +164,43 @@ public class BridgesTest extends BaseTest {
     // ---- lifecycle helpers ----------------------------------------------------------------
 
     @AfterMethod(alwaysRun = true)
-    public void cleanupBridge() {
-        if (driver == null) {
-            return;
-        }
-        // Cleanup must never throw: an exception here is a TestNG configuration failure that
-        // skips every remaining test in the class. Page verify* methods throw AssertionError,
-        // which is not an Exception, hence Throwable.
-        if (renamedBridgeOriginalName != null) {
-            try {
-                devicesPage.recoverToDashboard();
-                devicesPage.clickBridgesTab();
-                devicesPage.verifyBridgeFoundInFilter(TestDataConstants.BRIDGE_PREFIX_UPDATED);
-                devicesPage.clickFirstBridge();
-                new BridgeSettingsPage(driver).renameBridge(renamedBridgeOriginalName);
-                logger.info("@AfterMethod: restored bridge name '{}'", renamedBridgeOriginalName);
-                renamedBridgeOriginalName = null;
-            } catch (Throwable t) {
-                logger.error("@AfterMethod: could not restore bridge name '{}': {}", renamedBridgeOriginalName, t.toString());
+    public void cleanupBridge(ITestResult testResult) {
+        try {
+            if (driver == null) {
+                return;
             }
-        }
-        if (testBridgeName != null) {
-            try {
-                devicesPage.recoverToDashboard();
-                devicesPage.clickBridgesTab();
-                if (devicesPage.tryDeleteBridge(testBridgeName, true)) {
-                    logger.info("@AfterMethod: cleaned up bridge '{}'", testBridgeName);
-                } else {
-                    logger.warn("@AfterMethod: bridge '{}' was not found for cleanup", testBridgeName);
+            // Cleanup must never throw: an exception here is a TestNG configuration failure that
+            // skips every remaining test in the class. Page verify* methods throw AssertionError,
+            // which is not an Exception, hence Throwable.
+            if (renamedBridgeOriginalName != null) {
+                try {
+                    devicesPage.recoverToDashboard();
+                    devicesPage.clickBridgesTab();
+                    devicesPage.verifyBridgeFoundInFilter(TestDataConstants.BRIDGE_PREFIX_UPDATED);
+                    devicesPage.clickFirstBridge();
+                    new BridgeSettingsPage(driver).renameBridge(renamedBridgeOriginalName);
+                    logger.info("@AfterMethod: restored bridge name '{}'", renamedBridgeOriginalName);
+                    renamedBridgeOriginalName = null;
+                } catch (Throwable t) {
+                    logger.error("@AfterMethod: could not restore bridge name '{}': {}", renamedBridgeOriginalName, t.toString());
                 }
-                testBridgeName = null;
-            } catch (Throwable t) {
-                logger.error("@AfterMethod: could not clean up bridge '{}': {}", testBridgeName, t.toString());
             }
+            if (testBridgeName != null) {
+                try {
+                    devicesPage.recoverToDashboard();
+                    devicesPage.clickBridgesTab();
+                    if (devicesPage.tryDeleteBridge(testBridgeName, true)) {
+                        logger.info("@AfterMethod: cleaned up bridge '{}'", testBridgeName);
+                    } else {
+                        logger.warn("@AfterMethod: bridge '{}' was not found for cleanup", testBridgeName);
+                    }
+                    testBridgeName = null;
+                } catch (Throwable t) {
+                    logger.error("@AfterMethod: could not clean up bridge '{}': {}", testBridgeName, t.toString());
+                }
+            }
+        } finally {
+            super.tearDown(testResult);
         }
     }
 

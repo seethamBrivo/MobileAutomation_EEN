@@ -4,6 +4,7 @@ import base.BaseTest;
 import constants.TestDataConstants;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.ITestResult;
 import org.testng.annotations.Test;
 import pages.CamerasPage;
 import pages.DevicesPage;
@@ -41,14 +42,15 @@ public class CameraContextMenuTest extends BaseTest {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void cleanup() {
-        if (driver == null) {
-            return;
-        }
+    public void cleanup(ITestResult testResult) {
         try {
-            camerasPage.dismissContextMenu();
+            if (driver != null) {
+                camerasPage.dismissContextMenu();
+            }
         } catch (Throwable t) {
             logger.warn("Cleanup: could not dismiss context menu: {}", t.toString());
+        } finally {
+            super.tearDown(testResult);
         }
     }
 }
