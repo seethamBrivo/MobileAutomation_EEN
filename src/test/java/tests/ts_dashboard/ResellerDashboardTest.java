@@ -11,6 +11,8 @@ import utils.TestDataGenerator;
 
 public class ResellerDashboardTest extends BaseTest {
 
+    private static final int MAX_CUSTOMER_ID_LENGTH = 120;
+
     private static final String INVALID_CUSTOMER_ID_ACCOUNT_NAME = "TestAccount_TC40220";
 
     private ResellerDashboardPage resellerDashboardPage;
@@ -91,8 +93,9 @@ public class ResellerDashboardTest extends BaseTest {
         resellerDashboardPage.verifyCloudPreviewOnlyToggleButtonDisplayed();
 
         // Verify Customer ID character limit validation
-        String customer_ID = getTestDataValue("customer_Id_Above_120_Characters");
-        resellerDashboardPage.enterCustomerId(customer_ID);
+        // Generated rather than read from testData: the CI-provided value was only 36 characters,
+        // so it never crossed the 120-character limit and no error appeared.
+        resellerDashboardPage.enterCustomerId("A".repeat(MAX_CUSTOMER_ID_LENGTH + 1));
         resellerDashboardPage.enterAccountName(INVALID_CUSTOMER_ID_ACCOUNT_NAME);
         resellerDashboardPage.clickAddOption();
         resellerDashboardPage.verifyMax120CharsErrorMessageDisplayed();

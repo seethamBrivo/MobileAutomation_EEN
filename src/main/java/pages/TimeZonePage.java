@@ -3,6 +3,9 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.nativekey.AndroidKey;
+import io.appium.java_client.android.nativekey.KeyEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -47,11 +50,23 @@ public class TimeZonePage {
         hideKeyboard();
     }
 
+    /**
+     * Dismisses the soft keyboard. {@code mobile: hideKeyboard} is a silent no-op on this Compose
+     * search field (the keyboard stayed up and covered the empty-state message in BrowserStack
+     * build #9), so fall back to BACK - which only closes the IME while it is showing.
+     */
     private void hideKeyboard() {
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (org.openqa.selenium.WebDriverException e) {
-            logger.debug("Keyboard already hidden or not present: {}", e.getMessage());
+            logger.debug("mobile: hideKeyboard failed: {}", e.getMessage());
+        }
+        try {
+            if (driver instanceof AndroidDriver androidDriver && androidDriver.isKeyboardShown()) {
+                androidDriver.pressKey(new KeyEvent(AndroidKey.BACK));
+            }
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.debug("Could not dismiss keyboard with BACK: {}", e.getMessage());
         }
     }
 
@@ -65,8 +80,11 @@ public class TimeZonePage {
     public void verifyEmptyStateDisplayed() {
         // The keyboard can reappear after the list re-filters and cover the empty-state message.
         hideKeyboard();
-        Assert.assertTrue(WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.FILTER_RESULT_TIMEOUT),
-                "Empty state message 'No results found' should be displayed");
+        // Fall back to presence: with the IME resizing the window the message can sit below the
+        // visible area even though it is rendered.
+        boolean shown = WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.FILTER_RESULT_TIMEOUT)
+                || WaitUtils.isPresent(driver, emptyStateMessage);
+        Assert.assertTrue(shown, "Empty state message 'No results found' should be displayed");
     }
 
     public void clearSearchField() {

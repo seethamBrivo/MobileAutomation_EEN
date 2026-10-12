@@ -18,6 +18,12 @@ public final class TimeoutConstants {
     /** Budget for "is this optional element on screen?" probes (snackbars, status labels). */
     public static final Duration SHORT_TIMEOUT = Duration.ofSeconds(3);
 
+    /** How long a list screen may show loading skeletons before its first rows arrive. */
+    public static final Duration LIST_LOAD_TIMEOUT = Duration.ofSeconds(30);
+
+    /** How long a details screen may show loading skeletons before it is closed and re-opened. */
+    public static final Duration DETAILS_LOAD_TIMEOUT = Duration.ofSeconds(15);
+
     /** Budget for a list to re-render after typing into its filter field. */
     public static final Duration FILTER_RESULT_TIMEOUT = Duration.ofSeconds(5);
 

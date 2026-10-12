@@ -34,6 +34,7 @@ public class UsersPage {
     private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
     private final By backButton = AppiumBy.id("com.een.vms.android:id/img_back");
 
+    private static final int DETAILS_OPEN_ATTEMPTS = 3;
     private static final String END_ICON_DESC = "_user_details_container_end_icon";
 
     public UsersPage(AppiumDriver driver) {
@@ -224,11 +225,33 @@ public class UsersPage {
     }
 
     private void deleteListedUser(String email) {
-        WaitUtils.click(driver, userRowEndIcon(email));
-        WaitUtils.waitForVisibility(driver, deleteUserOption);
+        openUserDetailsWithDelete(email);
         WaitUtils.click(driver, deleteUserOption);
         WaitUtils.waitForVisibility(driver, confirmDeleteUserOption);
         WaitUtils.click(driver, confirmDeleteUserOption);
         WaitUtils.waitForVisibility(driver, filterForUsersSearchbar);
+    }
+
+    /**
+     * Opens the details screen of the listed row until its delete option shows. The details of a
+     * just-created user can stay on loading skeletons indefinitely (BrowserStack build #9), so a
+     * screen that does not finish loading is closed and the row re-opened instead of waiting longer.
+     */
+    private void openUserDetailsWithDelete(String email) {
+        for (int attempt = 1; attempt <= DETAILS_OPEN_ATTEMPTS; attempt++) {
+            WaitUtils.click(driver, userRowEndIcon(email));
+            if (WaitUtils.isVisible(driver, deleteUserOption, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
+                return;
+            }
+            logger.warn("Details of {} did not finish loading (attempt {}/{})", email, attempt, DETAILS_OPEN_ATTEMPTS);
+            if (attempt < DETAILS_OPEN_ATTEMPTS) {
+                driver.navigate().back();
+                if (!WaitUtils.isVisible(driver, userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT)) {
+                    filterForUsersSearchbar(email);
+                    WaitUtils.waitForVisibility(driver, userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
+                }
+            }
+        }
+        Assert.fail("Delete option never appeared on the details screen of " + email);
     }
 }
