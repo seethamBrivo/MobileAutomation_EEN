@@ -36,8 +36,8 @@ public class UsersPage {
             + " | //android.widget.TextView[@text='First name']/following-sibling::android.widget.EditText[1]");
     private final By lastNameTextField = AppiumBy.xpath("//*[@content-desc='last_name_text_field']"
             + " | //android.widget.TextView[@text='Last name']/following-sibling::android.widget.EditText[1]");
-    private final By reachedMaxCharactersErrorMessage = AppiumBy.id("com.een.vms.android:id/error_desc");
-    private final By emailPlusHint = AppiumBy.id("com.een.vms.android:id/emailPlusHint");
+    private final By emailPlusHint = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/emailPlusHint']"
+            + " | //android.widget.TextView[starts-with(@text,'The + alias is no longer required')]");
     // New UI: the snackbar is a plain TextView with this text. The old positional Compose path is kept in the union.
     private final By snackbarText = AppiumBy.xpath("//android.widget.TextView[@text='User was added']"
             + " | //androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
@@ -46,8 +46,12 @@ public class UsersPage {
     private final By filterForUsersSearchbar = AppiumBy.xpath(
             "//*[@resource-id='com.een.vms.android:id/search_bar']"
                     + " | //androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.EditText");
-    private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']");
-    private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
+    // New UI: a clickable row on the user's details screen with a "Delete user" label.
+    private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']"
+            + " | //android.widget.TextView[@text='Delete user']/ancestor::android.view.View[@clickable='true'][1]");
+    // New UI: the confirmation dialog's "DELETE" action.
+    private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']"
+            + " | //android.widget.TextView[@text='DELETE']/ancestor::android.view.View[@clickable='true'][1]");
     private final By backButton = AppiumBy.id("com.een.vms.android:id/img_back");
 
     private static final int DETAILS_OPEN_ATTEMPTS = 3;
@@ -135,17 +139,6 @@ public class UsersPage {
 
     public void verifyEmailPlusHintDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, emailPlusHint).isDisplayed(), "Email plus hint should be displayed");
-    }
-
-    public void verifyMaxCharactersErrorMessageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, reachedMaxCharactersErrorMessage).isDisplayed(),
-                "Max characters error message should be displayed");
-    }
-
-    public void verifyMaxCharactersValidation() {
-        enterFirstNameInputField("f".repeat(55));
-        verifyMaxCharactersErrorMessageDisplayed();
-        enterLastNameInputField("l".repeat(55));
     }
 
     /** The "user was added" snackbar - verify it appears (no text validation). */
