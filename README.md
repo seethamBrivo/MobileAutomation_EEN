@@ -109,6 +109,20 @@ mvn test -Dplatform=android -Dgroups=profile       # only profile tests
 mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackBuildName="My Build"
 ```
 
+### Retrying failed tests
+
+Every `@Test` is re-run once if it fails (`listeners.RetryAnalyzer`, attached by
+`listeners.RetryTransformer` in `testng.xml`). Each attempt gets a fresh Appium session, and a
+failed attempt keeps its screenshot in the report and is marked failed in BrowserStack.
+
+```bash
+mvn test -Dplatform=android -DretryCount=2   # up to 2 extra attempts
+mvn test -Dplatform=android -DretryCount=0   # disable retries
+```
+
+TestNG does not retry failed `@BeforeMethod` methods; login has its own retry in `LoginPage.loginAs`.
+A test that only passes on retry is flaky: check the earlier attempt's session before ignoring it.
+
 ## Test Cases
 
 Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
