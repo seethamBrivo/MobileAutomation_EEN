@@ -64,6 +64,10 @@ public class TestListener implements ITestListener {
 
     @Override
     public void onTestFailure(ITestResult result) {
+        logFailure(result);
+    }
+
+    private void logFailure(ITestResult result) {
         ensureTestNode(result);
         byte[] screenshot;
         try {
@@ -88,6 +92,12 @@ public class TestListener implements ITestListener {
 
     @Override
     public void onTestSkipped(ITestResult result) {
+        if (result.wasRetried()) {
+            // TestNG reports a failed attempt that will be retried as SKIP; keep its screenshot and error.
+            logFailure(result);
+            ExtentManager.getTest().log(Status.WARNING, "Attempt failed; the test is being retried");
+            return;
+        }
         ensureTestNode(result);
         ExtentManager.getTest().log(Status.SKIP, result.getThrowable());
     }

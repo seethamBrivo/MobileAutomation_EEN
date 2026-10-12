@@ -152,7 +152,8 @@ public abstract class BaseTest {
             JavascriptExecutor jse = (JavascriptExecutor) driver;
             if (testResult.getStatus() == ITestResult.SUCCESS) {
                 jse.executeScript("browserstack_executor: {\"action\": \"setSessionStatus\", \"arguments\": {\"status\": \"passed\", \"reason\": \"Test passed successfully\"}}");
-            } else if (testResult.getStatus() == ITestResult.FAILURE) {
+            } else if (testResult.getStatus() == ITestResult.FAILURE || testResult.wasRetried()) {
+                // A failed attempt that is about to be retried is reported by TestNG as SKIP.
                 String reason = testResult.getThrowable() != null ? testResult.getThrowable().getMessage() : "Test failed";
                 if (reason != null) {
                     reason = reason.replaceAll("[\"\\\\\r\n]", " ");
