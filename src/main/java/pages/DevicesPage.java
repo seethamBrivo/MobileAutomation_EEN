@@ -101,6 +101,12 @@ public class DevicesPage {
     }
 
     public void clickBridgesTab() {
+        // The dashboard shows skeleton rows ("0 devices") until the device list loads, which took longer
+        // than the default 20s in BrowserStack build #22. Wait for it, then reload the dashboard once.
+        if (!WaitUtils.isVisible(driver, bridgesTab, TimeoutConstants.LIST_LOAD_TIMEOUT)) {
+            logger.warn("Bridges tile not shown after {}; reloading the dashboard", TimeoutConstants.LIST_LOAD_TIMEOUT);
+            navigateToDashboard();
+        }
         WaitUtils.click(driver, bridgesTab);
     }
 
