@@ -8,6 +8,14 @@
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
     </listeners>
 
+    <!-- Pure unit tests of framework code: no device, no BrowserStack session. -->
+    <test name="Framework Unit Tests">
+        <classes>
+            <class name="listeners.RetryAnalyzerTest"/>
+            <class name="listeners.RetryTransformerTest"/>
+        </classes>
+    </test>
+
     <test name="Reseller Dashboard Tests">
         <classes>
             <class name="tests.ts_dashboard.ResellerDashboardTest"/>

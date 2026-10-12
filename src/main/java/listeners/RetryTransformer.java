@@ -10,9 +10,18 @@ public class RetryTransformer implements IAnnotationTransformer {
 
     @Override
     public void transform(ITestAnnotation annotation, Class testClass, Constructor testConstructor, Method testMethod) {
-        if (annotation.getRetryAnalyzerClass() == null
-                || annotation.getRetryAnalyzerClass().getName().equals("org.testng.internal.annotations.DisabledRetryAnalyzer")) {
+        if (!hasOwnRetryAnalyzer(annotation.getRetryAnalyzerClass())) {
             annotation.setRetryAnalyzer(RetryAnalyzer.class);
         }
+    }
+
+    /**
+     * An unset analyzer is either null or TestNG's internal "disabled" placeholder. Rather than
+     * matching that placeholder's exact name (a TestNG upgrade could rename it and silently turn
+     * retries off), treat any analyzer that ships inside TestNG as "not declared by the test".
+     * RetryTransformerTest guards this against upgrades.
+     */
+    static boolean hasOwnRetryAnalyzer(Class<?> analyzer) {
+        return analyzer != null && !analyzer.getName().startsWith("org.testng.");
     }
 }
