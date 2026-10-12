@@ -9,6 +9,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -89,6 +90,14 @@ public final class WaitUtils {
                 return;
             } catch (StaleElementReferenceException | InvalidElementStateException e) {
                 if (attempt == 2) {
+                    throw e;
+                }
+            } catch (WebDriverException e) {
+                // Appium restores the input method after typing with `adb shell ime set <id>`; on a
+                // device where the original IME is unknown that runs as a bare `ime set` and fails
+                // (build #11, BridgesTest rename). Retry the whole clear+type instead of failing.
+                String message = e.getMessage() == null ? "" : e.getMessage();
+                if (attempt == 3 || !message.contains("shell ime set")) {
                     throw e;
                 }
             }
