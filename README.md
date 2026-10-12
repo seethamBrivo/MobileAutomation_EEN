@@ -109,6 +109,25 @@ mvn test -Dplatform=android -Dgroups=profile       # only profile tests
 mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackBuildName="My Build"
 ```
 
+### BrowserStack SDK (optional)
+
+The default BrowserStack run builds its own capabilities and reports status itself. Adding the
+BrowserStack SDK on top gives Test Reporting & Analytics (smart reporting, failure analysis, debugging)
+and lets BrowserStack name builds/sessions and mark statuses.
+
+```bash
+export BROWSERSTACK_USERNAME=... BROWSERSTACK_ACCESS_KEY=... BROWSERSTACK_APP_URL=bs://...
+mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackSdk=true
+```
+
+- `-DbrowserstackSdk=true` activates the `browserstack-sdk` Maven profile (SDK dependency + `-javaagent`).
+  Without it nothing changes and `browserstack.yml` is ignored.
+- Config lives in `browserstack.yml` (device, `parallelsPerPlatform`, project/build names, observability).
+  Credentials and the app URL come from the environment variables above, never from the file.
+- In SDK mode `DriverManager` stops sending `bstack:options`; the SDK supplies them.
+- In CI: Actions > CI > Run workflow > tick `use_sdk` (the push-to-main run stays on the default path).
+- `parallelsPerPlatform: 1` keeps the run sequential. Do not combine `-DthreadCount` with a higher value.
+
 ### Retrying failed tests
 
 Every `@Test` is re-run once if it fails (`listeners.RetryAnalyzer`, attached by

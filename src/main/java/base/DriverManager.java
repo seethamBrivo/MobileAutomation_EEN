@@ -205,6 +205,13 @@ public final class DriverManager {
         if (!isBrowserStackExecution()) {
             return;
         }
+        if (isBrowserStackSdkMode()) {
+            // The BrowserStack SDK injects credentials, project/build/session names and the
+            // debug/network-log flags from browserstack.yml; setting them here would be ignored at
+            // best and would need credentials that the SDK run keeps in the environment.
+            LOGGER.info("BrowserStack SDK mode: bstack:options are supplied by browserstack.yml");
+            return;
+        }
 
         Map<String, Object> browserStackOptions = new LinkedHashMap<>();
         browserStackOptions.put("userName", requireProperty("browserstackUserName"));
@@ -279,6 +286,11 @@ public final class DriverManager {
     private static String getExecutionProvider() {
         String provider = ConfigReader.getProperty("executionProvider");
         return isValidProperty(provider) ? provider.trim().toLowerCase() : "local";
+    }
+
+    /** True when the run was started with {@code -DbrowserstackSdk=true} (the SDK javaagent is attached). */
+    private static boolean isBrowserStackSdkMode() {
+        return "true".equalsIgnoreCase(System.getProperty("browserstackSdk", "").trim());
     }
 
     private static boolean isBrowserStackExecution() {

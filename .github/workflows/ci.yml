@@ -4,6 +4,11 @@ on:
   push:
     branches: [main, master]  # Runs only when code is merged to main/master
   workflow_dispatch:  # Allows manual trigger from GitHub UI
+    inputs:
+      use_sdk:
+        description: 'Run through the BrowserStack SDK (browserstack.yml) instead of direct capabilities'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -110,7 +115,13 @@ jobs:
       - name: Run tests
         # Note: continue-on-error removed intentionally to ensure CI fails on test failures
         # This prevents merging broken code and ensures all tests pass before merge
-        run: mvn test -Dplatform=android -DexecutionProvider=browserstack
+        env:
+          # Read by the BrowserStack SDK when use_sdk is set; ignored otherwise.
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          BROWSERSTACK_APP_URL: ${{ secrets.BROWSERSTACK_APP_URL }}
+          BROWSERSTACK_BUILD_NUMBER: ${{ github.run_number }}
+        run: mvn test -Dplatform=android -DexecutionProvider=browserstack ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
 
       - name: Upload test results
         if: always()

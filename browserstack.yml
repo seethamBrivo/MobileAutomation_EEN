@@ -1,0 +1,35 @@
+# BrowserStack SDK configuration. Only used when running with -DbrowserstackSdk=true
+# (see the browserstack-sdk profile in pom.xml). Without that flag the framework builds its own
+# capabilities from config.properties / android.properties and this file is ignored.
+#
+# Credentials and the app come from the environment, never from this file:
+#   BROWSERSTACK_USERNAME, BROWSERSTACK_ACCESS_KEY, BROWSERSTACK_APP_URL (bs://...)
+userName: ${BROWSERSTACK_USERNAME}
+accessKey: ${BROWSERSTACK_ACCESS_KEY}
+
+framework: testng
+app: ${BROWSERSTACK_APP_URL}
+
+projectName: EEN Mobile Automation
+buildName: CI SDK Build
+buildIdentifier: '#${BROWSERSTACK_BUILD_NUMBER}'
+
+# Same device the direct-capability CI run uses.
+platforms:
+  - platformName: android
+    deviceName: Google Pixel 9
+    platformVersion: "15.0"
+
+# 1 = sequential, like the default run. The suite shares accounts and one bridge attach ID, so raise
+# this only after checking which test blocks can safely overlap (the plan allows 2 parallels).
+parallelsPerPlatform: 1
+
+# Test Reporting & Analytics: smart reporting, failure analysis, debugging.
+testObservability: true
+testObservabilityOptions:
+  projectName: EEN Mobile Automation
+  buildName: CI SDK Build
+
+debug: true
+networkLogs: true
+browserstackLocal: false
