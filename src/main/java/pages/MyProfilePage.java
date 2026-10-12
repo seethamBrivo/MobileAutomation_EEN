@@ -7,7 +7,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.testng.Assert;
+import utils.ConfigReader;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class MyProfilePage {
@@ -16,9 +18,21 @@ public class MyProfilePage {
     private final AppiumDriver driver;
 
     // Stable: Profile section is always first [1] child in ScrollView on My Profile screen
-    private final By profileSection = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.view.View");
-    private final By timezoneOption = AppiumBy.xpath("//android.widget.TextView[@text='Time zone']");
-    private final By currentTimezoneValue = AppiumBy.xpath("//android.widget.TextView[@text='Time zone']/following-sibling::android.widget.TextView[1]");
+    private final By profileSection = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.view.View"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[1]/XCUIElementTypeOther")
+    );
+    private final By timezoneOption = PlatformLocator.byText("Time zone");
+    private final By currentTimezoneValue = buildCurrentTimezoneLocator();
+
+    private By buildCurrentTimezoneLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeStaticText' AND visible == 1");
+        }
+        return AppiumBy.xpath("//android.widget.TextView[@text='Time zone']/following-sibling::android.widget.TextView[1]");
+    }
 
     public MyProfilePage(AppiumDriver driver) {
         this.driver = driver;

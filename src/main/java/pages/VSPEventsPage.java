@@ -8,6 +8,8 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.testng.Assert;
 import org.testng.SkipException;
+import utils.ConfigReader;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class VSPEventsPage {
@@ -16,17 +18,32 @@ public class VSPEventsPage {
     private final AppiumDriver driver;
 
     // Stable: ProfileMain back button at fixed position [2] in profile screen
-    private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ProfileMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
-    private final By vspSection = AppiumBy.xpath("//android.widget.TextView[@text='VSP']");
-    private final By eventsOption = AppiumBy.xpath("//android.widget.TextView[@text='Events']");
-    private final By vspEventsHeading = AppiumBy.xpath("//android.widget.TextView[@text='VSP Events']");
+    private final By backButton = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ProfileMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View"),
+        AppiumBy.accessibilityId("backButton")
+    );
+    private final By vspSection = PlatformLocator.byText("VSP");
+    private final By eventsOption = PlatformLocator.byText("Events");
+    private final By vspEventsHeading = PlatformLocator.byText("VSP Events");
     // Scoped to VspMain screen - timestamp pattern specific to event list (Today, HH:MM format)
-    private final By timestampWithTime = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]//android.widget.TextView[contains(@text, 'Today,') and contains(@text, ':')]");
+    private final By timestampWithTime = buildTimestampLocator();
     // Stable: First event card at position [4][1] in VspMain event list
-    private final By firstEventInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]/android.view.View");
+    private final By firstEventInList = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]/android.view.View"),
+        AppiumBy.accessibilityId("firstEventCard")
+    );
     // No events messages - displayed when VSP event list is empty
-    private final By noEventsMessage = AppiumBy.xpath("//android.widget.TextView[@text='No license plate events yet']");
-    private final By zeroEventsMessage = AppiumBy.xpath("//android.widget.TextView[@text='0 license plate events']");
+    private final By noEventsMessage = PlatformLocator.byText("No license plate events yet");
+    private final By zeroEventsMessage = PlatformLocator.byText("0 license plate events");
+
+    private By buildTimestampLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeStaticText' AND label CONTAINS 'Today,' AND label CONTAINS ':'");
+        }
+        return AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]//android.widget.TextView[contains(@text, 'Today,') and contains(@text, ':')]");
+    }
 
     public VSPEventsPage(AppiumDriver driver) {
         this.driver = driver;

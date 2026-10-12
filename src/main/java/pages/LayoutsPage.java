@@ -10,6 +10,8 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.ConfigReader;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class LayoutsPage {
@@ -17,36 +19,68 @@ public class LayoutsPage {
     private static final Logger logger = LogManager.getLogger(LayoutsPage.class);
     private final AppiumDriver driver;
 
-    private final By allCamerasTab = AppiumBy.accessibilityId("cell_at_0_layout_tab");
-    private final By firstLayoutTab = AppiumBy.accessibilityId("cell_at_1_layout_tab");
-    private final By threeDotsMenuButton = AppiumBy.id("com.een.vms.android:id/img_more");
-    private final By addCamerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Add cameras']");
-    private final By newLayoutOption = AppiumBy.xpath("//android.widget.TextView[@text='New layout']");
-    private final By editLayoutOption = AppiumBy.xpath("//android.widget.TextView[@text='Edit layout']");
-    private final By layoutSettingsOption = AppiumBy.xpath("//android.widget.TextView[@text='Layout settings']");
-    private final By mapViewOption = AppiumBy.xpath("//android.widget.TextView[@text='Map view']");
-    private final By zoomInOption = AppiumBy.xpath("//android.widget.TextView[@text='Zoom in']");
-    private final By zoomOutOption = AppiumBy.xpath("//android.widget.TextView[@text='Zoom out']");
-    private final By layoutNameLabel = AppiumBy.accessibilityId("row_name_header");
-    private final By layoutNameEditField = AppiumBy.accessibilityId("row_name_dj0");
-    private final By aspectRatio16_9 = AppiumBy.xpath("//android.widget.TextView[@text='16:9']");
-    private final By aspectRatio4_3 = AppiumBy.xpath("//android.widget.TextView[@text='4:3']");
-    private final By showCameraTitleBarsToggle = AppiumBy.accessibilityId("row_show_cameras_title_item_switch");
-    private final By addCamerasIcon = AppiumBy.accessibilityId("row_add_cameras_end_icon");
-    private final By selectCamera = AppiumBy.accessibilityId("cell_at_0_add_camera_check_box");
-    private final By saveButton = AppiumBy.xpath("//android.widget.TextView[@text='Save']");
-    private final By addButton = AppiumBy.xpath("//android.widget.TextView[@text='Add']");
-    private final By successMessage = AppiumBy.id("com.een.vms.android:id/snackbar_text");
-    private final By filterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
-    private final By layoutsTab = AppiumBy.xpath("//android.widget.TextView[@text='LAYOUTS']");
-    private final By searchBar = AppiumBy.id("com.een.vms.android:id/search_bar");
-    private final By deleteButton = AppiumBy.accessibilityId("delete_header");
-    private final By confirmButton = AppiumBy.accessibilityId("negative_button");
-    private final By cameraPreviewCards = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
-    private final By cameraPreviewImages = AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']");
-    private final By cameraTimestamps = AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 3 and string-length(@text) < 25 and (contains(@text, '0') or contains(@text, '1') or contains(@text, '2') or contains(@text, '3') or contains(@text, '4') or contains(@text, '5') or contains(@text, '6') or contains(@text, '7') or contains(@text, '8') or contains(@text, '9'))]");
+    private final By allCamerasTab = PlatformLocator.byAccessibilityId("cell_at_0_layout_tab");
+    private final By firstLayoutTab = PlatformLocator.byAccessibilityId("cell_at_1_layout_tab");
+    private final By threeDotsMenuButton = PlatformLocator.byId("com.een.vms.android:id/img_more", "moreMenuButton");
+    private final By addCamerasOption = PlatformLocator.byText("Add cameras");
+    private final By newLayoutOption = PlatformLocator.byText("New layout");
+    private final By editLayoutOption = PlatformLocator.byText("Edit layout");
+    private final By layoutSettingsOption = PlatformLocator.byText("Layout settings");
+    private final By mapViewOption = PlatformLocator.byText("Map view");
+    private final By zoomInOption = PlatformLocator.byText("Zoom in");
+    private final By zoomOutOption = PlatformLocator.byText("Zoom out");
+    private final By layoutNameLabel = PlatformLocator.byAccessibilityId("row_name_header");
+    private final By layoutNameEditField = PlatformLocator.byAccessibilityId("row_name_dj0");
+    private final By aspectRatio16_9 = PlatformLocator.byText("16:9");
+    private final By aspectRatio4_3 = PlatformLocator.byText("4:3");
+    private final By showCameraTitleBarsToggle = PlatformLocator.byAccessibilityId("row_show_cameras_title_item_switch");
+    private final By addCamerasIcon = PlatformLocator.byAccessibilityId("row_add_cameras_end_icon");
+    private final By selectCamera = PlatformLocator.byAccessibilityId("cell_at_0_add_camera_check_box");
+    private final By saveButton = PlatformLocator.byText("Save");
+    private final By addButton = PlatformLocator.byText("Add");
+    private final By successMessage = PlatformLocator.byId("com.een.vms.android:id/snackbar_text", "successMessage");
+    private final By filterIcon = PlatformLocator.byId("com.een.vms.android:id/img_search", "searchIcon");
+    private final By layoutsTab = PlatformLocator.byText("LAYOUTS");
+    private final By searchBar = PlatformLocator.byId("com.een.vms.android:id/search_bar", "searchBar");
+    private final By deleteButton = PlatformLocator.byAccessibilityId("delete_header");
+    private final By confirmButton = PlatformLocator.byAccessibilityId("negative_button");
+    private final By cameraPreviewCards = buildCameraPreviewCardsLocator();
+    private final By cameraPreviewImages = buildCameraPreviewImagesLocator();
+    private final By cameraTimestamps = buildCameraTimestampsLocator();
+
+    private By buildCameraPreviewCardsLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.accessibilityId("cameraPreviewCard");
+        }
+        return AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']");
+    }
+
+    private By buildCameraPreviewImagesLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.accessibilityId("cameraPreviewImage");
+        }
+        return AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']");
+    }
+
+    private By buildCameraTimestampsLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeStaticText' AND label CONTAINS ':' AND " +
+                "label.length > 3 AND label.length < 25");
+        }
+        return AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 3 and string-length(@text) < 25 and (contains(@text, '0') or contains(@text, '1') or contains(@text, '2') or contains(@text, '3') or contains(@text, '4') or contains(@text, '5') or contains(@text, '6') or contains(@text, '7') or contains(@text, '8') or contains(@text, '9'))]");
+    }
 
     private By layoutByName(String layoutName) {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                String.format("type == 'XCUIElementTypeOther' AND label CONTAINS '%s'",
+                    layoutName.replace("'", "\\'")));
+        }
         String xpathValue = buildXPathStringLiteral(layoutName);
         return AppiumBy.xpath("//androidx.recyclerview.widget.RecyclerView[@resource-id='com.een.vms.android:id/recycler']"
                 + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, " + xpathValue + ")]]");
@@ -79,7 +113,7 @@ public class LayoutsPage {
         if (count < 1 || count > 6) {
             throw new IllegalArgumentException("Invalid camera count for locator: " + count + " (must be 1-6)");
         }
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + count + "']");
+        return PlatformLocator.byText(String.valueOf(count));
     }
 
     public LayoutsPage(AppiumDriver driver) {

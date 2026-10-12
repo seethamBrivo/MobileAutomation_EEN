@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.ConfigReader;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class TimeZonePage {
@@ -18,14 +20,23 @@ public class TimeZonePage {
     private static final Logger logger = LogManager.getLogger(TimeZonePage.class);
     private final AppiumDriver driver;
 
-    private final By timezonePopup = AppiumBy.xpath("//android.widget.TextView[@text='Time zone']");
+    private final By timezonePopup = PlatformLocator.byText("Time zone");
     // EditText in timezone picker - only one EditText exists on the timezone selection screen
     // Verified safe: search bar appears only after clicking timezone option, no other EditText present
-    private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
-    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text='Filter for time zones']");
+    private final By searchBar = PlatformLocator.byInputField(null);
+    private final By searchPlaceholder = PlatformLocator.byText("Filter for time zones");
     // First timezone result - scoped by timezone format pattern (contains '/')
-    private final By firstTimezoneInList = AppiumBy.xpath("(//android.widget.TextView[contains(@text, '/')])[1]");
-    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text='No results found']");
+    private final By firstTimezoneInList = buildFirstTimezoneLocator();
+    private final By emptyStateMessage = PlatformLocator.byText("No results found");
+
+    private By buildFirstTimezoneLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeStaticText' AND label CONTAINS '/' AND visible == 1");
+        }
+        return AppiumBy.xpath("(//android.widget.TextView[contains(@text, '/')])[1]");
+    }
 
     public TimeZonePage(AppiumDriver driver) {
         this.driver = driver;

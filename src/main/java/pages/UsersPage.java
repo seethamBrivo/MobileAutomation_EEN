@@ -8,6 +8,8 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.ConfigReader;
+import utils.PlatformLocator;
 import utils.TestDataGenerator;
 import utils.WaitUtils;
 
@@ -16,23 +18,38 @@ public class UsersPage {
     private static final Logger logger = LogManager.getLogger(UsersPage.class);
     private final AppiumDriver driver;
 
-    private final By usersOptionAtTheBottomOfTheScreen = AppiumBy.xpath("//android.widget.TextView[@text='Users']");
-    private final By usersAddIconAtTheTopRightCorner = AppiumBy.id("com.een.vms.android:id/img_custom");
-    private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/header' and @text='New user']");
-    private final By emailTextInputField = AppiumBy.accessibilityId("email_text_field");
-    private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/error_desc' and @text='Enter a valid email address']");
-    private final By addButton = AppiumBy.id("com.een.vms.android:id/btn_text");
-    private final By firstNameTextField = AppiumBy.accessibilityId("first_name_text_field");
-    private final By lastNameTextField = AppiumBy.accessibilityId("last_name_text_field");
-    private final By reachedMaxCharactersErrorMessage = AppiumBy.id("com.een.vms.android:id/error_desc");
-    private final By emailPlusHint = AppiumBy.id("com.een.vms.android:id/emailPlusHint");
+    private final By usersOptionAtTheBottomOfTheScreen = PlatformLocator.byText("Users");
+    private final By usersAddIconAtTheTopRightCorner = PlatformLocator.byId("com.een.vms.android:id/img_custom", "addUserButton");
+    private final By newUserHeading = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/header' and @text='New user']"),
+        PlatformLocator.byText("New user")
+    );
+    private final By emailTextInputField = PlatformLocator.byAccessibilityId("email_text_field");
+    private final By enterValidEmailAddressErrorMessage = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/error_desc' and @text='Enter a valid email address']"),
+        PlatformLocator.byText("Enter a valid email address")
+    );
+    private final By addButton = PlatformLocator.byId("com.een.vms.android:id/btn_text", "addButton");
+    private final By firstNameTextField = PlatformLocator.byAccessibilityId("first_name_text_field");
+    private final By lastNameTextField = PlatformLocator.byAccessibilityId("last_name_text_field");
+    private final By reachedMaxCharactersErrorMessage = PlatformLocator.byId("com.een.vms.android:id/error_desc", "errorDescription");
+    private final By emailPlusHint = PlatformLocator.byId("com.een.vms.android:id/emailPlusHint", "emailPlusHint");
     // TODO: Replace with proper resource-id or content-desc when mobile team adds snackbar identifiers
-    private final By snackbarText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
-    private final By usersSearchFilterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
-    private final By filterForUsersSearchbar = AppiumBy.id("com.een.vms.android:id/search_bar");
-    private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']");
-    private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
-    private final By backButton = AppiumBy.id("com.een.vms.android:id/img_back");
+    private final By snackbarText = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]"),
+        AppiumBy.accessibilityId("snackbarMessage")
+    );
+    private final By usersSearchFilterIcon = PlatformLocator.byId("com.een.vms.android:id/img_search", "searchIcon");
+    private final By filterForUsersSearchbar = PlatformLocator.byId("com.een.vms.android:id/search_bar", "searchBar");
+    private final By deleteUserOption = PlatformLocator.get(
+        AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']"),
+        AppiumBy.accessibilityId("delete_header_content")
+    );
+    private final By confirmDeleteUserOption = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']"),
+        AppiumBy.accessibilityId("negative_button")
+    );
+    private final By backButton = PlatformLocator.byId("com.een.vms.android:id/img_back", "backButton");
 
     private static final int DETAILS_OPEN_ATTEMPTS = 3;
     private static final String END_ICON_DESC = "_user_details_container_end_icon";
@@ -43,7 +60,7 @@ public class UsersPage {
 
     /** The list row showing exactly this e-mail. */
     private static By userRowText(String email) {
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']");
+        return PlatformLocator.byText(email);
     }
 
     /**
@@ -51,6 +68,10 @@ public class UsersPage {
      * e-mail label that also contains an end icon is the row itself.
      */
     private static By userRowEndIcon(String email) {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.accessibilityId(END_ICON_DESC);
+        }
         return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']"
                 + "/ancestor::*[.//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']][1]"
                 + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']");

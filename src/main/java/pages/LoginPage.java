@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import utils.ConfigReader;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class LoginPage {
@@ -18,12 +19,24 @@ public class LoginPage {
     private static final String DEFAULT_APP_ACTIVITY = "com.een.core.MainActivity";
 
     private final AppiumDriver driver;
-    private final By signInButton = AppiumBy.accessibilityId("sign_in_btn_button");
-    private final By emailInputField = AppiumBy.className("android.widget.EditText");
-    private final By nextButton = AppiumBy.xpath("//android.widget.Button[@text=\"Next\"]");
-    private final By passwordField = AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]");
-    private final By signInButtonToLogin = AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]");
-    private final By noThanksOptionInBiometricsAuthenticationPopUp = AppiumBy.id("com.een.vms.android:id/positive_button");
+    private final By signInButton = PlatformLocator.byAccessibilityId("sign_in_btn_button");
+    private final By emailInputField = PlatformLocator.get(
+        AppiumBy.className("android.widget.EditText"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeTextField[1]")
+    );
+    private final By nextButton = PlatformLocator.byButton("Next");
+    private final By passwordField = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]"),
+        AppiumBy.accessibilityId("authentication--input__password")
+    );
+    private final By signInButtonToLogin = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]"),
+        AppiumBy.accessibilityId("next")
+    );
+    private final By noThanksOptionInBiometricsAuthenticationPopUp = PlatformLocator.get(
+        AppiumBy.id("com.een.vms.android:id/positive_button"),
+        AppiumBy.accessibilityId("positive_button")
+    );
 
     public LoginPage(AppiumDriver driver) {
         this.driver = driver;
@@ -57,12 +70,7 @@ public class LoginPage {
     public LoginPage tapNoThanksOptionInBiometricsAuthenticationPopup() {
         // Uses 5-second timeout since popup appears after login completes (async operation)
         // NOTE: negative_button is intentionally excluded - it's used as confirm delete in UsersPage
-        java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
-            noThanksOptionInBiometricsAuthenticationPopUp,
-            AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks') or contains(@text, 'No thanks')]"),
-            AppiumBy.id("android:id/button2"),
-            AppiumBy.androidUIAutomator("new UiSelector().textContains(\"No\").className(\"android.widget.Button\")")
-        );
+        java.util.List<org.openqa.selenium.By> strategies = buildBiometricsPopupStrategies();
         boolean clicked = WaitUtils.tryClickOptionalElement(driver, strategies, TimeoutConstants.POPUP_TIMEOUT);
         if (!clicked) {
             logger.info("Biometrics popup did not appear or was already dismissed");
@@ -70,6 +78,24 @@ public class LoginPage {
             logger.info("Biometrics popup successfully dismissed");
         }
         return this;
+    }
+
+    private java.util.List<org.openqa.selenium.By> buildBiometricsPopupStrategies() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return java.util.Arrays.asList(
+                noThanksOptionInBiometricsAuthenticationPopUp,
+                AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND (label CONTAINS[c] 'no thanks' OR name CONTAINS[c] 'no thanks')"),
+                AppiumBy.accessibilityId("No Thanks"),
+                AppiumBy.accessibilityId("Not Now")
+            );
+        }
+        return java.util.Arrays.asList(
+            noThanksOptionInBiometricsAuthenticationPopUp,
+            AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks') or contains(@text, 'No thanks')]"),
+            AppiumBy.id("android:id/button2"),
+            AppiumBy.androidUIAutomator("new UiSelector().textContains(\"No\").className(\"android.widget.Button\")")
+        );
     }
 
     public ResellerDashboardPage loginAs(String username, String password) {

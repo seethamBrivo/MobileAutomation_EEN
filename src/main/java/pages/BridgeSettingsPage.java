@@ -6,7 +6,9 @@ import io.appium.java_client.AppiumDriver;
 import java.util.Map;
 import org.openqa.selenium.By;
 import org.testng.Assert;
+import utils.ConfigReader;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /** The screen a bridge row opens: status, name editing, restart and delete. */
@@ -18,21 +20,39 @@ public class BridgeSettingsPage {
 
     private final AppiumDriver driver;
 
-    private final By bridgeSettingsPage = AppiumBy.xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout");
-    private final By statusSection = AppiumBy.xpath("//android.widget.TextView[@text='Status']");
-    private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Online')]");
-    private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Offline')]");
+    private final By bridgeSettingsPage = PlatformLocator.get(
+        AppiumBy.xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeOther")
+    );
+    private final By statusSection = PlatformLocator.byText("Status");
+    private final By onlineStatus = PlatformLocator.byTextContains("Online");
+    private final By offlineStatus = PlatformLocator.byTextContains("Offline");
 
-    private final By bridgeNameOption = AppiumBy.xpath("//android.widget.TextView[@text='Name']");
+    private final By bridgeNameOption = PlatformLocator.byText("Name");
     // Generic: the name editor is the only EditText on its screen. No testTag available yet.
-    private final By bridgeNameEditField = AppiumBy.xpath("//android.widget.EditText");
+    private final By bridgeNameEditField = PlatformLocator.byInputField(null);
 
-    private final By restartBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
-    private final By restartConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
-    private final By confirmRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']");
+    private final By restartBridgeButton = PlatformLocator.byText("Restart bridge");
+    private final By restartConfirmationDialog = buildRestartConfirmationLocator();
+    private final By confirmRestartButton = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']"),
+        PlatformLocator.byText("RESTART")
+    );
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: the post-restart confirmation snackbar carries no content-desc/testTag yet.
-    private final By bridgeRestartedMessage = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
+    private final By bridgeRestartedMessage = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View"),
+        AppiumBy.accessibilityId("bridgeRestartedMessage")
+    );
+
+    private By buildRestartConfirmationLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeStaticText' AND (label CONTAINS[c] 'restart' OR label CONTAINS[c] 'reboot')");
+        }
+        return AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
+    }
 
     public BridgeSettingsPage(AppiumDriver driver) {
         this.driver = driver;

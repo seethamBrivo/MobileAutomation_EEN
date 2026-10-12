@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.testng.Assert;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class VideoSearchPage {
@@ -14,9 +15,12 @@ public class VideoSearchPage {
     private final AppiumDriver driver;
 
     // Stable: Back button at fixed position [6] in VspMain screen
-    private final By backButtonFromVSPEvents = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View/android.view.View");
-    private final By searchOption = AppiumBy.xpath("//android.widget.TextView[@text='Search']");
-    private final By dateField = AppiumBy.id("com.een.vms.android:id/date");
+    private final By backButtonFromVSPEvents = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View/android.view.View"),
+        AppiumBy.accessibilityId("backButton")
+    );
+    private final By searchOption = PlatformLocator.byText("Search");
+    private final By dateField = PlatformLocator.byId("com.een.vms.android:id/date", "dateField");
 
     public VideoSearchPage(AppiumDriver driver) {
         this.driver = driver;

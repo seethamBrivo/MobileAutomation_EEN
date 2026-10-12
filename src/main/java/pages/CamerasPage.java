@@ -9,7 +9,9 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.ConfigReader;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class CamerasPage {
@@ -28,32 +30,93 @@ public class CamerasPage {
         STATUS_ONLINE, STATUS_OFFLINE, STATUS_INVALID_CREDENTIALS,
         STATUS_DEVICE_ERROR, STATUS_CONNECTIVITY_ISSUE, STATUS_TURNED_OFF
     };
-    private final By camerasItem = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
-    private final By cameraListContainer = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView");
-    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
-    private final By firstOfflineOrErrorCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]");
-    private final By firstOnlineCamera = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
-    private final By contextMenuContainer = AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]");
-    private final By cameraSettingsOption = AppiumBy.xpath("//android.widget.TextView[@text=\"Camera settings\"]");
-    private final By historyBrowserOption = AppiumBy.xpath("//android.widget.TextView[@text='History browser']");
-    private final By liveVideoOption = AppiumBy.xpath("//android.widget.TextView[@text='Live video']");
-    private final By turnOnCameraOption = AppiumBy.xpath("//android.widget.TextView[@text='Turn on camera']");
-    private final By turnOffCameraOption = AppiumBy.xpath("//android.widget.TextView[@text='Turn off camera']");
+    private final By camerasItem = PlatformLocator.byText("Cameras");
+    private final By cameraListContainer = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeOther")
+    );
+    private final By firstCameraInList = buildFirstCameraLocator();
+    private final By firstOfflineOrErrorCamera = buildFirstOfflineOrErrorCameraLocator();
+    private final By firstOnlineCamera = buildFirstOnlineCameraLocator();
+    private final By contextMenuContainer = PlatformLocator.get(
+        AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeOther[`label CONTAINS 'Camera settings'`]")
+    );
+    private final By cameraSettingsOption = PlatformLocator.byText("Camera settings");
+    private final By historyBrowserOption = PlatformLocator.byText("History browser");
+    private final By liveVideoOption = PlatformLocator.byText("Live video");
+    private final By turnOnCameraOption = PlatformLocator.byText("Turn on camera");
+    private final By turnOffCameraOption = PlatformLocator.byText("Turn off camera");
     // TODO: Replace with testTag when mobile team adds an identifier to the preview overlay.
     // Positional: the preview container and its name label carry no content-desc/testTag yet.
-    private final By cameraPreview = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[2]");
-    private final By cameraNameInPreview = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]//android.widget.TextView[1]");
-    private final By timestamp = AppiumBy.xpath("//android.widget.TextView[contains(@text, ':')]");
-    private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[@text='Online']");
-    private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[@text='Offline']");
-    private final By invalidCredentialsStatus = AppiumBy.xpath("//android.widget.TextView[@text='Invalid Credentials']");
-    private final By deviceErrorStatus = AppiumBy.xpath("//android.widget.TextView[@text='Device error']");
-    private final By connectivityIssueStatus = AppiumBy.xpath("//android.widget.TextView[@text='Connectivity issue']");
-    private final By turnedOffStatus = AppiumBy.xpath("//android.widget.TextView[@text='Turned off']");
-    private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
-    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.SEARCH_PLACEHOLDER + "\"]");
-    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + UiTextConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
-    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]");
+    private final By cameraPreview = PlatformLocator.get(
+        AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[2]"),
+        AppiumBy.accessibilityId("cameraPreview")
+    );
+    private final By cameraNameInPreview = PlatformLocator.get(
+        AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]//android.widget.TextView[1]"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeOther/XCUIElementTypeStaticText[1]")
+    );
+    private final By timestamp = buildTimestampLocator();
+    private final By onlineStatus = PlatformLocator.byText("Online");
+    private final By offlineStatus = PlatformLocator.byText("Offline");
+    private final By invalidCredentialsStatus = PlatformLocator.byText("Invalid Credentials");
+    private final By deviceErrorStatus = PlatformLocator.byText("Device error");
+    private final By connectivityIssueStatus = PlatformLocator.byText("Connectivity issue");
+    private final By turnedOffStatus = PlatformLocator.byText("Turned off");
+    private final By searchBar = PlatformLocator.byInputField(null);
+    private final By searchPlaceholder = PlatformLocator.byText(UiTextConstants.SEARCH_PLACEHOLDER);
+    private final By cameraCounter = buildCameraCounterLocator();
+    private final By emptyStateMessage = PlatformLocator.byText(UiTextConstants.EMPTY_STATE_MESSAGE);
+
+    private By buildFirstCameraLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeOther' AND visible == 1 AND " +
+                "(label CONTAINS 'Online' OR label CONTAINS 'Offline' OR label CONTAINS 'error' OR " +
+                "label CONTAINS 'Invalid' OR label CONTAINS 'Turned off')");
+        }
+        return AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
+    }
+
+    private By buildFirstOfflineOrErrorCameraLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeOther' AND visible == 1 AND " +
+                "(label CONTAINS 'Offline' OR label CONTAINS 'error')");
+        }
+        return AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]");
+    }
+
+    private By buildFirstOnlineCameraLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeOther' AND visible == 1 AND label CONTAINS 'Online'");
+        }
+        return AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
+    }
+
+    private By buildTimestampLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND label CONTAINS ':'");
+        }
+        return AppiumBy.xpath("//android.widget.TextView[contains(@text, ':')]");
+    }
+
+    private By buildCameraCounterLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                String.format("type == 'XCUIElementTypeStaticText' AND label CONTAINS '%s' AND " +
+                    "NOT label CONTAINS 'Filter' AND NOT label CONTAINS 'No matching'",
+                    UiTextConstants.CAMERA_COUNTER_TEXT));
+        }
+        return AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + UiTextConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
+    }
 
     public CamerasPage(AppiumDriver driver) {
         this.driver = driver;

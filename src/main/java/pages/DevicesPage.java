@@ -9,7 +9,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.ConfigReader;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**
@@ -23,46 +25,88 @@ public class DevicesPage {
     private final BridgeSettingsPage settings;
 
     // Bottom navigation and tabs
-    private final By moreMenuOption = AppiumBy.xpath("//android.widget.TextView[@text='More']");
-    private final By dashboardOption = AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
-    private final By allDevicesPage = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View");
-    private final By allDevicesSection = AppiumBy.xpath("//android.widget.TextView[@text='All devices']");
-    private final By bridgesTab = AppiumBy.xpath("//android.widget.TextView[@text='Bridges']");
-    private final By camerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
-    private final By speakersOption = AppiumBy.xpath("//android.widget.TextView[@text='Speakers']");
-    private final By switchesOption = AppiumBy.xpath("//android.widget.TextView[@text='Switches']");
+    private final By moreMenuOption = PlatformLocator.byText("More");
+    private final By dashboardOption = PlatformLocator.byText("Dashboard");
+    private final By allDevicesPage = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View"),
+        AppiumBy.accessibilityId("DevicesMainScreen")
+    );
+    private final By allDevicesSection = PlatformLocator.byText("All devices");
+    private final By bridgesTab = PlatformLocator.byText("Bridges");
+    private final By camerasOption = PlatformLocator.byText("Cameras");
+    private final By speakersOption = PlatformLocator.byText("Speakers");
+    private final By switchesOption = PlatformLocator.byText("Switches");
 
     // Add-bridge flow.
     // Positional Compose paths: no testTag exists on these nodes yet. Tracked for the mobile team.
-    private final By addBridgeIcon = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[5]/android.view.View[2]/android.view.View");
-    private final By addBridgeOption = AppiumBy.xpath("//android.widget.TextView[@text='Add bridge']");
-    private final By addCameraOption = AppiumBy.xpath("//android.widget.TextView[@text='Add camera']");
-    private final By addCameraDirectOption = AppiumBy.xpath("//android.widget.TextView[@text='Add Camera Direct']");
-    private final By bridgeNameField = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.widget.EditText");
-    private final By attachIdField = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
-    private final By addBridgeButton = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.Button");
-    private final By conflictErrorMessage = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'There is a conflict in the operation')]");
+    private final By addBridgeIcon = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[5]/android.view.View[2]/android.view.View"),
+        AppiumBy.accessibilityId("addDeviceButton")
+    );
+    private final By addBridgeOption = PlatformLocator.byText("Add bridge");
+    private final By addCameraOption = PlatformLocator.byText("Add camera");
+    private final By addCameraDirectOption = PlatformLocator.byText("Add Camera Direct");
+    private final By bridgeNameField = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.widget.EditText"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[1]/XCUIElementTypeTextField")
+    );
+    private final By attachIdField = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[2]/XCUIElementTypeTextField")
+    );
+    private final By addBridgeButton = PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.Button"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[3]/XCUIElementTypeButton")
+    );
+    private final By conflictErrorMessage = PlatformLocator.byTextContains("There is a conflict in the operation");
 
     // Bridge list
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes
-    private final By bridgesBackButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
-    private final By firstBridgeInList = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]");
-    private final By firstBridgeNameText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.widget.TextView[1]");
-    private final By bridgeThreeDotsButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View/android.view.View[7]");
+    private final By bridgesBackButton = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View"),
+        AppiumBy.accessibilityId("backButton")
+    );
+    private final By firstBridgeInList = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]"),
+        AppiumBy.accessibilityId("firstBridgeRow")
+    );
+    private final By firstBridgeNameText = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.widget.TextView[1]"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeOther/XCUIElementTypeStaticText[1]")
+    );
+    private final By bridgeThreeDotsButton = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View/android.view.View[7]"),
+        AppiumBy.accessibilityId("bridgeMoreOptions")
+    );
     // The nearest clickable ancestor of the first "Online" label is that bridge's row.
     // (An unbounded ancestor:: step returns the outermost container first, which is the whole list.)
-    private final By firstOnlineBridge = AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
-    private final By filterSearchField = AppiumBy.xpath("//android.widget.EditText");
-    private final By noMatchingBridgesMessage = AppiumBy.xpath("//android.widget.TextView[@text='No matching bridges']");
-    private final By restartBridgeContextOption = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
+    private final By firstOnlineBridge = buildFirstOnlineBridgeLocator();
+    private final By filterSearchField = PlatformLocator.byInputField(null);
+    private final By noMatchingBridgesMessage = PlatformLocator.byText("No matching bridges");
+    private final By restartBridgeContextOption = PlatformLocator.byText("Restart bridge");
 
     // Bridge settings > delete
-    private final By deleteBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Delete bridge']");
+    private final By deleteBridgeButton = PlatformLocator.byText("Delete bridge");
     // TODO: Replace with testTag when mobile team adds proper dialog identifiers
     // Delete confirmation popup button (Compose UI positional path)
-    private final By deleteConfirmationDialog = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View");
+    private final By deleteConfirmationDialog = PlatformLocator.get(
+        AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeOther/XCUIElementTypeOther")
+    );
     // TODO: Replace with testTag when mobile team adds proper dialog identifiers
-    private final By deleteButton = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button");
+    private final By deleteButton = PlatformLocator.get(
+        AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeOther/XCUIElementTypeButton[2]")
+    );
+
+    private By buildFirstOnlineBridgeLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeOther' AND visible == 1 AND label CONTAINS 'Online'");
+        }
+        return AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]");
+    }
 
     public DevicesPage(AppiumDriver driver) {
         this.driver = driver;
@@ -70,7 +114,7 @@ public class DevicesPage {
     }
 
     private static By contextMenuOption(String text) {
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + text + "']");
+        return PlatformLocator.byText(text);
     }
 
     // ---- navigation -----------------------------------------------------------------------

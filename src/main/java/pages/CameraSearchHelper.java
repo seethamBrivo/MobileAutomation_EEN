@@ -11,6 +11,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
+import utils.ConfigReader;
 import utils.GestureUtils;
 import utils.WaitUtils;
 
@@ -216,9 +217,7 @@ public class CameraSearchHelper {
     }
 
     public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
-        By allVisibleCameras = AppiumBy.xpath(
-            "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]"
-        );
+        By allVisibleCameras = buildAllVisibleCamerasLocator();
         List<WebElement> cameraElements = driver.findElements(allVisibleCameras);
         Assert.assertFalse(cameraElements.isEmpty(), "Should have at least one visible camera");
         for (WebElement element : cameraElements) {
@@ -227,6 +226,19 @@ public class CameraSearchHelper {
                 "Camera name '" + cameraName + "' should contain search term '" + searchTerm + "'");
         }
         logger.info("Verified {} visible cameras all contain search term '{}'", cameraElements.size(), searchTerm);
+    }
+
+    private By buildAllVisibleCamerasLocator() {
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            return AppiumBy.iOSNsPredicateString(
+                "type == 'XCUIElementTypeStaticText' AND visible == 1 AND " +
+                "(label CONTAINS 'Online' OR label CONTAINS 'Offline' OR label CONTAINS 'error' OR " +
+                "label CONTAINS 'Invalid' OR label CONTAINS 'Turned off')");
+        }
+        return AppiumBy.xpath(
+            "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]"
+        );
     }
 
     public void dismissContextMenu() {

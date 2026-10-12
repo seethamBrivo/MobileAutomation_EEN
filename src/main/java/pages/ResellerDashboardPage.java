@@ -5,107 +5,164 @@ import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.ConfigReader;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 import java.time.Duration;
 
 public class ResellerDashboardPage {
     private final AppiumDriver driver;
-    private final By resellerDashboard = AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]");
-    private final By totalAccounts= AppiumBy.xpath("//android.widget.TextView[contains(@text, 'accounts')]");
+    private final By resellerDashboard = PlatformLocator.byText("Reseller dashboard");
+    private final By totalAccounts= PlatformLocator.byTextContains("accounts");
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: this dashboard graphic carries no content-desc/testTag yet.
-    private final By largeModelTransformationIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
+    private final By largeModelTransformationIcon= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View"),
+        AppiumBy.accessibilityId("ResellerDashboardMainScreen")  // iOS: Use accessibility ID directly
+    );
     private By accountName(String accountName) {
-        return AppiumBy.xpath(
-                "//android.widget.TextView[@text=\"" + accountName + "\"]"
-        );
+        return PlatformLocator.byText(accountName);
     }
 
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: the first account row's resource icons and status dots carry no
     // content-desc/testTag yet, so each is addressed by its sibling index in the row.
-    private final By bridgeResourceIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[1]");
-    private final By greenDotForOnline= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[2]");
-    private final By redDotForOffline= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[3]");
-    private final By yellowDotForConnectivityIssue= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[7]");
-    private final By greyDotForStatusTurnedOff= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[8]");
-    private final By cameraResourceIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[4]");
-    private final By threeDotsOption= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[9]");
-    private final By settingsOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Settings\"]");
-    private final By deleteAccountOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Delete account\"]");
-    private final By filterByAccountNameFilter= AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by account name\"]");
+    private final By bridgeResourceIcon= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[1]"),
+        AppiumBy.accessibilityId("bridgeResourceIcon")  // iOS: Add accessibility ID once available
+    );
+    private final By greenDotForOnline= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[2]"),
+        AppiumBy.accessibilityId("statusDotOnline")
+    );
+    private final By redDotForOffline= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[3]"),
+        AppiumBy.accessibilityId("statusDotOffline")
+    );
+    private final By yellowDotForConnectivityIssue= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[7]"),
+        AppiumBy.accessibilityId("statusDotConnectivityIssue")
+    );
+    private final By greyDotForStatusTurnedOff= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[8]"),
+        AppiumBy.accessibilityId("statusDotTurnedOff")
+    );
+    private final By cameraResourceIcon= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[4]"),
+        AppiumBy.accessibilityId("cameraResourceIcon")
+    );
+    private final By threeDotsOption= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[9]"),
+        AppiumBy.accessibilityId("moreOptions")
+    );
+    private final By settingsOption= PlatformLocator.byText("Settings");
+    private final By deleteAccountOption= PlatformLocator.byText("Delete account");
+    private final By filterByAccountNameFilter= PlatformLocator.byText("Filter by account name");
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: this button carries no content-desc/testTag yet.
-    private final By addAccountButton= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[5]/android.view.View/android.view.View");
-    private final By dashboardOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Dashboard\"]");
-    private final By usersOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]");
-    private final By businessPortalOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Business Portal\"]");
-    private final By moreOption= AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]");
+    private final By addAccountButton= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[5]/android.view.View/android.view.View"),
+        AppiumBy.accessibilityId("addAccountButton")
+    );
+    private final By dashboardOption= PlatformLocator.byText("Dashboard");
+    private final By usersOption= PlatformLocator.byText("Users");
+    private final By businessPortalOption= PlatformLocator.byText("Business Portal");
+    private final By moreOption= PlatformLocator.byText("More");
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: the first account row in the list carries no content-desc/testTag yet.
-    private final By firstAccountWithBridges = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]");
-    private final By layoutsScreen = AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]");
-    private final By logoutOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
-    private final By confirmLogoutButton= AppiumBy.xpath("//android.widget.TextView[@text=\"YES\"]");
+    private final By firstAccountWithBridges = PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]"),
+        AppiumBy.accessibilityId("firstAccountRow")
+    );
+    private final By layoutsScreen = PlatformLocator.byText("Layouts");
+    private final By logoutOption= PlatformLocator.byText("Log out");
+    private final By confirmLogoutButton= PlatformLocator.byText("YES");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
     // Positional: the add-account form's EditTexts are addressed by their position in the
     // ScrollView, since none carries a resource-id or testTag.
-    private final By accountNameField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
-    private final By addButton= AppiumBy.xpath("//android.widget.TextView[@text=\"Add\"]");
-    private final By addCustomerIdField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.EditText");
-    private final By emailField= AppiumBy.xpath("//android.widget.TextView[@text=\"Add email\"]");
-    private final By editionField= AppiumBy.xpath("//android.widget.TextView[@text=\"Edition\"]");
-    private final By standardByDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"Standard\"]");
+    private final By accountNameField= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[2]/XCUIElementTypeTextField")
+    );
+    private final By addButton= PlatformLocator.byText("Add");
+    private final By addCustomerIdField= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.EditText"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[3]/XCUIElementTypeTextField")
+    );
+    private final By emailField= PlatformLocator.byText("Add email");
+    private final By editionField= PlatformLocator.byText("Edition");
+    private final By standardByDefault= PlatformLocator.byText("Standard");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
     // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By editionSectionNavigationIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[5]/android.view.View");
-    private final By professionalOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Professional\"]");
-    private final By enterpriseOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Enterprise\"]");
+    private final By editionSectionNavigationIcon= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[5]/android.view.View"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[5]/XCUIElementTypeOther")
+    );
+    private final By professionalOption= PlatformLocator.byText("Professional");
+    private final By enterpriseOption= PlatformLocator.byText("Enterprise");
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: the generic back-chevron icon reused across every settings sub-panel
     // (edition, cloud retention, min retention, max retention) — same element each time,
     // so a single field is clicked from clickEditionSectionBackNavigationIcon(),
     // clickCloudRetentionSectionBackNavigationIcon(), clickMinRetentionSectionBackIcon()
     // and clickMaxRetentionSectionBackIcon().
-    private final By genericBackChevron= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
-    private final By cameraDefaultsSection= AppiumBy.xpath("//android.widget.TextView[@text=\"CAMERAS DEFAULTS\"]");
-    private final By cloudRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Cloud retention\"]");
-    private final By thirtyDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"30 days\"]");
+    private final By genericBackChevron= PlatformLocator.get(
+        AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View"),
+        AppiumBy.accessibilityId("backButton")
+    );
+    private final By cameraDefaultsSection= PlatformLocator.byText("CAMERAS DEFAULTS");
+    private final By cloudRetention= PlatformLocator.byText("Cloud retention");
+    private final By thirtyDaysDefault= PlatformLocator.byText("30 days");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
     // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By cloudRetentionSectionNavigationIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[7]/android.view.View");
-    private final By minimumOneDayOption= AppiumBy.xpath("//android.widget.TextView[@text=\"1 day (M10)\"]");
-    private final By max5YearsRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"5 years\"]");
-    private final By minRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Min retention\"]");
-    private final By fourTeenDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"14 days\"]");
+    private final By cloudRetentionSectionNavigationIcon= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[7]/android.view.View"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[7]/XCUIElementTypeOther")
+    );
+    private final By minimumOneDayOption= PlatformLocator.byText("1 day (M10)");
+    private final By max5YearsRetentionOption= PlatformLocator.byText("5 years");
+    private final By minRetention= PlatformLocator.byText("Min retention");
+    private final By fourTeenDaysDefault= PlatformLocator.byText("14 days");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
     // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By minRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[8]/android.view.View");
-    private final By miniumRetentionMinimumValueNone= AppiumBy.xpath("//android.widget.TextView[@text=\"None\"]");
-    private final By max180DaysOption= AppiumBy.xpath("//android.widget.TextView[@text=\"180 days\"]");
-    private final By maxRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Max retention\"]");
-    private final By sixtyDaysByDafaultOptionForMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"60 days\"]");
+    private final By minRetentionViewIcon= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[8]/android.view.View"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[8]/XCUIElementTypeOther")
+    );
+    private final By miniumRetentionMinimumValueNone= PlatformLocator.byText("None");
+    private final By max180DaysOption= PlatformLocator.byText("180 days");
+    private final By maxRetentionOption= PlatformLocator.byText("Max retention");
+    private final By sixtyDaysByDafaultOptionForMaxRetention= PlatformLocator.byText("60 days");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
     // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By maxRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[9]/android.view.View");
-    private final By minValueIsNoneInMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"None\"]");
-    private final By maxValueIs1YearInMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"1 year\"]");
-    private final By previewResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Preview resolution\"]");
-    private final By defaultPreviewResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"cif (SD1 320x240)\"]");
-    private final By fullVideoResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Full video resolution\"]");
-    private final By fullVideoResolutionDafaultValue= AppiumBy.xpath("//android.widget.TextView[@text=\"high (HD1 1280x720)\"]");
+    private final By maxRetentionViewIcon= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[9]/android.view.View"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[9]/XCUIElementTypeOther")
+    );
+    private final By minValueIsNoneInMaxRetention= PlatformLocator.byText("None");
+    private final By maxValueIs1YearInMaxRetention= PlatformLocator.byText("1 year");
+    private final By previewResolutionOption= PlatformLocator.byText("Preview resolution");
+    private final By defaultPreviewResolutionOption= PlatformLocator.byText("cif (SD1 320x240)");
+    private final By fullVideoResolutionOption= PlatformLocator.byText("Full video resolution");
+    private final By fullVideoResolutionDafaultValue= PlatformLocator.byText("high (HD1 1280x720)");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
     // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By cloudPreviewOnlyoggleButton= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[12]/android.view.View/android.view.View");
-    private final By max120CharErrorMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Max 120 characters\"]");
-    private final By successMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Added successfully\"]");
-    private final By deleteConfirmButton= AppiumBy.xpath("//android.widget.TextView[@text=\"DELETE\"]");
-    private final By deletedSuccessMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Deleted successfully\"]");
+    private final By cloudPreviewOnlyoggleButton= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[12]/android.view.View/android.view.View"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[12]/XCUIElementTypeOther/XCUIElementTypeOther")
+    );
+    private final By max120CharErrorMessage= PlatformLocator.byText("Max 120 characters");
+    private final By successMessage= PlatformLocator.byText("Added successfully");
+    private final By deleteConfirmButton= PlatformLocator.byText("DELETE");
+    private final By deletedSuccessMessage= PlatformLocator.byText("Deleted successfully");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
     // Positional: Email input field within the ScrollView after clicking "Add email"
-    private final By emailInputField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[4]/android.widget.EditText");
+    private final By emailInputField= PlatformLocator.get(
+        AppiumBy.xpath("//android.widget.ScrollView/android.view.View[4]/android.widget.EditText"),
+        AppiumBy.iOSClassChain("**/XCUIElementTypeScrollView/XCUIElementTypeOther[4]/XCUIElementTypeTextField")
+    );
 
     public ResellerDashboardPage(AppiumDriver driver) {
         this.driver = driver;
@@ -379,8 +436,19 @@ public class ResellerDashboardPage {
     }
 
     public void longPressOnAccount(String accountNameWithCustomerId) {
-        String xpathSafeText = buildXPathStringLiteral(accountNameWithCustomerId);
-        By accountLocator = AppiumBy.xpath("(//android.widget.TextView[@text=" + xpathSafeText + "])[1]");
+        By accountLocator;
+        String platform = ConfigReader.getPlatform();
+
+        if ("ios".equalsIgnoreCase(platform)) {
+            accountLocator = AppiumBy.iOSNsPredicateString(
+                String.format("label == '%s' OR name == '%s'",
+                    accountNameWithCustomerId.replace("'", "\\'"),
+                    accountNameWithCustomerId.replace("'", "\\'")));
+        } else {
+            String xpathSafeText = buildXPathStringLiteral(accountNameWithCustomerId);
+            accountLocator = AppiumBy.xpath("(//android.widget.TextView[@text=" + xpathSafeText + "])[1]");
+        }
+
         WebElement accountElement = WaitUtils.waitForVisibility(driver, accountLocator);
         GestureUtils.longPress(driver, accountElement);
     }
@@ -500,11 +568,18 @@ public class ResellerDashboardPage {
     }
 
     public void dismissContextMenu() {
-        ((io.appium.java_client.android.AndroidDriver) driver).pressKey(
-            new io.appium.java_client.android.nativekey.KeyEvent(
-                io.appium.java_client.android.nativekey.AndroidKey.BACK
-            )
-        );
+        String platform = ConfigReader.getPlatform();
+        if ("ios".equalsIgnoreCase(platform)) {
+            // iOS: Tap outside the menu or use escape gesture
+            driver.navigate().back();
+        } else {
+            // Android: Use back key
+            ((io.appium.java_client.android.AndroidDriver) driver).pressKey(
+                new io.appium.java_client.android.nativekey.KeyEvent(
+                    io.appium.java_client.android.nativekey.AndroidKey.BACK
+                )
+            );
+        }
     }
 
     public void verifyAccountNameFieldDisplayed() {
