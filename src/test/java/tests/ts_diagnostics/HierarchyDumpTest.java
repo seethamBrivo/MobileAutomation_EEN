@@ -97,7 +97,12 @@ public class HierarchyDumpTest extends BaseTest {
                 java.time.Duration.ofSeconds(30)).getText());
         step("reseller-01c-account-menu", () -> dash.longPressOnAccount(account[0]));
         step("reseller-01d-account-delete-dialog", dash::clickDeleteAccountOption);
-        step("reseller-01e-back-from-dialog", () -> driver.navigate().back());
+        // Approved by the repo owner: confirms the delete of exactly ONE leftover automation account
+        // (TC40220_*, the kind the dashboard test creates and tries to delete) to see what follows.
+        step("reseller-01e-after-confirm", dash::clickDeleteConfirmButton);
+        step("reseller-01f-after-confirm-1s", () -> pause(1_000));
+        step("reseller-01g-after-confirm-4s", () -> pause(3_000));
+        step("reseller-01h-after-confirm-12s", () -> pause(8_000));
         UsersPage users = new UsersPage(driver);
         step("reseller-02-users", users::clickUsersOptionAtTheBottom);
         // Same data the AddUserTest creates (a pending test user), so the post-add snackbar, the user's
