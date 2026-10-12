@@ -7,6 +7,7 @@ import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
+import utils.XPathUtils;
 
 import java.time.Duration;
 
@@ -70,7 +71,7 @@ public class ResellerDashboardPage {
     // clickCloudRetentionSectionBackNavigationIcon(), clickMinRetentionSectionBackIcon()
     // and clickMaxRetentionSectionBackIcon().
     private final By genericBackChevron= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
-    private final By cameraDefaultsSection= AppiumBy.xpath("//android.widget.TextView[@text=\"CAMERAS DEFAULTS\"]");
+    private final By cameraDefaultsSection= AppiumBy.xpath(XPathUtils.textViewIgnoreCase("Cameras defaults"));
     private final By cloudRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Cloud retention\"]");
     private final By thirtyDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"30 days\"]");
     // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.

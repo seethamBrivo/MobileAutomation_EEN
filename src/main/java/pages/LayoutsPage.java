@@ -8,9 +8,11 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.WaitUtils;
+import utils.XPathUtils;
 
 public class LayoutsPage {
 
@@ -28,7 +30,11 @@ public class LayoutsPage {
     private final By zoomInOption = AppiumBy.xpath("//android.widget.TextView[@text='Zoom in']");
     private final By zoomOutOption = AppiumBy.xpath("//android.widget.TextView[@text='Zoom out']");
     private final By layoutNameLabel = AppiumBy.accessibilityId("row_name_header");
-    private final By layoutNameEditField = AppiumBy.accessibilityId("row_name_dj0");
+    // The name row's tag carried a generated suffix ("row_name_dj0") that changed between app builds, so
+    // the editable field is found by its type first, then by the stable "row_name_" prefix.
+    private final List<By> layoutNameEditFields = List.of(
+            AppiumBy.xpath("//android.widget.EditText"),
+            AppiumBy.xpath("//*[starts-with(@content-desc,'row_name_') and @content-desc!='row_name_header']"));
     private final By aspectRatio16_9 = AppiumBy.xpath("//android.widget.TextView[@text='16:9']");
     private final By aspectRatio4_3 = AppiumBy.xpath("//android.widget.TextView[@text='4:3']");
     private final By showCameraTitleBarsToggle = AppiumBy.accessibilityId("row_show_cameras_title_item_switch");
@@ -38,7 +44,7 @@ public class LayoutsPage {
     private final By addButton = AppiumBy.xpath("//android.widget.TextView[@text='Add']");
     private final By successMessage = AppiumBy.id("com.een.vms.android:id/snackbar_text");
     private final By filterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
-    private final By layoutsTab = AppiumBy.xpath("//android.widget.TextView[@text='LAYOUTS']");
+    private final By layoutsTab = AppiumBy.xpath(XPathUtils.textViewIgnoreCase("Layouts"));
     private final By searchBar = AppiumBy.id("com.een.vms.android:id/search_bar");
     private final By deleteButton = AppiumBy.accessibilityId("delete_header");
     private final By confirmButton = AppiumBy.accessibilityId("negative_button");
@@ -148,7 +154,10 @@ public class LayoutsPage {
 
     public void setLayoutName(String layoutName) {
         WaitUtils.click(driver, layoutNameLabel);
-        WaitUtils.clearAndType(driver, layoutNameEditField, layoutName);
+        WebElement field = WaitUtils.waitForAny(driver, layoutNameEditFields, FrameworkConstants.EXPLICIT_WAIT)
+                .orElseThrow(() -> new NoSuchElementException("Layout name field not found on the New layout screen"));
+        field.clear();
+        field.sendKeys(layoutName);
     }
 
     public void selectAspectRatio(String ratio) {
