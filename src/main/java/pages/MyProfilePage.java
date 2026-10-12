@@ -29,7 +29,9 @@ public class MyProfilePage {
     }
 
     public void scrollToTimezoneOption() {
-        if (!WaitUtils.isVisible(driver, timezoneOption, TimeoutConstants.SHORT_TIMEOUT)) {
+        // The profile screen renders after a load; swiping before it is up exhausts the scroll
+        // budget (BrowserStack build #11, where Time zone was on screen right after the failure).
+        if (!WaitUtils.isVisible(driver, timezoneOption, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
             boolean found = GestureUtils.scrollUntilPresent(driver, timezoneOption);
             Assert.assertTrue(found, "Could not find timezone option even after scrolling");
         }

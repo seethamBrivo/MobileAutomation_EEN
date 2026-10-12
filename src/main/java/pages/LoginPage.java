@@ -14,6 +14,8 @@ public class LoginPage {
 
     private static final Logger logger = LogManager.getLogger(LoginPage.class);
     private static final int LOGIN_ATTEMPTS = 3;
+    /** Launcher activity; the CI android.properties leaves appActivity unset on purpose (Android 15). */
+    private static final String DEFAULT_APP_ACTIVITY = "com.een.core.MainActivity";
 
     private final AppiumDriver driver;
     private final By signInButton = AppiumBy.accessibilityId("sign_in_btn_button");
@@ -94,18 +96,32 @@ public class LoginPage {
 
     /**
      * The sign-in page intermittently never renders its input fields (BrowserStack CI builds
-     * #10/#11). Restarting the app returns to the sign-in entry point; app data is kept so
-     * permissions granted earlier in the session stay in place.
+     * #10/#11). Relaunches the app so the sign-in entry point is shown again; app data is kept so
+     * permissions granted earlier in the session stay in place. BrowserStack's Appium rejects
+     * {@code mobile: terminateApp}/{@code activateApp}, so the supported {@code mobile: startActivity}
+     * with {@code stop=true} (force-stop, then launch) is used. Never throws: if the relaunch is
+     * refused the caller simply retries on the current screen.
      */
     private void restartApp() {
-        boolean android = "android".equalsIgnoreCase(ConfigReader.getPlatform());
-        String key = android ? "appId" : "bundleId";
-        String appId = ConfigReader.getProperty(android ? "appPackage" : "bundleId");
-        if (appId.isBlank()) {
-            logger.warn("App id not configured; retrying login without restarting the app");
+        if (!"android".equalsIgnoreCase(ConfigReader.getPlatform())) {
+            logger.warn("App restart is only implemented for Android; retrying login in place");
             return;
         }
-        driver.executeScript("mobile: terminateApp", java.util.Map.of(key, appId));
-        driver.executeScript("mobile: activateApp", java.util.Map.of(key, appId));
+        String appPackage = ConfigReader.getProperty("appPackage");
+        if (appPackage.isBlank()) {
+            logger.warn("appPackage not configured; retrying login without restarting the app");
+            return;
+        }
+        String activity = ConfigReader.getProperty("appActivity");
+        if (activity.isBlank()) {
+            activity = DEFAULT_APP_ACTIVITY;
+        }
+        try {
+            driver.executeScript("mobile: startActivity",
+                    java.util.Map.of("intent", appPackage + "/" + activity, "stop", true));
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.warn("Could not relaunch the app ({}); retrying login in place",
+                    e.getMessage().lines().findFirst().orElse(""));
+        }
     }
 }
