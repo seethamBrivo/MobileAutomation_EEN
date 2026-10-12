@@ -20,6 +20,7 @@
         <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
         <allure.version>2.29.1</allure.version>
         <aspectj.version>1.9.24</aspectj.version>
+        <browserstack.sdk.version>1.75.6</browserstack.sdk.version>
     </properties>
 
     <dependencies>
@@ -130,4 +131,60 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- BrowserStack SDK (Test Reporting & Analytics, smart reporting/debugging, parallels, status
+             marking). Opt-in: mvn test -DexecutionProvider=browserstack -DbrowserstackSdk=true
+             Needs BROWSERSTACK_USERNAME, BROWSERSTACK_ACCESS_KEY and BROWSERSTACK_APP_URL in the
+             environment; see browserstack.yml. Without the flag the build is unchanged. -->
+        <profile>
+            <id>browserstack-sdk</id>
+            <activation>
+                <property>
+                    <name>browserstackSdk</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.browserstack</groupId>
+                    <artifactId>browserstack-java-sdk</artifactId>
+                    <version>${browserstack.sdk.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <!-- Exposes ${com.browserstack:browserstack-java-sdk:jar} for the javaagent below. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.8.1</version>
+                        <executions>
+                            <execution>
+                                <id>resolve-browserstack-sdk-path</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>properties</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <browserstackSdk>true</browserstackSdk>
+                            </systemPropertyVariables>
+                            <!-- Both agents: AspectJ (Allure) and the BrowserStack SDK. -->
+                            <argLine>
+                                -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                                -javaagent:"${com.browserstack:browserstack-java-sdk:jar}"
+                            </argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
