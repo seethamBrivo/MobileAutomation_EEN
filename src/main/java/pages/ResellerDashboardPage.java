@@ -402,6 +402,39 @@ public class ResellerDashboardPage {
         WaitUtils.waitForClickability(driver, deleteConfirmButton).click();
     }
 
+    /** Matches the list header "11 accounts" / "1 account" (not the "Filter by account name" hint). */
+    private final By accountsCountLabel = AppiumBy.xpath("//android.widget.TextView[contains(@text,' account')]");
+
+    /** The number in the "N accounts" header, or -1 when it is not on screen. */
+    public int getAccountCount() {
+        for (WebElement label : driver.findElements(accountsCountLabel)) {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("^(\\d+) accounts?$").matcher(label.getText().trim());
+            if (m.matches()) {
+                return Integer.parseInt(m.group(1));
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * After confirming a delete: passes when the "Deleted successfully" snackbar is seen OR the account
+     * count in the list header drops below {@code countBefore}. The snackbar only stays for about 3
+     * seconds and one lookup on the long account list can take that long, so waiting for the message
+     * alone missed it (BrowserStack builds #23/#24, where the count did drop from 11 to 10).
+     */
+    public void verifyAccountDeleted(int countBefore) {
+        boolean deleted;
+        try {
+            deleted = new org.openqa.selenium.support.ui.WebDriverWait(driver, Duration.ofSeconds(60))
+                    .pollingEvery(Duration.ofMillis(250))
+                    .until(d -> WaitUtils.isPresent(driver, deletedSuccessMessage)
+                            || (countBefore >= 0 && getAccountCount() >= 0 && getAccountCount() < countBefore));
+        } catch (org.openqa.selenium.TimeoutException e) {
+            deleted = false;
+        }
+        Assert.assertTrue(deleted, "Account should be deleted: no 'Deleted successfully' message and the account count did not drop below " + countBefore);
+    }
+
     public boolean isDeletedSuccessMessageDisplayed() {
         return WaitUtils.waitForVisibility(driver, deletedSuccessMessage, Duration.ofSeconds(60)).isDisplayed();
     }
