@@ -86,9 +86,9 @@ public class HierarchyDumpTest extends BaseTest {
         step("reseller-03-new-user-form", users::clickUsersAddIconAtTheTopRightCorner);
         step("reseller-04-after-add", () -> email[0] = users.addUserWithDetails(first, last));
         step("reseller-04b-after-add-1500ms", () -> pause(1_500));
-        step("reseller-05-filtered", () -> users.filterForUsersSearchbar(email[0]));
-        step("reseller-06-details", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
-                "//android.widget.TextView[@text='" + email[0] + "']/ancestor::android.view.View[@clickable='true'][1]")).click());
+        step("reseller-05-filtered", () -> users.searchForUser(email[0]));
+        step("reseller-06-details", () -> utils.WaitUtils.waitForVisibility(driver, io.appium.java_client.AppiumBy.xpath(
+                "//android.widget.TextView[@text='" + email[0] + "']"), java.time.Duration.ofSeconds(30)).click());
         step("reseller-06b-details-loaded", () -> pause(12_000));
         step("reseller-07-delete-dialog", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
                 "//android.widget.TextView[contains(translate(@text,'DELETE','delete'),'delete')]"

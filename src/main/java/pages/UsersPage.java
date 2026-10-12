@@ -38,8 +38,9 @@ public class UsersPage {
             + " | //android.widget.TextView[@text='Last name']/following-sibling::android.widget.EditText[1]");
     private final By reachedMaxCharactersErrorMessage = AppiumBy.id("com.een.vms.android:id/error_desc");
     private final By emailPlusHint = AppiumBy.id("com.een.vms.android:id/emailPlusHint");
-    // TODO: Replace with proper resource-id or content-desc when mobile team adds snackbar identifiers
-    private final By snackbarText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
+    // New UI: the snackbar is a plain TextView with this text. The old positional Compose path is kept in the union.
+    private final By snackbarText = AppiumBy.xpath("//android.widget.TextView[@text='User was added']"
+            + " | //androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
     private final By usersSearchFilterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
     // New UI: the filter field is always on the list (no search icon / separate search screen).
     private final By filterForUsersSearchbar = AppiumBy.xpath(
@@ -198,7 +199,8 @@ public class UsersPage {
     public boolean searchForUser(String email) {
         clickUsersSearchFilterIcon();
         filterForUsersSearchbar(email);
-        return WaitUtils.isVisible(driver, userRowText(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
+        // The filter is applied server-side: the row took ~12s to show up in BrowserStack build #14.
+        return WaitUtils.isVisible(driver, userRowText(email), TimeoutConstants.LIST_LOAD_TIMEOUT);
     }
 
     /** Opens the row for exactly {@code email} and deletes it. Fails if that row is not listed. */
