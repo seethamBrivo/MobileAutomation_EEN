@@ -47,7 +47,7 @@ public class TimeZonePage {
         hideKeyboard();
     }
 
-    private void hideKeyboard() {
+    public void hideKeyboard() {
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (org.openqa.selenium.WebDriverException e) {

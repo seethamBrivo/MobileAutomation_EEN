@@ -6,6 +6,9 @@ import org.testng.annotations.Test;
 import pages.ResellerDashboardPage;
 import utils.GestureUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class ResellerDashboardTest extends BaseTest {
 
     private ResellerDashboardPage resellerDashboardPage;
@@ -82,10 +85,40 @@ public class ResellerDashboardTest extends BaseTest {
         resellerDashboardPage.verifyFullVideoResolutionOptionDisplayed();
         resellerDashboardPage.verifyFullVideoResolutionDefaultValueDisplayed();
         resellerDashboardPage.verifyCloudPreviewOnlyToggleButtonDisplayed();
+
+        // Verify Customer ID character limit validation
         String customer_ID = getTestDataValue("customer_Id_Above_120_Characters");
-        resellerDashboardPage.enterCustomerIdMoreThan120Characters(customer_ID);
-        resellerDashboardPage.enterAccountName("NewAccountNia");
+        resellerDashboardPage.enterCustomerId(customer_ID);
+        resellerDashboardPage.enterAccountName("TestAccount_TC40220");
         resellerDashboardPage.clickAddOption();
         resellerDashboardPage.verifyMax120CharsErrorMessageDisplayed();
+
+        // Create account with unique timestamp-based identifiers (error will clear when entering valid data)
+        SimpleDateFormat sdf = new SimpleDateFormat("MMddHHmmss");
+        String timestamp = sdf.format(new Date());
+        String accountName = "TC40220_" + timestamp;
+        String customerId = "CustID_" + timestamp;
+
+        resellerDashboardPage.enterAccountName(accountName);
+        resellerDashboardPage.enterCustomerId(customerId);
+        resellerDashboardPage.clickEmailField();
+        String email = getTestDataValue("test_account_email");
+        resellerDashboardPage.enterEmail(email);
+        resellerDashboardPage.clickAddOption();
+        resellerDashboardPage.verifySuccessMessageDisplayed();
+
+        String fullAccountName = accountName + " (" + customerId + ")";
+        resellerDashboardPage.scrollUntilAccountIsVisible(fullAccountName);
+        resellerDashboardPage.verifyAccountNameDisplayed(fullAccountName);
+
+        // Cleanup
+        try {
+            resellerDashboardPage.longPressOnAccount(fullAccountName);
+            resellerDashboardPage.clickDeleteAccountOption();
+            resellerDashboardPage.clickDeleteConfirmButton();
+            resellerDashboardPage.verifyDeletedSuccessMessageDisplayed();
+        } catch (Exception e) {
+            logger.warn("Cleanup failed - account deletion unsuccessful: " + e.getMessage());
+        }
     }
 }

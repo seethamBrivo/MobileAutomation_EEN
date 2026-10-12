@@ -185,6 +185,13 @@ public class UsersPage {
     public void searchAndDeleteUser(String email) {
         Assert.assertTrue(searchForUser(email), "User should be listed before deletion: " + email);
         deleteListedUser(email);
+        returnToUsersList();
+    }
+
+    /** Navigates back from search screen to the main users list. */
+    private void returnToUsersList() {
+        clickBackButton();
+        WaitUtils.waitForVisibility(driver, usersAddIconAtTheTopRightCorner);
     }
 
     /**
@@ -198,21 +205,19 @@ public class UsersPage {
         try {
             if (!searchForUser(email)) {
                 logger.info("User {} is not listed; nothing to clean up", email);
-                clickBackButton();
+                returnToUsersList();
                 return false;
             }
             deleteListedUser(email);
+            returnToUsersList();
             logger.info("Deleted test user {}", email);
-            if (!isAddIconDisplayed()) {
-                clickBackButton();
-            }
             return true;
         } catch (Exception e) {
             logger.warn("Cleanup for {} failed: {}", email, e.getMessage());
             try {
-                clickBackButton();
+                returnToUsersList();
             } catch (Exception ignored) {
-                // already off the search screen
+                logger.warn("Could not return to users list after failed cleanup");
             }
             return false;
         }
@@ -220,7 +225,10 @@ public class UsersPage {
 
     private void deleteListedUser(String email) {
         WaitUtils.click(driver, userRowEndIcon(email));
+        WaitUtils.waitForVisibility(driver, deleteUserOption);
         WaitUtils.click(driver, deleteUserOption);
+        WaitUtils.waitForVisibility(driver, confirmDeleteUserOption);
         WaitUtils.click(driver, confirmDeleteUserOption);
+        WaitUtils.waitForVisibility(driver, filterForUsersSearchbar);
     }
 }

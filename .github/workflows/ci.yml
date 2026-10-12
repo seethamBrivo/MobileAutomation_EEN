@@ -33,6 +33,7 @@ jobs:
                 "password": "${{ secrets.RESELLER_PASSWORD }}",
                 "bridge-account-name": "Gdynia-End-User-QA",
                 "customer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
+                "test_account_email": "automation-test@brivo.com",
                 "invalidEmailFormatText": "inavalidemailformattext",
                 "existingUserInSystemButNotExistingInCurrentLogin": "${{ secrets.EXISTING_USER_EMAIL || 'seetham.c+reseller@brivo.com' }}",
                 "attachId": "${{ secrets.ATTACH_ID }}"
