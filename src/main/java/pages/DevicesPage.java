@@ -34,7 +34,12 @@ public class DevicesPage {
 
     // Add-bridge flow.
     // Positional Compose paths: no testTag exists on these nodes yet. Tracked for the mobile team.
-    private final By addBridgeIcon = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[5]/android.view.View[2]/android.view.View");
+    // The Devices header is now [back, title, sort, add] with no ids, on the dashboard ("All devices") and on
+    // the Bridges tab ("Bridges"). The old positional path (View[2]) lands on the sort icon, so the add
+    // icon is the last clickable sibling after the title.
+    private final By addBridgeIcon = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']"
+            + "//android.widget.TextView[@text='All devices' or @text='Bridges']"
+            + "/following-sibling::android.view.View[@clickable='true'][last()]");
     private final By addBridgeOption = AppiumBy.xpath("//android.widget.TextView[@text='Add bridge']");
     private final By addCameraOption = AppiumBy.xpath("//android.widget.TextView[@text='Add camera']");
     private final By addCameraDirectOption = AppiumBy.xpath("//android.widget.TextView[@text='Add Camera Direct']");

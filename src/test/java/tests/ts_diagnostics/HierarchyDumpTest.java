@@ -49,20 +49,27 @@ public class HierarchyDumpTest extends BaseTest {
         DevicesPage devices = new DevicesPage(driver);
         dump("enduser-01-after-login");
         step("enduser-02-dashboard", devices::navigateToDashboard);
-        step("enduser-03-bridges-tab", devices::clickBridgesTab);
-        step("enduser-04-bridges-add-menu", devices::clickOnAddBridgeIcon);
+        // The add-bridge icon lives on the dashboard header.
+        step("enduser-03-add-menu", devices::clickOnAddBridgeIcon);
+        step("enduser-04-add-bridge-form", devices::clickAddBridgeOption);
         step("enduser-05-back-to-dashboard", () -> {
+            driver.navigate().back();
+            devices.navigateToDashboard();
+        });
+        step("enduser-06-bridges-tab", devices::clickBridgesTab);
+        step("enduser-07-dashboard-again", () -> {
             driver.navigate().back();
             devices.navigateToDashboard();
         });
 
         LayoutsPage layouts = new LayoutsPage(driver);
-        step("enduser-06-layouts", () -> {
+        step("enduser-08-layouts", () -> {
             layouts.verifyLayoutsScreenDisplayed();
             layouts.clickFirstLayoutTab();
         });
-        step("enduser-07-layouts-menu", layouts::clickThreeDotsMenuButton);
-        step("enduser-08-new-layout", layouts::clickNewLayoutOption);
+        step("enduser-09-layouts-menu", layouts::clickThreeDotsMenuButton);
+        step("enduser-10-new-layout", layouts::clickNewLayoutOption);
+        step("enduser-11-new-layout-name-editing", () -> layouts.setLayoutName("DiagLayout"));
     }
 
     @Test(description = "Hierarchies of the reseller screens used by the users and account tests")
@@ -71,5 +78,10 @@ public class HierarchyDumpTest extends BaseTest {
         dump("reseller-01-after-login");
         UsersPage users = new UsersPage(driver);
         step("reseller-02-users", users::clickUsersOptionAtTheBottom);
+        step("reseller-03-new-user-form", users::clickUsersAddIconAtTheTopRightCorner);
+        step("reseller-04-back-to-users", () -> driver.navigate().back());
+        step("reseller-05-user-details", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
+                "(//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']"
+                        + "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text,'@')]])[1]")).click());
     }
 }

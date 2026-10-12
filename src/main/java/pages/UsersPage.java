@@ -17,7 +17,13 @@ public class UsersPage {
     private final AppiumDriver driver;
 
     private final By usersOptionAtTheBottomOfTheScreen = AppiumBy.xpath("//android.widget.TextView[@text='Users']");
-    private final By usersAddIconAtTheTopRightCorner = AppiumBy.id("com.een.vms.android:id/img_custom");
+    // The Users screen is Compose now (UsersMainScreen). Its header is [title, sort, add] with no ids,
+    // so the add icon is the last clickable sibling after the title. The old view-based id is kept
+    // in the union so an older app build still works.
+    private final By usersAddIconAtTheTopRightCorner = AppiumBy.xpath(
+            "//*[@resource-id='com.een.vms.android:id/img_custom']"
+                    + " | "+"//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.TextView[@text='Users']"
+                    + "/following-sibling::android.view.View[@clickable='true'][last()]");
     private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/header' and @text='New user']");
     private final By emailTextInputField = AppiumBy.accessibilityId("email_text_field");
     private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/error_desc' and @text='Enter a valid email address']");
@@ -29,7 +35,10 @@ public class UsersPage {
     // TODO: Replace with proper resource-id or content-desc when mobile team adds snackbar identifiers
     private final By snackbarText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
     private final By usersSearchFilterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
-    private final By filterForUsersSearchbar = AppiumBy.id("com.een.vms.android:id/search_bar");
+    // New UI: the filter field is always on the list (no search icon / separate search screen).
+    private final By filterForUsersSearchbar = AppiumBy.xpath(
+            "//*[@resource-id='com.een.vms.android:id/search_bar']"
+                    + " | //androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.EditText");
     private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']");
     private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
     private final By backButton = AppiumBy.id("com.een.vms.android:id/img_back");
@@ -53,7 +62,10 @@ public class UsersPage {
     private static By userRowEndIcon(String email) {
         return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']"
                 + "/ancestor::*[.//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']][1]"
-                + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']");
+                + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']"
+                // New UI: the whole row is the clickable target.
+                + " | //android.widget.TextView[@text='" + email + "']"
+                + "/ancestor::android.view.View[@clickable='true'][1]");
     }
 
     // ---- navigation -----------------------------------------------------------------------
@@ -168,7 +180,8 @@ public class UsersPage {
     // ---- search / delete ------------------------------------------------------------------
 
     public void clickUsersSearchFilterIcon() {
-        WaitUtils.click(driver, usersSearchFilterIcon);
+        // Only the old UI has a search icon; the new list already shows the filter field.
+        WaitUtils.tryClickOptionalElement(driver, java.util.List.of(usersSearchFilterIcon), TimeoutConstants.SHORT_TIMEOUT);
     }
 
     public void filterForUsersSearchbar(String email) {
@@ -191,7 +204,10 @@ public class UsersPage {
 
     /** Navigates back from search screen to the main users list. */
     private void returnToUsersList() {
-        clickBackButton();
+        // The old UI had a separate search screen with its own back button; the new one does not.
+        if (WaitUtils.isPresent(driver, backButton)) {
+            clickBackButton();
+        }
         WaitUtils.waitForVisibility(driver, usersAddIconAtTheTopRightCorner);
     }
 
