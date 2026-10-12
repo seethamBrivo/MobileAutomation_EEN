@@ -1,0 +1,13 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Diagnostics only: dumps UI hierarchies to target/page-sources/. Run with
+     mvn test -Dsuite.file=testng-diagnostics.xml (or CI > Run workflow > suite_file). -->
+<suite name="Hierarchy Dump" parallel="false" thread-count="1">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+    </listeners>
+    <test name="Hierarchy Dump">
+        <classes>
+            <class name="tests.ts_diagnostics.HierarchyDumpTest"/>
+        </classes>
+    </test>
+</suite>

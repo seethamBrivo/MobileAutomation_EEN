@@ -20,6 +20,7 @@
         <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
         <allure.version>2.29.1</allure.version>
         <aspectj.version>1.9.24</aspectj.version>
+        <suite.file>testng.xml</suite.file>
         <browserstack.sdk.version>1.75.6</browserstack.sdk.version>
     </properties>
 
@@ -103,7 +104,7 @@
                 <version>${maven.surefire.plugin.version}</version>
                 <configuration>
                     <suiteXmlFiles>
-                        <suiteXmlFile>testng.xml</suiteXmlFile>
+                        <suiteXmlFile>${suite.file}</suiteXmlFile>
                     </suiteXmlFiles>
                     <systemPropertyVariables>
                         <platform>${platform}</platform>

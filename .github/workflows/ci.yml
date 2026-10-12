@@ -5,6 +5,10 @@ on:
     branches: [main, master]  # Runs only when code is merged to main/master
   workflow_dispatch:  # Allows manual trigger from GitHub UI
     inputs:
+      suite_file:
+        description: 'TestNG suite to run (testng.xml, or testng-diagnostics.xml to dump UI hierarchies)'
+        type: string
+        default: 'testng.xml'
       use_sdk:
         description: 'Run through the BrowserStack SDK (browserstack.yml) instead of direct capabilities'
         type: boolean
@@ -121,7 +125,7 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           BROWSERSTACK_APP_URL: ${{ secrets.BROWSERSTACK_APP_URL }}
           BROWSERSTACK_BUILD_NUMBER: ${{ github.run_number }}
-        run: mvn test -Dplatform=android -DexecutionProvider=browserstack ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
+        run: mvn test -Dplatform=android -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || 'testng.xml' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
 
       - name: Upload test results
         if: always()
@@ -130,6 +134,7 @@ jobs:
           name: test-reports
           path: |
             target/surefire-reports/
+            target/page-sources/
             test-output/
           if-no-files-found: warn
 
