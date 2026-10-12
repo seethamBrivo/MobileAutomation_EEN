@@ -36,6 +36,14 @@ public final class DriverManager {
         initializeDriver(testClassName, testMethodName, new Object[0]);
     }
 
+    /**
+     * The session name the user configured, captured before the first test overwrites the
+     * {@code browserstackSessionName} system property with its own resolved name. Re-reading the
+     * property per test would treat that resolved name as configured and give every session the
+     * first test's name.
+     */
+    private static final String CONFIGURED_SESSION_NAME = ConfigReader.getProperty("browserstackSessionName");
+
     public static void initializeDriver(String testClassName, String testMethodName, Object[] testParameters) {
         if (DRIVER.get() != null) {
             return;
@@ -44,7 +52,7 @@ public final class DriverManager {
         String platform = ConfigReader.getPlatform();
         String provider = getExecutionProvider();
         String browserStackSessionName = BrowserStackSessionNameHelper.resolveSessionName(
-                ConfigReader.getProperty("browserstackSessionName"),
+                CONFIGURED_SESSION_NAME,
                 testClassName,
                 testMethodName,
                 testParameters);

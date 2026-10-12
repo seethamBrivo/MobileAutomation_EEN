@@ -99,6 +99,11 @@ public class CamerasPage {
     }
 
     public boolean scrollToFirstCamera() {
+        // The list first renders skeleton rows with "0 cameras"; swiping through that placeholder
+        // exhausts the scroll budget before any data arrives (BrowserStack build #9).
+        if (WaitUtils.isVisible(driver, firstCameraInList, TimeoutConstants.LIST_LOAD_TIMEOUT)) {
+            return true;
+        }
         return GestureUtils.scrollUntilPresent(driver, firstCameraInList);
     }
 
