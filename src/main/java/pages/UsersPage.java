@@ -24,12 +24,18 @@ public class UsersPage {
             "//*[@resource-id='com.een.vms.android:id/img_custom']"
                     + " | "+"//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.TextView[@text='Users']"
                     + "/following-sibling::android.view.View[@clickable='true'][last()]");
-    private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/header' and @text='New user']");
-    private final By emailTextInputField = AppiumBy.accessibilityId("email_text_field");
-    private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/error_desc' and @text='Enter a valid email address']");
-    private final By addButton = AppiumBy.id("com.een.vms.android:id/btn_text");
-    private final By firstNameTextField = AppiumBy.accessibilityId("first_name_text_field");
-    private final By lastNameTextField = AppiumBy.accessibilityId("last_name_text_field");
+    // New-user form (Compose): header is [back, "New user", Add]; each field is an EditText that follows its
+    // label TextView. The previous resource-id / content-desc locators are kept in the unions.
+    private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@text='New user']");
+    private final By emailTextInputField = AppiumBy.xpath("//*[@content-desc='email_text_field']"
+            + " | //android.widget.TextView[@text='Email']/following-sibling::android.widget.EditText[1]");
+    private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@text='Enter a valid email address']");
+    private final By addButton = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/btn_text']"
+            + " | //android.widget.TextView[@text='New user']/following-sibling::android.view.View[@clickable='true'][last()]");
+    private final By firstNameTextField = AppiumBy.xpath("//*[@content-desc='first_name_text_field']"
+            + " | //android.widget.TextView[@text='First name']/following-sibling::android.widget.EditText[1]");
+    private final By lastNameTextField = AppiumBy.xpath("//*[@content-desc='last_name_text_field']"
+            + " | //android.widget.TextView[@text='Last name']/following-sibling::android.widget.EditText[1]");
     private final By reachedMaxCharactersErrorMessage = AppiumBy.id("com.een.vms.android:id/error_desc");
     private final By emailPlusHint = AppiumBy.id("com.een.vms.android:id/emailPlusHint");
     // TODO: Replace with proper resource-id or content-desc when mobile team adds snackbar identifiers

@@ -79,9 +79,26 @@ public class HierarchyDumpTest extends BaseTest {
         UsersPage users = new UsersPage(driver);
         step("reseller-02-users", users::clickUsersOptionAtTheBottom);
         step("reseller-03-new-user-form", users::clickUsersAddIconAtTheTopRightCorner);
-        step("reseller-04-back-to-users", () -> driver.navigate().back());
+        step("reseller-03b-invalid-email", () -> {
+            users.enterEmailAtTheInputField("inavalidemailformattext");
+            users.clickAddButton();
+        });
+        step("reseller-03c-plus-hint", () -> users.enterEmailAtTheInputField("john+"));
+        step("reseller-03d-max-chars", () -> users.enterFirstNameInputField("f".repeat(55)));
+        step("reseller-04-back-from-form", () -> driver.navigate().back());
+        step("reseller-04b-after-second-back", () -> driver.navigate().back());
         step("reseller-05-user-details", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
                 "(//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']"
                         + "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text,'@')]])[1]")).click());
+        step("reseller-05b-user-details-loaded", () -> {
+            try {
+                Thread.sleep(15_000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        // Opens the delete confirmation but never confirms it.
+        step("reseller-06-delete-dialog", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
+                "//android.widget.TextView[contains(translate(@text,'DELETE','delete'),'delete')]/ancestor-or-self::android.view.View[@clickable='true'][1]")).click());
     }
 }
