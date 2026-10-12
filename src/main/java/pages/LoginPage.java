@@ -6,11 +6,15 @@ import io.appium.java_client.AppiumDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
+import utils.ConfigReader;
 import utils.WaitUtils;
 
 public class LoginPage {
 
     private static final Logger logger = LogManager.getLogger(LoginPage.class);
+    private static final int LOGIN_ATTEMPTS = 3;
+
     private final AppiumDriver driver;
     private final By signInButton = AppiumBy.accessibilityId("sign_in_btn_button");
     private final By emailInputField = AppiumBy.className("android.widget.EditText");
@@ -67,12 +71,41 @@ public class LoginPage {
     }
 
     public ResellerDashboardPage loginAs(String username, String password) {
-        tapSignIn();
-        enterEmail(username);
-        tapNextButton();
-        enterPassword(password);
-        tapSignInButtonToLogin();
+        for (int attempt = 1; attempt <= LOGIN_ATTEMPTS; attempt++) {
+            try {
+                tapSignIn();
+                enterEmail(username);
+                tapNextButton();
+                enterPassword(password);
+                tapSignInButtonToLogin();
+                break;
+            } catch (TimeoutException e) {
+                if (attempt == LOGIN_ATTEMPTS) {
+                    throw e;
+                }
+                logger.warn("Login screen did not load (attempt {}/{}), restarting the app: {}",
+                        attempt, LOGIN_ATTEMPTS, e.getMessage().lines().findFirst().orElse(""));
+                restartApp();
+            }
+        }
         tapNoThanksOptionInBiometricsAuthenticationPopup();
         return new ResellerDashboardPage(driver);
+    }
+
+    /**
+     * The sign-in page intermittently never renders its input fields (BrowserStack CI builds
+     * #10/#11). Restarting the app returns to the sign-in entry point; app data is kept so
+     * permissions granted earlier in the session stay in place.
+     */
+    private void restartApp() {
+        boolean android = "android".equalsIgnoreCase(ConfigReader.getPlatform());
+        String key = android ? "appId" : "bundleId";
+        String appId = ConfigReader.getProperty(android ? "appPackage" : "bundleId");
+        if (appId.isBlank()) {
+            logger.warn("App id not configured; retrying login without restarting the app");
+            return;
+        }
+        driver.executeScript("mobile: terminateApp", java.util.Map.of(key, appId));
+        driver.executeScript("mobile: activateApp", java.util.Map.of(key, appId));
     }
 }
