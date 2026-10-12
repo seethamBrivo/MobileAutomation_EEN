@@ -1,17 +1,21 @@
 package tests.ts_dashboard;
 
 import base.BaseTest;
+import constants.TestDataConstants;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.ResellerDashboardPage;
 import utils.GestureUtils;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import utils.TestDataGenerator;
 
 public class ResellerDashboardTest extends BaseTest {
 
+    private static final String INVALID_CUSTOMER_ID_ACCOUNT_NAME = "TestAccount_TC40220";
+
     private ResellerDashboardPage resellerDashboardPage;
+    // Set once the account exists, cleared once it is deleted; @AfterMethod removes any leftover.
+    private String createdAccountDisplayName;
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndVerifyDashboard() {
@@ -89,36 +93,61 @@ public class ResellerDashboardTest extends BaseTest {
         // Verify Customer ID character limit validation
         String customer_ID = getTestDataValue("customer_Id_Above_120_Characters");
         resellerDashboardPage.enterCustomerId(customer_ID);
-        resellerDashboardPage.enterAccountName("TestAccount_TC40220");
+        resellerDashboardPage.enterAccountName(INVALID_CUSTOMER_ID_ACCOUNT_NAME);
         resellerDashboardPage.clickAddOption();
         resellerDashboardPage.verifyMax120CharsErrorMessageDisplayed();
 
-        // Create account with unique timestamp-based identifiers (error will clear when entering valid data)
-        SimpleDateFormat sdf = new SimpleDateFormat("MMddHHmmss");
-        String timestamp = sdf.format(new Date());
-        String accountName = "TC40220_" + timestamp;
-        String customerId = "CustID_" + timestamp;
+        // Create account with unique identifiers (error will clear when entering valid data)
+        String accountName = TestDataGenerator.generateUniqueName("TC40220_");
+        String customerId = TestDataGenerator.generateUniqueName("CustID_");
 
         resellerDashboardPage.enterAccountName(accountName);
         resellerDashboardPage.enterCustomerId(customerId);
         resellerDashboardPage.clickEmailField();
-        String email = getTestDataValue("test_account_email");
+        String email = getTestDataValue(TestDataConstants.TEST_ACCOUNT_EMAIL);
         resellerDashboardPage.enterEmail(email);
         resellerDashboardPage.clickAddOption();
+        String fullAccountName = accountName + " (" + customerId + ")";
+        createdAccountDisplayName = fullAccountName;
         resellerDashboardPage.verifySuccessMessageDisplayed();
 
-        String fullAccountName = accountName + " (" + customerId + ")";
         resellerDashboardPage.scrollUntilAccountIsVisible(fullAccountName);
         resellerDashboardPage.verifyAccountNameDisplayed(fullAccountName);
 
-        // Cleanup
-        try {
-            resellerDashboardPage.longPressOnAccount(fullAccountName);
-            resellerDashboardPage.clickDeleteAccountOption();
-            resellerDashboardPage.clickDeleteConfirmButton();
-            resellerDashboardPage.verifyDeletedSuccessMessageDisplayed();
-        } catch (Exception e) {
-            logger.warn("Cleanup failed - account deletion unsuccessful: " + e.getMessage());
+        deleteAccount(fullAccountName);
+        createdAccountDisplayName = null;
+    }
+
+    // ---- lifecycle helpers ----------------------------------------------------------------
+
+    /**
+     * Removes the account created by the test even when the test failed part-way. Runs before
+     * BaseTest's teardown (subclass @AfterMethod first), so the driver is still alive. Must not
+     * throw: an exception here would skip the remaining tests in the class. Catches
+     * AssertionError too because the page verify* methods throw it.
+     */
+    @AfterMethod(alwaysRun = true)
+    public void cleanupCreatedAccount() {
+        if (driver == null || createdAccountDisplayName == null) {
+            return;
         }
+        String accountToDelete = createdAccountDisplayName;
+        try {
+            resellerDashboardPage.recoverToAccountList();
+            deleteAccount(accountToDelete);
+            logger.info("@AfterMethod: deleted test account '{}'", accountToDelete);
+        } catch (Exception | AssertionError e) {
+            logger.error("@AfterMethod: could not delete test account '{}': {}", accountToDelete, e.toString());
+        } finally {
+            createdAccountDisplayName = null;
+        }
+    }
+
+    private void deleteAccount(String accountDisplayName) {
+        resellerDashboardPage.scrollUntilAccountIsVisible(accountDisplayName);
+        resellerDashboardPage.longPressOnAccount(accountDisplayName);
+        resellerDashboardPage.clickDeleteAccountOption();
+        resellerDashboardPage.clickDeleteConfirmButton();
+        resellerDashboardPage.verifyDeletedSuccessMessageDisplayed();
     }
 }

@@ -385,6 +385,13 @@ public class ResellerDashboardPage {
         GestureUtils.longPress(driver, accountElement);
     }
 
+    /** Backs out of any add/edit screen so the account list (bottom navigation) is showing. */
+    public void recoverToAccountList() {
+        for (int i = 0; i < 3 && !WaitUtils.isPresent(driver, dashboardOption); i++) {
+            driver.navigate().back();
+        }
+    }
+
     public void clickDeleteAccountOption() {
         WaitUtils.waitForClickability(driver, deleteAccountOption).click();
     }

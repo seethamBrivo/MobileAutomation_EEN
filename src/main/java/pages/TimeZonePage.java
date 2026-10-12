@@ -47,7 +47,7 @@ public class TimeZonePage {
         hideKeyboard();
     }
 
-    public void hideKeyboard() {
+    private void hideKeyboard() {
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (org.openqa.selenium.WebDriverException e) {
@@ -63,6 +63,8 @@ public class TimeZonePage {
     }
 
     public void verifyEmptyStateDisplayed() {
+        // The keyboard can reappear after the list re-filters and cover the empty-state message.
+        hideKeyboard();
         Assert.assertTrue(WaitUtils.isVisible(driver, emptyStateMessage, TimeoutConstants.FILTER_RESULT_TIMEOUT),
                 "Empty state message 'No results found' should be displayed");
     }

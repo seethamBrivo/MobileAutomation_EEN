@@ -67,7 +67,6 @@ public class MyProfileTest extends BaseTest {
         timeZonePage.enterSearchTerm(searchTerm);
         timeZonePage.verifyTimezoneListAdjustedToInput(searchTerm);
         timeZonePage.enterSearchTerm(invalidSearchTerm);
-        timeZonePage.hideKeyboard();
         timeZonePage.verifyEmptyStateDisplayed();
         timeZonePage.clearSearchField();
         timeZonePage.enterSearchTerm(testTimezone);
