@@ -78,27 +78,29 @@ public class HierarchyDumpTest extends BaseTest {
         dump("reseller-01-after-login");
         UsersPage users = new UsersPage(driver);
         step("reseller-02-users", users::clickUsersOptionAtTheBottom);
+        // Same data the AddUserTest creates (a pending test user), so the post-add snackbar, the user's
+        // details screen and the delete dialog can be captured. The delete is never confirmed.
+        String first = utils.TestDataGenerator.generateFirstName();
+        String last = utils.TestDataGenerator.generateLastName();
+        String[] email = new String[1];
         step("reseller-03-new-user-form", users::clickUsersAddIconAtTheTopRightCorner);
-        step("reseller-03b-invalid-email", () -> {
-            users.enterEmailAtTheInputField("inavalidemailformattext");
-            users.clickAddButton();
-        });
-        step("reseller-03c-plus-hint", () -> users.enterEmailAtTheInputField("john+"));
-        step("reseller-03d-max-chars", () -> users.enterFirstNameInputField("f".repeat(55)));
-        step("reseller-04-back-from-form", () -> driver.navigate().back());
-        step("reseller-04b-after-second-back", () -> driver.navigate().back());
-        step("reseller-05-user-details", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
-                "(//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']"
-                        + "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text,'@')]])[1]")).click());
-        step("reseller-05b-user-details-loaded", () -> {
-            try {
-                Thread.sleep(15_000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-        // Opens the delete confirmation but never confirms it.
-        step("reseller-06-delete-dialog", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
-                "//android.widget.TextView[contains(translate(@text,'DELETE','delete'),'delete')]/ancestor-or-self::android.view.View[@clickable='true'][1]")).click());
+        step("reseller-04-after-add", () -> email[0] = users.addUserWithDetails(first, last));
+        step("reseller-04b-after-add-1500ms", () -> pause(1_500));
+        step("reseller-05-filtered", () -> users.filterForUsersSearchbar(email[0]));
+        step("reseller-06-details", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
+                "//android.widget.TextView[@text='" + email[0] + "']/ancestor::android.view.View[@clickable='true'][1]")).click());
+        step("reseller-06b-details-loaded", () -> pause(12_000));
+        step("reseller-07-delete-dialog", () -> driver.findElement(io.appium.java_client.AppiumBy.xpath(
+                "//android.widget.TextView[contains(translate(@text,'DELETE','delete'),'delete')]"
+                        + "/ancestor-or-self::android.view.View[@clickable='true'][1]")).click());
+        logger.info("Diagnostics created pending test user {}", email[0]);
+    }
+
+    private static void pause(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
