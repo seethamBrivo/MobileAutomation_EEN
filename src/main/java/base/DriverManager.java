@@ -24,6 +24,8 @@ public final class DriverManager {
 
     private static final Logger LOGGER = LogManager.getLogger(DriverManager.class);
     private static final ThreadLocal<AppiumDriver> DRIVER = new ThreadLocal<>();
+    /** Session name of the driver being built on this thread (a system property would be shared by all threads). */
+    private static final ThreadLocal<String> SESSION_NAME = new ThreadLocal<>();
 
     private DriverManager() {
     }
@@ -37,10 +39,9 @@ public final class DriverManager {
     }
 
     /**
-     * The session name the user configured, captured before the first test overwrites the
-     * {@code browserstackSessionName} system property with its own resolved name. Re-reading the
-     * property per test would treat that resolved name as configured and give every session the
-     * first test's name.
+     * The session name the user configured. Each test's resolved name lives in
+     * {@link #SESSION_NAME}, never back in the {@code browserstackSessionName} property, so it is
+     * not mistaken for a configured name and parallel threads cannot overwrite each other's.
      */
     private static final String CONFIGURED_SESSION_NAME = ConfigReader.getProperty("browserstackSessionName");
 
@@ -56,7 +57,7 @@ public final class DriverManager {
                 testClassName,
                 testMethodName,
                 testParameters);
-        System.setProperty("browserstackSessionName", browserStackSessionName);
+        SESSION_NAME.set(browserStackSessionName);
 
         try {
             if ("android".equalsIgnoreCase(platform)) {
@@ -104,6 +105,7 @@ public final class DriverManager {
             LOGGER.warn("driver.quit() failed, discarding session anyway: {}", e.getMessage());
         } finally {
             DRIVER.remove();
+            SESSION_NAME.remove();
         }
     }
 
@@ -220,7 +222,7 @@ public final class DriverManager {
             browserStackOptions.put("buildName", buildName);
         }
 
-        String sessionName = ConfigReader.getProperty("browserstackSessionName");
+        String sessionName = SESSION_NAME.get();
         if (isValidProperty(sessionName)) {
             browserStackOptions.put("sessionName", sessionName);
         }

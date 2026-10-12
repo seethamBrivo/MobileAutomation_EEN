@@ -109,6 +109,23 @@ mvn test -Dplatform=android -Dgroups=profile       # only profile tests
 mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackBuildName="My Build"
 ```
 
+### Parallel execution (BrowserStack)
+
+Sequential by default. Add `-DthreadCount=N` to run N sessions at once:
+
+```bash
+mvn test -Dplatform=android -DexecutionProvider=browserstack -DthreadCount=2
+mvn test -Dplatform=android -DexecutionProvider=browserstack -DthreadCount=2 -DparallelMode=classes
+```
+
+- `parallelMode=tests` (default): each `<test>` block in `testng.xml` runs on its own thread; classes inside
+  one block stay in order. The three bridge classes share one attach ID, so they live in one block.
+- `parallelMode=classes`: every class gets a thread. Only safe if the classes do not share data.
+- Keep N within the BrowserStack plan's parallel limit (the account shows `0 of 2 parallels`).
+- Ignored for local runs (one device); the suite then runs sequentially.
+- Tests that share an account also share its data (reseller: dashboard, add-user, bridge restart;
+  end user: bridges, cameras, layouts). Blocks that touch the same records should not run together.
+
 ## Test Cases
 
 Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
