@@ -1,9 +1,11 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<!-- parallel="false": all bridge tests share one attach ID on one account, and one Appium
-     session per thread would fight over the same device locally. -->
+<!-- Sequential by default. -DthreadCount=N (BrowserStack only) runs the <test> blocks in parallel via
+     listeners.ParallelConfigListener; the bridge classes share one attach ID, so they stay together
+     in one <test> block and run in order. -->
 <suite name="Mobile Automation Suite" parallel="false" thread-count="1">
     <listeners>
         <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.ParallelConfigListener"/>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
     </listeners>
 
