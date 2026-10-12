@@ -5,6 +5,7 @@
       "password": "YourPassword123",
       "bridge-account-name": "Your-Account-Name",
       "customer_Id_Above_120_Characters": "Lorem Ipsum is simply dummy text...",
+      "test_account_email": "automation-test@brivo.com",
       "invalidEmailFormatText": "invalidemailtext",
       "existingUserInSystemButNotExistingInCurrentLogin": "existing_user@example.com",
       "attachId": "XXXX-XXXX-XXXX-XXXX"

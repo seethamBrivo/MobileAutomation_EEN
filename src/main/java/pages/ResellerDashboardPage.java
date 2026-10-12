@@ -3,9 +3,12 @@ import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
+
+import java.time.Duration;
 
 public class ResellerDashboardPage {
     private final AppiumDriver driver;
@@ -97,6 +100,12 @@ public class ResellerDashboardPage {
     // Positional: addressed by its position in the ScrollView, since it carries neither.
     private final By cloudPreviewOnlyoggleButton= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[12]/android.view.View/android.view.View");
     private final By max120CharErrorMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Max 120 characters\"]");
+    private final By successMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Added successfully\"]");
+    private final By deleteConfirmButton= AppiumBy.xpath("//android.widget.TextView[@text=\"DELETE\"]");
+    private final By deletedSuccessMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Deleted successfully\"]");
+    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
+    // Positional: Email input field within the ScrollView after clicking "Add email"
+    private final By emailInputField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[4]/android.widget.EditText");
 
     public ResellerDashboardPage(AppiumDriver driver) {
         this.driver = driver;
@@ -127,6 +136,10 @@ public class ResellerDashboardPage {
                 driver,
                 accountName(accountName)
         ).isDisplayed();
+    }
+
+    public void scrollUntilAccountIsVisible(String accountName) {
+        GestureUtils.scrollUntilPresent(driver, accountName(accountName));
     }
 
     public boolean isBridgeResourceIconDisplayed() {
@@ -317,12 +330,16 @@ public class ResellerDashboardPage {
     public boolean cloudPreviewOnlyToggleButton() {
         return WaitUtils.waitForVisibility(driver, cloudPreviewOnlyoggleButton).isDisplayed();
      }
-    public void enterCustomerIdMoreThan120Characters(String customerID) {
-        WaitUtils.waitForVisibility(driver, addCustomerIdField).sendKeys(customerID);
+    public void enterCustomerId(String customerID) {
+        WebElement field = WaitUtils.waitForVisibility(driver, addCustomerIdField);
+        field.clear();
+        field.sendKeys(customerID);
     }
 
     public void enterAccountName(String accountName) {
-        WaitUtils.waitForVisibility(driver, accountNameField).sendKeys(accountName);
+        WebElement field = WaitUtils.waitForVisibility(driver, accountNameField);
+        field.clear();
+        field.sendKeys(accountName);
     }
 
     public void clickAddOption() {
@@ -331,6 +348,62 @@ public class ResellerDashboardPage {
     public boolean isMax120CharsErrorMessageDisplayed() {
         return WaitUtils.waitForVisibility(driver, max120CharErrorMessage).isDisplayed();
     }
+
+    public boolean isSuccessMessageDisplayed() {
+        return WaitUtils.waitForVisibility(driver, successMessage, Duration.ofSeconds(60)).isDisplayed();
+    }
+
+    public void clickEmailField() {
+        WaitUtils.waitForVisibility(driver, emailField).click();
+    }
+
+    public void enterEmail(String email) {
+        WaitUtils.waitForVisibility(driver, emailInputField).sendKeys(email);
+    }
+
+    public void clickBackButton() {
+        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
+    }
+
+    // XPath 1.0 string escaping: uses concat() for values with quotes to prevent injection.
+    // Example: John's "Test" → concat('John', "'", 's "Test"')
+    private String buildXPathStringLiteral(String value) {
+        if (!value.contains("'")) {
+            return "'" + value + "'";
+        }
+        if (!value.contains("\"")) {
+            return "\"" + value + "\"";
+        }
+        String[] parts = value.split("'", -1);
+        return "concat('" + String.join("',\"'\",'", parts) + "')";
+    }
+
+    public void longPressOnAccount(String accountNameWithCustomerId) {
+        String xpathSafeText = buildXPathStringLiteral(accountNameWithCustomerId);
+        By accountLocator = AppiumBy.xpath("(//android.widget.TextView[@text=" + xpathSafeText + "])[1]");
+        WebElement accountElement = WaitUtils.waitForVisibility(driver, accountLocator);
+        GestureUtils.longPress(driver, accountElement);
+    }
+
+    /** Backs out of any add/edit screen so the account list (bottom navigation) is showing. */
+    public void recoverToAccountList() {
+        for (int i = 0; i < 3 && !WaitUtils.isPresent(driver, dashboardOption); i++) {
+            driver.navigate().back();
+        }
+    }
+
+    public void clickDeleteAccountOption() {
+        WaitUtils.waitForClickability(driver, deleteAccountOption).click();
+    }
+
+    public void clickDeleteConfirmButton() {
+        WaitUtils.waitForClickability(driver, deleteConfirmButton).click();
+    }
+
+    public boolean isDeletedSuccessMessageDisplayed() {
+        return WaitUtils.waitForVisibility(driver, deletedSuccessMessage, Duration.ofSeconds(60)).isDisplayed();
+    }
+
     /**
      * Logs out from wherever the test finished. Bottom navigation is reachable from most
      * screens; nested screens/dialogs are unwound with Back first. Throws if it cannot get
@@ -540,5 +613,13 @@ public class ResellerDashboardPage {
 
     public void verifyMax120CharsErrorMessageDisplayed() {
         Assert.assertTrue(isMax120CharsErrorMessageDisplayed(), "Max 120 characters error message should be displayed");
+    }
+
+    public void verifySuccessMessageDisplayed() {
+        Assert.assertTrue(isSuccessMessageDisplayed(), "Success message should be displayed after account creation");
+    }
+
+    public void verifyDeletedSuccessMessageDisplayed() {
+        Assert.assertTrue(isDeletedSuccessMessageDisplayed(), "Deleted successfully message should be displayed after account deletion");
     }
 }

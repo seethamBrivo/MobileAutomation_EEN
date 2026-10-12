@@ -23,6 +23,7 @@ public final class TestDataConstants {
     public static final String RESELLER_CREDS = "reseller_user_creds";
     public static final String ENDUSER_CREDS = "enduser_user_creds";
     public static final String TS02_CREDS = "ts02_user_creds";
+    public static final String TEST_ACCOUNT_EMAIL = "test_account_email";
 
     // Test-data JSON keys (search_filter block).
     public static final String SEARCH_FILTER = "search_filter";
