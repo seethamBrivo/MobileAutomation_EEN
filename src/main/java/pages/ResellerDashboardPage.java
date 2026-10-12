@@ -113,7 +113,8 @@ public class ResellerDashboardPage {
     }
 
     public boolean isDashboardPageDisplayed() {
-        return WaitUtils.waitForVisibility(driver, resellerDashboard).isDisplayed();
+        // Right after login the dashboard can sit on skeleton rows for longer than the default wait.
+        return WaitUtils.waitForVisibility(driver, resellerDashboard, TimeoutConstants.LIST_LOAD_TIMEOUT).isDisplayed();
     }
 
     public void clickFirstAccountWithBridges() {
