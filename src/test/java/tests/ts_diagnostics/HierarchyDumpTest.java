@@ -49,6 +49,20 @@ public class HierarchyDumpTest extends BaseTest {
         DevicesPage devices = new DevicesPage(driver);
         dump("enduser-01-after-login");
         step("enduser-02-dashboard", devices::navigateToDashboard);
+        // Bridge settings: the "settings page" wait matches the root view, so find out what really marks it.
+        step("enduser-02b-bridges-tab", devices::clickBridgesTab);
+        step("enduser-02c-bridge-settings", devices::clickFirstBridge);
+        step("enduser-02d-bridge-settings-loaded", () -> pause(15_000));
+        step("enduser-02e-bridge-settings-bottom", () -> {
+            for (int i = 0; i < 6; i++) {
+                utils.GestureUtils.swipeUp(driver);
+            }
+        });
+        step("enduser-02f-back-to-dashboard", () -> {
+            driver.navigate().back();
+            devices.navigateToDashboard();
+        });
+
         // The add-bridge icon lives on the dashboard header.
         step("enduser-03-add-menu", devices::clickOnAddBridgeIcon);
         step("enduser-04-add-bridge-form", devices::clickAddBridgeOption);
@@ -74,8 +88,16 @@ public class HierarchyDumpTest extends BaseTest {
 
     @Test(description = "Hierarchies of the reseller screens used by the users and account tests")
     public void resellerScreens() {
-        loginAs(TestDataConstants.RESELLER_CREDS);
+        pages.ResellerDashboardPage dash = loginAs(TestDataConstants.RESELLER_CREDS);
         dump("reseller-01-after-login");
+        // Account long-press menu and delete dialog on a leftover TC40220_ account (never confirmed).
+        String[] account = new String[1];
+        step("reseller-01b-account-lookup", () -> account[0] = utils.WaitUtils.waitForVisibility(driver,
+                io.appium.java_client.AppiumBy.xpath("//android.widget.TextView[starts-with(@text,'TC40220_')]"),
+                java.time.Duration.ofSeconds(30)).getText());
+        step("reseller-01c-account-menu", () -> dash.longPressOnAccount(account[0]));
+        step("reseller-01d-account-delete-dialog", dash::clickDeleteAccountOption);
+        step("reseller-01e-back-from-dialog", () -> driver.navigate().back());
         UsersPage users = new UsersPage(driver);
         step("reseller-02-users", users::clickUsersOptionAtTheBottom);
         // Same data the AddUserTest creates (a pending test user), so the post-add snackbar, the user's
