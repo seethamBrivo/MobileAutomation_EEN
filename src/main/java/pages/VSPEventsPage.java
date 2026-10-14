@@ -9,6 +9,7 @@ import org.openqa.selenium.By;
 import org.testng.Assert;
 import org.testng.SkipException;
 import utils.WaitUtils;
+import utils.XPathUtils;
 
 public class VSPEventsPage {
 
@@ -17,7 +18,7 @@ public class VSPEventsPage {
 
     // Stable: ProfileMain back button at fixed position [2] in profile screen
     private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ProfileMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
-    private final By vspSection = AppiumBy.xpath("//android.widget.TextView[@text='VSP']");
+    private final By vspSection = AppiumBy.xpath(XPathUtils.textViewIgnoreCase("VSP"));
     private final By eventsOption = AppiumBy.xpath("//android.widget.TextView[@text='Events']");
     private final By vspEventsHeading = AppiumBy.xpath("//android.widget.TextView[@text='VSP Events']");
     // Scoped to VspMain screen - timestamp pattern specific to event list (Today, HH:MM format)

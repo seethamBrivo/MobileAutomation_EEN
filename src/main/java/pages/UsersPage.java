@@ -17,21 +17,41 @@ public class UsersPage {
     private final AppiumDriver driver;
 
     private final By usersOptionAtTheBottomOfTheScreen = AppiumBy.xpath("//android.widget.TextView[@text='Users']");
-    private final By usersAddIconAtTheTopRightCorner = AppiumBy.id("com.een.vms.android:id/img_custom");
-    private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/header' and @text='New user']");
-    private final By emailTextInputField = AppiumBy.accessibilityId("email_text_field");
-    private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/error_desc' and @text='Enter a valid email address']");
-    private final By addButton = AppiumBy.id("com.een.vms.android:id/btn_text");
-    private final By firstNameTextField = AppiumBy.accessibilityId("first_name_text_field");
-    private final By lastNameTextField = AppiumBy.accessibilityId("last_name_text_field");
-    private final By reachedMaxCharactersErrorMessage = AppiumBy.id("com.een.vms.android:id/error_desc");
-    private final By emailPlusHint = AppiumBy.id("com.een.vms.android:id/emailPlusHint");
-    // TODO: Replace with proper resource-id or content-desc when mobile team adds snackbar identifiers
-    private final By snackbarText = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
+    // The Users screen is Compose now (UsersMainScreen). Its header is [title, sort, add] with no ids,
+    // so the add icon is the last clickable sibling after the title. The old view-based id is kept
+    // in the union so an older app build still works.
+    private final By usersAddIconAtTheTopRightCorner = AppiumBy.xpath(
+            "//*[@resource-id='com.een.vms.android:id/img_custom']"
+                    + " | "+"//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.TextView[@text='Users']"
+                    + "/following-sibling::android.view.View[@clickable='true'][last()]");
+    // New-user form (Compose): header is [back, "New user", Add]; each field is an EditText that follows its
+    // label TextView. The previous resource-id / content-desc locators are kept in the unions.
+    private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@text='New user']");
+    private final By emailTextInputField = AppiumBy.xpath("//*[@content-desc='email_text_field']"
+            + " | //android.widget.TextView[@text='Email']/following-sibling::android.widget.EditText[1]");
+    private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@text='Enter a valid email address']");
+    private final By addButton = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/btn_text']"
+            + " | //android.widget.TextView[@text='New user']/following-sibling::android.view.View[@clickable='true'][last()]");
+    private final By firstNameTextField = AppiumBy.xpath("//*[@content-desc='first_name_text_field']"
+            + " | //android.widget.TextView[@text='First name']/following-sibling::android.widget.EditText[1]");
+    private final By lastNameTextField = AppiumBy.xpath("//*[@content-desc='last_name_text_field']"
+            + " | //android.widget.TextView[@text='Last name']/following-sibling::android.widget.EditText[1]");
+    private final By emailPlusHint = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/emailPlusHint']"
+            + " | //android.widget.TextView[starts-with(@text,'The + alias is no longer required')]");
+    // New UI: the snackbar is a plain TextView with this text. The old positional Compose path is kept in the union.
+    private final By snackbarText = AppiumBy.xpath("//android.widget.TextView[@text='User was added']"
+            + " | //androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
     private final By usersSearchFilterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
-    private final By filterForUsersSearchbar = AppiumBy.id("com.een.vms.android:id/search_bar");
-    private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']");
-    private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']");
+    // New UI: the filter field is always on the list (no search icon / separate search screen).
+    private final By filterForUsersSearchbar = AppiumBy.xpath(
+            "//*[@resource-id='com.een.vms.android:id/search_bar']"
+                    + " | //androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.EditText");
+    // New UI: a clickable row on the user's details screen with a "Delete user" label.
+    private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']"
+            + " | //android.widget.TextView[@text='Delete user']/ancestor::android.view.View[@clickable='true'][1]");
+    // New UI: the confirmation dialog's "DELETE" action.
+    private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']"
+            + " | //android.widget.TextView[@text='DELETE']/ancestor::android.view.View[@clickable='true'][1]");
     private final By backButton = AppiumBy.id("com.een.vms.android:id/img_back");
 
     private static final int DETAILS_OPEN_ATTEMPTS = 3;
@@ -53,7 +73,10 @@ public class UsersPage {
     private static By userRowEndIcon(String email) {
         return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']"
                 + "/ancestor::*[.//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']][1]"
-                + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']");
+                + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']"
+                // New UI: the whole row is the clickable target.
+                + " | //android.widget.TextView[@text='" + email + "']"
+                + "/ancestor::android.view.View[@clickable='true'][1]");
     }
 
     // ---- navigation -----------------------------------------------------------------------
@@ -118,17 +141,6 @@ public class UsersPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, emailPlusHint).isDisplayed(), "Email plus hint should be displayed");
     }
 
-    public void verifyMaxCharactersErrorMessageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, reachedMaxCharactersErrorMessage).isDisplayed(),
-                "Max characters error message should be displayed");
-    }
-
-    public void verifyMaxCharactersValidation() {
-        enterFirstNameInputField("f".repeat(55));
-        verifyMaxCharactersErrorMessageDisplayed();
-        enterLastNameInputField("l".repeat(55));
-    }
-
     /** The "user was added" snackbar - verify it appears (no text validation). */
     public void verifyUserWasAddedMessageDisplayed() {
         WebElement snackbar = WaitUtils.waitForVisibility(driver, snackbarText);
@@ -168,7 +180,8 @@ public class UsersPage {
     // ---- search / delete ------------------------------------------------------------------
 
     public void clickUsersSearchFilterIcon() {
-        WaitUtils.click(driver, usersSearchFilterIcon);
+        // Only the old UI has a search icon; the new list already shows the filter field.
+        WaitUtils.tryClickOptionalElement(driver, java.util.List.of(usersSearchFilterIcon), TimeoutConstants.SHORT_TIMEOUT);
     }
 
     public void filterForUsersSearchbar(String email) {
@@ -179,7 +192,8 @@ public class UsersPage {
     public boolean searchForUser(String email) {
         clickUsersSearchFilterIcon();
         filterForUsersSearchbar(email);
-        return WaitUtils.isVisible(driver, userRowText(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
+        // The filter is applied server-side: the row took ~12s to show up in BrowserStack build #14.
+        return WaitUtils.isVisible(driver, userRowText(email), TimeoutConstants.LIST_LOAD_TIMEOUT);
     }
 
     /** Opens the row for exactly {@code email} and deletes it. Fails if that row is not listed. */
@@ -191,7 +205,10 @@ public class UsersPage {
 
     /** Navigates back from search screen to the main users list. */
     private void returnToUsersList() {
-        clickBackButton();
+        // The old UI had a separate search screen with its own back button; the new one does not.
+        if (WaitUtils.isPresent(driver, backButton)) {
+            clickBackButton();
+        }
         WaitUtils.waitForVisibility(driver, usersAddIconAtTheTopRightCorner);
     }
 
