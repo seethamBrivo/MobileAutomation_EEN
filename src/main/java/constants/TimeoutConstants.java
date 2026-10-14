@@ -33,4 +33,7 @@ public final class TimeoutConstants {
     public static final Duration SWIPE_PAUSE = Duration.ofMillis(300);
     public static final Duration SWIPE_MOVE = Duration.ofMillis(700);
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);
+
+    /** Max wait for device to stabilize after rotation (detects window size change, not a sleep). */
+    public static final Duration ROTATION_STABILIZE = Duration.ofMillis(2000);
 }

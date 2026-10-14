@@ -71,6 +71,27 @@ public final class GestureUtils {
         return false;
     }
 
+    /**
+     * Scrolls until element is visible and clickable, then performs adjustment scroll
+     * to move it away from screen edge. Use when element needs to be clicked after scrolling.
+     */
+    public static boolean scrollUntilVisible(AppiumDriver driver, By locator) {
+        for (int swipes = 0; swipes <= GestureConstants.MAX_SCROLL_SWIPES; swipes++) {
+            if (WaitUtils.isVisible(driver, locator, TimeoutConstants.SHORT_TIMEOUT)) {
+                Dimension size = driver.manage().window().getSize();
+                int centerX = size.width / 2;
+                int startY = (int) (size.height * 0.7);
+                int endY = (int) (size.height * 0.5);
+                swipe(driver, centerX, startY, centerX, endY);
+                return true;
+            }
+            if (swipes < GestureConstants.MAX_SCROLL_SWIPES) {
+                swipeUp(driver);
+            }
+        }
+        return false;
+    }
+
     public static void swipe(AppiumDriver driver, int startX, int startY, int endX, int endY) {
         PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
         Sequence swipeSequence = new Sequence(finger, 1);

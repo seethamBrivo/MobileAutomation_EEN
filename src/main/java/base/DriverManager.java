@@ -138,9 +138,12 @@ public final class DriverManager {
             options.setAppWaitActivity(appActivity);
         }
 
-        // Android 15 workaround: Force app to stop and restart for each session (applies to both BrowserStack and local)
+        // Android 15 workaround: Force app restart for each session
         options.amend("forceAppLaunch", true);
         options.amend("shouldTerminateApp", true);
+
+        // SECURITY: Allows shell commands for device rotation - test environments only
+        options.amend("allowInsecure", java.util.List.of("adb_shell"));
 
         return new AndroidDriver(getServerUrl(), options);
     }
