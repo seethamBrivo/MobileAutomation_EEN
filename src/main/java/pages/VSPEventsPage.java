@@ -12,6 +12,7 @@ import org.testng.SkipException;
 import utils.DeviceUtils;
 import utils.GestureUtils;
 import utils.WaitUtils;
+import utils.XPathUtils;
 
 import java.util.List;
 
@@ -24,7 +25,9 @@ public class VSPEventsPage {
 
     private final AppiumDriver driver;
     private final By moreMenuOption = AppiumBy.xpath("//android.widget.TextView[@text='More']");
-    private final By vspSection = AppiumBy.xpath("//android.widget.TextView[@text='VSP']");
+    // Stable: ProfileMain back button at fixed position [2] in profile screen
+    private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ProfileMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
+    private final By vspSection = AppiumBy.xpath(XPathUtils.textViewIgnoreCase("VSP"));
     private final By eventsOption = AppiumBy.xpath("//android.widget.TextView[@text='Events']");
     private final By vspEventsHeading = AppiumBy.xpath("//android.widget.TextView[@text='VSP Events']");
     private final By vspMainContainer = AppiumBy.xpath(VSP_MAIN_SCREEN);
@@ -158,16 +161,32 @@ public class VSPEventsPage {
         List<WebElement> initialCards = WaitUtils.findElements(driver, allEventCards, TimeoutConstants.SHORT_TIMEOUT);
         int initialCount = initialCards.size();
 
-        // Capture first visible card to detect if content changed (view recycling may remove it)
-        String firstCardTextBefore = initialCards.isEmpty() ? "" :
-                                     initialCards.get(0).getText().replaceAll("\\s+", " ").trim();
+        // Capture first visible card text immediately to avoid stale element
+        String firstCardTextBefore = "";
+        if (!initialCards.isEmpty()) {
+            try {
+                firstCardTextBefore = initialCards.get(0).getText().replaceAll("\\s+", " ").trim();
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                logger.debug("Element became stale, will re-find after scroll");
+                firstCardTextBefore = "";
+            }
+        }
 
         GestureUtils.swipeUp(driver);
 
         List<WebElement> afterScrollCards = WaitUtils.findElements(driver, allEventCards, TimeoutConstants.SHORT_TIMEOUT);
         int afterScrollCount = afterScrollCards.size();
-        String firstCardTextAfter = afterScrollCards.isEmpty() ? "" :
-                                    afterScrollCards.get(0).getText().replaceAll("\\s+", " ").trim();
+
+        // Get text immediately after finding elements
+        String firstCardTextAfter = "";
+        if (!afterScrollCards.isEmpty()) {
+            try {
+                firstCardTextAfter = afterScrollCards.get(0).getText().replaceAll("\\s+", " ").trim();
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                logger.debug("Element became stale after scroll");
+                firstCardTextAfter = "";
+            }
+        }
 
         // Pagination works if content changed (different cards visible) OR count increased
         boolean contentChanged = !firstCardTextBefore.equals(firstCardTextAfter) && !firstCardTextBefore.isEmpty();

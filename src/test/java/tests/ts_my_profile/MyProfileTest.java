@@ -79,7 +79,7 @@ public class MyProfileTest extends BaseTest {
         vspEventsPage.verifyTimestampChangedAfterTimezoneChange(initialVSPTimestamp);
         videoSearchPage.navigateBackFromVSPEvents();
         videoSearchPage.clickSearch();
-        videoSearchPage.verifyDateFieldChangedAfterTimezoneChange(initialVideoSearchDate);
+        videoSearchPage.verifyDateFieldMatchesTimezone(testTimezone);
     }
 
     @AfterMethod(alwaysRun = true)

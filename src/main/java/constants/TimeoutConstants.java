@@ -24,6 +24,9 @@ public final class TimeoutConstants {
     /** How long a details screen may show loading skeletons before it is closed and re-opened. */
     public static final Duration DETAILS_LOAD_TIMEOUT = Duration.ofSeconds(15);
 
+    /** Pause before a scrolling lookup is repeated, so a screen still on skeleton rows can finish loading. */
+    public static final Duration SCROLL_RETRY_SETTLE = Duration.ofSeconds(8);
+
     /** Budget for a list to re-render after typing into its filter field. */
     public static final Duration FILTER_RESULT_TIMEOUT = Duration.ofSeconds(5);
 

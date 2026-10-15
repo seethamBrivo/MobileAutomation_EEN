@@ -148,9 +148,10 @@ public class ResellerDashboardTest extends BaseTest {
 
     private void deleteAccount(String accountDisplayName) {
         resellerDashboardPage.scrollUntilAccountIsVisible(accountDisplayName);
+        int accountsBefore = resellerDashboardPage.getAccountCount();
         resellerDashboardPage.longPressOnAccount(accountDisplayName);
         resellerDashboardPage.clickDeleteAccountOption();
         resellerDashboardPage.clickDeleteConfirmButton();
-        resellerDashboardPage.verifyDeletedSuccessMessageDisplayed();
+        resellerDashboardPage.verifyAccountDeleted(accountsBefore);
     }
 }

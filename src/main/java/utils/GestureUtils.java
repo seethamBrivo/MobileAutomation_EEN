@@ -58,8 +58,27 @@ public final class GestureUtils {
     /**
      * Swipes up until {@code locator} is present, at most {@link GestureConstants#MAX_SCROLL_SWIPES}
      * times. Does nothing if it is already on screen. Returns whether it was found.
+     *
+     * <p>Screens often report themselves as open (title visible) while their content is still on
+     * loading skeletons; four swipes over a skeleton find nothing. So when the first round fails the
+     * screen is scrolled back to the top, given {@link TimeoutConstants#SCROLL_RETRY_SETTLE} to finish
+     * loading, and swiped once more. That second round only costs time on a failing lookup.
      */
     public static boolean scrollUntilPresent(AppiumDriver driver, By locator) {
+        if (swipeUntilPresent(driver, locator)) {
+            return true;
+        }
+        scrollToTop(driver);
+        try {
+            Thread.sleep(TimeoutConstants.SCROLL_RETRY_SETTLE.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+        return swipeUntilPresent(driver, locator);
+    }
+
+    private static boolean swipeUntilPresent(AppiumDriver driver, By locator) {
         for (int swipes = 0; swipes <= GestureConstants.MAX_SCROLL_SWIPES; swipes++) {
             if (WaitUtils.isPresent(driver, locator)) {
                 return true;
