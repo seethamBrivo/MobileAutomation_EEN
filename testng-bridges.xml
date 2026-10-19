@@ -1,0 +1,15 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Only the bridge tests that use the enduser account (BridgesTest: 6 tests, the biggest class).
+     mvn test -Dsuite.file=testng-bridges.xml -->
+<suite name="Bridge Tests Suite" parallel="false" thread-count="1" group-by-instances="true">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.RetryTransformer"/>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+    <test name="Bridge Tests">
+        <classes>
+            <class name="tests.ts_bridges.BridgesTest"/>
+        </classes>
+    </test>
+</suite>

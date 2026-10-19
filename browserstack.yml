@@ -30,6 +30,9 @@ testObservabilityOptions:
   projectName: EEN Mobile Automation
   buildName: CI SDK Build
 
-debug: true
-networkLogs: true
+# Debug logs, network logs and video recording each slow a session down (BrowserStack lists them as
+# high-impact capabilities). Off for routine runs; switch on when diagnosing a failure.
+debug: false
+networkLogs: false
+video: false
 browserstackLocal: false

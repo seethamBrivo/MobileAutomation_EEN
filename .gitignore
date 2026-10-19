@@ -46,6 +46,7 @@ node_modules/
 extent-reports/
 surefire-reports/
 allure-results/
+.allure/
 screenshots/
 
 # Allow essential project files
@@ -70,6 +71,7 @@ screenshots/
 
 # Claude AI Skills (track these for team)
 # .claude/ directory contains team skills - should be committed
+*.claude
 
 # Compiled class files
 *.class

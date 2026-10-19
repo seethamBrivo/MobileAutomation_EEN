@@ -5,18 +5,22 @@ import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
 import io.qameta.allure.Allure;
 import java.io.ByteArrayInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.WebDriverException;
+import org.testng.IConfigurationListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import reports.ExtentManager;
 import utils.ConfigReader;
 
-public class TestListener implements ITestListener {
+public class TestListener implements ITestListener, IConfigurationListener {
 
     private static final Logger logger = LogManager.getLogger(TestListener.class);
 
@@ -69,11 +73,16 @@ public class TestListener implements ITestListener {
 
     private void logFailure(ITestResult result) {
         ensureTestNode(result);
+        savePageSource(result);
         byte[] screenshot;
         try {
             screenshot = DriverManager.getScreenshot();
-        } catch (IllegalStateException exception) {
-            // Driver may not be available when a configuration method fails before setup completes.
+        } catch (IllegalStateException | WebDriverException exception) {
+            // The driver may not exist yet (a configuration method failed before setup completed) or the
+            // device session may already be gone (BrowserStack timed it out). An exception escaping a
+            // listener aborts the whole TestNG run, so record the failure without a screenshot instead.
+            logger.warn("No screenshot for {}: {}", result.getMethod().getMethodName(),
+                    String.valueOf(exception.getMessage()).lines().findFirst().orElse(""));
             ExtentManager.getTest().fail(result.getThrowable());
             return;
         }
@@ -88,6 +97,35 @@ public class TestListener implements ITestListener {
         String screenshotBase64 = Base64.getEncoder().encodeToString(screenshot);
         ExtentManager.getTest().fail(result.getThrowable(),
                 MediaEntityBuilder.createScreenCaptureFromBase64String(screenshotBase64, result.getMethod().getMethodName()).build());
+    }
+
+    /**
+     * A failed @BeforeMethod (login, navigation) skips the test and would otherwise leave no screenshot at
+     * all, so a login that never completes could not be diagnosed from the report.
+     */
+    @Override
+    public void onConfigurationFailure(ITestResult result) {
+        logFailure(result);
+    }
+
+
+    /**
+     * Writes the UI hierarchy of the failing screen to target/page-sources/, so a locator that stopped matching
+     * (typically after an app update) can be fixed from the real attributes instead of guessing. Never throws:
+     * the session may already be gone.
+     */
+    private void savePageSource(ITestResult result) {
+        try {
+            String xml = DriverManager.getDriver().getPageSource();
+            Path dir = Path.of("target", "page-sources");
+            Files.createDirectories(dir);
+            Path file = dir.resolve("FAILED-" + result.getMethod().getMethodName() + "-"
+                    + System.currentTimeMillis() + ".xml");
+            Files.writeString(file, xml);
+            logger.info("Saved page source of the failing screen to {}", file);
+        } catch (Exception exception) {
+            logger.debug("No page source for {}: {}", result.getMethod().getMethodName(), exception.toString());
+        }
     }
 
     @Override

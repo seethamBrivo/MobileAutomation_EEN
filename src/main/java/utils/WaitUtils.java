@@ -90,6 +90,12 @@ public final class WaitUtils {
                 return;
             } catch (StaleElementReferenceException | InvalidElementStateException e) {
                 if (attempt == 2) {
+                    if (e instanceof InvalidElementStateException) {
+                        // Some devices refuse the "set text" command on this field (seen on a Realme phone;
+                        // the BrowserStack Pixel accepts it). Typing key by key still works there.
+                        typeWithKeyEvents(driver, locator, text);
+                        return;
+                    }
                     throw e;
                 }
             } catch (WebDriverException e) {
@@ -102,6 +108,22 @@ public final class WaitUtils {
                 }
             }
         }
+    }
+
+
+    /**
+     * Fallback for fields that reject "set text": focuses the field, clears it and types the text through Appium's
+     * own input method ({@code mobile: type}). Slower than setting the text, so only used after that was refused twice.
+     */
+    private static void typeWithKeyEvents(AppiumDriver driver, By locator, String text) {
+        WebElement field = waitForVisibility(driver, locator);
+        field.click();
+        try {
+            field.clear();
+        } catch (WebDriverException e) {
+            // the typing below still replaces nothing if this fails; the caller reads the field back
+        }
+        driver.executeScript("mobile: type", java.util.Map.of("text", text));
     }
 
     // ---- elements that may legitimately be absent ---------------------------------------
@@ -135,6 +157,29 @@ public final class WaitUtils {
                     for (WebElement candidate : d.findElements(locator)) {
                         if (candidate.isDisplayed()) {
                             return candidate;
+                        }
+                    }
+                }
+                return null;
+            });
+            return Optional.ofNullable(found);
+        } catch (TimeoutException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Like {@link #waitForAny} but reports which locator matched, for callers that react
+     * differently depending on what showed up first (e.g. a popup versus the screen behind it).
+     * Empty when none became visible within {@code timeout}.
+     */
+    public static Optional<By> waitForFirstVisible(AppiumDriver driver, List<By> locators, Duration timeout) {
+        try {
+            By found = wait(driver, timeout).until(d -> {
+                for (By locator : locators) {
+                    for (WebElement candidate : d.findElements(locator)) {
+                        if (candidate.isDisplayed()) {
+                            return locator;
                         }
                     }
                 }

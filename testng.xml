@@ -1,7 +1,10 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <!-- parallel="false": all bridge tests share one attach ID on one account, and one Appium
-     session per thread would fight over the same device locally. -->
-<suite name="Mobile Automation Suite" parallel="false" thread-count="1">
+     session per thread would fight over the same device locally.
+     group-by-instances: BridgesTest uses priorities, which TestNG applies across the whole suite;
+     without this its methods could interleave with other classes' and break the one-session-per-class
+     lifecycle in BaseTest. -->
+<suite name="Mobile Automation Suite" parallel="false" thread-count="1" group-by-instances="true">
     <listeners>
         <listener class-name="listeners.TestListener"/>
         <listener class-name="listeners.RetryTransformer"/>
@@ -14,6 +17,9 @@
             <class name="listeners.RetryAnalyzerTest"/>
             <class name="listeners.RetryTransformerTest"/>
             <class name="utils.XPathUtilsTest"/>
+            <class name="utils.BrowserStackStatusTest"/>
+            <class name="base.SessionScopeTest"/>
+            <class name="base.AuthSessionTest"/>
         </classes>
     </test>
 

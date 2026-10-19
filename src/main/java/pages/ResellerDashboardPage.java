@@ -405,10 +405,12 @@ public class ResellerDashboardPage {
     /** Matches the list header "11 accounts" / "1 account" (not the "Filter by account name" hint). */
     private final By accountsCountLabel = AppiumBy.xpath("//android.widget.TextView[contains(@text,' account')]");
 
+    private static final java.util.regex.Pattern ACCOUNTS_COUNT_PATTERN = java.util.regex.Pattern.compile("^(\\d+) accounts?$");
+
     /** The number in the "N accounts" header, or -1 when it is not on screen. */
     public int getAccountCount() {
         for (WebElement label : driver.findElements(accountsCountLabel)) {
-            java.util.regex.Matcher m = java.util.regex.Pattern.compile("^(\\d+) accounts?$").matcher(label.getText().trim());
+            java.util.regex.Matcher m = ACCOUNTS_COUNT_PATTERN.matcher(label.getText().trim());
             if (m.matches()) {
                 return Integer.parseInt(m.group(1));
             }
@@ -427,16 +429,20 @@ public class ResellerDashboardPage {
         try {
             deleted = new org.openqa.selenium.support.ui.WebDriverWait(driver, Duration.ofSeconds(60))
                     .pollingEvery(Duration.ofMillis(250))
-                    .until(d -> WaitUtils.isPresent(driver, deletedSuccessMessage)
-                            || (countBefore >= 0 && getAccountCount() >= 0 && getAccountCount() < countBefore));
+                    .until(d -> {
+                        if (WaitUtils.isPresent(driver, deletedSuccessMessage)) {
+                            return true;
+                        }
+                        if (countBefore < 0) {
+                            return false;
+                        }
+                        int countNow = getAccountCount(); // one lookup per poll, not two
+                        return countNow >= 0 && countNow < countBefore;
+                    });
         } catch (org.openqa.selenium.TimeoutException e) {
             deleted = false;
         }
         Assert.assertTrue(deleted, "Account should be deleted: no 'Deleted successfully' message and the account count did not drop below " + countBefore);
-    }
-
-    public boolean isDeletedSuccessMessageDisplayed() {
-        return WaitUtils.waitForVisibility(driver, deletedSuccessMessage, Duration.ofSeconds(60)).isDisplayed();
     }
 
     /**
@@ -445,10 +451,11 @@ public class ResellerDashboardPage {
      * there so BaseTest can fall back to clearing the app.
      */
     public void logout() {
-        if (!WaitUtils.isVisible(driver, dashboardOption, TimeoutConstants.SHORT_TIMEOUT)) {
-            for (int i = 0; i < 5 && !WaitUtils.isPresent(driver, moreOption); i++) {
-                driver.navigate().back();
-            }
+        // "More" is part of the bottom navigation, so its presence is all that matters. The old
+        // check waited 3 s for the Dashboard tab to be visible first, on every logout from a screen
+        // that does not show it.
+        for (int i = 0; i < 5 && !WaitUtils.isPresent(driver, moreOption); i++) {
+            driver.navigate().back();
         }
         WaitUtils.click(driver, moreOption);
         if (!WaitUtils.isPresent(driver, logoutOption)) {
@@ -652,9 +659,5 @@ public class ResellerDashboardPage {
 
     public void verifySuccessMessageDisplayed() {
         Assert.assertTrue(isSuccessMessageDisplayed(), "Success message should be displayed after account creation");
-    }
-
-    public void verifyDeletedSuccessMessageDisplayed() {
-        Assert.assertTrue(isDeletedSuccessMessageDisplayed(), "Deleted successfully message should be displayed after account deletion");
     }
 }

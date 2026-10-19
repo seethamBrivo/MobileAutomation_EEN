@@ -131,8 +131,9 @@ mvn test -Dplatform=android -DexecutionProvider=browserstack -DbrowserstackSdk=t
 ### Retrying failed tests
 
 Every `@Test` is re-run once if it fails (`listeners.RetryAnalyzer`, attached by
-`listeners.RetryTransformer` in `testng.xml`). Each attempt gets a fresh Appium session, and a
-failed attempt keeps its screenshot in the report and is marked failed in BrowserStack.
+`listeners.RetryTransformer` in `testng.xml`). With `-DsessionScope=method` each attempt gets a fresh
+Appium session; in the default class scope the retry reuses the class session (a new one is started
+only if the old one is dead). A failed attempt keeps its screenshot in the report.
 
 ```bash
 mvn test -Dplatform=android -DretryCount=2   # up to 2 extra attempts
@@ -141,6 +142,36 @@ mvn test -Dplatform=android -DretryCount=0   # disable retries
 
 TestNG does not retry failed `@BeforeMethod` methods; login has its own retry in `LoginPage.loginAs`.
 A test that only passes on retry is flaky: check the earlier attempt's session before ignoring it.
+
+### Session scope: one session and login per class
+
+By default (`-DsessionScope=class`, Android only) a test class runs in **one Appium session**, and its
+tests reuse the login:
+
+- `BaseTest` opens the session in `@BeforeClass` and quits it in `@AfterClass`. The session name is the
+  class name, and BrowserStack gets one pass/fail status for the session plus a `Start Class.test`
+  annotation per test on its timeline.
+- `loginAs(account)` signs in the first time. Later tests relaunch the app (`mobile: startActivity`,
+  data kept) to get back to the landing screen and skip the login. If the login did not survive the
+  relaunch it signs in again. Asking for another account logs out first; an unknown app state is wiped
+  with `mobile: clearApp`. Cleanup of test data is unchanged (the `@AfterMethod` hooks).
+- A dead Appium session is replaced at the start of the next test.
+- `-DsessionScope=method` restores the old behaviour (new session, UI login and logout per test); use it
+  to compare timings. iOS always uses `method`.
+- The app has no deep link to its dashboard (its manifest only declares `/camera_history/`,
+  `/camera_history_status/` and `/notification/` links), so relaunching `MainActivity` is the way back.
+
+BrowserStack debug logs, network logs and video are off by default because they slow sessions down:
+set `browserstackDebug`, `browserstackNetworkLogs` and `browserstackVideo` to `true` (or tick
+`diagnostics` when running the CI workflow) to diagnose a failure.
+
+### Parallel run (what CI runs)
+
+`mvn test -Dsuite.file=testng-parallel.xml` runs two suites one after the other: `testng-lanes.xml` (every class
+except BridgesTest, 2 workers at once to match the BrowserStack plan; a free worker takes the next class), then
+`testng-bridges.xml` (BridgesTest alone, because the account has a single attach ID). Check the note at the top of
+`testng-lanes.xml` about classes sharing an account. `mvn test -Dsuite.file=testng-unit.xml` runs only the
+framework unit tests (no device).
 
 ## Test Cases
 
@@ -207,7 +238,11 @@ MobileAutomation_EEN/
 │       └── resources/          # Test data
 │           └── testData.json
 ├── pom.xml                     # Maven configuration
-└── testng.xml                  # TestNG suite
+├── testng.xml                  # TestNG suite (sequential)
+├── testng-parallel.xml         # lanes suite, then BridgesTest alone (CI default)
+├── testng-lanes.xml            # all classes except BridgesTest, 2 workers
+├── testng-bridges.xml          # BridgesTest only
+└── testng-unit.xml             # framework unit tests only
 ```
 
 ## Key Features

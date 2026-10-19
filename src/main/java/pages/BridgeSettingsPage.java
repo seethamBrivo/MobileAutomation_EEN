@@ -23,7 +23,6 @@ public class BridgeSettingsPage {
     private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Online')]");
     private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Offline')]");
 
-    private final By bridgeNameOption = AppiumBy.xpath("//android.widget.TextView[@text='Name']");
     // Generic: the name editor is the only EditText on its screen. No testTag available yet.
     private final By bridgeNameEditField = AppiumBy.xpath("//android.widget.EditText");
 
@@ -45,7 +44,24 @@ public class BridgeSettingsPage {
     }
 
     public void verifyStatusSectionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, statusSection).isDisplayed(), "Status section should be displayed");
+        // The settings screen re-renders right after it opens, which can invalidate the element between finding it
+        // and asking whether it is displayed; look it up again instead of failing on that.
+        for (int attempt = 1; ; attempt++) {
+            try {
+                Assert.assertTrue(WaitUtils.waitForVisibility(driver, statusSection).isDisplayed(), "Status section should be displayed");
+                return;
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                if (attempt == 3) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /** True when this settings screen shows a name field holding exactly {@code name}; does not wait long. */
+    public boolean hasNameField(String name) {
+        return WaitUtils.isVisible(driver,
+                AppiumBy.xpath("//android.widget.EditText[@text=" + xpathLiteral(name) + "]"), TimeoutConstants.SHORT_TIMEOUT);
     }
 
     /** {@link #STATUS_ONLINE}, {@link #STATUS_OFFLINE} or {@link #STATUS_UNKNOWN}. */
@@ -66,28 +82,66 @@ public class BridgeSettingsPage {
 
     // ---- rename ---------------------------------------------------------------------------
 
-    public void clickNameOption() {
-        WaitUtils.click(driver, bridgeNameOption);
+    /**
+     * Taps the name field located by its own text: the child view of {@code EditText[@text=<name>]}. Used on the
+     * settings screen to reach the name field of the bridge called {@code name}, in place of tapping the "Name" row.
+     */
+    public void clickNameField(String name) {
+        By field = AppiumBy.xpath("//android.widget.EditText[@text=" + xpathLiteral(name) + "]/android.view.View");
+        org.openqa.selenium.WebElement element = WaitUtils.waitForClickability(driver, field);
+        // A real touch at the centre of the field, like a finger tap. Done with a standard W3C pointer action: the
+        // "mobile: clickGesture" command is not available on BrowserStack's Appium.
+        org.openqa.selenium.Point centre = GestureUtils.getElementCenter(element);
+        org.openqa.selenium.interactions.PointerInput finger =
+                new org.openqa.selenium.interactions.PointerInput(org.openqa.selenium.interactions.PointerInput.Kind.TOUCH, "finger");
+        org.openqa.selenium.interactions.Sequence tap = new org.openqa.selenium.interactions.Sequence(finger, 1);
+        tap.addAction(finger.createPointerMove(java.time.Duration.ZERO,
+                org.openqa.selenium.interactions.PointerInput.Origin.viewport(), centre.x, centre.y));
+        tap.addAction(finger.createPointerDown(org.openqa.selenium.interactions.PointerInput.MouseButton.LEFT.asArg()));
+        tap.addAction(finger.createPointerUp(org.openqa.selenium.interactions.PointerInput.MouseButton.LEFT.asArg()));
+        driver.perform(java.util.List.of(tap));
     }
 
     public String getCurrentBridgeNameFromEditField() {
         return WaitUtils.waitForVisibility(driver, bridgeNameEditField).getText();
     }
 
+    /**
+     * Replaces the bridge name in the name field (which the caller has already opened by tapping it). The field is
+     * read back afterwards, so a name that never reached it fails here with a clear message instead of later at a
+     * check on the settings screen.
+     */
     public void enterNewBridgeName(String newName) {
         WaitUtils.waitForVisibility(driver, bridgeNameEditField).click(); // focus first
         WaitUtils.clearAndType(driver, bridgeNameEditField, newName);
+        java.util.concurrent.atomic.AtomicReference<String> seen = new java.util.concurrent.atomic.AtomicReference<>("");
+        try {
+            new org.openqa.selenium.support.ui.WebDriverWait(driver, java.time.Duration.ofSeconds(5))
+                    .pollingEvery(java.time.Duration.ofMillis(250))
+                    .ignoring(org.openqa.selenium.WebDriverException.class)
+                    .until(d -> {
+                        seen.set(d.findElement(bridgeNameEditField).getText());
+                        return newName.equals(seen.get()) ? Boolean.TRUE : null;
+                    });
+        } catch (org.openqa.selenium.TimeoutException ignored) {
+            // the assertion below reports what the field held
+        }
+        Assert.assertEquals(seen.get(), newName, "The new bridge name should be in the field before it is confirmed");
+    }
+
+    /** XPath 1.0 string literal for {@code value}, which may contain quotes. */
+    private static String xpathLiteral(String value) {
+        if (!value.contains("'")) {
+            return "'" + value + "'";
+        }
+        if (!value.contains("\"")) {
+            return "\"" + value + "\"";
+        }
+        return "concat('" + String.join("',\"'\",'", value.split("'", -1)) + "')";
     }
 
     public void clickDoneOnKeyboard() {
         driver.executeScript("mobile: performEditorAction", Map.of("action", "done"));
-    }
-
-    /** Name option > type > Done. Caller decides how to leave the screen. */
-    public void renameBridge(String newName) {
-        clickNameOption();
-        enterNewBridgeName(newName);
-        clickDoneOnKeyboard();
     }
 
     // ---- restart --------------------------------------------------------------------------

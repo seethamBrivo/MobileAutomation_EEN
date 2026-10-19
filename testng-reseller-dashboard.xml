@@ -1,0 +1,14 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Only ResellerDashboardTest. mvn test -Dsuite.file=testng-reseller-dashboard.xml -->
+<suite name="Reseller Dashboard Suite" parallel="false" thread-count="1" group-by-instances="true">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.RetryTransformer"/>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+    <test name="Reseller Dashboard Tests">
+        <classes>
+            <class name="tests.ts_dashboard.ResellerDashboardTest"/>
+        </classes>
+    </test>
+</suite>

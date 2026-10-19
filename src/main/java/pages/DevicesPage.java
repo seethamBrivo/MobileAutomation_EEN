@@ -33,13 +33,20 @@ public class DevicesPage {
     private final By switchesOption = AppiumBy.xpath("//android.widget.TextView[@text='Switches']");
 
     // Add-bridge flow.
-    // Positional Compose paths: no testTag exists on these nodes yet. Tracked for the mobile team.
-    // The Devices header is now [back, title, sort, add] with no ids, on the dashboard ("All devices") and on
-    // the Bridges tab ("Bridges"). The old positional path (View[2]) lands on the sort icon, so the add
-    // icon is the last clickable sibling after the title.
-    private final By addBridgeIcon = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']"
-            + "//android.widget.TextView[@text='All devices' or @text='Bridges']"
-            + "/following-sibling::android.view.View[@clickable='true'][last()]");
+    private static final java.time.Duration BRIDGE_ROW_SETTLE = java.time.Duration.ofSeconds(15);
+    private static final int ADD_MENU_TAP_ATTEMPTS = 3;
+    private static final java.time.Duration ADD_MENU_APPEAR_TIMEOUT = java.time.Duration.ofSeconds(5);
+    private static final java.time.Duration ADD_FORM_CLOSE_TIMEOUT = java.time.Duration.ofSeconds(20);
+    private static final java.time.Duration ADD_RETRY_PAUSE = java.time.Duration.ofSeconds(10);
+
+    // Positional Compose path: no testTag exists on this node yet. Tracked for the mobile team.
+    // The header is [back, title, sort, add] with no ids, so the "+" is the last clickable item after the
+    // "All devices" title. Only this form is used: a positional form
+    // (".../View[5]/View[2]/View") lands on the filter icon of the Bridges list screen, and the tap then opens the
+    // filter instead of the add menu. clickOnAddBridgeIcon() makes sure the All devices screen is showing first.
+    private final By addBridgeIcon = AppiumBy.xpath(
+            "//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]//android.widget.TextView[@text=\"All devices\"]/following-sibling::android.view.View[@clickable=\"true\"][last()]");
+    private final By onlineBridgeRows = AppiumBy.xpath("//android.widget.TextView[@text='Online']/ancestor::android.view.View[@clickable='true'][1]");
     private final By addBridgeOption = AppiumBy.xpath("//android.widget.TextView[@text='Add bridge']");
     private final By addCameraOption = AppiumBy.xpath("//android.widget.TextView[@text='Add camera']");
     private final By addCameraDirectOption = AppiumBy.xpath("//android.widget.TextView[@text='Add Camera Direct']");
@@ -168,8 +175,24 @@ public class DevicesPage {
 
     // ---- add bridge -----------------------------------------------------------------------
 
+    /**
+     * Opens the "add device" menu. The "+" icon exists before the device list has finished loading, and a tap
+     * that lands during that reload is swallowed (the menu never opens). So the tap is repeated, a few seconds
+     * apart, until the menu shows, instead of waiting out the full element timeout for a menu that is not coming.
+     * If it still does not open, the next step fails with its usual message.
+     */
     public void clickOnAddBridgeIcon() {
-        WaitUtils.click(driver, addBridgeIcon);
+        if (!WaitUtils.isVisible(driver, allDevicesSection, ADD_MENU_APPEAR_TIMEOUT)) {
+            // Still on the Bridges list (or another screen): its header has no "+" for this locator, and a
+            // positional guess would hit the filter icon. Go back to the All devices screen first.
+            recoverToDashboard();
+        }
+        for (int attempt = 1; attempt <= ADD_MENU_TAP_ATTEMPTS; attempt++) {
+            WaitUtils.click(driver, addBridgeIcon);
+            if (WaitUtils.isVisible(driver, addBridgeOption, ADD_MENU_APPEAR_TIMEOUT)) {
+                return;
+            }
+        }
     }
 
     public void verifyAddDeviceOptionsDisplayed() {
@@ -216,6 +239,42 @@ public class DevicesPage {
         enterAttachId(attachId);
         verifyAddBridgeButtonEnabled();
         clickAddBridgeButton();
+        if (!waitForAddFormToClose()) {
+            // The server can still be freeing the attach ID of a bridge deleted a moment ago, which answers with a
+            // short-lived "conflict" message and leaves the form open. The fields keep their values: wait, tap Add once more.
+            logger.warn("The add-bridge form is still open after tapping Add; waiting {} and trying once more", ADD_RETRY_PAUSE);
+            pause(ADD_RETRY_PAUSE);
+            clickAddBridgeButton();
+            Assert.assertTrue(waitForAddFormToClose(),
+                    "Adding bridge '" + bridgeName + "' did not go through: the add-bridge form stayed open after two attempts");
+        }
+    }
+
+    /** True once the add-bridge form is gone, i.e. the app accepted the bridge. Notes a conflict message if one flashes by. */
+    private boolean waitForAddFormToClose() {
+        long deadline = System.nanoTime() + ADD_FORM_CLOSE_TIMEOUT.toNanos();
+        boolean conflictSeen = false;
+        while (System.nanoTime() < deadline) {
+            // Back on "All devices" (where an accepted add lands, and the form has no such heading), or the form's
+            // name field is gone: either way the app took the bridge.
+            if (WaitUtils.isPresent(driver, allDevicesSection) || !WaitUtils.isPresent(driver, bridgeNameField)) {
+                return true;
+            }
+            if (!conflictSeen && WaitUtils.isPresent(driver, conflictErrorMessage)) {
+                conflictSeen = true;
+                logger.warn("The app answered the add with a conflict message");
+            }
+            pause(java.time.Duration.ofMillis(300));
+        }
+        return false;
+    }
+
+    private static void pause(java.time.Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     // ---- bridge list / filter -------------------------------------------------------------
@@ -252,15 +311,68 @@ public class DevicesPage {
 
     public void verifyBridgeNameMatches(String expectedName) {
         WaitUtils.waitForVisibility(driver, firstBridgeNameText);
-        Assert.assertEquals(getFirstBridgeName(), expectedName, "Bridge name should match");
+        Assert.assertEquals(awaitFirstBridgeName(expectedName), expectedName, "Bridge name should match");
+    }
+
+    /**
+     * Polls the first row of the (filtered) list until its name is exactly {@code expectedName}, for up to
+     * {@link #BRIDGE_ROW_SETTLE}. Returns the name last seen, so the caller can assert on it. The list keeps
+     * showing the previous rows for a moment after the filter or a rename, so a single read is not reliable.
+     */
+    private String awaitFirstBridgeName(String expectedName) {
+        long deadline = System.nanoTime() + BRIDGE_ROW_SETTLE.toNanos();
+        String seen = "";
+        while (System.nanoTime() < deadline) {
+            try {
+                seen = driver.findElement(firstBridgeNameText).getText().trim();
+                if (expectedName.equals(seen)) {
+                    return seen;
+                }
+            } catch (org.openqa.selenium.WebDriverException e) {
+                // row not rendered yet, or re-rendering: look again
+            }
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        return seen;
     }
 
     public void clickFirstBridge() {
-        WaitUtils.click(driver, firstBridgeInList);
+        // The list re-renders after a filter or a rename, which can invalidate the row between finding and tapping it.
+        for (int attempt = 1; ; attempt++) {
+            try {
+                WaitUtils.click(driver, firstBridgeInList);
+                return;
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                if (attempt == 3) {
+                    throw e;
+                }
+            }
+        }
     }
 
-    public void clickFirstOnlineBridge() {
-        WaitUtils.click(driver, firstOnlineBridge);
+    /**
+     * Opens the first online bridge in the list and returns its name. Only an online bridge's name can be edited (a
+     * bridge that was just added stays offline for about an hour), so the rename test works on an existing online
+     * bridge and puts the name it found back afterwards.
+     */
+    public String clickFirstOnlineBridgeAndGetName() {
+        WaitUtils.waitForVisibility(driver, firstOnlineBridge);
+        for (WebElement row : driver.findElements(onlineBridgeRows)) {
+            try {
+                String name = row.findElement(By.xpath(".//android.widget.TextView[1]")).getText().trim();
+                row.click();
+                return name;
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                // the list re-rendered under us: try the next row, the loop below ends with a clear failure
+            }
+        }
+        Assert.fail("No online bridge is available for the rename test");
+        return null;
     }
 
     public void clickBridgeThreeDotsButton() {
@@ -308,13 +420,40 @@ public class DevicesPage {
      */
     public void deleteBridgeWorkflow(String bridgeName) {
         verifyBridgeFoundInFilter(bridgeName);
+        // The list can still be showing the previous (unfiltered) rows for a moment after typing in the filter.
+        // Clicking its first row would open, and then delete, an unrelated bridge on the shared account.
+        waitForFirstBridgeNamed(bridgeName);
         WaitUtils.waitForVisibility(driver, firstBridgeInList).click();
+        deleteBridgeFromOpenSettings();
+        // The server frees the attach ID only once the bridge is really gone; returning earlier lets the next
+        // add-bridge hit a "conflict" error. The filter showing no match for this name means it is gone.
+        verifyUserNavigatedBackToBridgesTab();
+        verifyNoMatchingBridgesMessageDisplayed(bridgeName);
+    }
+
+    /**
+     * Deletes the bridge whose settings screen is open. The caller is responsible for having confirmed which bridge
+     * that is (e.g. by reading its name on the settings screen).
+     */
+    public void deleteBridgeFromOpenSettings() {
         settings.waitForDeleteBridgeSettingsPage();
         Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, deleteBridgeButton),
                 "Delete bridge button should be reachable on the bridge settings screen");
         clickDeleteBridgeButton();
         Assert.assertTrue(isDeleteConfirmationDialogDisplayed(), "Delete confirmation dialog should be displayed");
         clickDeleteButton();
+    }
+
+
+    /**
+     * Fails without touching anything unless the first row of the filtered list is exactly {@code bridgeName}, so a
+     * delete can never be pointed at a bridge the test did not create.
+     */
+    private void waitForFirstBridgeNamed(String bridgeName) {
+        String seen = awaitFirstBridgeName(bridgeName);
+        if (!bridgeName.equals(seen)) {
+            Assert.fail("Refusing to delete: the first bridge in the list is '" + seen + "', not '" + bridgeName + "'");
+        }
     }
 
     /**
@@ -340,6 +479,17 @@ public class DevicesPage {
             logger.warn("Not deleting '{}': it does not match '{}'", displayed, expectedName);
             return false;
         }
+        // The list can re-render between the check above and the click; look again right before clicking.
+        try {
+            String stillDisplayed = getFirstBridgeName();
+            boolean stillMatches = exactMatch ? stillDisplayed.equals(expectedName) : stillDisplayed.startsWith(expectedName);
+            if (!stillMatches) {
+                logger.warn("Not deleting: the first row changed from '{}' to '{}'", displayed, stillDisplayed);
+                return false;
+            }
+        } catch (TimeoutException e) {
+            return false;
+        }
         clickFirstBridge();
         if (!GestureUtils.scrollUntilPresent(driver, deleteBridgeButton)) {
             logger.warn("Delete bridge button not reachable for '{}'", displayed);
@@ -352,6 +502,22 @@ public class DevicesPage {
         }
         clickDeleteButton();
         logger.info("Deleted bridge '{}'", displayed);
+        awaitBridgeGone(displayed);
         return true;
+    }
+
+    /**
+     * Cleanup version of the wait in {@link #deleteBridgeWorkflow}: the attach ID is free again only once the bridge is
+     * gone, so the next add must not start before that. Never throws; a bridge that lingers is only logged.
+     */
+    private void awaitBridgeGone(String bridgeName) {
+        try {
+            WaitUtils.clearAndType(driver, filterSearchField, bridgeName);
+            if (!WaitUtils.isVisible(driver, noMatchingBridgesMessage, constants.FrameworkConstants.EXPLICIT_WAIT)) {
+                logger.warn("Bridge '{}' still shows in the list after its delete", bridgeName);
+            }
+        } catch (RuntimeException e) {
+            logger.warn("Could not confirm that bridge '{}' is gone: {}", bridgeName, e.toString());
+        }
     }
 }

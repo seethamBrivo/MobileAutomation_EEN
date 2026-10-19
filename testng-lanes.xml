@@ -1,0 +1,37 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Every class except BridgesTest in one pool: 2 workers (the BrowserStack plan allows 2 parallel sessions),
+     and each worker takes the next waiting class as soon as it finishes one, so neither session sits idle.
+
+     BridgesTest is NOT in here on purpose (single attach ID, so it must run alone). Run testng-parallel.xml
+     to get this pool followed by BridgesTest in one command.
+
+     Do not add group-by-instances="true" here: with parallel="classes" it makes TestNG run the classes one after
+     another. All methods of one class still run on one thread, in order, so the class-level session is safe.
+
+     Watch out: which classes run side by side is no longer fixed. Two classes that use the same account
+     (e.g. two enduser classes) can now be signed in at the same time on two devices, and the camera classes
+     and BridgeRestartTest share the account's bridge data. If that causes flaky results, go back to fixed
+     lanes (one account per lane).
+     Unit tests are not in here (RetryAnalyzerTest changes system properties while the other session runs);
+     run them with -Dsuite.file=testng-unit.xml. -->
+<suite name="Mobile Automation Suite (2 workers)" parallel="classes" thread-count="2">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.RetryTransformer"/>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+
+    <test name="All classes except BridgesTest">
+        <classes>
+            <!-- longest first, so the short ones fill the gaps at the end -->
+            <class name="tests.ts_users.AddUserTest"/>
+            <class name="tests.ts_dashboard.ResellerDashboardTest"/>
+            <class name="tests.ts_layouts.LayoutsTest"/>
+            <class name="tests.ts_my_profile.MyProfileTest"/>
+            <class name="tests.ts_bridges.BridgeCameraSearchFilterTest"/>
+            <class name="tests.ts_cameras.CameraContextMenuTest"/>
+            <class name="tests.ts_cameras.CameraSearchFilterTest"/>
+            <class name="tests.ts_bridges.BridgeRestartTest"/>
+        </classes>
+    </test>
+</suite>

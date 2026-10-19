@@ -55,6 +55,8 @@ public final class GestureUtils {
         }
     }
 
+    private static final long SETTLE_POLL_MILLIS = 500;
+
     /**
      * Swipes up until {@code locator} is present, at most {@link GestureConstants#MAX_SCROLL_SWIPES}
      * times. Does nothing if it is already on screen. Returns whether it was found.
@@ -69,11 +71,19 @@ public final class GestureUtils {
             return true;
         }
         scrollToTop(driver);
-        try {
-            Thread.sleep(TimeoutConstants.SCROLL_RETRY_SETTLE.toMillis());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
+        // Same settle budget as before, but stop waiting the moment the target shows up on its own
+        // (the content finished loading at the top) instead of always sleeping the full time.
+        long deadline = System.nanoTime() + TimeoutConstants.SCROLL_RETRY_SETTLE.toNanos();
+        while (System.nanoTime() < deadline) {
+            if (WaitUtils.isPresent(driver, locator)) {
+                return true;
+            }
+            try {
+                Thread.sleep(SETTLE_POLL_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
         }
         return swipeUntilPresent(driver, locator);
     }

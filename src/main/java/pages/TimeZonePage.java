@@ -94,13 +94,6 @@ public class TimeZonePage {
                 "Timezone list should be restored after clearing search field");
     }
 
-    public void selectFirstTimezone() {
-        WebElement firstTimezone = WaitUtils.waitForVisibility(driver, firstTimezoneInList);
-        String timezoneText = firstTimezone.getText();
-        WaitUtils.click(driver, firstTimezoneInList);
-        logger.info("Selected first timezone: {}", timezoneText);
-    }
-
     /**
      * Select first timezone and verify it matches the expected search term.
      *

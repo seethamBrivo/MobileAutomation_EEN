@@ -12,7 +12,8 @@ public final class TestDataConstants {
     public static final String BRIDGE_PREFIX_DUPLICATE = "DuplicateBridge_";
     public static final String BRIDGE_PREFIX_FILTER = "FilterTestBridge_";
     public static final String BRIDGE_PREFIX_CONTEXT_MENU = "ContextMenuBridge_";
-    public static final String BRIDGE_PREFIX_UPDATED = "UpdatedBridge_";
+    /** Short prefix of the temporary name the rename test gives an existing bridge (the name is `Rn_` + 5 digits). */
+    public static final String BRIDGE_PREFIX_RENAMED = "Rn_";
 
     // Random suffix range for generated e-mail addresses.
     public static final int MIN_RANDOM_SUFFIX = 1000;
