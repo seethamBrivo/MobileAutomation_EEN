@@ -2,6 +2,7 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import locators.ResellerDashboardLocators;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
@@ -14,36 +15,11 @@ import java.time.Duration;
 public class ResellerDashboardPage {
     private final AppiumDriver driver;
     private final By resellerDashboard = AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]");
-    private final By totalAccounts= AppiumBy.xpath("//android.widget.TextView[contains(@text, 'accounts')]");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: this dashboard graphic carries no content-desc/testTag yet.
-    private final By largeModelTransformationIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private By accountName(String accountName) {
         return AppiumBy.xpath(
                 "//android.widget.TextView[@text=\"" + accountName + "\"]"
         );
     }
-
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: the first account row's resource icons and status dots carry no
-    // content-desc/testTag yet, so each is addressed by its sibling index in the row.
-    private final By bridgeResourceIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[1]");
-    private final By greenDotForOnline= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[2]");
-    private final By redDotForOffline= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[3]");
-    private final By yellowDotForConnectivityIssue= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[7]");
-    private final By greyDotForStatusTurnedOff= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[8]");
-    private final By cameraResourceIcon= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[4]");
-    private final By threeDotsOption= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View[9]");
-    private final By settingsOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Settings\"]");
-    private final By deleteAccountOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Delete account\"]");
-    private final By filterByAccountNameFilter= AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by account name\"]");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: this button carries no content-desc/testTag yet.
-    private final By addAccountButton= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[5]/android.view.View/android.view.View");
-    private final By dashboardOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Dashboard\"]");
-    private final By usersOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]");
-    private final By businessPortalOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Business Portal\"]");
-    private final By moreOption= AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]");
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: the first account row in the list carries no content-desc/testTag yet.
     private final By firstAccountWithBridges = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]");
@@ -126,11 +102,11 @@ public class ResellerDashboardPage {
     }
 
     public boolean isTotalAccountsDisplayed() {
-        return WaitUtils.waitForVisibility(driver, totalAccounts).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.TOTAL_ACCOUNTS).isDisplayed();
     }
 
     public boolean isLargeModelTransformationIconDisplayed() {
-        return WaitUtils.waitForVisibility(driver, largeModelTransformationIcon).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.TRANSFORMATION_ICON).isDisplayed();
     }
 
     public boolean isAccountNameDisplayed(String accountName) {
@@ -145,67 +121,67 @@ public class ResellerDashboardPage {
     }
 
     public boolean isBridgeResourceIconDisplayed() {
-        return WaitUtils.waitForVisibility(driver, bridgeResourceIcon).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.BRIDGE_ICON).isDisplayed();
     }
 
     public boolean isGreenDotDisplayed() {
-        return WaitUtils.waitForVisibility(driver, greenDotForOnline).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.DOT_GREEN).isDisplayed();
     }
 
     public boolean isRedDotDisplayed() {
-        return WaitUtils.waitForVisibility(driver, redDotForOffline).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.DOT_RED).isDisplayed();
     }
 
     public boolean isYellowDotDisplayed() {
-        return WaitUtils.waitForVisibility(driver, yellowDotForConnectivityIssue).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.DOT_YELLOW).isDisplayed();
     }
 
     public boolean isGreyDotDisplayed() {
-        return WaitUtils.waitForVisibility(driver, greyDotForStatusTurnedOff).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.DOT_GREY).isDisplayed();
     }
 
     public boolean isCameraResourceIconDisplayed() {
-        return WaitUtils.waitForVisibility(driver, cameraResourceIcon).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CAMERA_ICON).isDisplayed();
     }
 
-    public  void clickThreeDotsOption() {
-        WaitUtils.waitForVisibility(driver, threeDotsOption).click();
+    public void clickThreeDotsOption() {
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.THREE_DOTS_BUTTON).click();
     }
 
     public boolean isSettingsOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, settingsOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CONTEXT_MENU_SETTINGS).isDisplayed();
     }
 
     public boolean isDeleteAccountOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, deleteAccountOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CONTEXT_MENU_DELETE_ACCOUNT).isDisplayed();
     }
 
     public boolean isFilterByAccountNameFilterDisplayed() {
-        return WaitUtils.waitForVisibility(driver, filterByAccountNameFilter).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.FILTER_BY_ACCOUNT_NAME).isDisplayed();
     }
 
     public boolean isAddAccountButtonDisplayed() {
-        return WaitUtils.waitForVisibility(driver, addAccountButton).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ADD_ACCOUNT_BUTTON).isDisplayed();
     }
 
     public boolean isDashboardOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, dashboardOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_DASHBOARD).isDisplayed();
     }
 
     public boolean isUsersOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, usersOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_USERS).isDisplayed();
     }
 
     public boolean isBusinessPortalOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, businessPortalOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_BUSINESS_PORTAL).isDisplayed();
     }
 
     public boolean isMoreOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, moreOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_MORE).isDisplayed();
     }
 
-    public  void clickAddAccountButton() {
-        WaitUtils.waitForVisibility(driver, addAccountButton).click();
+    public void clickAddAccountButton() {
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ADD_ACCOUNT_BUTTON).click();
     }
 
     public boolean isAccountNameFieldDisplayed() {
@@ -393,13 +369,13 @@ public class ResellerDashboardPage {
 
     /** Backs out of any add/edit screen so the account list (bottom navigation) is showing. */
     public void recoverToAccountList() {
-        for (int i = 0; i < 3 && !WaitUtils.isPresent(driver, dashboardOption); i++) {
+        for (int i = 0; i < 3 && !WaitUtils.isPresent(driver, ResellerDashboardLocators.NAV_DASHBOARD); i++) {
             driver.navigate().back();
         }
     }
 
     public void clickDeleteAccountOption() {
-        WaitUtils.waitForClickability(driver, deleteAccountOption).click();
+        WaitUtils.waitForClickability(driver, ResellerDashboardLocators.CONTEXT_MENU_DELETE_ACCOUNT).click();
     }
 
     public void clickDeleteConfirmButton() {
@@ -459,10 +435,10 @@ public class ResellerDashboardPage {
         // "More" is part of the bottom navigation, so its presence is all that matters. Give it a moment to show up
         // before pressing Back: right after a relaunch the screen may still be rendering, and Back from the landing
         // screen would leave the app. The wait only costs time when the screen really is somewhere else.
-        for (int i = 0; i < 5 && !WaitUtils.isVisible(driver, moreOption, TimeoutConstants.SHORT_TIMEOUT); i++) {
+        for (int i = 0; i < 5 && !WaitUtils.isVisible(driver, ResellerDashboardLocators.NAV_MORE, TimeoutConstants.SHORT_TIMEOUT); i++) {
             driver.navigate().back();
         }
-        WaitUtils.click(driver, moreOption);
+        WaitUtils.click(driver, ResellerDashboardLocators.NAV_MORE);
         if (!WaitUtils.isPresent(driver, logoutOption)) {
             GestureUtils.swipeUp(driver);
         }
@@ -664,5 +640,45 @@ public class ResellerDashboardPage {
 
     public void verifySuccessMessageDisplayed() {
         Assert.assertTrue(isSuccessMessageDisplayed(), "Success message should be displayed after account creation");
+    }
+
+    public void verifyDeletedSuccessMessageDisplayed() {
+        Assert.assertTrue(isDeletedSuccessMessageDisplayed(), "Deleted successfully message should be displayed after account deletion");
+    }
+
+    // ---- step-level verification workflows --------------------------------------------------
+
+    public void verifyDashboardSummary() {
+        verifyTotalAccountsDisplayed();
+    }
+
+    public void verifyAccountCardContents(String bridgeAccountName) {
+        verifyLargeModelTransformationIconDisplayed();
+        verifyAccountNameDisplayed(bridgeAccountName);
+        verifyBridgeResourceIconDisplayed();
+        verifyCameraResourceIconDisplayed();
+        verifyGreenDotDisplayed();
+        verifyRedDotDisplayed();
+        verifyYellowDotDisplayed();
+        verifyGreyDotDisplayed();
+    }
+
+    public void verifyContextMenuOptions() {
+        clickThreeDotsOption();
+        verifySettingsOptionDisplayed();
+        verifyDeleteAccountOptionDisplayed();
+        dismissContextMenu();
+    }
+
+    public void verifyDashboardToolbar() {
+        verifyFilterByAccountNameDisplayed();
+        verifyAddAccountButtonDisplayed();
+    }
+
+    public void verifyBottomNavigationBar() {
+        verifyDashboardOptionDisplayed();
+        verifyUsersOptionDisplayed();
+        verifyBusinessPortalOptionDisplayed();
+        verifyMoreOptionDisplayed();
     }
 }

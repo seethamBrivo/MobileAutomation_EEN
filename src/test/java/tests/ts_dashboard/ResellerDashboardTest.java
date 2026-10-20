@@ -27,26 +27,11 @@ public class ResellerDashboardTest extends BaseTest {
     @Test(description = "EEPD-TC-4516: POS-Reseller Dashboard - (View Dashboard for Reseller) in mobile VMS app",
           groups = {"regression", "dashboard"})
     public void verifyResellerDashboard() {
-        resellerDashboardPage.verifyTotalAccountsDisplayed();
-        resellerDashboardPage.verifyLargeModelTransformationIconDisplayed();
-        String bridgeAccountName = getTestDataValue("bridge-account-name");
-        resellerDashboardPage.verifyAccountNameDisplayed(bridgeAccountName);
-        resellerDashboardPage.verifyBridgeResourceIconDisplayed();
-        resellerDashboardPage.verifyGreenDotDisplayed();
-        resellerDashboardPage.verifyRedDotDisplayed();
-        resellerDashboardPage.verifyYellowDotDisplayed();
-        resellerDashboardPage.verifyGreyDotDisplayed();
-        resellerDashboardPage.verifyCameraResourceIconDisplayed();
-        resellerDashboardPage.clickThreeDotsOption();
-        resellerDashboardPage.verifySettingsOptionDisplayed();
-        resellerDashboardPage.verifyDeleteAccountOptionDisplayed();
-        resellerDashboardPage.dismissContextMenu();
-        resellerDashboardPage.verifyFilterByAccountNameDisplayed();
-        resellerDashboardPage.verifyAddAccountButtonDisplayed();
-        resellerDashboardPage.verifyDashboardOptionDisplayed();
-        resellerDashboardPage.verifyUsersOptionDisplayed();
-        resellerDashboardPage.verifyBusinessPortalOptionDisplayed();
-        resellerDashboardPage.verifyMoreOptionDisplayed();
+        resellerDashboardPage.verifyDashboardSummary();
+        resellerDashboardPage.verifyAccountCardContents(getTestDataValue("bridge-account-name"));
+        resellerDashboardPage.verifyContextMenuOptions();
+        resellerDashboardPage.verifyDashboardToolbar();
+        resellerDashboardPage.verifyBottomNavigationBar();
     }
 
     @Test(description = "EEPD-TC-40220: POS-Reseller Dashboard - Verify the account creation for Admin OR Account access users",
