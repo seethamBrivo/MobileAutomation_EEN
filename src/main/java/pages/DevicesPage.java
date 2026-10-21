@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
@@ -42,6 +41,7 @@ public class DevicesPage {
     private static final Duration ADD_MENU_APPEAR_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration ADD_FORM_CLOSE_TIMEOUT = Duration.ofSeconds(20);
     private static final Duration ADD_RETRY_PAUSE = Duration.ofSeconds(10);
+    private static final Duration ADD_LANDING_TIMEOUT = Duration.ofSeconds(40);
 
     // Positional Compose path: no testTag exists on this node yet. Tracked for the mobile team.
     // The header is [back, title, sort, add] with no ids, so the "+" is the last clickable item after the
@@ -192,6 +192,9 @@ public class DevicesPage {
             recoverToDashboard();
         }
         for (int attempt = 1; attempt <= ADD_MENU_TAP_ATTEMPTS; attempt++) {
+            if (attempt > 1 && WaitUtils.isPresent(driver, addBridgeOption)) {
+                return; // the menu opened just after the last check; tapping "+" again would close it
+            }
             WaitUtils.click(driver, addBridgeIcon);
             if (WaitUtils.isVisible(driver, addBridgeOption, ADD_MENU_APPEAR_TIMEOUT)) {
                 return;
@@ -244,26 +247,40 @@ public class DevicesPage {
         enterAttachId(attachId);
         verifyAddBridgeButtonEnabled();
         clickAddBridgeButton();
-        if (!waitForAddFormToClose()) {
+        AddResult result = awaitAddResult();
+        if (result == AddResult.STILL_OPEN) {
             // The server can still be freeing the attach ID of a bridge deleted a moment ago, which answers with a
             // short-lived "conflict" message and leaves the form open. The fields keep their values: wait, tap Add once more.
             logger.warn("The add-bridge form is still open after tapping Add; waiting {} and trying once more", ADD_RETRY_PAUSE);
             pause(ADD_RETRY_PAUSE);
             clickAddBridgeButton();
-            Assert.assertTrue(waitForAddFormToClose(),
+            result = awaitAddResult();
+        }
+        if (result == AddResult.UNKNOWN) {
+            // Neither the form nor the dashboard: the app is still busy (or somewhere unexpected). Do NOT tap Add again, the
+            // bridge may already be added; give the dashboard more time to show up.
+            logger.warn("Neither the add form nor the dashboard is showing; waiting up to {} for the dashboard", ADD_LANDING_TIMEOUT);
+            Assert.assertTrue(WaitUtils.isVisible(driver, allDevicesSection, ADD_LANDING_TIMEOUT),
+                    "After adding bridge '" + bridgeName + "' the app did not return to the All devices screen");
+        } else {
+            Assert.assertSame(result, AddResult.ACCEPTED,
                     "Adding bridge '" + bridgeName + "' did not go through: the add-bridge form stayed open after two attempts");
         }
     }
 
-    /** True once the add-bridge form is gone, i.e. the app accepted the bridge. Notes a conflict message if one flashes by. */
-    private boolean waitForAddFormToClose() {
+    private enum AddResult { ACCEPTED, STILL_OPEN, UNKNOWN }
+
+    /**
+     * After tapping Add: ACCEPTED once the "All devices" screen is back (a positive sign; the form has no such heading),
+     * STILL_OPEN if the form's name field is on screen at the deadline, UNKNOWN if neither is. Notes a conflict message
+     * if one flashes by.
+     */
+    private AddResult awaitAddResult() {
         long deadline = System.nanoTime() + ADD_FORM_CLOSE_TIMEOUT.toNanos();
         boolean conflictSeen = false;
         while (System.nanoTime() < deadline) {
-            // Back on "All devices" (where an accepted add lands, and the form has no such heading), or the form's
-            // name field is gone: either way the app took the bridge.
-            if (WaitUtils.isPresent(driver, allDevicesSection) || !WaitUtils.isPresent(driver, bridgeNameField)) {
-                return true;
+            if (WaitUtils.isPresent(driver, allDevicesSection)) {
+                return AddResult.ACCEPTED;
             }
             if (!conflictSeen && WaitUtils.isPresent(driver, conflictErrorMessage)) {
                 conflictSeen = true;
@@ -271,7 +288,7 @@ public class DevicesPage {
             }
             pause(Duration.ofMillis(300));
         }
-        return false;
+        return WaitUtils.isPresent(driver, bridgeNameField) ? AddResult.STILL_OPEN : AddResult.UNKNOWN;
     }
 
     private static void pause(Duration duration) {
@@ -325,39 +342,12 @@ public class DevicesPage {
      * showing the previous rows for a moment after the filter or a rename, so a single read is not reliable.
      */
     private String awaitFirstBridgeName(String expectedName) {
-        long deadline = System.nanoTime() + BRIDGE_ROW_SETTLE.toNanos();
-        String seen = "";
-        while (System.nanoTime() < deadline) {
-            try {
-                seen = driver.findElement(firstBridgeNameText).getText().trim();
-                if (expectedName.equals(seen)) {
-                    return seen;
-                }
-            } catch (WebDriverException e) {
-                // row not rendered yet, or re-rendering: look again
-            }
-            try {
-                Thread.sleep(300);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-        return seen;
+        return WaitUtils.pollText(driver, firstBridgeNameText, expectedName, BRIDGE_ROW_SETTLE);
     }
 
     public void clickFirstBridge() {
-        // The list re-renders after a filter or a rename, which can invalidate the row between finding and tapping it.
-        for (int attempt = 1; ; attempt++) {
-            try {
-                WaitUtils.click(driver, firstBridgeInList);
-                return;
-            } catch (StaleElementReferenceException e) {
-                if (attempt == 3) {
-                    throw e;
-                }
-            }
-        }
+        // WaitUtils.click repeats the lookup if the list re-renders between finding the row and tapping it.
+        WaitUtils.click(driver, firstBridgeInList);
     }
 
     /**
@@ -366,8 +356,7 @@ public class DevicesPage {
      * bridge and puts the name it found back afterwards.
      */
     public String clickFirstOnlineBridgeAndGetName() {
-        WaitUtils.waitForVisibility(driver, firstOnlineBridge);
-        for (WebElement row : driver.findElements(onlineBridgeRows)) {
+        for (WebElement row : WaitUtils.findElements(driver, onlineBridgeRows)) {
             try {
                 String name = row.findElement(By.xpath(".//android.widget.TextView[1]")).getText().trim();
                 row.click();

@@ -41,9 +41,54 @@ public final class WaitUtils {
         return wait(driver, timeout).until(ExpectedConditions.elementToBeClickable(locator));
     }
 
-    /** Waits for the element to be clickable, then clicks it. */
+    /**
+     * Waits for the element to be clickable, then clicks it. A list or Compose screen that re-renders between finding
+     * the element and tapping it makes the element stale; the lookup is then repeated (up to {@link #STALE_ATTEMPTS}).
+     */
     public static void click(AppiumDriver driver, By locator) {
-        waitForClickability(driver, locator).click();
+        retryOnStale(() -> {
+            waitForClickability(driver, locator).click();
+            return null;
+        });
+    }
+
+    private static final int STALE_ATTEMPTS = 3;
+
+    /**
+     * Runs {@code action}, repeating it when the element it used went stale because the screen re-rendered. The action
+     * must look the element up itself each time. The third stale failure is rethrown.
+     */
+    public static <T> T retryOnStale(java.util.function.Supplier<T> action) {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return action.get();
+            } catch (StaleElementReferenceException e) {
+                if (attempt == STALE_ATTEMPTS) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /**
+     * Polls the text of the first element matching {@code locator} (trimmed) until it equals {@code expected}, for up to
+     * {@code timeout}, and returns the text last seen ("" if none was readable). A missing or re-rendering element is
+     * not an error here; the caller compares the result with what it expects.
+     */
+    public static String pollText(AppiumDriver driver, By locator, String expected, Duration timeout) {
+        java.util.concurrent.atomic.AtomicReference<String> seen = new java.util.concurrent.atomic.AtomicReference<>("");
+        try {
+            new WebDriverWait(driver, timeout)
+                    .pollingEvery(Duration.ofMillis(300))
+                    .ignoring(WebDriverException.class)
+                    .until(d -> {
+                        seen.set(d.findElement(locator).getText().trim());
+                        return expected.equals(seen.get()) ? Boolean.TRUE : null;
+                    });
+        } catch (TimeoutException ignored) {
+            // the caller compares the last text seen with what it expected
+        }
+        return seen.get();
     }
 
     /**
@@ -121,9 +166,16 @@ public final class WaitUtils {
         try {
             field.clear();
         } catch (WebDriverException e) {
-            // the typing below still replaces nothing if this fails; the caller reads the field back
+            // the typing below still replaces nothing if this fails; the field is read back right after
         }
         driver.executeScript("mobile: type", java.util.Map.of("text", text));
+        String held = pollText(driver, locator, text.trim(), Duration.ofSeconds(3));
+        if (!text.trim().equals(held)) {
+            // Typed key by key without confirmation can leave a partial or empty field; do not pass that on silently.
+            // Lengths only: the text may be a password.
+            throw new InvalidElementStateException("The field holds " + held.length() + " characters after typing "
+                    + text.length() + " key by key");
+        }
     }
 
     // ---- elements that may legitimately be absent ---------------------------------------

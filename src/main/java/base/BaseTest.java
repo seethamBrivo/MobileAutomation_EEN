@@ -40,12 +40,10 @@ public abstract class BaseTest {
     protected AppiumDriver driver;
     protected final Logger logger = LogManager.getLogger(getClass());
 
-    /**
-     * Final outcome of each test run in this class session: PASSED, FAILED, or NOT_RUN (it was skipped because
-     * a setup method failed). A failed attempt that TestNG retries is overwritten by the retry's outcome.
-     */
-    private final Map<String, String> outcomes = new LinkedHashMap<>();
-    private long testStartedAt;
+    // Per-class state in instance fields (reporter, blockedAccounts, lastTornDown, driver): safe only because TestNG
+    // runs all methods of one class instance on one thread (parallel="classes" or a serial suite), never one class
+    // on two threads. The per-thread state (driver, AuthSession) lives in ThreadLocals.
+    private final BrowserStackReporter reporter = new BrowserStackReporter();
     /** Accounts whose sign-in is blocked (e.g. a security-code step), so later tests fail at once instead of retrying it. */
     private final Map<String, String> blockedAccounts = new LinkedHashMap<>();
     /** Subclass cleanup hooks call {@link #tearDown} themselves, so it can run twice for one test. */
@@ -77,10 +75,7 @@ public abstract class BaseTest {
             openSession(className, method.getName(), testResult.getParameters());
         } else {
             ensureSessionAlive();
-            testStartedAt = System.nanoTime();
-            if (isBrowserStackExecution()) {
-                BrowserStackStatus.annotate(driver, "START " + method.getName());
-            }
+            reporter.testStarted(driver, method.getName());
         }
         logger.info("Test setup completed for {}.{}", className, method.getName());
     }
@@ -262,7 +257,7 @@ public abstract class BaseTest {
         if (SessionScope.current() == SessionScope.CLASS) {
             if (testResult != lastTornDown) {
                 lastTornDown = testResult;
-                recordResult(testResult);
+                reporter.record(driver, testResult);
             }
             return;
         }
@@ -285,63 +280,19 @@ public abstract class BaseTest {
             return;
         }
         try {
-            if (isBrowserStackExecution()) {
-                List<String> failed = namesWithOutcome("FAILED");
-                List<String> notRun = namesWithOutcome("NOT_RUN");
-                BrowserStackStatus.setStatus(driver, failed.isEmpty() && notRun.isEmpty(),
-                        BrowserStackStatus.sessionReason(outcomes.size(), failed, notRun));
-            }
+            reporter.finishSession(driver);
         } finally {
             DriverManager.quitDriver();
             driver = null;
             AuthSession.reset();
-            outcomes.clear();
+            reporter.reset();
             blockedAccounts.clear();
             logger.info("Class session ended for {}", getClass().getSimpleName());
         }
     }
 
-    /** Records the test's outcome and marks it on the BrowserStack timeline, so a shared session stays readable. */
-    private void recordResult(ITestResult testResult) {
-        String name = testResult.getMethod().getMethodName();
-        long seconds = Math.max(0, (System.nanoTime() - testStartedAt) / 1_000_000_000L);
-        String reason = testResult.getThrowable() == null ? "" : ": " + firstLine(testResult.getThrowable().getMessage());
-        switch (testResult.getStatus()) {
-            case ITestResult.SUCCESS -> {
-                outcomes.put(name, "PASSED");
-                annotate("PASSED " + name + " (" + seconds + "s)", "info");
-            }
-            case ITestResult.FAILURE -> {
-                outcomes.put(name, "FAILED");
-                annotate("FAILED " + name + " (" + seconds + "s)" + reason, "error");
-            }
-            case ITestResult.SKIP -> {
-                if (testResult.wasRetried()) {
-                    // TestNG reports a failed attempt it is about to retry as SKIP; the retry decides the outcome.
-                    annotate("ATTEMPT FAILED, retrying " + name + " (" + seconds + "s)" + reason, "warn");
-                } else {
-                    // The test never ran (a @BeforeMethod/@BeforeClass failed); it must not leave the
-                    // session looking green.
-                    outcomes.put(name, "NOT_RUN");
-                    annotate("NOT RUN " + name + " (setup failed)" + reason, "error");
-                }
-            }
-            default -> { }
-        }
-    }
-
-    private void annotate(String message, String level) {
-        if (isBrowserStackExecution() && driver != null) {
-            BrowserStackStatus.annotate(driver, message, level);
-        }
-    }
-
-    private List<String> namesWithOutcome(String outcome) {
-        return outcomes.entrySet().stream().filter(e -> outcome.equals(e.getValue())).map(Map.Entry::getKey).toList();
-    }
-
     private static String firstLine(String text) {
-        return text == null ? "" : text.lines().findFirst().orElse("");
+        return BrowserStackReporter.firstLine(text);
     }
 
     /**
@@ -395,7 +346,7 @@ public abstract class BaseTest {
     }
 
     private boolean isBrowserStackExecution() {
-        return "browserstack".equalsIgnoreCase(ConfigReader.getProperty("executionProvider"));
+        return BrowserStackReporter.isBrowserStackExecution();
     }
 
     private void updateBrowserStackStatus(ITestResult testResult) {

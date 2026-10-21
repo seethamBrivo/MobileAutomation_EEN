@@ -10,6 +10,7 @@
             <class name="utils.BrowserStackStatusTest"/>
             <class name="base.SessionScopeTest"/>
             <class name="base.AuthSessionTest"/>
+            <class name="base.BrowserStackReporterTest"/>
         </classes>
     </test>
 </suite>

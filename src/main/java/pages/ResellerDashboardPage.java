@@ -451,10 +451,10 @@ public class ResellerDashboardPage {
      * there so BaseTest can fall back to clearing the app.
      */
     public void logout() {
-        // "More" is part of the bottom navigation, so its presence is all that matters. The old
-        // check waited 3 s for the Dashboard tab to be visible first, on every logout from a screen
-        // that does not show it.
-        for (int i = 0; i < 5 && !WaitUtils.isPresent(driver, moreOption); i++) {
+        // "More" is part of the bottom navigation, so its presence is all that matters. Give it a moment to show up
+        // before pressing Back: right after a relaunch the screen may still be rendering, and Back from the landing
+        // screen would leave the app. The wait only costs time when the screen really is somewhere else.
+        for (int i = 0; i < 5 && !WaitUtils.isVisible(driver, moreOption, TimeoutConstants.SHORT_TIMEOUT); i++) {
             driver.navigate().back();
         }
         WaitUtils.click(driver, moreOption);

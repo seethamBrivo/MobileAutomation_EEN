@@ -147,7 +147,7 @@ public class LoginPage {
         if (promptButton == null) {
             logger.info("No biometrics prompt; signed-in screen is showing");
         } else {
-            driver.findElement(promptButton).click();
+            WaitUtils.click(driver, promptButton);
             logger.info("Biometrics popup successfully dismissed");
         }
         return true;

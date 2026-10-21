@@ -3,10 +3,13 @@ package tests.ts_bridges;
 import base.BaseTest;
 import constants.TestDataConstants;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
+import java.util.ArrayList;
+import java.util.List;
 import pages.BridgeSettingsPage;
 import pages.DevicesPage;
 import utils.BridgeTestHelper;
@@ -22,6 +25,8 @@ public class BridgesTest extends BaseTest {
 
     /** Name of the bridge this test created and has not yet deleted, or null. */
     private String testBridgeName;
+    /** Bridges whose cleanup threw: they may still hold the account's single attach ID. Reported at the end of the class. */
+    private final List<String> leftoverBridges = new ArrayList<>();
     /** Original name of the existing bridge the rename test renamed and has not yet restored, or null. */
     private String renamedBridgeOriginalName;
     /** The unique name given to that bridge by the rename test; restoring looks the bridge up by this exact name. */
@@ -186,6 +191,14 @@ public class BridgesTest extends BaseTest {
 
     // ---- lifecycle helpers ----------------------------------------------------------------
 
+    @AfterClass(alwaysRun = true)
+    public void reportLeftoverBridges() {
+        if (!leftoverBridges.isEmpty()) {
+            // Loud on purpose: with one attach ID, a bridge left behind makes the next run's add fail with a conflict.
+            logger.error("Bridges that could not be cleaned up and may still be on the account: {}", leftoverBridges);
+        }
+    }
+
     @AfterMethod(alwaysRun = true)
     public void cleanupBridge(ITestResult testResult) {
         try {
@@ -240,6 +253,7 @@ public class BridgesTest extends BaseTest {
                     }
                 } catch (Throwable t) {
                     logger.error("@AfterMethod: could not clean up bridge '{}': {}", testBridgeName, t.toString());
+                    leftoverBridges.add(testBridgeName);
                 }
             }
             testBridgeName = null;

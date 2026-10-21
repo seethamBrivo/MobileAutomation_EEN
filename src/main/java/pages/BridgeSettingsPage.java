@@ -6,16 +6,11 @@ import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Point;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
@@ -56,17 +51,9 @@ public class BridgeSettingsPage {
 
     public void verifyStatusSectionDisplayed() {
         // The settings screen re-renders right after it opens, which can invalidate the element between finding it
-        // and asking whether it is displayed; look it up again instead of failing on that.
-        for (int attempt = 1; ; attempt++) {
-            try {
-                Assert.assertTrue(WaitUtils.waitForVisibility(driver, statusSection).isDisplayed(), "Status section should be displayed");
-                return;
-            } catch (StaleElementReferenceException e) {
-                if (attempt == 3) {
-                    throw e;
-                }
-            }
-        }
+        // and asking whether it is displayed; the lookup is repeated instead of failing on that.
+        Assert.assertTrue(WaitUtils.retryOnStale(() -> WaitUtils.waitForVisibility(driver, statusSection).isDisplayed()),
+                "Status section should be displayed");
     }
 
     /** True when this settings screen shows a name field holding exactly {@code name}; does not wait long. */
@@ -125,19 +112,8 @@ public class BridgeSettingsPage {
     public void enterNewBridgeName(String newName) {
         WaitUtils.waitForVisibility(driver, bridgeNameEditField).click(); // focus first
         WaitUtils.clearAndType(driver, bridgeNameEditField, newName);
-        AtomicReference<String> seen = new AtomicReference<>("");
-        try {
-            new WebDriverWait(driver, Duration.ofSeconds(5))
-                    .pollingEvery(Duration.ofMillis(250))
-                    .ignoring(WebDriverException.class)
-                    .until(d -> {
-                        seen.set(d.findElement(bridgeNameEditField).getText());
-                        return newName.equals(seen.get()) ? Boolean.TRUE : null;
-                    });
-        } catch (TimeoutException ignored) {
-            // the assertion below reports what the field held
-        }
-        Assert.assertEquals(seen.get(), newName, "The new bridge name should be in the field before it is confirmed");
+        String seen = WaitUtils.pollText(driver, bridgeNameEditField, newName, Duration.ofSeconds(5));
+        Assert.assertEquals(seen, newName, "The new bridge name should be in the field before it is confirmed");
     }
 
     /** XPath 1.0 string literal for {@code value}, which may contain quotes. */

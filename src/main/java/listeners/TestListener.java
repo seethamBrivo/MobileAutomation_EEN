@@ -124,7 +124,10 @@ public class TestListener implements ITestListener, IConfigurationListener {
      */
     private void savePageSource(ITestResult result) {
         try {
-            String xml = DriverManager.getDriver().getPageSource();
+            // The file can end up in CI artifacts: blank the text of password fields so a typed password never reaches it.
+            String xml = DriverManager.getDriver().getPageSource()
+                    .replaceAll("(<[^>]*?)\\btext=\"[^\"]*\"([^>]*\\bpassword=\"true\")", "$1text=\"\"$2")
+                    .replaceAll("(<[^>]*\\bpassword=\"true\"[^>]*?)\\btext=\"[^\"]*\"", "$1text=\"\"");
             Path dir = Path.of("target", "page-sources");
             Files.createDirectories(dir);
             Path file = dir.resolve("FAILED-" + result.getMethod().getMethodName() + "-"
