@@ -104,6 +104,7 @@ jobs:
           browserstackAccessKey=${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           browserstackProjectName=EEN Mobile Automation
           browserstackBuildName=CI Build ${{ github.run_number }}
+          browserstackIdleTimeout=120
           browserstackDebug=${{ inputs.diagnostics == true && 'true' || 'false' }}
           browserstackNetworkLogs=${{ inputs.diagnostics == true && 'true' || 'false' }}
           browserstackVideo=${{ inputs.diagnostics == true && 'true' || 'false' }}
