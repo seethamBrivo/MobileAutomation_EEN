@@ -1,12 +1,16 @@
 package pages;
 
+import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
@@ -33,11 +37,11 @@ public class DevicesPage {
     private final By switchesOption = AppiumBy.xpath("//android.widget.TextView[@text='Switches']");
 
     // Add-bridge flow.
-    private static final java.time.Duration BRIDGE_ROW_SETTLE = java.time.Duration.ofSeconds(15);
+    private static final Duration BRIDGE_ROW_SETTLE = Duration.ofSeconds(15);
     private static final int ADD_MENU_TAP_ATTEMPTS = 3;
-    private static final java.time.Duration ADD_MENU_APPEAR_TIMEOUT = java.time.Duration.ofSeconds(5);
-    private static final java.time.Duration ADD_FORM_CLOSE_TIMEOUT = java.time.Duration.ofSeconds(20);
-    private static final java.time.Duration ADD_RETRY_PAUSE = java.time.Duration.ofSeconds(10);
+    private static final Duration ADD_MENU_APPEAR_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration ADD_FORM_CLOSE_TIMEOUT = Duration.ofSeconds(20);
+    private static final Duration ADD_RETRY_PAUSE = Duration.ofSeconds(10);
 
     // Positional Compose path: no testTag exists on this node yet. Tracked for the mobile team.
     // The header is [back, title, sort, add] with no ids, so the "+" is the last clickable item after the
@@ -193,6 +197,7 @@ public class DevicesPage {
                 return;
             }
         }
+        Assert.fail("The add-device menu did not open after " + ADD_MENU_TAP_ATTEMPTS + " taps on the '+' icon");
     }
 
     public void verifyAddDeviceOptionsDisplayed() {
@@ -264,12 +269,12 @@ public class DevicesPage {
                 conflictSeen = true;
                 logger.warn("The app answered the add with a conflict message");
             }
-            pause(java.time.Duration.ofMillis(300));
+            pause(Duration.ofMillis(300));
         }
         return false;
     }
 
-    private static void pause(java.time.Duration duration) {
+    private static void pause(Duration duration) {
         try {
             Thread.sleep(duration.toMillis());
         } catch (InterruptedException e) {
@@ -328,7 +333,7 @@ public class DevicesPage {
                 if (expectedName.equals(seen)) {
                     return seen;
                 }
-            } catch (org.openqa.selenium.WebDriverException e) {
+            } catch (WebDriverException e) {
                 // row not rendered yet, or re-rendering: look again
             }
             try {
@@ -347,7 +352,7 @@ public class DevicesPage {
             try {
                 WaitUtils.click(driver, firstBridgeInList);
                 return;
-            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+            } catch (StaleElementReferenceException e) {
                 if (attempt == 3) {
                     throw e;
                 }
@@ -367,7 +372,7 @@ public class DevicesPage {
                 String name = row.findElement(By.xpath(".//android.widget.TextView[1]")).getText().trim();
                 row.click();
                 return name;
-            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+            } catch (StaleElementReferenceException e) {
                 // the list re-rendered under us: try the next row, the loop below ends with a clear failure
             }
         }
@@ -513,7 +518,7 @@ public class DevicesPage {
     private void awaitBridgeGone(String bridgeName) {
         try {
             WaitUtils.clearAndType(driver, filterSearchField, bridgeName);
-            if (!WaitUtils.isVisible(driver, noMatchingBridgesMessage, constants.FrameworkConstants.EXPLICIT_WAIT)) {
+            if (!WaitUtils.isVisible(driver, noMatchingBridgesMessage, FrameworkConstants.EXPLICIT_WAIT)) {
                 logger.warn("Bridge '{}' still shows in the list after its delete", bridgeName);
             }
         } catch (RuntimeException e) {

@@ -32,6 +32,13 @@ public class BrowserStackStatusTest {
     }
 
     @Test
+    public void tabsOtherControlCharactersAndJsonSyntaxStayInsideTheString() throws Exception {
+        String script = BrowserStackStatus.annotateScript("a\tb\u0001c } { : , \"} x", "info");
+        JsonObject json = JsonParser.parseString(script.substring(PREFIX.length())).getAsJsonObject();
+        assertEquals(json.getAsJsonObject("arguments").get("data").getAsString(), "a b c } { : ,  } x");
+    }
+
+    @Test
     public void longTextIsTruncatedAndNullIsEmpty() {
         assertEquals(BrowserStackStatus.sanitize("x".repeat(1000)).length(), 250);
         assertEquals(BrowserStackStatus.sanitize(null), "");

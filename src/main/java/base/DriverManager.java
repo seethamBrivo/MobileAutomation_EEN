@@ -91,6 +91,9 @@ public final class DriverManager {
      * 0 turns the wait off, -1 keeps the driver's own default.
      */
     private static void applyIdleTimeoutSetting(AppiumDriver driver) {
+        if (!(driver instanceof AndroidDriver)) {
+            return; // a UiAutomator2 setting; XCUITest does not know it and would only log a warning
+        }
         String configured = ConfigReader.getProperty("waitForIdleTimeoutMs");
         long millis = DEFAULT_IDLE_TIMEOUT_MS;
         if (isValidProperty(configured)) {
@@ -195,10 +198,13 @@ public final class DriverManager {
 
         // The client's default read timeout is far longer than any real command. A BrowserStack session that
         // stops answering (seen once, after a click) then blocked the whole run for ~10 minutes.
-        AppiumClientConfig clientConfig = AppiumClientConfig.defaultConfig()
+        return new AndroidDriver(clientConfig(), options);
+    }
+
+    private static AppiumClientConfig clientConfig() throws MalformedURLException {
+        return AppiumClientConfig.defaultConfig()
                 .baseUrl(getServerUrl())
                 .readTimeout(COMMAND_READ_TIMEOUT);
-        return new AndroidDriver(clientConfig, options);
     }
 
     private static IOSDriver createIosDriver(String sessionName) throws MalformedURLException {
@@ -221,7 +227,7 @@ public final class DriverManager {
             options.setBundleId(bundleId);
         }
 
-        return new IOSDriver(getServerUrl(), options);
+        return new IOSDriver(clientConfig(), options);
     }
 
     private static void setCommonMobileOptions(io.appium.java_client.remote.options.BaseOptions<?> options) {

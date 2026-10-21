@@ -67,12 +67,15 @@ public final class BrowserStackStatus {
                 + sanitize(message) + "\", \"level\": \"" + sanitize(level) + "\"}}";
     }
 
-    /** Keeps the text valid inside the hand-built JSON string: no quotes, backslashes or line breaks. */
+    /**
+     * Keeps the text valid inside the hand-built JSON string. Only the quote and the backslash can end or escape a
+     * JSON string ({ } : , are plain text there), and JSON forbids raw control characters (line breaks, tabs, ...).
+     */
     static String sanitize(String text) {
         if (text == null) {
             return "";
         }
-        String clean = text.replaceAll("[\"\\\\\r\n]", " ").trim();
+        String clean = text.replaceAll("[\"\\\\\\p{Cntrl}]", " ").trim();
         return clean.length() > MAX_TEXT_LENGTH ? clean.substring(0, MAX_TEXT_LENGTH) : clean;
     }
 

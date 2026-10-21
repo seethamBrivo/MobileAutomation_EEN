@@ -204,17 +204,25 @@ public class BridgesTest extends BaseTest {
                     devicesPage.verifyBridgeFoundInFilter(renamedBridgeNewName);
                     devicesPage.clickFirstBridge();
                     BridgeSettingsPage restoreSettings = new BridgeSettingsPage(driver);
+                    // Wait for the settings screen first: a slow render must not look like "the name is not there".
+                    restoreSettings.verifyStatusSectionDisplayed();
                     if (restoreSettings.hasNameField(renamedBridgeNewName)) {
                         restoreSettings.clickNameField(renamedBridgeNewName);
                         restoreSettings.enterNewBridgeName(renamedBridgeOriginalName);
                         restoreSettings.clickDoneOnKeyboard();
                         logger.info("@AfterMethod: restored bridge name '{}'", renamedBridgeOriginalName);
-                    } else {
+                        renamedBridgeOriginalName = null;
+                        renamedBridgeNewName = null;
+                    } else if (restoreSettings.hasNameField(renamedBridgeOriginalName)) {
                         // The test body already put the name back (the failure came after that): nothing to restore.
-                        logger.info("@AfterMethod: no bridge is named '{}' any more, so nothing to restore", renamedBridgeNewName);
+                        logger.info("@AfterMethod: the bridge already has its original name '{}'", renamedBridgeOriginalName);
+                        renamedBridgeOriginalName = null;
+                        renamedBridgeNewName = null;
+                    } else {
+                        // Neither name is on the open screen: do not report it as fine.
+                        logger.error("@AfterMethod: this bridge shows neither '{}' nor '{}'; check the account's bridge names",
+                                renamedBridgeNewName, renamedBridgeOriginalName);
                     }
-                    renamedBridgeOriginalName = null;
-                    renamedBridgeNewName = null;
                 } catch (Throwable t) {
                     // Loud on purpose: the account is left with a renamed bridge until someone sets it back.
                     logger.error("@AfterMethod: COULD NOT RESTORE bridge '{}' to its original name '{}': {}",

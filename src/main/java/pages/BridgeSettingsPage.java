@@ -3,8 +3,19 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.PointerInput;
+import org.openqa.selenium.interactions.Sequence;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
@@ -50,7 +61,7 @@ public class BridgeSettingsPage {
             try {
                 Assert.assertTrue(WaitUtils.waitForVisibility(driver, statusSection).isDisplayed(), "Status section should be displayed");
                 return;
-            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+            } catch (StaleElementReferenceException e) {
                 if (attempt == 3) {
                     throw e;
                 }
@@ -88,18 +99,18 @@ public class BridgeSettingsPage {
      */
     public void clickNameField(String name) {
         By field = AppiumBy.xpath("//android.widget.EditText[@text=" + xpathLiteral(name) + "]/android.view.View");
-        org.openqa.selenium.WebElement element = WaitUtils.waitForClickability(driver, field);
+        WebElement element = WaitUtils.waitForClickability(driver, field);
         // A real touch at the centre of the field, like a finger tap. Done with a standard W3C pointer action: the
         // "mobile: clickGesture" command is not available on BrowserStack's Appium.
-        org.openqa.selenium.Point centre = GestureUtils.getElementCenter(element);
-        org.openqa.selenium.interactions.PointerInput finger =
-                new org.openqa.selenium.interactions.PointerInput(org.openqa.selenium.interactions.PointerInput.Kind.TOUCH, "finger");
-        org.openqa.selenium.interactions.Sequence tap = new org.openqa.selenium.interactions.Sequence(finger, 1);
-        tap.addAction(finger.createPointerMove(java.time.Duration.ZERO,
-                org.openqa.selenium.interactions.PointerInput.Origin.viewport(), centre.x, centre.y));
-        tap.addAction(finger.createPointerDown(org.openqa.selenium.interactions.PointerInput.MouseButton.LEFT.asArg()));
-        tap.addAction(finger.createPointerUp(org.openqa.selenium.interactions.PointerInput.MouseButton.LEFT.asArg()));
-        driver.perform(java.util.List.of(tap));
+        Point centre = GestureUtils.getElementCenter(element);
+        PointerInput finger =
+                new PointerInput(PointerInput.Kind.TOUCH, "finger");
+        Sequence tap = new Sequence(finger, 1);
+        tap.addAction(finger.createPointerMove(Duration.ZERO,
+                PointerInput.Origin.viewport(), centre.x, centre.y));
+        tap.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        tap.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        driver.perform(List.of(tap));
     }
 
     public String getCurrentBridgeNameFromEditField() {
@@ -114,16 +125,16 @@ public class BridgeSettingsPage {
     public void enterNewBridgeName(String newName) {
         WaitUtils.waitForVisibility(driver, bridgeNameEditField).click(); // focus first
         WaitUtils.clearAndType(driver, bridgeNameEditField, newName);
-        java.util.concurrent.atomic.AtomicReference<String> seen = new java.util.concurrent.atomic.AtomicReference<>("");
+        AtomicReference<String> seen = new AtomicReference<>("");
         try {
-            new org.openqa.selenium.support.ui.WebDriverWait(driver, java.time.Duration.ofSeconds(5))
-                    .pollingEvery(java.time.Duration.ofMillis(250))
-                    .ignoring(org.openqa.selenium.WebDriverException.class)
+            new WebDriverWait(driver, Duration.ofSeconds(5))
+                    .pollingEvery(Duration.ofMillis(250))
+                    .ignoring(WebDriverException.class)
                     .until(d -> {
                         seen.set(d.findElement(bridgeNameEditField).getText());
                         return newName.equals(seen.get()) ? Boolean.TRUE : null;
                     });
-        } catch (org.openqa.selenium.TimeoutException ignored) {
+        } catch (TimeoutException ignored) {
             // the assertion below reports what the field held
         }
         Assert.assertEquals(seen.get(), newName, "The new bridge name should be in the field before it is confirmed");

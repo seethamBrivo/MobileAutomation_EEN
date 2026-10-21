@@ -73,6 +73,14 @@ public class TestListener implements ITestListener, IConfigurationListener {
 
     private void logFailure(ITestResult result) {
         ensureTestNode(result);
+        // On a hung or dead device session every call below would wait out the 180 s client read timeout, twice per
+        // failure. One liveness check up front; a dead session gets the failure recorded without page source or picture.
+        if (!DriverManager.isSessionAlive()) {
+            logger.warn("No screenshot or page source for {}: the device session is not available",
+                    result.getMethod().getMethodName());
+            ExtentManager.getTest().fail(result.getThrowable());
+            return;
+        }
         savePageSource(result);
         byte[] screenshot;
         try {
