@@ -67,6 +67,7 @@ public class LoginPage {
      * field does not hold the full text shortly after typing, it is cleared and typed again. Never logs the text.
      */
     private void typeAndVerify(By locator, String text) {
+        int lastSeenLength = -1;
         for (int attempt = 1; attempt <= TYPE_ATTEMPTS; attempt++) {
             WebElement field = WaitUtils.waitForVisibility(driver, locator);
             if (attempt > 1) {
@@ -76,7 +77,8 @@ public class LoginPage {
             long deadline = System.nanoTime() + TYPE_SETTLE.toNanos();
             while (System.nanoTime() < deadline) {
                 try {
-                    if (field.getText().length() >= text.length()) {
+                    lastSeenLength = field.getText().length();
+                    if (lastSeenLength >= text.length()) {
                         return;
                     }
                 } catch (org.openqa.selenium.StaleElementReferenceException e) {
@@ -91,9 +93,12 @@ public class LoginPage {
             }
             logger.warn("Only part of the text reached the field (attempt {}/{}); typing it again", attempt, TYPE_ATTEMPTS);
         }
-        // Submitting a cut-off value only fails later with a vague "landing screen" message. Never logs the text.
-        throw new TimeoutException("The sign-in field never held all " + text.length() + " typed characters after "
-                + TYPE_ATTEMPTS + " attempts");
+        // Not fatal: a field can report fewer characters than were typed even when it holds all of them (masked or
+        // trimmed text, a trailing space or line break in the stored credential), and failing here stopped every login
+        // of such an account. If the text really was cut off, the sign-in is rejected and the landing-screen wait
+        // reports that. Lengths only: the text may be a password.
+        logger.warn("The field reports {} of {} typed characters after {} attempts; continuing with the sign-in",
+                lastSeenLength, text.length(), TYPE_ATTEMPTS);
     }
 
     public LoginPage tapNextButton() {
