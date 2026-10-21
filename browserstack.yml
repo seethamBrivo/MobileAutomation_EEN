@@ -31,10 +31,10 @@ testObservabilityOptions:
   buildName: CI SDK Build
 
 # Debug logs, network logs and video recording each slow a session down (BrowserStack lists them as
-# high-impact capabilities). This file only applies to SDK runs (the diagnostic mode), so video is on there;
-# debug and network logs stay off unless you are chasing a failure. Direct-mode runs ignore this file and take
+# high-impact capabilities). This file only applies to SDK runs (the diagnostic mode), so video and network logs
+# are on there; debug logs stay off unless you are chasing a failure. Direct-mode runs ignore this file and take
 # these flags from config.properties (the CI "diagnostics" input).
 debug: false
-networkLogs: false
+networkLogs: true
 video: true
 browserstackLocal: false
