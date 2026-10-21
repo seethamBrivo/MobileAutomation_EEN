@@ -1,0 +1,16 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Framework unit tests only: no device, no BrowserStack session.
+     mvn test -Dsuite.file=testng-unit.xml -->
+<suite name="Framework Unit Tests Suite">
+    <test name="Framework Unit Tests">
+        <classes>
+            <class name="listeners.RetryAnalyzerTest"/>
+            <class name="listeners.RetryTransformerTest"/>
+            <class name="utils.XPathUtilsTest"/>
+            <class name="utils.BrowserStackStatusTest"/>
+            <class name="base.SessionScopeTest"/>
+            <class name="base.AuthSessionTest"/>
+            <class name="base.BrowserStackReporterTest"/>
+        </classes>
+    </test>
+</suite>

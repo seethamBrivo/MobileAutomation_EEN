@@ -1,7 +1,9 @@
 package base;
 
 import constants.FrameworkConstants;
+import io.appium.java_client.AppiumClientConfig;
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.Setting;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
 import io.appium.java_client.ios.IOSDriver;
@@ -10,6 +12,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +27,10 @@ public final class DriverManager {
 
     private static final Logger LOGGER = LogManager.getLogger(DriverManager.class);
     private static final ThreadLocal<AppiumDriver> DRIVER = new ThreadLocal<>();
+    /** Default for UiAutomator2's wait-for-idle before each command; see {@link #applyIdleTimeoutSetting}. */
+    private static final long DEFAULT_IDLE_TIMEOUT_MS = 1000;
+    /** Longest a single driver command (including session creation) may wait for the device's answer. */
+    private static final Duration COMMAND_READ_TIMEOUT = Duration.ofSeconds(180);
 
     private DriverManager() {
     }
@@ -37,10 +44,9 @@ public final class DriverManager {
     }
 
     /**
-     * The session name the user configured, captured before the first test overwrites the
-     * {@code browserstackSessionName} system property with its own resolved name. Re-reading the
-     * property per test would treat that resolved name as configured and give every session the
-     * first test's name.
+     * The session name the user configured. The resolved per-session name is passed to the capability
+     * builders directly: a JVM-wide system property would let two parallel sessions overwrite each
+     * other's name.
      */
     private static final String CONFIGURED_SESSION_NAME = ConfigReader.getProperty("browserstackSessionName");
 
@@ -56,22 +62,70 @@ public final class DriverManager {
                 testClassName,
                 testMethodName,
                 testParameters);
-        System.setProperty("browserstackSessionName", browserStackSessionName);
 
         try {
             if ("android".equalsIgnoreCase(platform)) {
-                DRIVER.set(createAndroidDriver());
+                DRIVER.set(createAndroidDriver(browserStackSessionName));
             } else if ("ios".equalsIgnoreCase(platform)) {
-                DRIVER.set(createIosDriver());
+                DRIVER.set(createIosDriver(browserStackSessionName));
             } else {
                 throw new IllegalArgumentException("Unsupported platform: " + platform);
             }
             // Zero: WaitUtils owns all polling. See FrameworkConstants.IMPLICIT_WAIT.
             DRIVER.get().manage().timeouts().implicitlyWait(FrameworkConstants.IMPLICIT_WAIT);
+            applyIdleTimeoutSetting(DRIVER.get());
             LOGGER.info("Appium driver initialized for platform: {} using provider: {} with session name: {}",
                     platform, provider, browserStackSessionName);
         } catch (MalformedURLException exception) {
             throw new RuntimeException("Failed to create Appium driver", exception);
+        }
+    }
+
+
+    /**
+     * UiAutomator2 waits (10 s by default) for the screen to go "idle" before it answers each command. A screen
+     * of live camera previews never goes idle, so single lookups were measured at 10-20 s each. Switching the wait
+     * off entirely (0) removed that, but let steps race screen transitions (the add-bridge "+" tap landed before the
+     * list had finished loading, typing was cut short). So a short bounded wait is used instead: 1 s caps the
+     * stall on busy screens and still lets ordinary screens settle. Set {@code waitForIdleTimeoutMs} to change it;
+     * 0 turns the wait off, -1 keeps the driver's own default.
+     */
+    private static void applyIdleTimeoutSetting(AppiumDriver driver) {
+        if (!(driver instanceof AndroidDriver)) {
+            return; // a UiAutomator2 setting; XCUITest does not know it and would only log a warning
+        }
+        String configured = ConfigReader.getProperty("waitForIdleTimeoutMs");
+        long millis = DEFAULT_IDLE_TIMEOUT_MS;
+        if (isValidProperty(configured)) {
+            try {
+                millis = Long.parseLong(configured.trim());
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid waitForIdleTimeoutMs '{}', using {}", configured, DEFAULT_IDLE_TIMEOUT_MS);
+            }
+        }
+        if (millis < 0) {
+            return;
+        }
+        try {
+            driver.setSetting(Setting.WAIT_FOR_IDLE_TIMEOUT, millis);
+            LOGGER.info("UiAutomator2 waitForIdleTimeout set to {} ms", millis);
+        } catch (WebDriverException e) {
+            LOGGER.warn("Could not set waitForIdleTimeout ({}); the driver default applies",
+                    String.valueOf(e.getMessage()).lines().findFirst().orElse(""));
+        }
+    }
+
+    /** True when this thread has a driver and the Appium session still answers. */
+    public static boolean isSessionAlive() {
+        AppiumDriver driver = DRIVER.get();
+        if (driver == null) {
+            return false;
+        }
+        try {
+            driver.manage().window().getSize();
+            return true;
+        } catch (WebDriverException e) {
+            return false;
         }
     }
 
@@ -107,7 +161,7 @@ public final class DriverManager {
         }
     }
 
-    private static AndroidDriver createAndroidDriver() throws MalformedURLException {
+    private static AndroidDriver createAndroidDriver(String sessionName) throws MalformedURLException {
         UiAutomator2Options options = new UiAutomator2Options()
                 .setDeviceName(ConfigReader.getProperty("deviceName"))
                 .setPlatformVersion(ConfigReader.getProperty("platformVersion"))
@@ -123,7 +177,7 @@ public final class DriverManager {
         }
 
         setCommonMobileOptions(options);
-        setRemoteProviderOptions(options);
+        setRemoteProviderOptions(options, sessionName);
 
         String appPackage = ConfigReader.getProperty("appPackage");
         String appActivity = ConfigReader.getProperty("appActivity");
@@ -142,10 +196,18 @@ public final class DriverManager {
         options.amend("forceAppLaunch", true);
         options.amend("shouldTerminateApp", true);
 
-        return new AndroidDriver(getServerUrl(), options);
+        // The client's default read timeout is far longer than any real command. A BrowserStack session that
+        // stops answering (seen once, after a click) then blocked the whole run for ~10 minutes.
+        return new AndroidDriver(clientConfig(), options);
     }
 
-    private static IOSDriver createIosDriver() throws MalformedURLException {
+    private static AppiumClientConfig clientConfig() throws MalformedURLException {
+        return AppiumClientConfig.defaultConfig()
+                .baseUrl(getServerUrl())
+                .readTimeout(COMMAND_READ_TIMEOUT);
+    }
+
+    private static IOSDriver createIosDriver(String sessionName) throws MalformedURLException {
         String udid = ConfigReader.getProperty("udid");
         XCUITestOptions options = new XCUITestOptions()
                 .setDeviceName(ConfigReader.getProperty("deviceName"))
@@ -154,7 +216,7 @@ public final class DriverManager {
                 .setApp(resolveAppReference());
 
         setCommonMobileOptions(options);
-        setRemoteProviderOptions(options);
+        setRemoteProviderOptions(options, sessionName);
 
         if (isValidProperty(udid)) {
             options.setUdid(udid);
@@ -165,7 +227,7 @@ public final class DriverManager {
             options.setBundleId(bundleId);
         }
 
-        return new IOSDriver(getServerUrl(), options);
+        return new IOSDriver(clientConfig(), options);
     }
 
     private static void setCommonMobileOptions(io.appium.java_client.remote.options.BaseOptions<?> options) {
@@ -201,7 +263,8 @@ public final class DriverManager {
         }
     }
 
-    private static void setRemoteProviderOptions(io.appium.java_client.remote.options.BaseOptions<?> options) {
+    private static void setRemoteProviderOptions(io.appium.java_client.remote.options.BaseOptions<?> options,
+                                                 String sessionName) {
         if (!isBrowserStackExecution()) {
             return;
         }
@@ -227,7 +290,6 @@ public final class DriverManager {
             browserStackOptions.put("buildName", buildName);
         }
 
-        String sessionName = ConfigReader.getProperty("browserstackSessionName");
         if (isValidProperty(sessionName)) {
             browserStackOptions.put("sessionName", sessionName);
         }
@@ -240,6 +302,13 @@ public final class DriverManager {
         String networkLogs = ConfigReader.getProperty("browserstackNetworkLogs");
         if (isValidProperty(networkLogs)) {
             browserStackOptions.put("networkLogs", Boolean.parseBoolean(networkLogs));
+        }
+
+        // Video recording and the debug/network logs all slow a session down; BrowserStack rates them
+        // as high-impact capabilities. Leave browserstackVideo unset to keep BrowserStack's default.
+        String video = ConfigReader.getProperty("browserstackVideo");
+        if (isValidProperty(video)) {
+            browserStackOptions.put("video", Boolean.parseBoolean(video));
         }
 
         String idleTimeout = ConfigReader.getProperty("browserstackIdleTimeout");

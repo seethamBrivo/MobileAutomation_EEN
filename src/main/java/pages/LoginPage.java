@@ -3,10 +3,15 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebElement;
 import utils.ConfigReader;
 import utils.WaitUtils;
 
@@ -14,6 +19,8 @@ public class LoginPage {
 
     private static final Logger logger = LogManager.getLogger(LoginPage.class);
     private static final int LOGIN_ATTEMPTS = 3;
+    private static final int TYPE_ATTEMPTS = 3;
+    private static final Duration TYPE_SETTLE = Duration.ofSeconds(4);
     /** Launcher activity; the CI android.properties leaves appActivity unset on purpose (Android 15). */
     private static final String DEFAULT_APP_ACTIVITY = "com.een.core.MainActivity";
 
@@ -24,6 +31,19 @@ public class LoginPage {
     private final By passwordField = AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]");
     private final By signInButtonToLogin = AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]");
     private final By noThanksOptionInBiometricsAuthenticationPopUp = AppiumBy.id("com.een.vms.android:id/positive_button");
+    /** Bottom-navigation "More" tab: shown on every signed-in landing screen, never on the sign-in screen. */
+    private final By signedInMarker = AppiumBy.xpath("//android.widget.TextView[@text='More']");
+
+    /**
+     * The identity provider can answer a correct password with "Account verification - we need to verify
+     * you with a Security Code" (sent by email). A test cannot finish that step, so it is recognised and
+     * reported as such instead of being waited out as a missing landing screen.
+     */
+    private final By verificationPrompt = AppiumBy.xpath(
+            "//*[contains(@text,'Account verification') or contains(@text,'Security Code')]");
+
+    /** What the app shows right after it starts. */
+    public enum StartScreen { SIGN_IN, SIGNED_IN, UNKNOWN }
 
     public LoginPage(AppiumDriver driver) {
         this.driver = driver;
@@ -35,8 +55,45 @@ public class LoginPage {
     }
 
     public LoginPage enterEmail(String username) {
-        WaitUtils.waitForVisibility(driver, emailInputField).sendKeys(username);
+        typeAndVerify(emailInputField, username);
         return this;
+    }
+
+
+    /**
+     * Types into a web sign-in field and makes sure all of it arrived. In the Chrome sign-in page the typing can
+     * still be running when the command returns, and tapping Next / Sign in at that moment submits a cut-off
+     * value (seen: a password field holding only its first few characters, so the login was rejected). If the
+     * field does not hold the full text shortly after typing, it is cleared and typed again. Never logs the text.
+     */
+    private void typeAndVerify(By locator, String text) {
+        for (int attempt = 1; attempt <= TYPE_ATTEMPTS; attempt++) {
+            WebElement field = WaitUtils.waitForVisibility(driver, locator);
+            if (attempt > 1) {
+                field.clear();
+            }
+            field.sendKeys(text);
+            long deadline = System.nanoTime() + TYPE_SETTLE.toNanos();
+            while (System.nanoTime() < deadline) {
+                try {
+                    if (field.getText().length() >= text.length()) {
+                        return;
+                    }
+                } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                    break; // the page re-rendered; type again into the fresh element
+                }
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            logger.warn("Only part of the text reached the field (attempt {}/{}); typing it again", attempt, TYPE_ATTEMPTS);
+        }
+        // Submitting a cut-off value only fails later with a vague "landing screen" message. Never logs the text.
+        throw new TimeoutException("The sign-in field never held all " + text.length() + " typed characters after "
+                + TYPE_ATTEMPTS + " attempts");
     }
 
     public LoginPage tapNextButton() {
@@ -45,7 +102,7 @@ public class LoginPage {
     }
 
     public LoginPage enterPassword(String password) {
-        WaitUtils.waitForVisibility(driver, passwordField).sendKeys(password);
+        typeAndVerify(passwordField, password);
         return this;
     }
 
@@ -54,22 +111,58 @@ public class LoginPage {
         return this;
     }
 
-    public LoginPage tapNoThanksOptionInBiometricsAuthenticationPopup() {
-        // Uses 5-second timeout since popup appears after login completes (async operation)
-        // NOTE: negative_button is intentionally excluded - it's used as confirm delete in UsersPage
-        java.util.List<org.openqa.selenium.By> strategies = java.util.Arrays.asList(
-            noThanksOptionInBiometricsAuthenticationPopUp,
-            AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks') or contains(@text, 'No thanks')]"),
-            AppiumBy.id("android:id/button2"),
-            AppiumBy.androidUIAutomator("new UiSelector().textContains(\"No\").className(\"android.widget.Button\")")
-        );
-        boolean clicked = WaitUtils.tryClickOptionalElement(driver, strategies, TimeoutConstants.POPUP_TIMEOUT);
-        if (!clicked) {
-            logger.info("Biometrics popup did not appear or was already dismissed");
+    /**
+     * Dismisses the biometrics prompt if one shows up after sign-in. On BrowserStack it never did
+     * (0 of 36 sessions), so waiting a fixed few seconds for it cost about 6 s per login for nothing.
+     * Instead this waits for whichever comes first, the prompt or the signed-in screen behind it, and
+     * returns as soon as the signed-in screen is up.
+     * NOTE: negative_button is intentionally excluded - it's used as confirm delete in UsersPage
+     */
+    private boolean dismissBiometricsPromptIfShown() {
+        List<By> prompt = List.of(
+                noThanksOptionInBiometricsAuthenticationPopUp,
+                AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks') or contains(@text, 'No thanks')]"),
+                AppiumBy.id("android:id/button2"));
+        List<By> candidates = new ArrayList<>();
+        candidates.add(signedInMarker);
+        candidates.add(verificationPrompt);
+        candidates.addAll(prompt);
+
+        Optional<By> first = WaitUtils.waitForFirstVisible(driver, candidates, TimeoutConstants.SIGN_IN_LANDING_TIMEOUT);
+        if (first.isEmpty()) {
+            logger.warn("Neither the biometrics prompt nor the signed-in screen appeared within {}",
+                    TimeoutConstants.SIGN_IN_LANDING_TIMEOUT);
+            return false;
+        }
+        By promptButton = first.get();
+        if (promptButton == verificationPrompt) {
+            throw new AccountVerificationRequiredException("Sign-in stopped at the identity provider's 'Account verification' "
+                    + "(security code) step. A test cannot complete it; use an account without verification "
+                    + "or whitelist this device.");
+        }
+        if (promptButton == signedInMarker) {
+            // Signed-in screen is up. Look once, without waiting, in case the prompt is drawn over it.
+            promptButton = prompt.stream().filter(b -> WaitUtils.isPresent(driver, b)).findFirst().orElse(null);
+        }
+        if (promptButton == null) {
+            logger.info("No biometrics prompt; signed-in screen is showing");
         } else {
+            WaitUtils.click(driver, promptButton);
             logger.info("Biometrics popup successfully dismissed");
         }
-        return this;
+        return true;
+    }
+
+    /**
+     * Waits for the sign-in screen or a signed-in screen, whichever the app shows. Used after the app
+     * starts or is relaunched, to learn whether a previous login survived.
+     */
+    public StartScreen waitForStartScreen(Duration timeout) {
+        Optional<By> first = WaitUtils.waitForFirstVisible(driver, List.of(signInButton, signedInMarker), timeout);
+        if (first.isEmpty()) {
+            return StartScreen.UNKNOWN;
+        }
+        return first.get() == signInButton ? StartScreen.SIGN_IN : StartScreen.SIGNED_IN;
     }
 
     public ResellerDashboardPage loginAs(String username, String password) {
@@ -90,7 +183,12 @@ public class LoginPage {
                 restartApp();
             }
         }
-        tapNoThanksOptionInBiometricsAuthenticationPopup();
+        if (!dismissBiometricsPromptIfShown()) {
+            // Failing here, rather than a step later, keeps a login that never completed from being reused
+            // by the next test and gives the failure a message that names the real problem.
+            throw new TimeoutException("Signed-in screen did not appear within " + TimeoutConstants.SIGN_IN_LANDING_TIMEOUT
+                    + " after tapping Sign in; check the credentials for this account");
+        }
         return new ResellerDashboardPage(driver);
     }
 
@@ -102,7 +200,7 @@ public class LoginPage {
      * with {@code stop=true} (force-stop, then launch) is used. Never throws: if the relaunch is
      * refused the caller simply retries on the current screen.
      */
-    private void restartApp() {
+    public void restartApp() {
         if (!"android".equalsIgnoreCase(ConfigReader.getPlatform())) {
             logger.warn("App restart is only implemented for Android; retrying login in place");
             return;

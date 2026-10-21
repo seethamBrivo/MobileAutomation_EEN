@@ -20,6 +20,14 @@ browserstackBuildName=Local Debug Build
 browserstackSessionName=
 
 # BrowserStack Options
-browserstackDebug=true
-browserstackNetworkLogs=true
+# Debug logs, network logs and video slow every session down. Keep them false for routine runs and
+# turn them on while diagnosing a failure.
+browserstackDebug=false
+browserstackNetworkLogs=false
+browserstackVideo=false
 browserstackIdleTimeout=120
+
+# Session scope (Android only): class (default) = one Appium session and one login per test class,
+# reused by its tests; method = a fresh session, login and logout around every test.
+# Can also be passed as -DsessionScope=method
+# sessionScope=class

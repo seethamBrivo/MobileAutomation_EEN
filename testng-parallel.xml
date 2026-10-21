@@ -1,0 +1,14 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- One command for the whole device run:
+         mvn test -Dsuite.file=testng-parallel.xml ...
+     TestNG runs the suites listed below one after another:
+       1. testng-lanes.xml   - the two parallel lanes (2 BrowserStack sessions at the same time)
+       2. testng-bridges.xml - BridgesTest alone, serially (it uses the account's single attach ID,
+                               so nothing else may touch bridges while it runs)
+     Each suite opens and closes its own sessions, so BridgesTest starts only after every lane has finished. -->
+<suite name="Mobile Automation - parallel lanes, then BridgesTest">
+    <suite-files>
+        <suite-file path="testng-lanes.xml"/>
+        <suite-file path="testng-bridges.xml"/>
+    </suite-files>
+</suite>
