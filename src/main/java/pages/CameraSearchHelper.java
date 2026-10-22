@@ -4,6 +4,9 @@ import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.nativekey.AndroidKey;
+import io.appium.java_client.android.nativekey.KeyEvent;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -211,8 +214,31 @@ public class CameraSearchHelper {
     }
 
     public void verifyEmptyStateDisplayed() {
-        Assert.assertTrue(isEmptyStateDisplayed(),
-                "Empty state message should be displayed when no cameras match search");
+        // The keyboard stays up after typing a search term and covers the empty-state message (CI Build 103, BrowserStack),
+        // so close it first. Then fall back to presence: with the IME resizing the window the message can sit below the
+        // visible area even though it is rendered.
+        hideKeyboard();
+        boolean shown = isEmptyStateDisplayed() || WaitUtils.isPresent(driver, emptyStateMessage);
+        Assert.assertTrue(shown, "Empty state message should be displayed when no cameras match search");
+    }
+
+    /**
+     * Dismisses the soft keyboard. {@code mobile: hideKeyboard} is a silent no-op on this Compose search field, so fall
+     * back to BACK, which only closes the IME while it is showing. Never throws.
+     */
+    private void hideKeyboard() {
+        try {
+            driver.executeScript("mobile: hideKeyboard");
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.debug("mobile: hideKeyboard failed: {}", e.getMessage());
+        }
+        try {
+            if (driver instanceof AndroidDriver androidDriver && androidDriver.isKeyboardShown()) {
+                androidDriver.pressKey(new KeyEvent(AndroidKey.BACK));
+            }
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.debug("Could not dismiss keyboard with BACK: {}", e.getMessage());
+        }
     }
 
     public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {

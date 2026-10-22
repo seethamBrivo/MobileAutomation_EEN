@@ -6,17 +6,33 @@ on:
   workflow_dispatch:  # Allows manual trigger from GitHub UI
     inputs:
       suite_file:
-        description: 'TestNG suite to run (testng.xml, or testng-diagnostics.xml to dump UI hierarchies)'
+        description: 'TestNG suite to run (testng-parallel.xml = 2 parallel workers, then BridgesTest alone; testng.xml = everything serially; testng-diagnostics.xml to dump UI hierarchies)'
         type: string
-        default: 'testng.xml'
+        default: 'testng-parallel.xml'
       use_sdk:
         description: 'Run through the BrowserStack SDK (browserstack.yml) instead of direct capabilities'
         type: boolean
         default: false
+      session_scope:
+        description: 'class = one Appium session and login per test class (faster); method = fresh session and login per test'
+        type: choice
+        options: [class, method]
+        default: class
+      diagnostics:
+        description: 'Turn BrowserStack debug logs, network logs and video back on (slower sessions)'
+        type: boolean
+        default: false
+
+# The suite uses 2 BrowserStack sessions and shared test accounts/bridges, so two CI runs must never overlap.
+# A later push waits for the running one instead of cancelling it half-way through its tests.
+concurrency:
+  group: browserstack-device-tests
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -88,8 +104,10 @@ jobs:
           browserstackAccessKey=${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           browserstackProjectName=EEN Mobile Automation
           browserstackBuildName=CI Build ${{ github.run_number }}
-          browserstackDebug=true
-          browserstackNetworkLogs=true
+          browserstackIdleTimeout=120
+          browserstackDebug=${{ inputs.diagnostics == true && 'true' || 'false' }}
+          browserstackNetworkLogs=${{ inputs.diagnostics == true && 'true' || 'false' }}
+          browserstackVideo=${{ inputs.diagnostics == true && 'true' || 'false' }}
           EOF
 
       - name: Create android.properties for BrowserStack
@@ -125,7 +143,7 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           BROWSERSTACK_APP_URL: ${{ secrets.BROWSERSTACK_APP_URL }}
           BROWSERSTACK_BUILD_NUMBER: ${{ github.run_number }}
-        run: mvn test -Dplatform=android -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || 'testng.xml' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
+        run: mvn test -Dplatform=android -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || 'testng-parallel.xml' }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
 
       - name: Upload test results
         if: always()

@@ -37,7 +37,8 @@ public class LayoutsPage {
             AppiumBy.xpath("//*[starts-with(@content-desc,'row_name_') and @content-desc!='row_name_header']"));
     private final By aspectRatio16_9 = AppiumBy.xpath("//android.widget.TextView[@text='16:9']");
     private final By aspectRatio4_3 = AppiumBy.xpath("//android.widget.TextView[@text='4:3']");
-    private final By showCameraTitleBarsToggle = AppiumBy.accessibilityId("row_show_cameras_title_item_switch");
+    // 10.5.2: the switch lost its "row_show_cameras_title_item_switch" accessibility id, so it is addressed by position.
+    private final By showCameraTitleBarsToggle = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View");
     private final By addCamerasIcon = AppiumBy.accessibilityId("row_add_cameras_end_icon");
     private final By selectCamera = AppiumBy.accessibilityId("cell_at_0_add_camera_check_box");
     private final By saveButton = AppiumBy.xpath("//android.widget.TextView[@text='Save']");

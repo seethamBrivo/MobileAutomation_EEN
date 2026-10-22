@@ -15,6 +15,13 @@ public final class TimeoutConstants {
     /** Budget for optional system / biometrics popups that may never appear. */
     public static final Duration POPUP_TIMEOUT = Duration.ofSeconds(5);
 
+    /**
+     * How long the app may take to show its signed-in landing screen after Sign in, or after a relaunch. It
+     * returns as soon as the screen is up, so the limit only matters when something is wrong. 20 s was too
+     * tight for an account whose camera list loads slowly (seen on a local phone).
+     */
+    public static final Duration SIGN_IN_LANDING_TIMEOUT = Duration.ofSeconds(60);
+
     /** Budget for "is this optional element on screen?" probes (snackbars, status labels). */
     public static final Duration SHORT_TIMEOUT = Duration.ofSeconds(3);
 

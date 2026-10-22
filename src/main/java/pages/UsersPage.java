@@ -29,7 +29,6 @@ public class UsersPage {
     private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@text='New user']");
     private final By emailTextInputField = AppiumBy.xpath("//*[@content-desc='email_text_field']"
             + " | //android.widget.TextView[@text='Email']/following-sibling::android.widget.EditText[1]");
-    private final By enterValidEmailAddressErrorMessage = AppiumBy.xpath("//android.widget.TextView[@text='Enter a valid email address']");
     private final By addButton = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/btn_text']"
             + " | //android.widget.TextView[@text='New user']/following-sibling::android.view.View[@clickable='true'][last()]");
     private final By firstNameTextField = AppiumBy.xpath("//*[@content-desc='first_name_text_field']"
@@ -93,10 +92,6 @@ public class UsersPage {
         WaitUtils.click(driver, backButton);
     }
 
-    public boolean isAddIconDisplayed() {
-        return WaitUtils.isVisible(driver, usersAddIconAtTheTopRightCorner, TimeoutConstants.SHORT_TIMEOUT);
-    }
-
     public void verifyUsersOptionAtBottomScreenDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, usersOptionAtTheBottomOfTheScreen).isDisplayed(),
                 "Users option should be displayed at the bottom of the screen");
@@ -110,10 +105,6 @@ public class UsersPage {
 
     public void verifyAddButtonDisabled() {
         Assert.assertFalse(WaitUtils.waitForVisibility(driver, addButton).isEnabled(), "Add button should be disabled");
-    }
-
-    public void verifyAddButtonEnabled() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, addButton).isEnabled(), "Add button should be enabled");
     }
 
     public void enterEmailAtTheInputField(String email) {
@@ -130,11 +121,6 @@ public class UsersPage {
 
     public void clickAddButton() {
         WaitUtils.click(driver, addButton);
-    }
-
-    public void verifyValidEmailErrorMessageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, enterValidEmailAddressErrorMessage).isDisplayed(),
-                "Valid email error message should be displayed");
     }
 
     public void verifyEmailPlusHintDisplayed() {

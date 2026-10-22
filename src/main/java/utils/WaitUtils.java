@@ -41,9 +41,54 @@ public final class WaitUtils {
         return wait(driver, timeout).until(ExpectedConditions.elementToBeClickable(locator));
     }
 
-    /** Waits for the element to be clickable, then clicks it. */
+    /**
+     * Waits for the element to be clickable, then clicks it. A list or Compose screen that re-renders between finding
+     * the element and tapping it makes the element stale; the lookup is then repeated (up to {@link #STALE_ATTEMPTS}).
+     */
     public static void click(AppiumDriver driver, By locator) {
-        waitForClickability(driver, locator).click();
+        retryOnStale(() -> {
+            waitForClickability(driver, locator).click();
+            return null;
+        });
+    }
+
+    private static final int STALE_ATTEMPTS = 3;
+
+    /**
+     * Runs {@code action}, repeating it when the element it used went stale because the screen re-rendered. The action
+     * must look the element up itself each time. The third stale failure is rethrown.
+     */
+    public static <T> T retryOnStale(java.util.function.Supplier<T> action) {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return action.get();
+            } catch (StaleElementReferenceException e) {
+                if (attempt == STALE_ATTEMPTS) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /**
+     * Polls the text of the first element matching {@code locator} (trimmed) until it equals {@code expected}, for up to
+     * {@code timeout}, and returns the text last seen ("" if none was readable). A missing or re-rendering element is
+     * not an error here; the caller compares the result with what it expects.
+     */
+    public static String pollText(AppiumDriver driver, By locator, String expected, Duration timeout) {
+        java.util.concurrent.atomic.AtomicReference<String> seen = new java.util.concurrent.atomic.AtomicReference<>("");
+        try {
+            new WebDriverWait(driver, timeout)
+                    .pollingEvery(Duration.ofMillis(300))
+                    .ignoring(WebDriverException.class)
+                    .until(d -> {
+                        seen.set(d.findElement(locator).getText().trim());
+                        return expected.equals(seen.get()) ? Boolean.TRUE : null;
+                    });
+        } catch (TimeoutException ignored) {
+            // the caller compares the last text seen with what it expected
+        }
+        return seen.get();
     }
 
     /**
@@ -90,6 +135,12 @@ public final class WaitUtils {
                 return;
             } catch (StaleElementReferenceException | InvalidElementStateException e) {
                 if (attempt == 2) {
+                    if (e instanceof InvalidElementStateException) {
+                        // Some devices refuse the "set text" command on this field (seen on a Realme phone;
+                        // the BrowserStack Pixel accepts it). Typing key by key still works there.
+                        typeWithKeyEvents(driver, locator, text);
+                        return;
+                    }
                     throw e;
                 }
             } catch (WebDriverException e) {
@@ -101,6 +152,29 @@ public final class WaitUtils {
                     throw e;
                 }
             }
+        }
+    }
+
+
+    /**
+     * Fallback for fields that reject "set text": focuses the field, clears it and types the text through Appium's
+     * own input method ({@code mobile: type}). Slower than setting the text, so only used after that was refused twice.
+     */
+    private static void typeWithKeyEvents(AppiumDriver driver, By locator, String text) {
+        WebElement field = waitForVisibility(driver, locator);
+        field.click();
+        try {
+            field.clear();
+        } catch (WebDriverException e) {
+            // the typing below still replaces nothing if this fails; the field is read back right after
+        }
+        driver.executeScript("mobile: type", java.util.Map.of("text", text));
+        String held = pollText(driver, locator, text.trim(), Duration.ofSeconds(3));
+        if (!text.trim().equals(held)) {
+            // Typed key by key without confirmation can leave a partial or empty field; do not pass that on silently.
+            // Lengths only: the text may be a password.
+            throw new InvalidElementStateException("The field holds " + held.length() + " characters after typing "
+                    + text.length() + " key by key");
         }
     }
 
@@ -135,6 +209,29 @@ public final class WaitUtils {
                     for (WebElement candidate : d.findElements(locator)) {
                         if (candidate.isDisplayed()) {
                             return candidate;
+                        }
+                    }
+                }
+                return null;
+            });
+            return Optional.ofNullable(found);
+        } catch (TimeoutException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Like {@link #waitForAny} but reports which locator matched, for callers that react
+     * differently depending on what showed up first (e.g. a popup versus the screen behind it).
+     * Empty when none became visible within {@code timeout}.
+     */
+    public static Optional<By> waitForFirstVisible(AppiumDriver driver, List<By> locators, Duration timeout) {
+        try {
+            By found = wait(driver, timeout).until(d -> {
+                for (By locator : locators) {
+                    for (WebElement candidate : d.findElements(locator)) {
+                        if (candidate.isDisplayed()) {
+                            return locator;
                         }
                     }
                 }
