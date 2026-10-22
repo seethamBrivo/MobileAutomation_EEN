@@ -33,22 +33,16 @@ public class VSPEventsTest extends BaseTest {
           groups = {"regression", "vsp", "events"})
     public void verifyEventCardsInVSPEventsPage() {
         vspEventsPage.navigateToVSPEvents();
-        vspEventsPage.verifyEventCardsDisplayed();
-        vspEventsPage.verifyCardsPerRow(1);
-        vspEventsPage.verifyEventCardInformation();
-        vspEventsPage.verifyToolbarHidesOnScroll();
-        vspEventsPage.verifyPaginationWorks();
+        vspEventsPage.verifyEventCardsWorkflow();
         // BLOCKER FIX B6: Set flag BEFORE rotation so cleanup runs even if rotation fails
         rotationWasUsed = true;
-        vspEventsPage.rotateToLandscape();
-        vspEventsPage.verifyCardsPerRow(2);
-        vspEventsPage.verifyEventCardInformation();
-        vspEventsPage.verifyPaginationWorks();
+        vspEventsPage.verifyOrientationWorkflow();
     }
 
     @Test(description = "EEPD-TC-37714: POS-VSP-Verify the More info detail page",
           groups = {"regression", "vsp", "events"})
     public void verifyVSPEventDetailPage() {
+        // Set up 12-hour time format for timestamp verification
         myProfilePage = devicesPage.navigateToMyProfile();
         myProfilePage.clickProfileSection();
         myProfilePage.scrollToTimeFormatOption();
@@ -60,12 +54,11 @@ public class VSPEventsTest extends BaseTest {
         myProfilePage.selectTimeFormat("12 hours");
         myProfilePage.verifyTimeFormatChanged("12 hours");
         vspEventsPage.navigateBackFromProfile();
+
+        // Verify detail page
         vspEventsPage.navigateToVSPEvents();
         vspEventsPage.verifyEventCardsDisplayed();
-        vspEventsPage.clickFirstEventCard();
-        vspEventsPage.verifyDetailPageDisplayed();
-        vspEventsPage.verifyDetailPageInformation();
-        vspEventsPage.closeDetailPage();
+        vspEventsPage.verifyDetailPageWorkflow();
         vspEventsPage.verifyEventCardsDisplayed();
     }
 

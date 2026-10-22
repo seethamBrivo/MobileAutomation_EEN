@@ -2,8 +2,8 @@ package pages;
 
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import locators.VSPEventsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -13,7 +13,6 @@ import org.testng.SkipException;
 import utils.DeviceUtils;
 import utils.GestureUtils;
 import utils.WaitUtils;
-import utils.XPathUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,71 +20,52 @@ import java.util.Optional;
 public class VSPEventsPage {
 
     private static final Logger logger = LogManager.getLogger(VSPEventsPage.class);
-    private static final String VSP_MAIN_SCREEN = "//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]";
-    private static final String VIEW_HIERARCHY = "/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View";
-    private static final String UTC_FORMAT_PATTERN = ".*\\(UTC[+-]\\d{2}:\\d{2}\\).*";
-
     private final AppiumDriver driver;
-    private final By moreMenuOption = AppiumBy.xpath("//android.widget.TextView[@text='More']");
-    private final By vspSection = AppiumBy.xpath(XPathUtils.textViewIgnoreCase("VSP"));
-    private final By eventsOption = AppiumBy.xpath("//android.widget.TextView[@text='Events']");
-    private final By vspEventsHeading = AppiumBy.xpath("//android.widget.TextView[@text='VSP Events']");
-    private final By vspMainContainer = AppiumBy.xpath(VSP_MAIN_SCREEN);
-
-    private final By toolbar = AppiumBy.xpath(VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[1]");
-    private final By allEventCards = AppiumBy.xpath(VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.view.View[@clickable='true']");
-    private final By firstEventInList = AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.view.View[@clickable='true'])[1]");
-    private final By anyEventThumbnail = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.view.View[@clickable='true'][1]");
-    // BLOCKER FIX: Scope within VspMain list area, use position + filters to avoid wrong matches
-    // Plate is typically first text (exclude filter labels, timestamps, headings)
-    private final By anyLicensePlate = AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'VSP Events')) and not(contains(@text, 'Today,')) and not(contains(@text, 'Filter by'))])[1]");
-    // Timestamp is any text with 'Today,' in the list area
-    private final By anyTimestamp = AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.widget.TextView[contains(@text, 'Today,') or contains(@text, ':')])[1]");
-    // Camera name is typically last text in the list area (exclude filter/heading text)
-    private final By anyCameraName = AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'Today,')) and not(contains(@text, 'Filter by')) and not(contains(@text, 'VSP Events'))])[last()]");
-    private final By timestampWithTime = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[contains(@text, 'Today,') and contains(@text, ':')]");
-
-    private final By noEventsMessage = AppiumBy.xpath("//android.widget.TextView[@text='No license plate events yet']");
-    private final By zeroEventsMessage = AppiumBy.xpath("//android.widget.TextView[@text='0 license plate events']");
-
-    // SAFETY FIX: Camera name format is "Org|Camera|Version" with pipes - not hardcoded to specific org
-    private final By detailCameraName = AppiumBy.xpath("//android.widget.TextView[contains(@text, '|')]");
-    private final By closeIcon = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
-    private final By detailThumbnail = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]/android.view.View");
-    private final By detailPlateCrop = AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[2]");
-    private final By anyUTCTimestamp = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'UTC')]");
-    private final By detailDeviceTime = AppiumBy.xpath("(//android.widget.TextView[contains(@text, 'UTC')])[1]");
-    private final By detailPreferredTime = AppiumBy.xpath("(//android.widget.TextView[contains(@text, 'UTC')])[2]");
-    // BLOCKER FIX (HIGH): Label+sibling doesn't exist in this UI. Use targeted exclusions + position
-    // Exclude: camera (|), UTC, labels, Search, timestamps (Today/am/pm), colons (times)
-    private final By detailPlateReading = AppiumBy.xpath("(//android.widget.TextView[string-length(@text) > 0 " +
-            "and not(contains(@text, '|')) " +
-            "and not(contains(@text, 'UTC')) " +
-            "and not(contains(@text, 'Search')) " +
-            "and not(contains(@text, 'Today')) " +
-            "and not(contains(@text, ':')) " +
-            "and @text!='Site' and @text!='Make' and @text!='Color' and @text!='Direction' " +
-            "and @text!='Vehicle type' and @text!='Access type' and @text!='Vehicle tags' " +
-            "and @text!='Timestamp'])[1]");
-    private final By detailPlateRegion = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Search')]");
-    private final By detailSite = AppiumBy.xpath("//android.widget.TextView[@text=\"Site\"]");
-    // VACUOUS FIX: Use label+sibling to get timestamp VALUE, not the label itself
-    private final By detailTimestamp = AppiumBy.xpath("//android.widget.TextView[@text='Timestamp']/following-sibling::android.widget.TextView[1]");
-    private final By detailMake = AppiumBy.xpath("//android.widget.TextView[@text=\"Make\"]");
-    private final By detailColor = AppiumBy.xpath("//android.widget.TextView[@text=\"Color\"]");
-    private final By detailDirection = AppiumBy.xpath("//android.widget.TextView[@text=\"Direction\"]");
-    private final By detailType = AppiumBy.xpath("//android.widget.TextView[@text=\"Vehicle type\"]");
-    private final By detailAccessType = AppiumBy.xpath("//android.widget.TextView[@text=\"Access type\"]");
-    private final By detailVehicleTags = AppiumBy.xpath("//android.widget.TextView[@text=\"Vehicle tags\"]");
-    private final By detailViewHistoryLink = AppiumBy.xpath("//android.widget.TextView[@text='View in history browser']");
-    private final By detailSearchPlateLink = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Search')]");
 
     public VSPEventsPage(AppiumDriver driver) {
         this.driver = driver;
     }
 
+    // --- Step-level workflow methods (TC-37646, TC-37714) ------------------------
+
+    /**
+     * TC-37646: Verify event cards display and pagination.
+     */
+    public void verifyEventCardsWorkflow() {
+        verifyEventCardsDisplayed();
+        verifyEventCardInformation();
+        verifyToolbarHidesOnScroll();
+        verifyPaginationWorks();
+        logger.info("Event cards workflow verified");
+    }
+
+    /**
+     * TC-37646: Verify orientation change affects card layout.
+     */
+    public void verifyOrientationWorkflow() {
+        verifyCardsPerRow(1);
+        rotateToLandscape();
+        verifyCardsPerRow(2);
+        verifyEventCardInformation();
+        verifyPaginationWorks();
+        logger.info("Orientation change workflow verified");
+    }
+
+    /**
+     * TC-37714: Verify detail page information.
+     */
+    public void verifyDetailPageWorkflow() {
+        clickFirstEventCard();
+        verifyDetailPageDisplayed();
+        verifyDetailPageInformation();
+        closeDetailPage();
+        logger.info("Detail page workflow verified");
+    }
+
+    // --- Navigation --------------------------------------------------------------
+
     public void navigateToVSPEvents() {
-        WaitUtils.click(driver, moreMenuOption);
+        WaitUtils.click(driver, VSPEventsLocators.MORE_MENU_OPTION);
         verifyVSPSectionVisible();
         clickEvents();
         verifyVSPEventsScreenDisplayed();
@@ -107,34 +87,34 @@ public class VSPEventsPage {
     }
 
     public void verifyVSPSectionVisible() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, vspSection).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VSPEventsLocators.VSP_SECTION).isDisplayed(),
                 "VSP section should be visible");
     }
 
     public void clickEvents() {
-        WaitUtils.click(driver, eventsOption);
+        WaitUtils.click(driver, VSPEventsLocators.EVENTS_OPTION);
     }
 
     public void verifyVSPEventsScreenDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, vspEventsHeading).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VSPEventsLocators.VSP_EVENTS_HEADING).isDisplayed(),
                 "VSP Events screen should be displayed");
-        WaitUtils.waitForVisibility(driver, vspMainContainer, TimeoutConstants.LIST_LOAD_TIMEOUT);
+        WaitUtils.waitForVisibility(driver, VSPEventsLocators.VSP_MAIN_CONTAINER, TimeoutConstants.LIST_LOAD_TIMEOUT);
     }
 
     public void verifyEventCardsDisplayed() {
         if (!hasEventsPresent()) {
             throw new SkipException("SKIP: No VSP events available");
         }
-        Assert.assertTrue(WaitUtils.isVisible(driver, firstEventInList, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.FIRST_EVENT_IN_LIST, TimeoutConstants.SHORT_TIMEOUT),
                 "Event cards should be displayed");
         logger.info("Verified {} event cards are displayed",
-                    WaitUtils.findElements(driver, allEventCards, TimeoutConstants.SHORT_TIMEOUT).size());
+                    WaitUtils.findElements(driver, VSPEventsLocators.ALL_EVENT_CARDS, TimeoutConstants.SHORT_TIMEOUT).size());
     }
 
     public void verifyEventCardInformation() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, anyEventThumbnail, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.ANY_EVENT_THUMBNAIL, TimeoutConstants.SHORT_TIMEOUT),
                 "Event card should contain thumbnail");
-        String plateText = verifyElementAndGetText(anyLicensePlate, "license plate");
+        String plateText = verifyElementAndGetText(VSPEventsLocators.ANY_LICENSE_PLATE, "license plate");
 
         // Verify 'No Plate' empty state per spec: "No Plate should be displayed if API received Empty License Plate"
         if ("No Plate".equals(plateText)) {
@@ -143,16 +123,16 @@ public class VSPEventsPage {
             Assert.assertFalse(plateText.isBlank(), "License plate should not be blank");
         }
 
-        String timestamp = verifyElementAndGetText(anyTimestamp, "timestamp");
-        String cameraName = verifyElementAndGetText(anyCameraName, "camera name");
+        String timestamp = verifyElementAndGetText(VSPEventsLocators.ANY_TIMESTAMP, "timestamp");
+        String cameraName = verifyElementAndGetText(VSPEventsLocators.ANY_CAMERA_NAME, "camera name");
         logger.info("Card verified - Plate: '{}', Time: '{}', Camera: '{}'", plateText, timestamp, cameraName);
     }
 
     public int getCardsPerRow() {
         // SAFETY FIX: Wait for layout to stabilize after rotation - re-find elements to get current layout
-        WaitUtils.waitForVisibility(driver, firstEventInList, TimeoutConstants.ROTATION_STABILIZE);
+        WaitUtils.waitForVisibility(driver, VSPEventsLocators.FIRST_EVENT_IN_LIST, TimeoutConstants.ROTATION_STABILIZE);
 
-        List<WebElement> cards = WaitUtils.findElements(driver, allEventCards, TimeoutConstants.SHORT_TIMEOUT);
+        List<WebElement> cards = WaitUtils.findElements(driver, VSPEventsLocators.ALL_EVENT_CARDS, TimeoutConstants.SHORT_TIMEOUT);
         if (cards.isEmpty()) {
             Assert.fail("No event cards found");
         }
@@ -190,7 +170,7 @@ public class VSPEventsPage {
      * we've just reached the end.
      */
     public void verifyPaginationWorks() {
-        List<WebElement> initialCards = WaitUtils.findElements(driver, allEventCards, TimeoutConstants.SHORT_TIMEOUT);
+        List<WebElement> initialCards = WaitUtils.findElements(driver, VSPEventsLocators.ALL_EVENT_CARDS, TimeoutConstants.SHORT_TIMEOUT);
         int initialCount = initialCards.size();
 
         // Capture first visible card text immediately to avoid stale element
@@ -206,7 +186,7 @@ public class VSPEventsPage {
 
         GestureUtils.swipeUp(driver);
 
-        List<WebElement> afterScrollCards = WaitUtils.findElements(driver, allEventCards, TimeoutConstants.SHORT_TIMEOUT);
+        List<WebElement> afterScrollCards = WaitUtils.findElements(driver, VSPEventsLocators.ALL_EVENT_CARDS, TimeoutConstants.SHORT_TIMEOUT);
         int afterScrollCount = afterScrollCards.size();
 
         // Get text immediately after finding elements
@@ -244,16 +224,16 @@ public class VSPEventsPage {
 
     public void verifyToolbarHidesOnScroll() {
         // VACUOUS FIX: Assert toolbar is present - silent return was vacuous
-        Assert.assertTrue(WaitUtils.isVisible(driver, toolbar, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.TOOLBAR, TimeoutConstants.SHORT_TIMEOUT),
                 "Toolbar should be present before scroll verification");
 
-        WebElement toolbarElement = WaitUtils.waitForVisibility(driver, toolbar, TimeoutConstants.SHORT_TIMEOUT);
+        WebElement toolbarElement = WaitUtils.waitForVisibility(driver, VSPEventsLocators.TOOLBAR, TimeoutConstants.SHORT_TIMEOUT);
         int initialY = toolbarElement.getLocation().getY();
 
         GestureUtils.swipeUp(driver);
 
-        if (WaitUtils.isVisible(driver, toolbar, TimeoutConstants.SHORT_TIMEOUT)) {
-            WebElement toolbarAfterScroll = WaitUtils.waitForVisibility(driver, toolbar, TimeoutConstants.SHORT_TIMEOUT);
+        if (WaitUtils.isVisible(driver, VSPEventsLocators.TOOLBAR, TimeoutConstants.SHORT_TIMEOUT)) {
+            WebElement toolbarAfterScroll = WaitUtils.waitForVisibility(driver, VSPEventsLocators.TOOLBAR, TimeoutConstants.SHORT_TIMEOUT);
             int afterY = toolbarAfterScroll.getLocation().getY();
             Assert.assertTrue(afterY < initialY, "Toolbar should move up when scrolling");
             logger.info("Toolbar verified - moved up on scroll");
@@ -274,7 +254,7 @@ public class VSPEventsPage {
         if (!hasEventsPresent()) {
             return "";
         }
-        String timestamp = WaitUtils.waitForVisibility(driver, timestampWithTime).getText();
+        String timestamp = WaitUtils.waitForVisibility(driver, VSPEventsLocators.TIMESTAMP_WITH_TIME).getText();
         logger.info("Captured timestamp: {}", timestamp);
         return timestamp;
     }
@@ -295,7 +275,12 @@ public class VSPEventsPage {
     private boolean hasEventsPresent() {
         // BrowserStack fix: Wait for either cards or no-events message directly,
         // Use both firstEventInList and anyEventThumbnail as they have different XPath strategies
-        List<By> expectedElements = List.of(firstEventInList, anyEventThumbnail, noEventsMessage, zeroEventsMessage);
+        List<By> expectedElements = List.of(
+                VSPEventsLocators.FIRST_EVENT_IN_LIST,
+                VSPEventsLocators.ANY_EVENT_THUMBNAIL,
+                VSPEventsLocators.NO_EVENTS_MESSAGE,
+                VSPEventsLocators.ZERO_EVENTS_MESSAGE
+        );
         Optional<By> foundElement = WaitUtils.waitForFirstVisible(driver, expectedElements, TimeoutConstants.LIST_LOAD_TIMEOUT);
 
         if (foundElement.isEmpty()) {
@@ -303,7 +288,8 @@ public class VSPEventsPage {
             return false;
         }
 
-        if (foundElement.get().equals(firstEventInList) || foundElement.get().equals(anyEventThumbnail)) {
+        if (foundElement.get().equals(VSPEventsLocators.FIRST_EVENT_IN_LIST)
+                || foundElement.get().equals(VSPEventsLocators.ANY_EVENT_THUMBNAIL)) {
             return true;
         }
 
@@ -314,11 +300,11 @@ public class VSPEventsPage {
 
     public void clickFirstEventCard() {
         // SAFETY FIX: Use EXPLICIT_WAIT for required elements
-        WebElement card = WaitUtils.waitForClickability(driver, firstEventInList, FrameworkConstants.EXPLICIT_WAIT);
+        WebElement card = WaitUtils.waitForClickability(driver, VSPEventsLocators.FIRST_EVENT_IN_LIST, FrameworkConstants.EXPLICIT_WAIT);
         card.click();
 
-        boolean loaded = WaitUtils.isVisible(driver, detailCameraName, FrameworkConstants.EXPLICIT_WAIT)
-                      || WaitUtils.isVisible(driver, anyUTCTimestamp, FrameworkConstants.EXPLICIT_WAIT);
+        boolean loaded = WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_CAMERA_NAME, FrameworkConstants.EXPLICIT_WAIT)
+                      || WaitUtils.isVisible(driver, VSPEventsLocators.ANY_UTC_TIMESTAMP, FrameworkConstants.EXPLICIT_WAIT);
 
         Assert.assertTrue(loaded, "Detail page did not load after clicking event card");
         logger.info("Detail page opened");
@@ -326,9 +312,9 @@ public class VSPEventsPage {
 
     public void verifyDetailPageDisplayed() {
         // SAFETY FIX: Use EXPLICIT_WAIT for required elements, removed hardcoded org name from message
-        Assert.assertTrue(WaitUtils.isVisible(driver, detailCameraName, FrameworkConstants.EXPLICIT_WAIT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_CAMERA_NAME, FrameworkConstants.EXPLICIT_WAIT),
                 "Detail page should display camera name");
-        Assert.assertTrue(WaitUtils.isVisible(driver, closeIcon, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.CLOSE_ICON, TimeoutConstants.SHORT_TIMEOUT),
                 "Close icon should be displayed");
         logger.info("Detail page displayed");
     }
@@ -339,50 +325,50 @@ public class VSPEventsPage {
         if (DeviceUtils.isBrowserStackExecution()) {
             driver.navigate().back();
         } else {
-            WaitUtils.click(driver, closeIcon);
+            WaitUtils.click(driver, VSPEventsLocators.CLOSE_ICON);
         }
         // Wait for VSP Events page to appear
-        WaitUtils.waitForVisibility(driver, vspMainContainer, TimeoutConstants.LIST_LOAD_TIMEOUT);
+        WaitUtils.waitForVisibility(driver, VSPEventsLocators.VSP_MAIN_CONTAINER, TimeoutConstants.LIST_LOAD_TIMEOUT);
         logger.info("Closed detail page");
     }
 
     public void verifyDetailPageInformation() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, detailThumbnail, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_THUMBNAIL, TimeoutConstants.SHORT_TIMEOUT),
                 "Thumbnail should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, detailPlateCrop, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_PLATE_CROP, TimeoutConstants.SHORT_TIMEOUT),
                 "Plate crop should be displayed");
 
-        String cameraName = getDetailFieldText(detailCameraName, "Camera name");
-        String plateReading = getDetailFieldText(detailPlateReading, "Plate reading");
-        String plateRegion = getDetailFieldText(detailPlateRegion, "Plate region");
-        String deviceTime = getDetailFieldText(detailDeviceTime, "Device time");
-        String preferredTime = getDetailFieldText(detailPreferredTime, "Preferred time");
-        String timestamp = getDetailFieldText(detailTimestamp, "Timestamp");
+        String cameraName = getDetailFieldText(VSPEventsLocators.DETAIL_CAMERA_NAME, "Camera name");
+        String plateReading = getDetailFieldText(VSPEventsLocators.DETAIL_PLATE_READING, "Plate reading");
+        String plateRegion = getDetailFieldText(VSPEventsLocators.DETAIL_PLATE_REGION, "Plate region");
+        String deviceTime = getDetailFieldText(VSPEventsLocators.DETAIL_DEVICE_TIME, "Device time");
+        String preferredTime = getDetailFieldText(VSPEventsLocators.DETAIL_PREFERRED_TIME, "Preferred time");
+        String timestamp = getDetailFieldText(VSPEventsLocators.DETAIL_TIMESTAMP, "Timestamp");
 
         // VACUOUS FIX: Assert plate reading and region have values (they were never asserted, only logged)
         Assert.assertFalse(plateReading.trim().isEmpty(), "Plate reading should not be empty");
         Assert.assertFalse(plateRegion.trim().isEmpty(), "Plate region should not be empty");
 
-        Assert.assertTrue(deviceTime.matches(UTC_FORMAT_PATTERN),
+        Assert.assertTrue(deviceTime.matches(VSPEventsLocators.UTC_FORMAT_PATTERN),
                 "Device time should contain UTC format, got: " + deviceTime);
-        Assert.assertTrue(preferredTime.matches(UTC_FORMAT_PATTERN),
+        Assert.assertTrue(preferredTime.matches(VSPEventsLocators.UTC_FORMAT_PATTERN),
                 "Preferred time should contain UTC format, got: " + preferredTime);
         Assert.assertFalse(timestamp.matches(".*:\\d{2}:\\d{2}.*"),
                 "Timestamp should not contain seconds, got: " + timestamp);
 
-        verifyOptionalField(detailSite, "Site");
-        verifyOptionalField(detailMake, "Make");
-        verifyOptionalField(detailColor, "Color");
-        verifyOptionalField(detailDirection, "Direction");
-        verifyOptionalField(detailType, "Type");
+        verifyOptionalField(VSPEventsLocators.DETAIL_SITE, "Site");
+        verifyOptionalField(VSPEventsLocators.DETAIL_MAKE, "Make");
+        verifyOptionalField(VSPEventsLocators.DETAIL_COLOR, "Color");
+        verifyOptionalField(VSPEventsLocators.DETAIL_DIRECTION, "Direction");
+        verifyOptionalField(VSPEventsLocators.DETAIL_TYPE, "Type");
 
         // Conditionally displayed based on API response - may not be present
-        verifyOptionalField(detailAccessType, "Access type");
-        verifyOptionalField(detailVehicleTags, "Vehicle tags");
+        verifyOptionalField(VSPEventsLocators.DETAIL_ACCESS_TYPE, "Access type");
+        verifyOptionalField(VSPEventsLocators.DETAIL_VEHICLE_TAGS, "Vehicle tags");
 
-        Assert.assertTrue(WaitUtils.isVisible(driver, detailViewHistoryLink, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_VIEW_HISTORY_LINK, TimeoutConstants.SHORT_TIMEOUT),
                 "View history link should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, detailSearchPlateLink, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_SEARCH_PLATE_LINK, TimeoutConstants.SHORT_TIMEOUT),
                 "Search plate link should be displayed");
 
         logger.info("All 17 fields verified - Camera: '{}', Plate: '{}', Region: '{}'",
