@@ -25,6 +25,8 @@
         <aspectj.version>1.9.24</aspectj.version>
         <suite.file>testng.xml</suite.file>
         <browserstack.sdk.version>1.75.6</browserstack.sdk.version>
+        <!-- Must match the Selenium version Appium's java-client brings in (see mvn dependency:tree). -->
+        <selenium.version>4.51.0</selenium.version>
     </properties>
 
     <dependencies>
@@ -153,6 +155,14 @@
                     <groupId>com.browserstack</groupId>
                     <artifactId>browserstack-java-sdk</artifactId>
                     <version>${browserstack.sdk.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- The SDK reads the capabilities through Selenium's ChromeOptions. Without this library it dies with
+                     NoClassDefFoundError, hands back null capabilities and every test fails with "Capabilities must be set". -->
+                <dependency>
+                    <groupId>org.seleniumhq.selenium</groupId>
+                    <artifactId>selenium-chrome-driver</artifactId>
+                    <version>${selenium.version}</version>
                     <scope>compile</scope>
                 </dependency>
             </dependencies>
