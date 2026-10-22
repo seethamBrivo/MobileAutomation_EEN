@@ -26,44 +26,6 @@ public class VSPEventsPage {
         this.driver = driver;
     }
 
-    // --- Step-level workflow methods (TC-37646, TC-37714) ------------------------
-
-    /**
-     * TC-37646: Verify event cards display and pagination.
-     */
-    public void verifyEventCardsWorkflow() {
-        verifyEventCardsDisplayed();
-        verifyEventCardInformation();
-        verifyToolbarHidesOnScroll();
-        verifyPaginationWorks();
-        logger.info("Event cards workflow verified");
-    }
-
-    /**
-     * TC-37646: Verify orientation change affects card layout.
-     */
-    public void verifyOrientationWorkflow() {
-        verifyCardsPerRow(1);
-        rotateToLandscape();
-        verifyCardsPerRow(2);
-        verifyEventCardInformation();
-        verifyPaginationWorks();
-        logger.info("Orientation change workflow verified");
-    }
-
-    /**
-     * TC-37714: Verify detail page information.
-     */
-    public void verifyDetailPageWorkflow() {
-        clickFirstEventCard();
-        verifyDetailPageDisplayed();
-        verifyDetailPageInformation();
-        closeDetailPage();
-        logger.info("Detail page workflow verified");
-    }
-
-    // --- Navigation --------------------------------------------------------------
-
     public void navigateToVSPEvents() {
         WaitUtils.click(driver, VSPEventsLocators.MORE_MENU_OPTION);
         verifyVSPSectionVisible();

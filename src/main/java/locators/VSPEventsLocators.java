@@ -104,18 +104,12 @@ public final class VSPEventsLocators {
     public static final By DETAIL_PREFERRED_TIME =
             AppiumBy.xpath("(//android.widget.TextView[contains(@text, 'UTC')])[2]");
 
-    // TODO: Replace with testTag - use targeted exclusions + position
-    // Exclude: camera (|), UTC, labels, Search, timestamps (Today/am/pm), colons (times)
+    // TODO: Replace with testTag - first value text after camera name (excludes camera, timestamps, labels, search link)
     public static final By DETAIL_PLATE_READING =
-            AppiumBy.xpath("(//android.widget.TextView[string-length(@text) > 0 " +
-                    "and not(contains(@text, '|')) " +
-                    "and not(contains(@text, 'UTC')) " +
-                    "and not(contains(@text, 'Search')) " +
-                    "and not(contains(@text, 'Today')) " +
-                    "and not(contains(@text, ':')) " +
-                    "and @text!='Site' and @text!='Make' and @text!='Color' and @text!='Direction' " +
-                    "and @text!='Vehicle type' and @text!='Access type' and @text!='Vehicle tags' " +
-                    "and @text!='Timestamp'])[1]");
+            AppiumBy.xpath("(//android.widget.TextView[not(contains(@text, '|') or contains(@text, 'UTC') " +
+                    "or contains(@text, 'Search') or contains(@text, ':') " +
+                    "or @text='Site' or @text='Make' or @text='Color' or @text='Direction' " +
+                    "or @text='Vehicle type' or @text='Access type' or @text='Vehicle tags' or @text='Timestamp')])[1]");
 
     public static final By DETAIL_PLATE_REGION =
             AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Search')]");
