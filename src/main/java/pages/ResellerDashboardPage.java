@@ -385,6 +385,10 @@ public class ResellerDashboardPage {
         By accountLocator = AppiumBy.xpath("(//android.widget.TextView[@text=" + xpathSafeText + "])[1]");
         WebElement accountElement = WaitUtils.waitForVisibility(driver, accountLocator);
         GestureUtils.longPress(driver, accountElement);
+        // The press sometimes lands while the long list is still settling,press again, on a fresh lookup.
+        for (int retry = 1; retry <= 2 && !WaitUtils.isVisible(driver, deleteAccountOption, TimeoutConstants.SHORT_TIMEOUT); retry++) {
+            GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, accountLocator));
+        }
     }
 
     /** Backs out of any add/edit screen so the account list (bottom navigation) is showing. */
@@ -429,6 +433,7 @@ public class ResellerDashboardPage {
         try {
             deleted = new org.openqa.selenium.support.ui.WebDriverWait(driver, Duration.ofSeconds(60))
                     .pollingEvery(Duration.ofMillis(250))
+                    .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
                     .until(d -> {
                         if (WaitUtils.isPresent(driver, deletedSuccessMessage)) {
                             return true;
