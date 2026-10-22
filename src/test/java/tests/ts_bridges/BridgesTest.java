@@ -49,17 +49,8 @@ public class BridgesTest extends BaseTest {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.verifyUserNavigatedToOriginScreen();
         // Same attach ID a second time must be rejected.
-        devicesPage.clickOnAddBridgeIcon();
-        devicesPage.verifyAddDeviceOptionsDisplayed();
-        devicesPage.clickAddBridgeOption();
-        devicesPage.waitForBridgeNameFieldToLoad();
-        // App behavior: Button is enabled by default on empty form (updated from previous version)
-        // Test validates current state - if this is a regression, mobile team will need to confirm
-        devicesPage.verifyAddBridgeButtonEnabled();
-        devicesPage.enterBridgeName(TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_DUPLICATE));
-        devicesPage.enterAttachId(getAttachId());
-        devicesPage.clickAddBridgeButton();
-        devicesPage.verifyConflictErrorMessageDisplayed();
+        devicesPage.verifyDuplicateAttachIdIsRejected(
+                TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_DUPLICATE), getAttachId());
         devicesPage.recoverToDashboard();
         devicesPage.clickBridgesTab();
         deleteTestBridge(bridgeName);
@@ -79,19 +70,9 @@ public class BridgesTest extends BaseTest {
           groups = {"regression", "bridges"})
     public void test03_verifyBridgesListInDashboard() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        devicesPage.verifyBridgesOptionDisplayed();
-        devicesPage.verifyCamerasOptionDisplayed();
-        // Speakers check disabled: the enduser account used for automation has no speakers, so the app does not show that row.
-        // devicesPage.verifySpeakersOptionDisplayed();
-        devicesPage.verifySwitchesOptionDisplayed();
-        devicesPage.clickBridgesTab();
-        devicesPage.verifyBridgeFoundInFilter(bridgeName);
-        devicesPage.verifyBridgeNameMatches(bridgeName);
-        devicesPage.clickFirstBridge();
-        BridgeSettingsPage settings = new BridgeSettingsPage(driver);
-        settings.verifyBridgeSettingsPageDisplayed();
-        settings.verifyStatusSectionDisplayed();
+        devicesPage.verifyDevicesOverviewOptions();
+        devicesPage.verifyBridgeShownInBridgesTab(bridgeName);
+        devicesPage.openFirstBridgeAndVerifySettings();
         driver.navigate().back();
         deleteTestBridge(bridgeName);
     }
@@ -116,18 +97,9 @@ public class BridgesTest extends BaseTest {
           groups = {"regression", "bridges"})
     public void test05_verifyBridgeContextMenu() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_CONTEXT_MENU);
-        devicesPage.clickBridgesTab();
-        devicesPage.verifyBridgeFoundInFilter(bridgeName);
-        devicesPage.verifyBridgeNameMatches(bridgeName);
+        devicesPage.verifyBridgeShownInBridgesTab(bridgeName);
         devicesPage.openFirstBridgeContextMenu();
-        devicesPage.verifyContextMenuOptionDisplayed("Bridge information");
-        devicesPage.verifyContextMenuOptionDisplayed("Bridge settings");
-        devicesPage.verifyContextMenuOptionDisplayed("Cameras");
-        devicesPage.verifyContextMenuOptionDisplayed("Turn on all cameras");
-        devicesPage.verifyContextMenuOptionDisplayed("Turn off all cameras");
-        devicesPage.verifyContextMenuOptionDisplayed("Replace bridge");
-        // Role-dependent entry; recorded, not asserted, until the TC states which roles see it.
-        logger.info("'Restart bridge' context option shown for this user: {}", devicesPage.isRestartBridgeContextOptionDisplayed());
+        devicesPage.verifyBridgeContextMenuOptions();
         driver.navigate().back();
         deleteTestBridge(bridgeName);
     }
