@@ -6,7 +6,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.ResellerDashboardPage;
-import utils.GestureUtils;
 import utils.TestDataGenerator;
 
 public class ResellerDashboardTest extends BaseTest {
@@ -37,70 +36,24 @@ public class ResellerDashboardTest extends BaseTest {
     @Test(description = "EEPD-TC-40220: POS-Reseller Dashboard - Verify the account creation for Admin OR Account access users",
           groups = {"regression", "dashboard"})
     public void verifyAccountCreationForAdminOrAccountAccessUsers() {
-        resellerDashboardPage.verifyAddAccountButtonDisplayed();
-        resellerDashboardPage.clickAddAccountButton();
-        resellerDashboardPage.verifyAccountNameFieldDisplayed();
-        resellerDashboardPage.verifyAddButtonDisplayed();
-        resellerDashboardPage.verifyAddCustomerIdFieldDisplayed();
-        resellerDashboardPage.verifyEmailFieldDisplayed();
-        resellerDashboardPage.verifyEditionFieldDisplayed();
-        resellerDashboardPage.verifyStandardOptionDisplayed();
-        resellerDashboardPage.clickEditionSectionNavigationIcon();
-        resellerDashboardPage.verifyProfessionalOptionDisplayed();
-        resellerDashboardPage.verifyEnterpriseOptionDisplayed();
-        resellerDashboardPage.clickEditionSectionBackNavigationIcon();
-        resellerDashboardPage.verifyCameraDefaultsSectionDisplayed();
-        resellerDashboardPage.verifyCloudRetentionOptionDisplayed();
-        resellerDashboardPage.verifyThirtyDaysDefaultOptionDisplayed();
-        resellerDashboardPage.cloudRetentionSectionNavigationIcon();
-        resellerDashboardPage.verifyMinimumOneDayOptionDisplayed();
-        GestureUtils.swipeUp(driver);
-        resellerDashboardPage.verifyMax5YearsOptionDisplayed();
-        resellerDashboardPage.clickCloudRetentionSectionBackNavigationIcon();
-        resellerDashboardPage.verifyMinRetentionOptionDisplayed();
-        resellerDashboardPage.verify14DaysDefaultOptionDisplayed();
-        resellerDashboardPage.clickMinRetentionSectionViewIcon();
-        resellerDashboardPage.verifyMinRetentionSectionMinValueNoneDisplayed();
-        GestureUtils.swipeUp(driver);
-        resellerDashboardPage.verifyMinRetentionSectionMaxValue180DaysDisplayed();
-        resellerDashboardPage.clickMinRetentionSectionBackIcon();
-        resellerDashboardPage.verifyMaxRetentionOptionDisplayed();
-        resellerDashboardPage.verifySixtyDaysByDefaultOptionDisplayed();
-        resellerDashboardPage.clickMaxRetentionSectionViewIcon();
-        resellerDashboardPage.verifyMinimumValueOptionIsNoneInMaxRetentionDisplayed();
-        GestureUtils.swipeUp(driver);
-        resellerDashboardPage.verifyMaxValueOptionIs1YearInMaxRetentionDisplayed();
-        resellerDashboardPage.clickMaxRetentionSectionBackIcon();
-        resellerDashboardPage.verifyPreviewResolutionOptionDisplayed();
-        resellerDashboardPage.verifyDefaultPreviewResolutionOptionDisplayed();
-        resellerDashboardPage.verifyFullVideoResolutionOptionDisplayed();
-        resellerDashboardPage.verifyFullVideoResolutionDefaultValueDisplayed();
-        resellerDashboardPage.verifyCloudPreviewOnlyToggleButtonDisplayed();
+        resellerDashboardPage.verifyAddAccountFormFields();
+        resellerDashboardPage.verifyEditionOptions();
+        resellerDashboardPage.verifyCloudRetentionRange();
+        resellerDashboardPage.verifyMinRetentionRange();
+        resellerDashboardPage.verifyMaxRetentionRange();
+        resellerDashboardPage.verifyResolutionAndToggleDefaults();
 
-        // Verify Customer ID character limit validation
         // Generated rather than read from testData: the CI-provided value was only 36 characters,
         // so it never crossed the 120-character limit and no error appeared.
-        resellerDashboardPage.enterCustomerId("A".repeat(MAX_CUSTOMER_ID_LENGTH + 1));
-        resellerDashboardPage.enterAccountName(INVALID_CUSTOMER_ID_ACCOUNT_NAME);
-        resellerDashboardPage.clickAddOption();
-        resellerDashboardPage.verifyMax120CharsErrorMessageDisplayed();
+        resellerDashboardPage.verifyCustomerIdTooLongIsRejected(
+                "A".repeat(MAX_CUSTOMER_ID_LENGTH + 1), INVALID_CUSTOMER_ID_ACCOUNT_NAME);
 
-        // Create account with unique identifiers (error will clear when entering valid data)
         String accountName = TestDataGenerator.generateUniqueName("TC40220_");
         String customerId = TestDataGenerator.generateUniqueName("CustID_");
-
-        resellerDashboardPage.enterAccountName(accountName);
-        resellerDashboardPage.enterCustomerId(customerId);
-        resellerDashboardPage.clickEmailField();
-        String email = getTestDataValue(TestDataConstants.TEST_ACCOUNT_EMAIL);
-        resellerDashboardPage.enterEmail(email);
-        resellerDashboardPage.clickAddOption();
         String fullAccountName = accountName + " (" + customerId + ")";
         createdAccountDisplayName = fullAccountName;
-        resellerDashboardPage.verifySuccessMessageDisplayed();
-
-        resellerDashboardPage.scrollUntilAccountIsVisible(fullAccountName);
-        resellerDashboardPage.verifyAccountNameDisplayed(fullAccountName);
+        resellerDashboardPage.submitNewAccount(accountName, customerId, getTestDataValue(TestDataConstants.TEST_ACCOUNT_EMAIL));
+        resellerDashboardPage.verifyAccountCreatedAndVisible(fullAccountName);
 
         deleteAccount(fullAccountName);
         createdAccountDisplayName = null;

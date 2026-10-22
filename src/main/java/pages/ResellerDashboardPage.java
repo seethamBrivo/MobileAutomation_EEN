@@ -8,7 +8,6 @@ import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
-import utils.XPathUtils;
 
 import java.time.Duration;
 
@@ -26,63 +25,7 @@ public class ResellerDashboardPage {
     private final By layoutsScreen = AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]");
     private final By logoutOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
     private final By confirmLogoutButton= AppiumBy.xpath("//android.widget.TextView[@text=\"YES\"]");
-    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
-    // Positional: the add-account form's EditTexts are addressed by their position in the
-    // ScrollView, since none carries a resource-id or testTag.
-    private final By accountNameField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
-    private final By addButton= AppiumBy.xpath("//android.widget.TextView[@text=\"Add\"]");
-    private final By addCustomerIdField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.EditText");
-    private final By emailField= AppiumBy.xpath("//android.widget.TextView[@text=\"Add email\"]");
-    private final By editionField= AppiumBy.xpath("//android.widget.TextView[@text=\"Edition\"]");
-    private final By standardByDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"Standard\"]");
-    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
-    // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By editionSectionNavigationIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[5]/android.view.View");
-    private final By professionalOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Professional\"]");
-    private final By enterpriseOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Enterprise\"]");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: the generic back-chevron icon reused across every settings sub-panel
-    // (edition, cloud retention, min retention, max retention) — same element each time,
-    // so a single field is clicked from clickEditionSectionBackNavigationIcon(),
-    // clickCloudRetentionSectionBackNavigationIcon(), clickMinRetentionSectionBackIcon()
-    // and clickMaxRetentionSectionBackIcon().
-    private final By genericBackChevron= AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
-    private final By cameraDefaultsSection= AppiumBy.xpath(XPathUtils.textViewIgnoreCase("Cameras defaults"));
-    private final By cloudRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Cloud retention\"]");
-    private final By thirtyDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"30 days\"]");
-    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
-    // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By cloudRetentionSectionNavigationIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[7]/android.view.View");
-    private final By minimumOneDayOption= AppiumBy.xpath("//android.widget.TextView[@text=\"1 day (M10)\"]");
-    private final By max5YearsRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"5 years\"]");
-    private final By minRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"Min retention\"]");
-    private final By fourTeenDaysDefault= AppiumBy.xpath("//android.widget.TextView[@text=\"14 days\"]");
-    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
-    // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By minRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[8]/android.view.View");
-    private final By miniumRetentionMinimumValueNone= AppiumBy.xpath("//android.widget.TextView[@text=\"None\"]");
-    private final By max180DaysOption= AppiumBy.xpath("//android.widget.TextView[@text=\"180 days\"]");
-    private final By maxRetentionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Max retention\"]");
-    private final By sixtyDaysByDafaultOptionForMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"60 days\"]");
-    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
-    // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By maxRetentionViewIcon= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[9]/android.view.View");
-    private final By minValueIsNoneInMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"None\"]");
-    private final By maxValueIs1YearInMaxRetention= AppiumBy.xpath("//android.widget.TextView[@text=\"1 year\"]");
-    private final By previewResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Preview resolution\"]");
-    private final By defaultPreviewResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"cif (SD1 320x240)\"]");
-    private final By fullVideoResolutionOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Full video resolution\"]");
-    private final By fullVideoResolutionDafaultValue= AppiumBy.xpath("//android.widget.TextView[@text=\"high (HD1 1280x720)\"]");
-    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
-    // Positional: addressed by its position in the ScrollView, since it carries neither.
-    private final By cloudPreviewOnlyoggleButton= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[12]/android.view.View/android.view.View");
-    private final By max120CharErrorMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Max 120 characters\"]");
-    private final By successMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Added successfully\"]");
-    private final By deleteConfirmButton= AppiumBy.xpath("//android.widget.TextView[@text=\"DELETE\"]");
-    private final By deletedSuccessMessage= AppiumBy.xpath("//android.widget.TextView[@text=\"Deleted successfully\"]");
-    // TODO: Replace with testTag when mobile team adds proper resource-id/testTag attributes.
-    // Positional: Email input field within the ScrollView after clicking "Add email"
-    private final By emailInputField= AppiumBy.xpath("//android.widget.ScrollView/android.view.View[4]/android.widget.EditText");
+    private final By deletedSuccessMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"Deleted successfully\"]");
 
     public ResellerDashboardPage(AppiumDriver driver) {
         this.driver = driver;
@@ -185,162 +128,175 @@ public class ResellerDashboardPage {
     }
 
     public boolean isAccountNameFieldDisplayed() {
-        return WaitUtils.waitForVisibility(driver, accountNameField).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ACCOUNT_NAME_FIELD).isDisplayed();
     }
 
     public boolean isAddButtonDisplayed() {
-        return WaitUtils.waitForVisibility(driver, addButton).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ADD_BUTTON).isDisplayed();
     }
 
     public boolean isAddCustomerIdFieldDisplayed() {
-        return WaitUtils.waitForVisibility(driver, addCustomerIdField).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CUSTOMER_ID_FIELD).isDisplayed();
     }
 
     public boolean isEmailFieldDisplayed() {
-        return WaitUtils.waitForVisibility(driver, emailField).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EMAIL_FIELD).isDisplayed();
     }
 
     public boolean isEditionFieldDisplayed() {
-        return WaitUtils.waitForVisibility(driver, editionField).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EDITION_FIELD).isDisplayed();
     }
 
     public boolean isStandardOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, standardByDefault).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EDITION_STANDARD).isDisplayed();
     }
 
-    public  void clickEditionSectionNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, editionSectionNavigationIcon).click();
+    public void clickEditionSectionNavigationIcon() {
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EDITION_NAV_ICON).click();
     }
 
     public boolean isProfessionalOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, professionalOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EDITION_PROFESSIONAL).isDisplayed();
     }
 
     public boolean isEnterpriseOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, enterpriseOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EDITION_ENTERPRISE).isDisplayed();
     }
 
     public void clickEditionSectionBackNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
     }
 
     public boolean isCameraDefaultsSectionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, cameraDefaultsSection).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CAMERA_DEFAULTS_SECTION).isDisplayed();
     }
 
     public boolean isCloudRetentionOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, cloudRetention).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CLOUD_RETENTION).isDisplayed();
     }
 
     public boolean isThirtyDaysDefaultOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, thirtyDaysDefault).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CLOUD_RETENTION_DEFAULT_30_DAYS).isDisplayed();
     }
 
     public void cloudRetentionSectionNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, cloudRetentionSectionNavigationIcon).click();
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CLOUD_RETENTION_NAV_ICON).click();
     }
 
     public boolean isMinimumOneDayOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, minimumOneDayOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CLOUD_RETENTION_MIN_1_DAY).isDisplayed();
     }
 
     public boolean isMax5YearsOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, max5YearsRetentionOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CLOUD_RETENTION_MAX_5_YEARS).isDisplayed();
     }
 
     public void clickCloudRetentionSectionBackNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
     }
 
     public boolean isMinRetentionOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, minRetention).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MIN_RETENTION).isDisplayed();
     }
 
     public boolean is14DaysDefaultOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, fourTeenDaysDefault).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MIN_RETENTION_DEFAULT_14_DAYS).isDisplayed();
     }
 
     public void clickMinRetentionSectionViewIcon() {
-        WaitUtils.waitForVisibility(driver, minRetentionViewIcon).click();
-       }
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MIN_RETENTION_NAV_ICON).click();
+    }
+
     public boolean isMinRetentionSectionMinValueNoneDisplayed() {
-        return WaitUtils.waitForVisibility(driver, miniumRetentionMinimumValueNone).isDisplayed();
-      }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MIN_RETENTION_MIN_NONE).isDisplayed();
+    }
+
     public boolean isMinRetentionSectionMaxValue180DaysDisplayed() {
-        return WaitUtils.waitForVisibility(driver, max180DaysOption).isDisplayed();
-     }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MIN_RETENTION_MAX_180_DAYS).isDisplayed();
+    }
+
     public void clickMinRetentionSectionBackIcon() {
-        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
-      }
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
+    }
+
     public boolean isMaxRetentionOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, maxRetentionOption).isDisplayed();
-     }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MAX_RETENTION).isDisplayed();
+    }
+
     public boolean sixtyDaysByDefaultOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, sixtyDaysByDafaultOptionForMaxRetention).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MAX_RETENTION_DEFAULT_60_DAYS).isDisplayed();
     }
 
     public void clickMaxRetentionSectionViewIcon() {
-        WaitUtils.waitForVisibility(driver, maxRetentionViewIcon).click();
-     }
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MAX_RETENTION_NAV_ICON).click();
+    }
+
     public boolean minimumValueOptionIsNoneInMaxRetentionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, minValueIsNoneInMaxRetention).isDisplayed();
-       }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MAX_RETENTION_MIN_NONE).isDisplayed();
+    }
+
     public boolean maxValueOptionIs1YearInMaxRetentionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, maxValueIs1YearInMaxRetention).isDisplayed();
-      }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MAX_RETENTION_MAX_1_YEAR).isDisplayed();
+    }
+
     public void clickMaxRetentionSectionBackIcon() {
-        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
     }
 
     public boolean previewResolutionOptionIsDisplayed() {
-        return WaitUtils.waitForVisibility(driver, previewResolutionOption).isDisplayed();
-     }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.PREVIEW_RESOLUTION).isDisplayed();
+    }
+
     public boolean defaultpreviewResolutionOptionIsDisplayed() {
-        return WaitUtils.waitForVisibility(driver, defaultPreviewResolutionOption).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.PREVIEW_RESOLUTION_DEFAULT).isDisplayed();
     }
 
     public boolean fullVideoResolutionOptionIsDisplayed() {
-        return WaitUtils.waitForVisibility(driver, fullVideoResolutionOption).isDisplayed();
-       }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.FULL_VIDEO_RESOLUTION).isDisplayed();
+    }
+
     public boolean fullVideoResolutionDefaultValueIsDisplayed() {
-        return WaitUtils.waitForVisibility(driver, fullVideoResolutionDafaultValue).isDisplayed();
-      }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.FULL_VIDEO_RESOLUTION_DEFAULT).isDisplayed();
+    }
+
     public boolean cloudPreviewOnlyToggleButton() {
-        return WaitUtils.waitForVisibility(driver, cloudPreviewOnlyoggleButton).isDisplayed();
-     }
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CLOUD_PREVIEW_ONLY_TOGGLE).isDisplayed();
+    }
+
     public void enterCustomerId(String customerID) {
-        WebElement field = WaitUtils.waitForVisibility(driver, addCustomerIdField);
+        WebElement field = WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CUSTOMER_ID_FIELD);
         field.clear();
         field.sendKeys(customerID);
     }
 
     public void enterAccountName(String accountName) {
-        WebElement field = WaitUtils.waitForVisibility(driver, accountNameField);
+        WebElement field = WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ACCOUNT_NAME_FIELD);
         field.clear();
         field.sendKeys(accountName);
     }
 
     public void clickAddOption() {
-        WaitUtils.waitForVisibility(driver, addButton).click();
-       }
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ADD_BUTTON).click();
+    }
+
     public boolean isMax120CharsErrorMessageDisplayed() {
-        return WaitUtils.waitForVisibility(driver, max120CharErrorMessage).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ERROR_MAX_120_CHARS).isDisplayed();
     }
 
     public boolean isSuccessMessageDisplayed() {
-        return WaitUtils.waitForVisibility(driver, successMessage, Duration.ofSeconds(60)).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.SUCCESS_ADDED, Duration.ofSeconds(60)).isDisplayed();
     }
 
     public void clickEmailField() {
-        WaitUtils.waitForVisibility(driver, emailField).click();
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EMAIL_FIELD).click();
     }
 
     public void enterEmail(String email) {
-        WaitUtils.waitForVisibility(driver, emailInputField).sendKeys(email);
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EMAIL_INPUT_FIELD).sendKeys(email);
     }
 
     public void clickBackButton() {
-        WaitUtils.waitForVisibility(driver, genericBackChevron).click();
+        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
     }
 
     // XPath 1.0 string escaping: uses concat() for values with quotes to prevent injection.
@@ -362,7 +318,7 @@ public class ResellerDashboardPage {
         WebElement accountElement = WaitUtils.waitForVisibility(driver, accountLocator);
         GestureUtils.longPress(driver, accountElement);
         // The press sometimes lands while the long list is still settling,press again, on a fresh lookup.
-        for (int retry = 1; retry <= 2 && !WaitUtils.isVisible(driver, deleteAccountOption, TimeoutConstants.SHORT_TIMEOUT); retry++) {
+        for (int retry = 1; retry <= 2 && !WaitUtils.isVisible(driver, ResellerDashboardLocators.CONTEXT_MENU_DELETE_ACCOUNT, TimeoutConstants.SHORT_TIMEOUT); retry++) {
             GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, accountLocator));
         }
     }
@@ -379,7 +335,7 @@ public class ResellerDashboardPage {
     }
 
     public void clickDeleteConfirmButton() {
-        WaitUtils.waitForClickability(driver, deleteConfirmButton).click();
+        WaitUtils.waitForClickability(driver, ResellerDashboardLocators.DELETE_CONFIRM_BUTTON).click();
     }
 
     /** Matches the list header "11 accounts" / "1 account" (not the "Filter by account name" hint). */
@@ -642,6 +598,10 @@ public class ResellerDashboardPage {
         Assert.assertTrue(isSuccessMessageDisplayed(), "Success message should be displayed after account creation");
     }
 
+    public boolean isDeletedSuccessMessageDisplayed() {
+        return WaitUtils.waitForVisibility(driver, deletedSuccessMessage, Duration.ofSeconds(60)).isDisplayed();
+    }
+
     public void verifyDeletedSuccessMessageDisplayed() {
         Assert.assertTrue(isDeletedSuccessMessageDisplayed(), "Deleted successfully message should be displayed after account deletion");
     }
@@ -680,5 +640,83 @@ public class ResellerDashboardPage {
         verifyUsersOptionDisplayed();
         verifyBusinessPortalOptionDisplayed();
         verifyMoreOptionDisplayed();
+    }
+
+    public void verifyAddAccountFormFields() {
+        verifyAddAccountButtonDisplayed();
+        clickAddAccountButton();
+        verifyAccountNameFieldDisplayed();
+        verifyAddButtonDisplayed();
+        verifyAddCustomerIdFieldDisplayed();
+        verifyEmailFieldDisplayed();
+        verifyEditionFieldDisplayed();
+        verifyStandardOptionDisplayed();
+    }
+
+    public void verifyEditionOptions() {
+        clickEditionSectionNavigationIcon();
+        verifyProfessionalOptionDisplayed();
+        verifyEnterpriseOptionDisplayed();
+        clickEditionSectionBackNavigationIcon();
+    }
+
+    public void verifyCloudRetentionRange() {
+        verifyCameraDefaultsSectionDisplayed();
+        verifyCloudRetentionOptionDisplayed();
+        verifyThirtyDaysDefaultOptionDisplayed();
+        cloudRetentionSectionNavigationIcon();
+        verifyMinimumOneDayOptionDisplayed();
+        GestureUtils.swipeUp(driver);
+        verifyMax5YearsOptionDisplayed();
+        clickCloudRetentionSectionBackNavigationIcon();
+    }
+
+    public void verifyMinRetentionRange() {
+        verifyMinRetentionOptionDisplayed();
+        verify14DaysDefaultOptionDisplayed();
+        clickMinRetentionSectionViewIcon();
+        verifyMinRetentionSectionMinValueNoneDisplayed();
+        GestureUtils.swipeUp(driver);
+        verifyMinRetentionSectionMaxValue180DaysDisplayed();
+        clickMinRetentionSectionBackIcon();
+    }
+
+    public void verifyMaxRetentionRange() {
+        verifyMaxRetentionOptionDisplayed();
+        verifySixtyDaysByDefaultOptionDisplayed();
+        clickMaxRetentionSectionViewIcon();
+        verifyMinimumValueOptionIsNoneInMaxRetentionDisplayed();
+        GestureUtils.swipeUp(driver);
+        verifyMaxValueOptionIs1YearInMaxRetentionDisplayed();
+        clickMaxRetentionSectionBackIcon();
+    }
+
+    public void verifyResolutionAndToggleDefaults() {
+        verifyPreviewResolutionOptionDisplayed();
+        verifyDefaultPreviewResolutionOptionDisplayed();
+        verifyFullVideoResolutionOptionDisplayed();
+        verifyFullVideoResolutionDefaultValueDisplayed();
+        verifyCloudPreviewOnlyToggleButtonDisplayed();
+    }
+
+    public void verifyCustomerIdTooLongIsRejected(String tooLongId, String accountName) {
+        enterCustomerId(tooLongId);
+        enterAccountName(accountName);
+        clickAddOption();
+        verifyMax120CharsErrorMessageDisplayed();
+    }
+
+    public void submitNewAccount(String accountName, String customerId, String email) {
+        enterAccountName(accountName);
+        enterCustomerId(customerId);
+        clickEmailField();
+        enterEmail(email);
+        clickAddOption();
+    }
+
+    public void verifyAccountCreatedAndVisible(String fullAccountName) {
+        verifySuccessMessageDisplayed();
+        scrollUntilAccountIsVisible(fullAccountName);
+        verifyAccountNameDisplayed(fullAccountName);
     }
 }
