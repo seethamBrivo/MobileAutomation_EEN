@@ -20,6 +20,7 @@ public class VSPEventsTest extends BaseTest {
     private VSPEventsPage vspEventsPage;
     private boolean rotationWasUsed = false;
     private boolean timeFormatWasChanged = false;
+    private String originalTimeFormat = null; // BLOCKER FIX B3: Store original value to restore, not hardcode
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
@@ -37,8 +38,9 @@ public class VSPEventsTest extends BaseTest {
         vspEventsPage.verifyEventCardInformation();
         vspEventsPage.verifyToolbarHidesOnScroll();
         vspEventsPage.verifyPaginationWorks();
-        vspEventsPage.rotateToLandscape();
+        // BLOCKER FIX B6: Set flag BEFORE rotation so cleanup runs even if rotation fails
         rotationWasUsed = true;
+        vspEventsPage.rotateToLandscape();
         vspEventsPage.verifyCardsPerRow(2);
         vspEventsPage.verifyEventCardInformation();
         vspEventsPage.verifyPaginationWorks();
@@ -50,10 +52,13 @@ public class VSPEventsTest extends BaseTest {
         myProfilePage = devicesPage.navigateToMyProfile();
         myProfilePage.clickProfileSection();
         myProfilePage.scrollToTimeFormatOption();
+        // BLOCKER FIX B3: Read original value to restore later, not hardcode
+        originalTimeFormat = myProfilePage.getCurrentTimeFormat();
         myProfilePage.clickTimeFormatOption();
+        // BLOCKER FIX B3: Set flag BEFORE selectTimeFormat so cleanup runs even if verifyTimeFormatChanged fails
+        timeFormatWasChanged = true;
         myProfilePage.selectTimeFormat("12 hours");
         myProfilePage.verifyTimeFormatChanged("12 hours");
-        timeFormatWasChanged = true;
         vspEventsPage.navigateBackFromProfile();
         vspEventsPage.navigateToVSPEvents();
         vspEventsPage.verifyEventCardsDisplayed();
@@ -73,20 +78,24 @@ public class VSPEventsTest extends BaseTest {
                     rotationWasUsed = false;
                 }
 
-                if (timeFormatWasChanged && myProfilePage != null) {
-                    // Navigate directly to My Profile without intermediate back() - more robust than assuming navigation state
+                if (timeFormatWasChanged && myProfilePage != null && originalTimeFormat != null) {
+                    // BLOCKER FIX B4: recoverToDashboard ends on More>Dashboard, so we're already in More menu
+                    // Navigate to dashboard first to get to a known state
                     devicesPage.recoverToDashboard();
+                    // Now we're on Dashboard (not More menu), safe to navigate to My Profile
+                    driver.navigate().back(); // Back to bottom nav
                     myProfilePage = devicesPage.navigateToMyProfile();
                     myProfilePage.clickProfileSection();
                     myProfilePage.scrollToTimeFormatOption();
                     myProfilePage.clickTimeFormatOption();
-                    myProfilePage.selectTimeFormat("24 hours");
-                    myProfilePage.verifyTimeFormatChanged("24 hours");
+                    // BLOCKER FIX B3: Restore original value, not hardcode
+                    myProfilePage.selectTimeFormat(originalTimeFormat);
+                    myProfilePage.verifyTimeFormatChanged(originalTimeFormat);
                     timeFormatWasChanged = false;
-                    logger.info("Time format reset to 24 hours");
+                    logger.info("Time format reset to {}", originalTimeFormat);
                 }
             }
-        } catch (Exception e) {
+        } catch (AssertionError | Exception e) { // BLOCKER FIX B5: Catch both - AssertionError escapes plain Exception
             logger.warn("Failed to cleanup: {}", e.getMessage());
         } finally {
             super.tearDown(testResult);

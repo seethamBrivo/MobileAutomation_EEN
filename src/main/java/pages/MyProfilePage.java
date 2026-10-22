@@ -66,11 +66,10 @@ public class MyProfilePage {
     }
 
     public void scrollToTimeFormatOption() {
+        // SAFETY FIX: Removed blind swipeUp when visible - it was unnecessary and cost 3s per probe
         if (!WaitUtils.isVisible(driver, timeFormatOption, TimeoutConstants.SHORT_TIMEOUT)) {
             boolean found = GestureUtils.scrollUntilVisible(driver, timeFormatOption);
             Assert.assertTrue(found, "Could not find time format option even after scrolling");
-        } else {
-            GestureUtils.swipeUp(driver); // Ensure not at screen edge
         }
     }
 
