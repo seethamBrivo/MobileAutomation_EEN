@@ -25,6 +25,9 @@ public final class TimeoutConstants {
     /** Budget for "is this optional element on screen?" probes (snackbars, status labels). */
     public static final Duration SHORT_TIMEOUT = Duration.ofSeconds(3);
 
+    /** Faster timeout for optional fields known to be frequently absent (detail page optional fields). */
+    public static final Duration OPTIONAL_FIELD_TIMEOUT = Duration.ofSeconds(1);
+
     /** How long a list screen may show loading skeletons before its first rows arrive. */
     public static final Duration LIST_LOAD_TIMEOUT = Duration.ofSeconds(30);
 

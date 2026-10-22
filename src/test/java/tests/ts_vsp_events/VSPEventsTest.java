@@ -73,9 +73,9 @@ public class VSPEventsTest extends BaseTest {
                     rotationWasUsed = false;
                 }
 
-                if (timeFormatWasChanged) {
+                if (timeFormatWasChanged && myProfilePage != null) {
+                    // Navigate directly to My Profile without intermediate back() - more robust than assuming navigation state
                     devicesPage.recoverToDashboard();
-                    driver.navigate().back();
                     myProfilePage = devicesPage.navigateToMyProfile();
                     myProfilePage.clickProfileSection();
                     myProfilePage.scrollToTimeFormatOption();

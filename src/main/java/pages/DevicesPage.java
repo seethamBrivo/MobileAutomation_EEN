@@ -108,6 +108,11 @@ public class DevicesPage {
     /** Navigate to My Profile via bottom navigation (More > My Profile). */
     public MyProfilePage navigateToMyProfile() {
         clickMoreMenuOptionAtTheBottom();
+        // Wait for More screen to fully render before returning - prevents timeout when clicking profile section
+        // The profile section is positional (TODO: replace with testTag when mobile team adds proper identifiers),
+        // so we wait for it to appear to ensure the ScrollView children are in the hierarchy
+        By profileSection = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.view.View");
+        WaitUtils.waitForVisibility(driver, profileSection, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
         return new MyProfilePage(driver);
     }
 

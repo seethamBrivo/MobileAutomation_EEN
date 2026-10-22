@@ -62,4 +62,10 @@
             <class name="tests.ts_my_profile.MyProfileTest"/>
         </classes>
     </test>
+
+    <test name="VSP Events Tests">
+        <classes>
+            <class name="tests.ts_vsp_events.VSPEventsTest"/>
+        </classes>
+    </test>
 </suite>

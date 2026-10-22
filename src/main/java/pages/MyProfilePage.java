@@ -83,6 +83,7 @@ public class MyProfilePage {
         logger.info("Current time format: {}", timeFormat);
         return timeFormat;
     }
+
     public void selectTimeFormat(String format) {
         By formatOption = AppiumBy.xpath("//android.widget.TextView[@text='" + format + "']");
         WaitUtils.click(driver, formatOption);

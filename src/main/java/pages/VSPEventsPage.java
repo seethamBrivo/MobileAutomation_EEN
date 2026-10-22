@@ -25,8 +25,6 @@ public class VSPEventsPage {
 
     private final AppiumDriver driver;
     private final By moreMenuOption = AppiumBy.xpath("//android.widget.TextView[@text='More']");
-    // Stable: ProfileMain back button at fixed position [2] in profile screen
-    private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ProfileMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View");
     private final By vspSection = AppiumBy.xpath(XPathUtils.textViewIgnoreCase("VSP"));
     private final By eventsOption = AppiumBy.xpath("//android.widget.TextView[@text='Events']");
     private final By vspEventsHeading = AppiumBy.xpath("//android.widget.TextView[@text='VSP Events']");
@@ -36,9 +34,11 @@ public class VSPEventsPage {
     private final By allEventCards = AppiumBy.xpath(VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.view.View[@clickable='true']");
     private final By firstEventInList = AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.view.View[@clickable='true'])[1]");
     private final By anyEventThumbnail = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.view.View[@clickable='true'][1]");
-    private final By anyLicensePlate = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'VSP Events')) and not(contains(@text, 'Today,'))]");
+    // Exclude filter text, headings, and timestamps to get actual plate value
+    private final By anyLicensePlate = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'VSP Events')) and not(contains(@text, 'Today,')) and not(contains(@text, 'Filter by'))]");
     private final By anyTimestamp = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[contains(@text, 'Today,') or contains(@text, ':')]");
-    private final By anyCameraName = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[string-length(@text) > 0][last()]");
+    // Using [last()] within VspMain screen scope, excluding timestamps and filter text to get camera name
+    private final By anyCameraName = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'Today,')) and not(contains(@text, 'Filter by')) and not(contains(@text, 'VSP Events'))][last()]");
     private final By timestampWithTime = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[contains(@text, 'Today,') and contains(@text, ':')]");
 
     private final By listContainer = AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.view.View[4]");
@@ -52,7 +52,8 @@ public class VSPEventsPage {
     private final By anyUTCTimestamp = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'UTC')]");
     private final By detailDeviceTime = AppiumBy.xpath("(//android.widget.TextView[contains(@text, 'UTC')])[1]");
     private final By detailPreferredTime = AppiumBy.xpath("(//android.widget.TextView[contains(@text, 'UTC')])[2]");
-    private final By detailPlateReading = AppiumBy.xpath("//android.widget.TextView[string-length(@text) > 0]");
+    // First TextView often returns camera name, so exclude Eagle Eye pattern and common labels
+    private final By detailPlateReading = AppiumBy.xpath("//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'Eagle Eye')) and not(contains(@text, 'UTC'))]");
     private final By detailPlateRegion = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Search')]");
     private final By detailSite = AppiumBy.xpath("//android.widget.TextView[@text=\"Site\"]");
     private final By detailTimestamp = AppiumBy.xpath("//android.widget.TextView[@text=\"Timestamp\"]");
@@ -114,6 +115,14 @@ public class VSPEventsPage {
         Assert.assertTrue(WaitUtils.isVisible(driver, anyEventThumbnail, TimeoutConstants.SHORT_TIMEOUT),
                 "Event card should contain thumbnail");
         String plateText = verifyElementAndGetText(anyLicensePlate, "license plate");
+
+        // Verify 'No Plate' empty state per spec: "No Plate should be displayed if API received Empty License Plate"
+        if ("No Plate".equals(plateText)) {
+            logger.info("License plate field shows 'No Plate' (empty plate from API)");
+        } else {
+            Assert.assertFalse(plateText.isBlank(), "License plate should not be blank");
+        }
+
         String timestamp = verifyElementAndGetText(anyTimestamp, "timestamp");
         String cameraName = verifyElementAndGetText(anyCameraName, "camera name");
         logger.info("Card verified - Plate: '{}', Time: '{}', Camera: '{}'", plateText, timestamp, cameraName);
@@ -348,7 +357,7 @@ public class VSPEventsPage {
     }
 
     private void verifyOptionalField(By locator, String fieldName) {
-        if (WaitUtils.isVisible(driver, locator, TimeoutConstants.SHORT_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, locator, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
             String text = WaitUtils.waitForVisibility(driver, locator, TimeoutConstants.SHORT_TIMEOUT).getText();
             Assert.assertFalse(text.trim().isEmpty(), fieldName + " field is displayed but has empty text");
             logger.info("Optional field '{}' displayed with value: '{}'", fieldName, text);
