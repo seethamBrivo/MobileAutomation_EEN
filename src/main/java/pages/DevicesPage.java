@@ -2,6 +2,7 @@ package pages;
 
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
+import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import locators.BridgesLocators;
 import java.time.Duration;
