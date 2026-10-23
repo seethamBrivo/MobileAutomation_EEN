@@ -111,9 +111,6 @@ public final class VSPEventsLocators {
                     "or @text='Site' or @text='Make' or @text='Color' or @text='Direction' " +
                     "or @text='Vehicle type' or @text='Access type' or @text='Vehicle tags' or @text='Timestamp')])[1]");
 
-    public static final By DETAIL_PLATE_REGION =
-            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Search')]");
-
     // --- Detail page labels and optional fields --------------------------------------
 
     public static final By DETAIL_SITE =
@@ -144,6 +141,7 @@ public final class VSPEventsLocators {
     public static final By DETAIL_VIEW_HISTORY_LINK =
             AppiumBy.xpath("//android.widget.TextView[@text='View in history browser']");
 
+    // Plate region link displays as "Search <plate>" (e.g., "Search P1173646")
     public static final By DETAIL_SEARCH_PLATE_LINK =
             AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Search')]");
 }

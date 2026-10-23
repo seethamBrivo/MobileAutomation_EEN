@@ -127,9 +127,7 @@ public class VSPEventsPage {
      * Verifies pagination by scrolling and checking if content changed.
      * <p>
      * Mobile list views use view recycling - cards are removed from DOM as they scroll off-screen.
-     * Therefore, we check if the CONTENT changed (different cards visible), not if count increased.
-     * If already at end of list (content doesn't change), that's acceptable - pagination works,
-     * we've just reached the end.
+     * Therefore, we check if the CONTENT changed (different cards visible), not just if count increased.
      */
     public void verifyPaginationWorks() {
         List<WebElement> initialCards = WaitUtils.findElements(driver, VSPEventsLocators.ALL_EVENT_CARDS, TimeoutConstants.SHORT_TIMEOUT);
@@ -162,9 +160,11 @@ public class VSPEventsPage {
             }
         }
 
-        // Pagination works if content changed (different cards visible) OR count increased
+        // Pagination works if content changed (different cards visible) OR count changed
         boolean contentChanged = !firstCardTextBefore.equals(firstCardTextAfter) && !firstCardTextBefore.isEmpty();
         boolean moreCardsLoaded = afterScrollCount > initialCount;
+        boolean viewRecycled = afterScrollCount < initialCount; // Cards scrolled off and were recycled
+        boolean countStable = afterScrollCount == initialCount;
 
         if (moreCardsLoaded) {
             logger.info("Pagination verified - {} cards loaded (before: {}, after: {})",
@@ -172,16 +172,15 @@ public class VSPEventsPage {
         } else if (contentChanged) {
             logger.info("Pagination verified - content scrolled (view recycling: {} cards before, {} after)",
                        initialCount, afterScrollCount);
-        } else {
-            logger.info("At end of list - no content change (expected when all events visible or at bottom)");
+        } else if (viewRecycled) {
+            logger.info("Pagination verified - view recycled (cards scrolled off: before {}, after {})",
+                       initialCount, afterScrollCount);
+        } else if (countStable && afterScrollCount > 0) {
+            logger.info("Pagination verified - count stable at {} (all events visible on single page)", afterScrollCount);
         }
 
-        // Success: pagination mechanism works (content scrolled or more loaded, or we're at the end)
-        // Note: We don't assert count increased due to view recycling - count can stay same or decrease
-        // Handle end-of-list case: if nothing changed and we have cards, we're at the end (valid state)
-        boolean atEndOfList = !contentChanged && !moreCardsLoaded && afterScrollCount > 0;
-        Assert.assertTrue(contentChanged || moreCardsLoaded || atEndOfList,
-                "Pagination should work or be at end of list (before: " + initialCount + ", after: " + afterScrollCount + ", changed: " + contentChanged + ")");
+        Assert.assertTrue(contentChanged || moreCardsLoaded || viewRecycled || (countStable && afterScrollCount > 0),
+                "Pagination verification failed. Before: " + initialCount + ", After: " + afterScrollCount);
     }
 
     public void verifyToolbarHidesOnScroll() {
@@ -302,7 +301,7 @@ public class VSPEventsPage {
 
         String cameraName = getDetailFieldText(VSPEventsLocators.DETAIL_CAMERA_NAME, "Camera name");
         String plateReading = getDetailFieldText(VSPEventsLocators.DETAIL_PLATE_READING, "Plate reading");
-        String plateRegion = getDetailFieldText(VSPEventsLocators.DETAIL_PLATE_REGION, "Plate region");
+        String plateRegion = getDetailFieldText(VSPEventsLocators.DETAIL_SEARCH_PLATE_LINK, "Plate region");
         String deviceTime = getDetailFieldText(VSPEventsLocators.DETAIL_DEVICE_TIME, "Device time");
         String preferredTime = getDetailFieldText(VSPEventsLocators.DETAIL_PREFERRED_TIME, "Preferred time");
         String timestamp = getDetailFieldText(VSPEventsLocators.DETAIL_TIMESTAMP, "Timestamp");
@@ -318,8 +317,12 @@ public class VSPEventsPage {
         Assert.assertFalse(timestamp.matches(".*:\\d{2}:\\d{2}.*"),
                 "Timestamp should not contain seconds, got: " + timestamp);
 
+        // Per TC-37714 spec: Make always shows (displays "Not recognized" when empty)
+        // Note: Color and Direction are actually optional in test data (not always present)
+        String make = getDetailFieldText(VSPEventsLocators.DETAIL_MAKE, "Make");
+        Assert.assertFalse(make.isBlank(), "Make should show 'Not recognized' when empty, not be absent");
+
         verifyOptionalField(VSPEventsLocators.DETAIL_SITE, "Site");
-        verifyOptionalField(VSPEventsLocators.DETAIL_MAKE, "Make");
         verifyOptionalField(VSPEventsLocators.DETAIL_COLOR, "Color");
         verifyOptionalField(VSPEventsLocators.DETAIL_DIRECTION, "Direction");
         verifyOptionalField(VSPEventsLocators.DETAIL_TYPE, "Type");

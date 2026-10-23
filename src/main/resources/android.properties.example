@@ -36,7 +36,7 @@ connectHardwareKeyboard=true
 # the app (mobile: clearApp, needs appPackage) so the next test starts at the sign-in screen.
 
 # Device Rotation & Security
-# Set to true to enable adb shell commands for device rotation (required for tests using DeviceUtils.rotateToLandscape/Portrait)
-# WARNING: Only enable in trusted test environments - this allows arbitrary shell command execution
-# Leave false or unset for production environments and shared CI infrastructure
+# Enables adb shell commands for device rotation (required by VSP Events tests TC-37646)
+# Set to TRUE for CI/test environments, FALSE for production/untrusted environments
+# WARNING: Allows arbitrary shell command execution - only enable in trusted infrastructure
 allowAdbShell=true

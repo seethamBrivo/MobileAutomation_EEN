@@ -79,10 +79,7 @@ public class VSPEventsTest extends BaseTest {
                 }
 
                 if (timeFormatWasChanged && myProfilePage != null && originalTimeFormat != null) {
-                    // BLOCKER FIX B4: recoverToDashboard ends on More>Dashboard, so we're already in More menu
-                    // Navigate to dashboard first to get to a known state
                     devicesPage.recoverToDashboard();
-                    // Now we're on Dashboard (not More menu), safe to navigate to My Profile
                     driver.navigate().back(); // Back to bottom nav
                     myProfilePage = devicesPage.navigateToMyProfile();
                     myProfilePage.clickProfileSection();
