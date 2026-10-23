@@ -34,3 +34,9 @@ connectHardwareKeyboard=true
 # NOTE: when noReset is omitted the framework defaults to noReset=true (Appium's own default is
 # false). Login state therefore persists between sessions; BaseTest.tearDown logs out or clears
 # the app (mobile: clearApp, needs appPackage) so the next test starts at the sign-in screen.
+
+# Device Rotation & Security
+# Enables adb shell commands for device rotation (required by VSP Events tests TC-37646)
+# Set to TRUE for CI/test environments, FALSE for production/untrusted environments
+# WARNING: Allows arbitrary shell command execution - only enable in trusted infrastructure
+allowAdbShell=true

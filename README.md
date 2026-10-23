@@ -102,6 +102,8 @@ mvn test -Dplatform=android -Dgroups=bridges       # only bridge tests
 mvn test -Dplatform=android -Dgroups=cameras       # only camera tests
 mvn test -Dplatform=android -Dgroups=dashboard     # only dashboard tests
 mvn test -Dplatform=android -Dgroups=profile       # only profile tests
+mvn test -Dplatform=android -Dgroups=vsp           # only VSP tests
+mvn test -Dplatform=android -Dgroups=events        # only event-related tests
 ```
 
 **BrowserStack execution:**
@@ -194,6 +196,8 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-12355 | ts_cameras.CameraContextMenuTest | Display context menu after long press on camera |
 | EEPD-TC-9005 | ts_layouts.LayoutsTest | Add new layout in mobile VMS app |
 | EEPD-TC-9163 | ts_layouts.LayoutsTest | Show camera previews in Layouts/Tags sections |
+| EEPD-TC-37646 | ts_vsp_events.VSPEventsTest | VSP Events - Card display, pagination, and orientation testing |
+| EEPD-TC-37714 | ts_vsp_events.VSPEventsTest | VSP Events - More info detail page verification with 17 fields |
 | EEPD-TC-3920 | ts_my_profile.MyProfileTest | POS-My Profile - setting 'Time zone' in VMS mobile app |
 
 ### Conventions

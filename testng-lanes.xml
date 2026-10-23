@@ -32,6 +32,7 @@
             <class name="tests.ts_cameras.CameraContextMenuTest"/>
             <class name="tests.ts_cameras.CameraSearchFilterTest"/>
             <class name="tests.ts_bridges.BridgeRestartTest"/>
+            <class name="tests.ts_vsp_events.VSPEventsTest"/>
         </classes>
     </test>
 </suite>

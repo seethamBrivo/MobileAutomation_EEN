@@ -192,9 +192,17 @@ public final class DriverManager {
             options.setAppWaitActivity(appActivity);
         }
 
-        // Android 15 workaround: Force app to stop and restart for each session (applies to both BrowserStack and local)
+        // Android 15 workaround: Force app restart for each session
         options.amend("forceAppLaunch", true);
         options.amend("shouldTerminateApp", true);
+
+        // SECURITY: Conditionally allow adb shell commands for device rotation (DeviceUtils.rotateToLandscape/Portrait)
+        // Only enabled when explicitly configured via allowAdbShell=true in android.properties
+        String allowAdbShell = ConfigReader.getProperty("allowAdbShell");
+        if ("true".equalsIgnoreCase(allowAdbShell)) {
+            options.amend("allowInsecure", java.util.List.of("adb_shell"));
+            LOGGER.info("adb_shell enabled for device rotation (allowAdbShell=true)");
+        }
 
         // The client's default read timeout is far longer than any real command. A BrowserStack session that
         // stops answering (seen once, after a click) then blocked the whole run for ~10 minutes.

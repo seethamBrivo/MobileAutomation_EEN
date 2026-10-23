@@ -253,6 +253,37 @@ public final class WaitUtils {
         return element.isPresent();
     }
 
+    /**
+     * Waits for an element to become invisible or not present within the given timeout.
+     * Returns true if the element became invisible, false if timeout occurred.
+     */
+    public static boolean waitForInvisibility(AppiumDriver driver, By locator, Duration timeout) {
+        try {
+            wait(driver, timeout).until(ExpectedConditions.invisibilityOfElementLocated(locator));
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Gets text from an element with automatic retry on StaleElementReferenceException.
+     * Handles UI re-renders that occur after user interaction (e.g., dropdown selection).
+     */
+    public static String getTextWithRetry(AppiumDriver driver, By locator, Duration timeout) {
+        final int maxRetries = 2;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return waitForVisibility(driver, locator, timeout).getText();
+            } catch (StaleElementReferenceException e) {
+                if (attempt == maxRetries) {
+                    throw e;
+                }
+            }
+        }
+        throw new AssertionError("Unreachable");
+    }
+
     private static WebDriverWait wait(AppiumDriver driver, Duration timeout) {
         return new WebDriverWait(driver, timeout);
     }
