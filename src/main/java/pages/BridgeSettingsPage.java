@@ -3,6 +3,7 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import locators.BridgesLocators;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -24,21 +25,6 @@ public class BridgeSettingsPage {
 
     private final AppiumDriver driver;
 
-    private final By bridgeSettingsPage = AppiumBy.xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout");
-    private final By statusSection = AppiumBy.xpath("//android.widget.TextView[@text='Status']");
-    private final By onlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Online')]");
-    private final By offlineStatus = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Offline')]");
-
-    // Generic: the name editor is the only EditText on its screen. No testTag available yet.
-    private final By bridgeNameEditField = AppiumBy.xpath("//android.widget.EditText");
-
-    private final By restartBridgeButton = AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
-    private final By restartConfirmationDialog = AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
-    private final By confirmRestartButton = AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: the post-restart confirmation snackbar carries no content-desc/testTag yet.
-    private final By bridgeRestartedMessage = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
-
     public BridgeSettingsPage(AppiumDriver driver) {
         this.driver = driver;
     }
@@ -46,13 +32,13 @@ public class BridgeSettingsPage {
     // ---- status ---------------------------------------------------------------------------
 
     public void verifyBridgeSettingsPageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeSettingsPage).isDisplayed(), "Bridge settings page should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_SETTINGS_PAGE).isDisplayed(), "Bridge settings page should be displayed");
     }
 
     public void verifyStatusSectionDisplayed() {
         // The settings screen re-renders right after it opens, which can invalidate the element between finding it
         // and asking whether it is displayed; the lookup is repeated instead of failing on that.
-        Assert.assertTrue(WaitUtils.retryOnStale(() -> WaitUtils.waitForVisibility(driver, statusSection).isDisplayed()),
+        Assert.assertTrue(WaitUtils.retryOnStale(() -> WaitUtils.waitForVisibility(driver, BridgesLocators.STATUS_SECTION).isDisplayed()),
                 "Status section should be displayed");
     }
 
@@ -64,10 +50,10 @@ public class BridgeSettingsPage {
 
     /** {@link #STATUS_ONLINE}, {@link #STATUS_OFFLINE} or {@link #STATUS_UNKNOWN}. */
     public String getBridgeStatus() {
-        if (WaitUtils.isVisible(driver, onlineStatus, TimeoutConstants.SHORT_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, BridgesLocators.ONLINE_STATUS, TimeoutConstants.SHORT_TIMEOUT)) {
             return STATUS_ONLINE;
         }
-        if (WaitUtils.isVisible(driver, offlineStatus, TimeoutConstants.SHORT_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, BridgesLocators.OFFLINE_STATUS, TimeoutConstants.SHORT_TIMEOUT)) {
             return STATUS_OFFLINE;
         }
         return STATUS_UNKNOWN;
@@ -101,7 +87,7 @@ public class BridgeSettingsPage {
     }
 
     public String getCurrentBridgeNameFromEditField() {
-        return WaitUtils.waitForVisibility(driver, bridgeNameEditField).getText();
+        return WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_NAME_EDIT_FIELD).getText();
     }
 
     /**
@@ -110,9 +96,9 @@ public class BridgeSettingsPage {
      * check on the settings screen.
      */
     public void enterNewBridgeName(String newName) {
-        WaitUtils.waitForVisibility(driver, bridgeNameEditField).click(); // focus first
-        WaitUtils.clearAndType(driver, bridgeNameEditField, newName);
-        String seen = WaitUtils.pollText(driver, bridgeNameEditField, newName, Duration.ofSeconds(5));
+        WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_NAME_EDIT_FIELD).click(); // focus first
+        WaitUtils.clearAndType(driver, BridgesLocators.BRIDGE_NAME_EDIT_FIELD, newName);
+        String seen = WaitUtils.pollText(driver, BridgesLocators.BRIDGE_NAME_EDIT_FIELD, newName, Duration.ofSeconds(5));
         Assert.assertEquals(seen, newName, "The new bridge name should be in the field before it is confirmed");
     }
 
@@ -135,26 +121,26 @@ public class BridgeSettingsPage {
 
     /** Scrolls the settings screen until Restart bridge is reachable, then taps it. */
     public void clickRestartBridgeButton() {
-        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, restartBridgeButton),
+        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, BridgesLocators.RESTART_BRIDGE_BUTTON),
                 "Restart bridge button should be reachable on the bridge settings screen");
-        WaitUtils.click(driver, restartBridgeButton);
+        WaitUtils.click(driver, BridgesLocators.RESTART_BRIDGE_BUTTON);
     }
 
     public void verifyRestartBridgeConfirmationDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, restartConfirmationDialog).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.RESTART_CONFIRMATION_DIALOG).isDisplayed(),
                 "Restart bridge confirmation should be displayed");
     }
 
     public void confirmRestartBridge() {
-        WaitUtils.click(driver, confirmRestartButton);
+        WaitUtils.click(driver, BridgesLocators.CONFIRM_RESTART_BUTTON);
     }
 
     public void verifyBridgeRestartedMessageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, bridgeRestartedMessage).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE).isDisplayed(),
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
 
     public void waitForDeleteBridgeSettingsPage() {
-        WaitUtils.waitForVisibility(driver, bridgeSettingsPage);
+        WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_SETTINGS_PAGE);
     }
 }
