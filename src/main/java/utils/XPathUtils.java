@@ -21,4 +21,18 @@ public final class XPathUtils {
         return "//android.widget.TextView[translate(normalize-space(@text),'" + LOWER + "','" + UPPER
                 + "')='" + text.trim().toUpperCase(java.util.Locale.ROOT) + "']";
     }
+
+    /**
+     * XPath 1.0 string literal for {@code value}, which may contain quotes.
+     * Handles single quotes, double quotes, and mixed quotes correctly.
+     */
+    public static String xpathLiteral(String value) {
+        if (!value.contains("'")) {
+            return "'" + value + "'";
+        }
+        if (!value.contains("\"")) {
+            return "\"" + value + "\"";
+        }
+        return "concat('" + String.join("',\"'\",'", value.split("'", -1)) + "')";
+    }
 }

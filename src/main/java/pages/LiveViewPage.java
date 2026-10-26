@@ -100,6 +100,11 @@ public class LiveViewPage {
         Assert.assertTrue(autoFocusDisplayed, "Auto focus option should be displayed");
     }
 
+    /**
+     * Clicks auto focus and verifies the app remains responsive.
+     * Note: This only confirms the controls are still visible (app didn't crash),
+     * not that the camera actually focused. Visual verification of focus is manual.
+     */
     public void clickAutoFocusWithVerification() {
         WaitUtils.click(driver, LiveViewLocators.AUTO_FOCUS_ICON);
 
@@ -120,6 +125,11 @@ public class LiveViewPage {
                 "Zoom in control should remain visible after auto focus operation");
     }
 
+    /**
+     * Clicks zoom in and verifies the app remains responsive.
+     * Note: This only confirms the controls are still visible (app didn't crash),
+     * not that the camera actually zoomed. Visual verification of zoom is manual.
+     */
     public void clickZoomInWithVerification() {
         WaitUtils.click(driver, LiveViewLocators.ZOOM_IN_ICON);
 
@@ -140,6 +150,11 @@ public class LiveViewPage {
                 "Zoom out control should remain visible after zoom in operation");
     }
 
+    /**
+     * Clicks zoom out and verifies the app remains responsive.
+     * Note: This only confirms the controls are still visible (app didn't crash),
+     * not that the camera actually zoomed. Visual verification of zoom is manual.
+     */
     public void clickZoomOutWithVerification() {
         WaitUtils.click(driver, LiveViewLocators.ZOOM_OUT_ICON);
 
@@ -174,7 +189,7 @@ public class LiveViewPage {
                 "Mechanical zoom menu (Zoom In/out/Auto focus) should be closed");
     }
 
-    public void tapScreenToHideMechanicalZoom() {
+    public void tapScreenCenter() {
         GestureUtils.tapScreenCenter(driver);
     }
 
@@ -187,10 +202,6 @@ public class LiveViewPage {
 
         Assert.assertTrue(isHidden,
                 "Mechanical zoom should not be visible in the live section");
-    }
-
-    public void tapScreenToUnhideMechanicalZoom() {
-        GestureUtils.tapScreenCenter(driver);
     }
 
     public void verifyMechanicalZoomUnhidden() {
@@ -220,9 +231,9 @@ public class LiveViewPage {
     }
 
     public void verifyMechanicalZoomHideUnhideBehavior() {
-        tapScreenToHideMechanicalZoom();
+        tapScreenCenter();
         verifyMechanicalZoomHidden();
-        tapScreenToUnhideMechanicalZoom();
+        tapScreenCenter();
         verifyMechanicalZoomUnhidden();
     }
 }

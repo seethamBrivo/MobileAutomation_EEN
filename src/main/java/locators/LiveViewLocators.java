@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.XPathUtils;
 
 public final class LiveViewLocators {
 
@@ -14,9 +15,7 @@ public final class LiveViewLocators {
             AppiumBy.id("com.een.vms.android:id/search_bar");
 
     public static By cameraCardByName(String cameraName) {
-        // Escape both single and double quotes to prevent XPath injection
-        String escapedName = cameraName.replace("'", "\\'").replace("\"", "&quot;");
-        return AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + escapedName + "')]");
+        return AppiumBy.xpath("//android.widget.TextView[contains(@text, " + XPathUtils.xpathLiteral(cameraName) + ")]");
     }
 
     // Uses last() to avoid matching menu icons when menu is open
