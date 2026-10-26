@@ -155,6 +155,18 @@ public final class JsonDataReader {
         return value.getAsString();
     }
 
+    /**
+     * A string value from {@code mechanical_zoom_camera_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing or null.
+     */
+    public static String getMechanicalZoomCameraValue(String key) {
+        return getBlockValue(
+                TestDataConstants.MECHANICAL_ZOOM_CAMERA_DATA,
+                "mechanical_zoom_camera_data",
+                key
+        ).getAsString();
+    }
+
     private static String loadResourceAsString(String resourcePath) {
         try (InputStream inputStream = Thread.currentThread()
                 .getContextClassLoader()

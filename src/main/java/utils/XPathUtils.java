@@ -21,4 +21,22 @@ public final class XPathUtils {
         return "//android.widget.TextView[translate(normalize-space(@text),'" + LOWER + "','" + UPPER
                 + "')='" + text.trim().toUpperCase(java.util.Locale.ROOT) + "']";
     }
+
+    /**
+     * Escapes a string value for safe use in an XPath expression.
+     * XPath 1.0 has no escape mechanism, so strings containing both single and double quotes
+     * must be built with concat().
+     *
+     * @param value the string to escape
+     * @return an XPath string literal (quoted or concat expression)
+     */
+    public static String xpathLiteral(String value) {
+        if (!value.contains("'")) {
+            return "'" + value + "'";
+        }
+        if (!value.contains("\"")) {
+            return "\"" + value + "\"";
+        }
+        return "concat('" + String.join("',\"'\",'", value.split("'", -1)) + "')";
+    }
 }

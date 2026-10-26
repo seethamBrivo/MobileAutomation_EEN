@@ -132,6 +132,28 @@ public final class GestureUtils {
         driver.perform(List.of(swipeSequence));
     }
 
+    /**
+     * Taps the center of the screen.
+     */
+    public static void tapScreenCenter(AppiumDriver driver) {
+        Dimension size = driver.manage().window().getSize();
+        int centerX = size.width / 2;
+        int centerY = size.height / 2;
+        tap(driver, centerX, centerY);
+    }
+
+    /**
+     * Performs a tap gesture at the specified coordinates.
+     */
+    public static void tap(AppiumDriver driver, int x, int y) {
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+        Sequence tapSequence = new Sequence(finger, 1);
+        tapSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y));
+        tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        driver.perform(List.of(tapSequence));
+    }
+
     public static Point getElementCenter(WebElement element) {
         Point location = element.getLocation();
         Dimension size = element.getSize();

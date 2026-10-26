@@ -45,4 +45,8 @@ public final class TestDataConstants {
     public static final String ASPECT_RATIO = "aspect_ratio";
     public static final String MAX_CAMERAS_PER_ROW = "max_cameras_per_row";
     public static final String SHOW_CAMERA_TITLE_BARS = "show_camera_title_bars";
+
+    // Test-data JSON keys (mechanical_zoom_camera block).
+    public static final String MECHANICAL_ZOOM_CAMERA_DATA = "mechanical_zoom_camera_data";
+    public static final String MECHANICAL_ZOOM_CAMERA_NAME = "camera_name";
 }
