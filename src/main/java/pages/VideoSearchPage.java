@@ -5,11 +5,10 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import locators.VideoSearchLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.By;
 import org.testng.Assert;
 import utils.WaitUtils;
 
@@ -20,25 +19,20 @@ public class VideoSearchPage {
     private static final Logger logger = LogManager.getLogger(VideoSearchPage.class);
     private final AppiumDriver driver;
 
-    // Stable: Back button at fixed position [6] in VspMain screen
-    private final By backButtonFromVSPEvents = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View/android.view.View");
-    private final By searchOption = AppiumBy.xpath("//android.widget.TextView[@text='Search']");
-    private final By dateField = AppiumBy.id("com.een.vms.android:id/date");
-
     public VideoSearchPage(AppiumDriver driver) {
         this.driver = driver;
     }
 
     public void navigateBackFromVSPEvents() {
-        WaitUtils.click(driver, backButtonFromVSPEvents);
+        WaitUtils.click(driver, VideoSearchLocators.BACK_BUTTON_FROM_VSP_EVENTS);
     }
 
     public void clickSearch() {
-        WaitUtils.click(driver, searchOption);
+        WaitUtils.click(driver, VideoSearchLocators.SEARCH_OPTION);
     }
 
     public String captureDateFieldText() {
-        String dateText = WaitUtils.waitForVisibility(driver, dateField).getText();
+        String dateText = WaitUtils.waitForVisibility(driver, VideoSearchLocators.DATE_FIELD).getText();
 
         Assert.assertFalse(dateText.isEmpty(),
                 "Date field should contain date/time information");

@@ -1,6 +1,5 @@
 package pages;
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import locators.ResellerDashboardLocators;
 import org.openqa.selenium.By;
@@ -13,19 +12,6 @@ import java.time.Duration;
 
 public class ResellerDashboardPage {
     private final AppiumDriver driver;
-    private final By resellerDashboard = AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]");
-    private By accountName(String accountName) {
-        return AppiumBy.xpath(
-                "//android.widget.TextView[@text=\"" + accountName + "\"]"
-        );
-    }
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: the first account row in the list carries no content-desc/testTag yet.
-    private final By firstAccountWithBridges = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]");
-    private final By layoutsScreen = AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]");
-    private final By logoutOption= AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
-    private final By confirmLogoutButton= AppiumBy.xpath("//android.widget.TextView[@text=\"YES\"]");
-    private final By deletedSuccessMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"Deleted successfully\"]");
 
     public ResellerDashboardPage(AppiumDriver driver) {
         this.driver = driver;
@@ -33,15 +19,21 @@ public class ResellerDashboardPage {
 
     public boolean isDashboardPageDisplayed() {
         // Right after login the dashboard can sit on skeleton rows for longer than the default wait.
-        return WaitUtils.waitForVisibility(driver, resellerDashboard, TimeoutConstants.LIST_LOAD_TIMEOUT).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.RESELLER_DASHBOARD_TITLE, TimeoutConstants.LIST_LOAD_TIMEOUT).isDisplayed();
+    }
+
+    /** Step "Click an account that has a bridge": re-login into it and wait for its Layouts section. */
+    public void openFirstAccountWithBridges() {
+        clickFirstAccountWithBridges();
+        verifyLayoutsScreenDisplayed();
     }
 
     public void clickFirstAccountWithBridges() {
-        WaitUtils.waitForClickability(driver, firstAccountWithBridges).click();
+        WaitUtils.waitForClickability(driver, ResellerDashboardLocators.FIRST_ACCOUNT_WITH_BRIDGES).click();
     }
 
     public boolean isLayoutsScreenDisplayed() {
-        return WaitUtils.waitForVisibility(driver, layoutsScreen).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.LAYOUTS_SCREEN).isDisplayed();
     }
 
     public boolean isTotalAccountsDisplayed() {
@@ -55,12 +47,12 @@ public class ResellerDashboardPage {
     public boolean isAccountNameDisplayed(String accountName) {
         return WaitUtils.waitForVisibility(
                 driver,
-                accountName(accountName)
+                ResellerDashboardLocators.accountByName(accountName)
         ).isDisplayed();
     }
 
     public void scrollUntilAccountIsVisible(String accountName) {
-        GestureUtils.scrollUntilPresent(driver, accountName(accountName));
+        GestureUtils.scrollUntilPresent(driver, ResellerDashboardLocators.accountByName(accountName));
     }
 
     public boolean isBridgeResourceIconDisplayed() {
@@ -314,7 +306,7 @@ public class ResellerDashboardPage {
 
     public void longPressOnAccount(String accountNameWithCustomerId) {
         String xpathSafeText = buildXPathStringLiteral(accountNameWithCustomerId);
-        By accountLocator = AppiumBy.xpath("(//android.widget.TextView[@text=" + xpathSafeText + "])[1]");
+        By accountLocator = ResellerDashboardLocators.accountByExactText(xpathSafeText);
         WebElement accountElement = WaitUtils.waitForVisibility(driver, accountLocator);
         GestureUtils.longPress(driver, accountElement);
         // The press sometimes lands while the long list is still settling,press again, on a fresh lookup.
@@ -338,14 +330,11 @@ public class ResellerDashboardPage {
         WaitUtils.waitForClickability(driver, ResellerDashboardLocators.DELETE_CONFIRM_BUTTON).click();
     }
 
-    /** Matches the list header "11 accounts" / "1 account" (not the "Filter by account name" hint). */
-    private final By accountsCountLabel = AppiumBy.xpath("//android.widget.TextView[contains(@text,' account')]");
-
     private static final java.util.regex.Pattern ACCOUNTS_COUNT_PATTERN = java.util.regex.Pattern.compile("^(\\d+) accounts?$");
 
     /** The number in the "N accounts" header, or -1 when it is not on screen. */
     public int getAccountCount() {
-        for (WebElement label : driver.findElements(accountsCountLabel)) {
+        for (WebElement label : driver.findElements(ResellerDashboardLocators.ACCOUNTS_COUNT_LABEL)) {
             java.util.regex.Matcher m = ACCOUNTS_COUNT_PATTERN.matcher(label.getText().trim());
             if (m.matches()) {
                 return Integer.parseInt(m.group(1));
@@ -367,7 +356,7 @@ public class ResellerDashboardPage {
                     .pollingEvery(Duration.ofMillis(250))
                     .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
                     .until(d -> {
-                        if (WaitUtils.isPresent(driver, deletedSuccessMessage)) {
+                        if (WaitUtils.isPresent(driver, ResellerDashboardLocators.DELETED_SUCCESS_MESSAGE)) {
                             return true;
                         }
                         if (countBefore < 0) {
@@ -395,11 +384,11 @@ public class ResellerDashboardPage {
             driver.navigate().back();
         }
         WaitUtils.click(driver, ResellerDashboardLocators.NAV_MORE);
-        if (!WaitUtils.isPresent(driver, logoutOption)) {
+        if (!WaitUtils.isPresent(driver, ResellerDashboardLocators.LOGOUT_OPTION)) {
             GestureUtils.swipeUp(driver);
         }
-        WaitUtils.click(driver, logoutOption);
-        WaitUtils.click(driver, confirmLogoutButton);
+        WaitUtils.click(driver, ResellerDashboardLocators.LOGOUT_OPTION);
+        WaitUtils.click(driver, ResellerDashboardLocators.CONFIRM_LOGOUT_BUTTON);
     }
 
     public void verifyLayoutsScreenDisplayed() {
@@ -599,7 +588,7 @@ public class ResellerDashboardPage {
     }
 
     public boolean isDeletedSuccessMessageDisplayed() {
-        return WaitUtils.waitForVisibility(driver, deletedSuccessMessage, Duration.ofSeconds(60)).isDisplayed();
+        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.DELETED_SUCCESS_MESSAGE, Duration.ofSeconds(60)).isDisplayed();
     }
 
     public void verifyDeletedSuccessMessageDisplayed() {

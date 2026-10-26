@@ -2,9 +2,9 @@ package pages;
 
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import locators.BridgesLocators;
+import locators.MyProfileLocators;
 import java.time.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,9 +61,15 @@ public class DevicesPage {
         // Wait for More screen to fully render before returning - prevents timeout when clicking profile section
         // The profile section is positional (TODO: replace with testTag when mobile team adds proper identifiers),
         // so we wait for it to appear to ensure the ScrollView children are in the hierarchy
-        By profileSection = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.view.View");
-        WaitUtils.waitForVisibility(driver, profileSection, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
+        WaitUtils.waitForVisibility(driver, MyProfileLocators.PROFILE_SECTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
         return new MyProfilePage(driver);
+    }
+
+    /** Steps "Go to Dashboard" and "Tap Bridge option": the All devices section, then the Bridges tab. */
+    public void openBridgesList() {
+        navigateToDashboard();
+        verifyAllDevicesSectionIsDisplayed();
+        clickBridgesTab();
     }
 
     public void clickBridgesTab() {

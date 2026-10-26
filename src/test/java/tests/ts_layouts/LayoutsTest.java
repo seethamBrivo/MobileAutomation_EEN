@@ -35,18 +35,13 @@ public class LayoutsTest extends BaseTest {
         int maxCamerasPerRow = JsonDataReader.getLayoutDataIntValue(TestDataConstants.MAX_CAMERAS_PER_ROW);
         boolean showCameraTitleBars = JsonDataReader.getLayoutDataBooleanValue(TestDataConstants.SHOW_CAMERA_TITLE_BARS);
 
-        layoutsPage.clickThreeDotsMenuButton();
-        layoutsPage.verifyMenuPopupDisplayed();
-        layoutsPage.verifyMenuOptions();
-        layoutsPage.clickNewLayoutOption();
-        layoutsPage.verifyNewLayoutScreenDisplayed();
-        layoutsPage.setLayoutName(uniqueLayoutName);
-        layoutsPage.selectAspectRatio(aspectRatio);
-        layoutsPage.selectMaxCamerasPerRow(maxCamerasPerRow);
-        layoutsPage.toggleShowCameraTitleBars(showCameraTitleBars);
-        layoutsPage.clickAddCamerasIcon();
-        layoutsPage.selectFirstCamera();
-        layoutsPage.clickSaveButton();
+        // Steps 2 and 3: Open the 3-dots menu and choose New Layout
+        layoutsPage.openNewLayoutForm();
+        // Steps 4 to 7: Name, aspect ratio, max cameras per row and camera title bars
+        layoutsPage.setLayoutDetails(uniqueLayoutName, aspectRatio, maxCamerasPerRow, showCameraTitleBars);
+        // Steps 8 and 9: Add a camera and save
+        layoutsPage.addFirstCameraAndSave();
+        // Step 10: Add the layout
         layoutsPage.clickAddButton();
         layoutCreated = true;
         layoutsPage.verifyLayoutCreatedSuccessfully(uniqueLayoutName);
@@ -55,11 +50,11 @@ public class LayoutsTest extends BaseTest {
     @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app",
           groups = {"regression", "layouts"})
     public void verifyCameraPreviewsDisplayedInLayouts() {
-        layoutsPage.waitForCameraPreviewsToLoad();
-        layoutsPage.verifyFirstCameraPreviewElements();
+        // Steps 2 and 3: Stay in the Layouts section and wait for the camera previews
+        layoutsPage.verifyCameraPreviewsLoaded();
+        // Same check on the All cameras tab
         layoutsPage.clickAllCamerasTab();
-        layoutsPage.waitForCameraPreviewsToLoad();
-        layoutsPage.verifyFirstCameraPreviewElements();
+        layoutsPage.verifyCameraPreviewsLoaded();
     }
 
     @AfterMethod(alwaysRun = true)

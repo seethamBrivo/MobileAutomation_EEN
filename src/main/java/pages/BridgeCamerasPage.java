@@ -1,9 +1,7 @@
 package pages;
 
-import constants.UiTextConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
-import org.openqa.selenium.By;
+import locators.BridgeCamerasLocators;
 import org.testng.Assert;
 import utils.WaitUtils;
 
@@ -12,44 +10,33 @@ public class BridgeCamerasPage {
     private final AppiumDriver driver;
     private final CameraSearchHelper searchHelper;
 
-    private final By camerasOption = AppiumBy.xpath("//android.widget.TextView[@text='Cameras']");
-    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
-    // Positional: same DevicesMainScreen back button as DevicesPage.bridgesBackButton, no testTag yet.
-    private final By backButton = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View");
-    private final By searchBar = AppiumBy.xpath("//android.widget.EditText");
-    // Inline locator for context menu - only used once in verification
-    private final By contextMenuCameraSettings = AppiumBy.xpath("//android.widget.TextView[@text='Camera settings']");
-    private final By searchPlaceholder = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.SEARCH_PLACEHOLDER + "\"]");
-    private final By cameraCounter = AppiumBy.xpath("//android.widget.TextView[contains(@text, '" + UiTextConstants.CAMERA_COUNTER_TEXT + "') and not(contains(@text, 'Filter')) and not(contains(@text, 'No matching'))]");
-    private final By firstCameraInList = AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]");
-    private final By emptyStateMessage = AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]");
 
     public BridgeCamerasPage(AppiumDriver driver) {
         this.driver = driver;
         this.searchHelper = new CameraSearchHelper(
             driver,
-            searchBar,
-            searchPlaceholder,
-            cameraCounter,
-            firstCameraInList,
-            emptyStateMessage
+            BridgeCamerasLocators.SEARCH_BAR,
+            BridgeCamerasLocators.SEARCH_PLACEHOLDER,
+            BridgeCamerasLocators.CAMERA_COUNTER,
+            BridgeCamerasLocators.FIRST_CAMERA_IN_LIST,
+            BridgeCamerasLocators.EMPTY_STATE_MESSAGE
         );
     }
 
     public void clickCamerasOption() {
-        WaitUtils.click(driver, camerasOption);
+        WaitUtils.click(driver, BridgeCamerasLocators.CAMERAS_OPTION);
     }
 
     public void verifyCamerasOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, camerasOption).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgeCamerasLocators.CAMERAS_OPTION).isDisplayed(),
                 "Cameras option should be displayed in bridge context menu");
     }
 
     public void verifyCameraListDisplayed() {
         // First verify we're on camera screen (search placeholder is unique to camera screen)
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, searchPlaceholder).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgeCamerasLocators.SEARCH_PLACEHOLDER).isDisplayed(),
                 "Camera screen should be displayed (search placeholder visible)");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, firstCameraInList).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgeCamerasLocators.FIRST_CAMERA_IN_LIST).isDisplayed(),
                 "Camera list should be displayed");
     }
 
@@ -125,10 +112,32 @@ public class BridgeCamerasPage {
         searchHelper.dismissContextMenu();
     }
 
+    // ---- step-level groups ----------------------------------------------------------------
+
+    public String captureCounterAndVerifyFormat() {
+        return searchHelper.captureCounterAndVerifyFormat();
+    }
+
+    public void tapSearchBarAndVerify() {
+        searchHelper.tapSearchBarAndVerify();
+    }
+
+    public void searchAndVerifyResults(String searchTerm, String initialCount) {
+        searchHelper.searchAndVerifyResults(searchTerm, initialCount);
+    }
+
+    public void clearSearchAndVerifyRestored(String initialCount) {
+        searchHelper.clearSearchAndVerifyRestored(initialCount);
+    }
+
+    public void searchWithNoResultsAndVerifyEmptyState(String searchTerm) {
+        searchHelper.searchWithNoResultsAndVerifyEmptyState(searchTerm);
+    }
+
     public void verifyCanInteractWithFilteredCamera() {
         longPressFirstCamera();
         // Verify context menu opened - use normal wait, not SHORT_TIMEOUT
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, contextMenuCameraSettings).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgeCamerasLocators.CONTEXT_MENU_CAMERA_SETTINGS).isDisplayed(),
                 "Context menu should be displayed after long press");
         dismissContextMenu();
     }
@@ -142,6 +151,6 @@ public class BridgeCamerasPage {
     }
 
     public void clickBackButton() {
-        WaitUtils.click(driver, backButton);
+        WaitUtils.click(driver, BridgeCamerasLocators.BACK_BUTTON);
     }
 }

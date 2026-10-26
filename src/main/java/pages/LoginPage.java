@@ -1,12 +1,12 @@
 package pages;
 
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import locators.LoginLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -25,22 +25,6 @@ public class LoginPage {
     private static final String DEFAULT_APP_ACTIVITY = "com.een.core.MainActivity";
 
     private final AppiumDriver driver;
-    private final By signInButton = AppiumBy.accessibilityId("sign_in_btn_button");
-    private final By emailInputField = AppiumBy.className("android.widget.EditText");
-    private final By nextButton = AppiumBy.xpath("//android.widget.Button[@text=\"Next\"]");
-    private final By passwordField = AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]");
-    private final By signInButtonToLogin = AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]");
-    private final By noThanksOptionInBiometricsAuthenticationPopUp = AppiumBy.id("com.een.vms.android:id/positive_button");
-    /** Bottom-navigation "More" tab: shown on every signed-in landing screen, never on the sign-in screen. */
-    private final By signedInMarker = AppiumBy.xpath("//android.widget.TextView[@text='More']");
-
-    /**
-     * The identity provider can answer a correct password with "Account verification - we need to verify
-     * you with a Security Code" (sent by email). A test cannot finish that step, so it is recognised and
-     * reported as such instead of being waited out as a missing landing screen.
-     */
-    private final By verificationPrompt = AppiumBy.xpath(
-            "//*[contains(@text,'Account verification') or contains(@text,'Security Code')]");
 
     /** What the app shows right after it starts. */
     public enum StartScreen { SIGN_IN, SIGNED_IN, UNKNOWN }
@@ -50,12 +34,12 @@ public class LoginPage {
     }
 
     public LoginPage tapSignIn() {
-        WaitUtils.waitForClickability(driver, signInButton).click();
+        WaitUtils.waitForClickability(driver, LoginLocators.SIGN_IN_BUTTON).click();
         return this;
     }
 
     public LoginPage enterEmail(String username) {
-        typeAndVerify(emailInputField, username);
+        typeAndVerify(LoginLocators.EMAIL_INPUT_FIELD, username);
         return this;
     }
 
@@ -102,17 +86,17 @@ public class LoginPage {
     }
 
     public LoginPage tapNextButton() {
-        WaitUtils.waitForVisibility(driver, nextButton).click();
+        WaitUtils.waitForVisibility(driver, LoginLocators.NEXT_BUTTON).click();
         return this;
     }
 
     public LoginPage enterPassword(String password) {
-        typeAndVerify(passwordField, password);
+        typeAndVerify(LoginLocators.PASSWORD_FIELD, password);
         return this;
     }
 
     public LoginPage tapSignInButtonToLogin() {
-        WaitUtils.waitForVisibility(driver, signInButtonToLogin).click();
+        WaitUtils.waitForVisibility(driver, LoginLocators.SIGN_IN_BUTTON_TO_LOGIN).click();
         return this;
     }
 
@@ -125,12 +109,12 @@ public class LoginPage {
      */
     private boolean dismissBiometricsPromptIfShown() {
         List<By> prompt = List.of(
-                noThanksOptionInBiometricsAuthenticationPopUp,
-                AppiumBy.xpath("//android.widget.Button[contains(@text, 'NO THANKS') or contains(@text, 'No Thanks') or contains(@text, 'No thanks')]"),
-                AppiumBy.id("android:id/button2"));
+                LoginLocators.NO_THANKS_OPTION_IN_BIOMETRICS_AUTHENTICATION_POP_UP,
+                LoginLocators.NO_THANKS_BUTTON_BY_TEXT,
+                LoginLocators.BIOMETRICS_NEGATIVE_BUTTON);
         List<By> candidates = new ArrayList<>();
-        candidates.add(signedInMarker);
-        candidates.add(verificationPrompt);
+        candidates.add(LoginLocators.SIGNED_IN_MARKER);
+        candidates.add(LoginLocators.VERIFICATION_PROMPT);
         candidates.addAll(prompt);
 
         Optional<By> first = WaitUtils.waitForFirstVisible(driver, candidates, TimeoutConstants.SIGN_IN_LANDING_TIMEOUT);
@@ -140,12 +124,12 @@ public class LoginPage {
             return false;
         }
         By promptButton = first.get();
-        if (promptButton == verificationPrompt) {
+        if (promptButton == LoginLocators.VERIFICATION_PROMPT) {
             throw new AccountVerificationRequiredException("Sign-in stopped at the identity provider's 'Account verification' "
                     + "(security code) step. A test cannot complete it; use an account without verification "
                     + "or whitelist this device.");
         }
-        if (promptButton == signedInMarker) {
+        if (promptButton == LoginLocators.SIGNED_IN_MARKER) {
             // Signed-in screen is up. Look once, without waiting, in case the prompt is drawn over it.
             promptButton = prompt.stream().filter(b -> WaitUtils.isPresent(driver, b)).findFirst().orElse(null);
         }
@@ -163,11 +147,11 @@ public class LoginPage {
      * starts or is relaunched, to learn whether a previous login survived.
      */
     public StartScreen waitForStartScreen(Duration timeout) {
-        Optional<By> first = WaitUtils.waitForFirstVisible(driver, List.of(signInButton, signedInMarker), timeout);
+        Optional<By> first = WaitUtils.waitForFirstVisible(driver, List.of(LoginLocators.SIGN_IN_BUTTON, LoginLocators.SIGNED_IN_MARKER), timeout);
         if (first.isEmpty()) {
             return StartScreen.UNKNOWN;
         }
-        return first.get() == signInButton ? StartScreen.SIGN_IN : StartScreen.SIGNED_IN;
+        return first.get() == LoginLocators.SIGN_IN_BUTTON ? StartScreen.SIGN_IN : StartScreen.SIGNED_IN;
     }
 
     public ResellerDashboardPage loginAs(String username, String password) {
