@@ -1,11 +1,10 @@
 package pages;
 
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import locators.UsersLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.TestDataGenerator;
@@ -16,120 +15,64 @@ public class UsersPage {
     private static final Logger logger = LogManager.getLogger(UsersPage.class);
     private final AppiumDriver driver;
 
-    private final By usersOptionAtTheBottomOfTheScreen = AppiumBy.xpath("//android.widget.TextView[@text='Users']");
-    // The Users screen is Compose now (UsersMainScreen). Its header is [title, sort, add] with no ids,
-    // so the add icon is the last clickable sibling after the title. The old view-based id is kept
-    // in the union so an older app build still works.
-    private final By usersAddIconAtTheTopRightCorner = AppiumBy.xpath(
-            "//*[@resource-id='com.een.vms.android:id/img_custom']"
-                    + " | "+"//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.TextView[@text='Users']"
-                    + "/following-sibling::android.view.View[@clickable='true'][last()]");
-    // New-user form (Compose): header is [back, "New user", Add]; each field is an EditText that follows its
-    // label TextView. The previous resource-id / content-desc locators are kept in the unions.
-    private final By newUserHeading = AppiumBy.xpath("//android.widget.TextView[@text='New user']");
-    private final By emailTextInputField = AppiumBy.xpath("//*[@content-desc='email_text_field']"
-            + " | //android.widget.TextView[@text='Email']/following-sibling::android.widget.EditText[1]");
-    private final By addButton = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/btn_text']"
-            + " | //android.widget.TextView[@text='New user']/following-sibling::android.view.View[@clickable='true'][last()]");
-    private final By firstNameTextField = AppiumBy.xpath("//*[@content-desc='first_name_text_field']"
-            + " | //android.widget.TextView[@text='First name']/following-sibling::android.widget.EditText[1]");
-    private final By lastNameTextField = AppiumBy.xpath("//*[@content-desc='last_name_text_field']"
-            + " | //android.widget.TextView[@text='Last name']/following-sibling::android.widget.EditText[1]");
-    private final By emailPlusHint = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/emailPlusHint']"
-            + " | //android.widget.TextView[starts-with(@text,'The + alias is no longer required')]");
-    // New UI: the snackbar is a plain TextView with this text. The old positional Compose path is kept in the union.
-    private final By snackbarText = AppiumBy.xpath("//android.widget.TextView[@text='User was added']"
-            + " | //androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
-    private final By usersSearchFilterIcon = AppiumBy.id("com.een.vms.android:id/img_search");
-    // New UI: the filter field is always on the list (no search icon / separate search screen).
-    private final By filterForUsersSearchbar = AppiumBy.xpath(
-            "//*[@resource-id='com.een.vms.android:id/search_bar']"
-                    + " | //androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.EditText");
-    // New UI: a clickable row on the user's details screen with a "Delete user" label.
-    private final By deleteUserOption = AppiumBy.xpath("//android.view.ViewGroup[@content-desc='delete_header_content']"
-            + " | //android.widget.TextView[@text='Delete user']/ancestor::android.view.View[@clickable='true'][1]");
-    // New UI: the confirmation dialog's "DELETE" action.
-    private final By confirmDeleteUserOption = AppiumBy.xpath("//android.widget.Button[@content-desc='negative_button']"
-            + " | //android.widget.TextView[@text='DELETE']/ancestor::android.view.View[@clickable='true'][1]");
-    private final By backButton = AppiumBy.id("com.een.vms.android:id/img_back");
-
     private static final int DETAILS_OPEN_ATTEMPTS = 3;
-    private static final String END_ICON_DESC = "_user_details_container_end_icon";
 
     public UsersPage(AppiumDriver driver) {
         this.driver = driver;
     }
 
-    /** The list row showing exactly this e-mail. */
-    private static By userRowText(String email) {
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']");
-    }
-
-    /**
-     * The end (details) icon inside the same row as {@code email}: the nearest ancestor of the
-     * e-mail label that also contains an end icon is the row itself.
-     */
-    private static By userRowEndIcon(String email) {
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']"
-                + "/ancestor::*[.//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']][1]"
-                + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']"
-                // New UI: the whole row is the clickable target.
-                + " | //android.widget.TextView[@text='" + email + "']"
-                + "/ancestor::android.view.View[@clickable='true'][1]");
-    }
-
     // ---- navigation -----------------------------------------------------------------------
 
     public void clickUsersOptionAtTheBottom() {
-        WaitUtils.click(driver, usersOptionAtTheBottomOfTheScreen);
+        WaitUtils.click(driver, UsersLocators.USERS_OPTION_AT_THE_BOTTOM_OF_THE_SCREEN);
     }
 
     public void clickUsersAddIconAtTheTopRightCorner() {
-        WaitUtils.click(driver, usersAddIconAtTheTopRightCorner);
+        WaitUtils.click(driver, UsersLocators.USERS_ADD_ICON_AT_THE_TOP_RIGHT_CORNER);
     }
 
     public void clickBackButton() {
-        WaitUtils.click(driver, backButton);
+        WaitUtils.click(driver, UsersLocators.BACK_BUTTON);
     }
 
     public void verifyUsersOptionAtBottomScreenDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, usersOptionAtTheBottomOfTheScreen).isDisplayed(),
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.USERS_OPTION_AT_THE_BOTTOM_OF_THE_SCREEN).isDisplayed(),
                 "Users option should be displayed at the bottom of the screen");
     }
 
     // ---- new-user form --------------------------------------------------------------------
 
     public void verifyNewUserHeadingDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, newUserHeading).isDisplayed(), "New user heading should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.NEW_USER_HEADING).isDisplayed(), "New user heading should be displayed");
     }
 
     public void verifyAddButtonDisabled() {
-        Assert.assertFalse(WaitUtils.waitForVisibility(driver, addButton).isEnabled(), "Add button should be disabled");
+        Assert.assertFalse(WaitUtils.waitForVisibility(driver, UsersLocators.ADD_BUTTON).isEnabled(), "Add button should be disabled");
     }
 
     public void enterEmailAtTheInputField(String email) {
-        WaitUtils.clearAndType(driver, emailTextInputField, email);
+        WaitUtils.clearAndType(driver, UsersLocators.EMAIL_TEXT_INPUT_FIELD, email);
     }
 
     public void enterFirstNameInputField(String firstName) {
-        WaitUtils.clearAndType(driver, firstNameTextField, firstName);
+        WaitUtils.clearAndType(driver, UsersLocators.FIRST_NAME_TEXT_FIELD, firstName);
     }
 
     public void enterLastNameInputField(String lastName) {
-        WaitUtils.clearAndType(driver, lastNameTextField, lastName);
+        WaitUtils.clearAndType(driver, UsersLocators.LAST_NAME_TEXT_FIELD, lastName);
     }
 
     public void clickAddButton() {
-        WaitUtils.click(driver, addButton);
+        WaitUtils.click(driver, UsersLocators.ADD_BUTTON);
     }
 
     public void verifyEmailPlusHintDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, emailPlusHint).isDisplayed(), "Email plus hint should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.EMAIL_PLUS_HINT).isDisplayed(), "Email plus hint should be displayed");
     }
 
     /** The "user was added" snackbar - verify it appears (no text validation). */
     public void verifyUserWasAddedMessageDisplayed() {
-        WebElement snackbar = WaitUtils.waitForVisibility(driver, snackbarText);
+        WebElement snackbar = WaitUtils.waitForVisibility(driver, UsersLocators.SNACKBAR_TEXT);
         Assert.assertTrue(snackbar.isDisplayed(), "Snackbar should be displayed after adding user");
     }
 
@@ -167,11 +110,11 @@ public class UsersPage {
 
     public void clickUsersSearchFilterIcon() {
         // Only the old UI has a search icon; the new list already shows the filter field.
-        WaitUtils.tryClickOptionalElement(driver, java.util.List.of(usersSearchFilterIcon), TimeoutConstants.SHORT_TIMEOUT);
+        WaitUtils.tryClickOptionalElement(driver, java.util.List.of(UsersLocators.USERS_SEARCH_FILTER_ICON), TimeoutConstants.SHORT_TIMEOUT);
     }
 
     public void filterForUsersSearchbar(String email) {
-        WaitUtils.clearAndType(driver, filterForUsersSearchbar, email);
+        WaitUtils.clearAndType(driver, UsersLocators.FILTER_FOR_USERS_SEARCHBAR, email);
     }
 
     /** From the users list: search for {@code email} and report whether its row is shown. */
@@ -179,7 +122,7 @@ public class UsersPage {
         clickUsersSearchFilterIcon();
         filterForUsersSearchbar(email);
         // The filter is applied server-side: the row took ~12s to show up in BrowserStack build #14.
-        return WaitUtils.isVisible(driver, userRowText(email), TimeoutConstants.LIST_LOAD_TIMEOUT);
+        return WaitUtils.isVisible(driver, UsersLocators.userRowText(email), TimeoutConstants.LIST_LOAD_TIMEOUT);
     }
 
     /** Opens the row for exactly {@code email} and deletes it. Fails if that row is not listed. */
@@ -192,10 +135,10 @@ public class UsersPage {
     /** Navigates back from search screen to the main users list. */
     private void returnToUsersList() {
         // The old UI had a separate search screen with its own back button; the new one does not.
-        if (WaitUtils.isPresent(driver, backButton)) {
+        if (WaitUtils.isPresent(driver, UsersLocators.BACK_BUTTON)) {
             clickBackButton();
         }
-        WaitUtils.waitForVisibility(driver, usersAddIconAtTheTopRightCorner);
+        WaitUtils.waitForVisibility(driver, UsersLocators.USERS_ADD_ICON_AT_THE_TOP_RIGHT_CORNER);
     }
 
     /**
@@ -229,10 +172,10 @@ public class UsersPage {
 
     private void deleteListedUser(String email) {
         openUserDetailsWithDelete(email);
-        WaitUtils.click(driver, deleteUserOption);
-        WaitUtils.waitForVisibility(driver, confirmDeleteUserOption);
-        WaitUtils.click(driver, confirmDeleteUserOption);
-        WaitUtils.waitForVisibility(driver, filterForUsersSearchbar);
+        WaitUtils.click(driver, UsersLocators.DELETE_USER_OPTION);
+        WaitUtils.waitForVisibility(driver, UsersLocators.CONFIRM_DELETE_USER_OPTION);
+        WaitUtils.click(driver, UsersLocators.CONFIRM_DELETE_USER_OPTION);
+        WaitUtils.waitForVisibility(driver, UsersLocators.FILTER_FOR_USERS_SEARCHBAR);
     }
 
     /**
@@ -242,16 +185,16 @@ public class UsersPage {
      */
     private void openUserDetailsWithDelete(String email) {
         for (int attempt = 1; attempt <= DETAILS_OPEN_ATTEMPTS; attempt++) {
-            WaitUtils.click(driver, userRowEndIcon(email));
-            if (WaitUtils.isVisible(driver, deleteUserOption, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
+            WaitUtils.click(driver, UsersLocators.userRowEndIcon(email));
+            if (WaitUtils.isVisible(driver, UsersLocators.DELETE_USER_OPTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
                 return;
             }
             logger.warn("Details of {} did not finish loading (attempt {}/{})", email, attempt, DETAILS_OPEN_ATTEMPTS);
             if (attempt < DETAILS_OPEN_ATTEMPTS) {
                 driver.navigate().back();
-                if (!WaitUtils.isVisible(driver, userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT)) {
+                if (!WaitUtils.isVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT)) {
                     filterForUsersSearchbar(email);
-                    WaitUtils.waitForVisibility(driver, userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
+                    WaitUtils.waitForVisibility(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
                 }
             }
         }

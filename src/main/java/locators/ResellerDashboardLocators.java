@@ -225,5 +225,43 @@ public final class ResellerDashboardLocators {
 
     public static final By DELETE_CONFIRM_BUTTON =
             AppiumBy.xpath("//android.widget.TextView[@text=\"DELETE\"]");
-}
 
+    // --- Page title / logout / delete feedback ----------------------------------------
+
+    public static final By RESELLER_DASHBOARD_TITLE =
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]");
+
+    public static final By LAYOUTS_SCREEN =
+            AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]");
+
+    public static final By LOGOUT_OPTION =
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
+
+    public static final By CONFIRM_LOGOUT_BUTTON =
+            AppiumBy.xpath("//android.widget.TextView[@text=\"YES\"]");
+
+    public static final By DELETED_SUCCESS_MESSAGE =
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Deleted successfully\"]");
+
+    // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
+    // Positional: the first account row in the list carries no content-desc/testTag yet.
+    public static final By FIRST_ACCOUNT_WITH_BRIDGES =
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]");
+
+    /** Matches the list header "11 accounts" / "1 account" (not the "Filter by account name" hint). */
+    public static final By ACCOUNTS_COUNT_LABEL =
+            AppiumBy.xpath("//android.widget.TextView[contains(@text,' account')]");
+
+    // --- Dynamic account locators ----------------------------------------------------
+
+    public static By accountByName(String accountName) {
+        return AppiumBy.xpath(
+                "//android.widget.TextView[@text=\"" + accountName + "\"]"
+        );
+    }
+
+    /** {@code xpathSafeText} must already be an XPath string literal (quoted/escaped by the caller). */
+    public static By accountByExactText(String xpathSafeText) {
+        return AppiumBy.xpath("(//android.widget.TextView[@text=" + xpathSafeText + "])[1]");
+    }
+}

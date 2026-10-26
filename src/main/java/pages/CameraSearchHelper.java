@@ -2,12 +2,12 @@ package pages;
 
 import constants.TimeoutConstants;
 import constants.UiTextConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
 import java.util.List;
+import locators.CamerasLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -242,10 +242,7 @@ public class CameraSearchHelper {
     }
 
     public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
-        By allVisibleCameras = AppiumBy.xpath(
-            "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]"
-        );
-        List<WebElement> cameraElements = driver.findElements(allVisibleCameras);
+        List<WebElement> cameraElements = driver.findElements(CamerasLocators.ALL_VISIBLE_CAMERAS);
         Assert.assertFalse(cameraElements.isEmpty(), "Should have at least one visible camera");
         for (WebElement element : cameraElements) {
             String cameraName = element.getText();
