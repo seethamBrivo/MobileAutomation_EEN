@@ -22,17 +22,13 @@ public class BridgeRestartTest extends BaseTest {
     public void restartBridgeFromDashboard() {
         BridgeSettingsPage settings = new BridgeSettingsPage(driver);
         DevicesPage devicesPage = new DevicesPage(driver);
-        resellerDashboardPage.clickFirstAccountWithBridges();
-        resellerDashboardPage.verifyLayoutsScreenDisplayed();
-        devicesPage.navigateToDashboard();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
-        devicesPage.clickBridgesTab();
+        // Step 2: Click an account that has a bridge to re-login into it
+        resellerDashboardPage.openFirstAccountWithBridges();
+        // Steps 3 and 4: Go to Dashboard and tap the Bridges option
+        devicesPage.openBridgesList();
+        // Step 5: Choose a bridge from the list
         devicesPage.clickFirstBridge();
-        settings.clickRestartBridgeButton();
-        settings.verifyRestartBridgeConfirmationDisplayed();
-        settings.confirmRestartBridge();
-        // If the demo account never shows this confirmation, the TC step should be marked
-        // not-automated rather than passed; a silent pass is what this replaces.
-        settings.verifyBridgeRestartedMessageDisplayed();
+        // Step 6: Click "Restart Bridge" at the bottom of the settings screen
+        settings.restartBridgeAndVerifyMessage();
     }
 }

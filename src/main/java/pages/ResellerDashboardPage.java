@@ -22,6 +22,12 @@ public class ResellerDashboardPage {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.RESELLER_DASHBOARD_TITLE, TimeoutConstants.LIST_LOAD_TIMEOUT).isDisplayed();
     }
 
+    /** Step "Click an account that has a bridge": re-login into it and wait for its Layouts section. */
+    public void openFirstAccountWithBridges() {
+        clickFirstAccountWithBridges();
+        verifyLayoutsScreenDisplayed();
+    }
+
     public void clickFirstAccountWithBridges() {
         WaitUtils.waitForClickability(driver, ResellerDashboardLocators.FIRST_ACCOUNT_WITH_BRIDGES).click();
     }

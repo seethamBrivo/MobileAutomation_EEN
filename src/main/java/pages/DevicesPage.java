@@ -65,6 +65,13 @@ public class DevicesPage {
         return new MyProfilePage(driver);
     }
 
+    /** Steps "Go to Dashboard" and "Tap Bridge option": the All devices section, then the Bridges tab. */
+    public void openBridgesList() {
+        navigateToDashboard();
+        verifyAllDevicesSectionIsDisplayed();
+        clickBridgesTab();
+    }
+
     public void clickBridgesTab() {
         // The dashboard shows skeleton rows ("0 devices") until the device list loads, which took longer
         // than the default 20s in BrowserStack build #22. Wait for it, then reload the dashboard once.

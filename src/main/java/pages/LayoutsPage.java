@@ -253,6 +253,12 @@ public class LayoutsPage {
         logger.info("Verified layout '{}' was successfully deleted", layoutName);
     }
 
+    /** Steps "Stay in Layouts" and "Wait for the camera previews": previews loaded with image and timestamp. */
+    public void verifyCameraPreviewsLoaded() {
+        waitForCameraPreviewsToLoad();
+        verifyFirstCameraPreviewElements();
+    }
+
     public void waitForCameraPreviewsToLoad() {
         WaitUtils.waitForVisibility(driver, LayoutsLocators.CAMERA_PREVIEW_CARDS);
     }

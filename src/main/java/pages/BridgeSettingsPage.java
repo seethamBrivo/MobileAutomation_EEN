@@ -140,6 +140,16 @@ public class BridgeSettingsPage {
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
 
+    /** Step "Click Restart Bridge": confirm the restart and wait for the restarted message. */
+    public void restartBridgeAndVerifyMessage() {
+        clickRestartBridgeButton();
+        verifyRestartBridgeConfirmationDisplayed();
+        confirmRestartBridge();
+        // If the demo account never shows this confirmation, the TC step should be marked
+        // not-automated rather than passed; a silent pass is what this replaces.
+        verifyBridgeRestartedMessageDisplayed();
+    }
+
     public void waitForDeleteBridgeSettingsPage() {
         WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_SETTINGS_PAGE);
     }

@@ -50,11 +50,11 @@ public class LayoutsTest extends BaseTest {
     @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app",
           groups = {"regression", "layouts"})
     public void verifyCameraPreviewsDisplayedInLayouts() {
-        layoutsPage.waitForCameraPreviewsToLoad();
-        layoutsPage.verifyFirstCameraPreviewElements();
+        // Steps 2 and 3: Stay in the Layouts section and wait for the camera previews
+        layoutsPage.verifyCameraPreviewsLoaded();
+        // Same check on the All cameras tab
         layoutsPage.clickAllCamerasTab();
-        layoutsPage.waitForCameraPreviewsToLoad();
-        layoutsPage.verifyFirstCameraPreviewElements();
+        layoutsPage.verifyCameraPreviewsLoaded();
     }
 
     @AfterMethod(alwaysRun = true)
