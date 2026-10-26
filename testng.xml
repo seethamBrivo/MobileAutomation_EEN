@@ -68,4 +68,10 @@
             <class name="tests.ts_vsp_events.VSPEventsTest"/>
         </classes>
     </test>
+
+    <test name="Live View Tests">
+        <classes>
+            <class name="tests.ts_live.LiveViewTests"/>
+        </classes>
+    </test>
 </suite>
