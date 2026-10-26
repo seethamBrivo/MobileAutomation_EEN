@@ -53,20 +53,20 @@ public class CamerasPage {
         Assert.assertTrue(scrollToFirstCamera(), "Could not find any camera in the list");
     }
 
-    public boolean scrollToOfflineOrErrorCamera() {
+    public boolean scrollToFirstOfflineOrErrorCamera() {
         logger.info("Looking for first offline or error camera");
         return GestureUtils.scrollUntilPresent(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
     }
 
-    public void longPressOnCamera() {
-        boolean found = scrollToOfflineOrErrorCamera();
+    public void longPressFirstOfflineOrErrorCamera() {
+        boolean found = scrollToFirstOfflineOrErrorCamera();
         Assert.assertTrue(found, "Could not find an offline or error camera even after scrolling");
         WebElement camera = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
         GestureUtils.longPress(driver, camera);
         logger.info("Long pressed on offline/error camera");
     }
 
-    public boolean scrollToOnlineCamera() {
+    public boolean scrollToFirstOnlineCamera() {
         logger.info("Looking for first online camera");
         return GestureUtils.scrollUntilPresent(driver, CamerasLocators.FIRST_ONLINE_CAMERA);
     }
@@ -80,13 +80,13 @@ public class CamerasPage {
         return GestureUtils.scrollUntilPresent(driver, CamerasLocators.FIRST_CAMERA_IN_LIST);
     }
 
-    public void verifyOnlineCameraFound() {
+    public void verifyFirstOnlineCameraFound() {
         GestureUtils.scrollToTop(driver);
-        Assert.assertTrue(scrollToOnlineCamera(),
+        Assert.assertTrue(scrollToFirstOnlineCamera(),
                 "Could not find an online camera even after scrolling");
     }
 
-    public void longPressOnOnlineCamera() {
+    public void longPressFirstOnlineCamera() {
         WebElement onlineCamera = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_ONLINE_CAMERA);
         GestureUtils.longPress(driver, onlineCamera);
         logger.info("Long pressed on online camera");
@@ -282,9 +282,9 @@ public class CamerasPage {
         searchHelper.searchWithNoResultsAndVerifyEmptyState(searchTerm);
     }
 
-    /** Step "Long press on a camera": context menu with its options, preview, name and status. */
-    public void longPressAndVerifyContextMenu() {
-        longPressOnCamera();
+    /** Long presses the first offline or error camera in the list and checks the context menu: options, preview, name and status. */
+    public void verifyFirstOfflineOrErrorCameraContextMenu() {
+        longPressFirstOfflineOrErrorCamera();
         verifyContextMenuDisplayed();
         verifyAllContextMenuOptions();
         verifyCameraPreviewDisplayed();
@@ -292,11 +292,11 @@ public class CamerasPage {
         verifyCameraStatusAndIndicators();
     }
 
-    /** Closes the menu, finds an online camera, long presses it and checks the timestamp. */
-    public void verifyOnlineCameraContextMenu() {
+    /** Closes the menu, finds the first online camera, long presses it and checks the timestamp. */
+    public void verifyFirstOnlineCameraContextMenu() {
         dismissContextMenu();
-        verifyOnlineCameraFound();
-        longPressOnOnlineCamera();
+        verifyFirstOnlineCameraFound();
+        longPressFirstOnlineCamera();
         verifyContextMenuDisplayed();
         verifyTimestampDisplayed();
     }

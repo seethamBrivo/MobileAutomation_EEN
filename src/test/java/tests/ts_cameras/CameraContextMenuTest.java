@@ -16,7 +16,7 @@ public class CameraContextMenuTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToDashboard() {
-        loginAs(TestDataConstants.ENDUSER_CREDS);
+        loginAs(TestDataConstants.TS02_CREDS);
         devicesPage = new DevicesPage(driver);
         devicesPage.navigateToDashboard();
         devicesPage.verifyAllDevicesSectionIsDisplayed();
@@ -28,10 +28,10 @@ public class CameraContextMenuTest extends BaseTest {
     public void verifyCameraContextMenuAfterLongPress() {
         // Step 3: Tap on the Cameras item
         camerasPage.openCamerasList();
-        // Step 4: Long press on a camera to launch the context menu
-        camerasPage.longPressAndVerifyContextMenu();
-        // Step 4 (online camera): the menu preview also shows a timestamp
-        camerasPage.verifyOnlineCameraContextMenu();
+        // Step 4: Long press the first offline or error camera and verify its context menu
+        camerasPage.verifyFirstOfflineOrErrorCameraContextMenu();
+        // Step 4 (online camera): long press the first online camera; its menu preview shows a timestamp
+        camerasPage.verifyFirstOnlineCameraContextMenu();
     }
 
     @AfterMethod(alwaysRun = true)
