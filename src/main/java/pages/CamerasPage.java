@@ -254,6 +254,53 @@ public class CamerasPage {
         searchHelper.longPressFirstCamera();
     }
 
+    // ---- step-level groups ----------------------------------------------------------------
+
+    /** Step "Tap on Cameras item": opens the cameras list and waits for it. */
+    public void openCamerasList() {
+        clickCamerasItem();
+        verifyCameraListDisplayed();
+    }
+
+    public String captureCounterAndVerifyFormat() {
+        return searchHelper.captureCounterAndVerifyFormat();
+    }
+
+    public void tapSearchBarAndVerify() {
+        searchHelper.tapSearchBarAndVerify();
+    }
+
+    public void searchAndVerifyResults(String searchTerm, String initialCount) {
+        searchHelper.searchAndVerifyResults(searchTerm, initialCount);
+    }
+
+    public void clearSearchAndVerifyRestored(String initialCount) {
+        searchHelper.clearSearchAndVerifyRestored(initialCount);
+    }
+
+    public void searchWithNoResultsAndVerifyEmptyState(String searchTerm) {
+        searchHelper.searchWithNoResultsAndVerifyEmptyState(searchTerm);
+    }
+
+    /** Step "Long press on a camera": context menu with its options, preview, name and status. */
+    public void longPressAndVerifyContextMenu() {
+        longPressOnCamera();
+        verifyContextMenuDisplayed();
+        verifyAllContextMenuOptions();
+        verifyCameraPreviewDisplayed();
+        verifyCameraNameDisplayed();
+        verifyCameraStatusAndIndicators();
+    }
+
+    /** Closes the menu, finds an online camera, long presses it and checks the timestamp. */
+    public void verifyOnlineCameraContextMenu() {
+        dismissContextMenu();
+        verifyOnlineCameraFound();
+        longPressOnOnlineCamera();
+        verifyContextMenuDisplayed();
+        verifyTimestampDisplayed();
+    }
+
     public void verifyCanInteractWithFilteredCamera() {
         longPressFirstCamera();
         verifyContextMenuDisplayed();

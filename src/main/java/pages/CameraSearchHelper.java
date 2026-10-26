@@ -204,6 +204,52 @@ public class CameraSearchHelper {
                 "Counter should restore to initial value");
     }
 
+    // ---- step-level groups (EEPD-TC-15581 and EEPD-TC-53382 share these steps) ----------------
+
+    /** Reads the camera counter, checks its format and returns the text for later comparison. */
+    public String captureCounterAndVerifyFormat() {
+        String count = getCameraCounterText();
+        validateCounterFormat(count);
+        return count;
+    }
+
+    /** Step "Tap on search bar": placeholder shown and the field is editable. */
+    public void tapSearchBarAndVerify() {
+        clickSearchBar();
+        verifySearchPlaceholderDisplayed();
+        verifySearchFieldEditable();
+    }
+
+    /** Step "Provide a search term": the list is filtered and the counter shrinks against {@code initialCount}. */
+    public void searchAndVerifyResults(String searchTerm, String initialCount) {
+        enterSearchTerm(searchTerm);
+        verifyCameraFoundInFilter(searchTerm);
+        verifyFilteredListDisplayed();
+        verifyAllVisibleCamerasContainSearchTerm(searchTerm);
+        verifyCameraCounterDisplayed();
+        String filteredCount = getCameraCounterText();
+        validateCounterFormat(filteredCount);
+        verifyFilteredCountLessThanInitial(filteredCount, initialCount);
+    }
+
+    /** Step "Cancel the filtering": the default list and the initial counter are back. */
+    public void clearSearchAndVerifyRestored(String initialCount) {
+        clearSearchIfNeeded();
+        verifyDefaultCameraListRestored();
+        verifyCameraCounterDisplayed();
+        String restoredCount = getCameraCounterText();
+        validateCounterFormat(restoredCount);
+        verifyCountersMatch(restoredCount, initialCount);
+    }
+
+    /** A term with no matches shows the empty state; clearing it brings the default list back. */
+    public void searchWithNoResultsAndVerifyEmptyState(String searchTerm) {
+        enterSearchTerm(searchTerm);
+        verifyEmptyStateDisplayed();
+        clearSearchIfNeeded();
+        verifyDefaultCameraListRestored();
+    }
+
     public void longPressFirstCamera() {
         WebElement camera = WaitUtils.waitForVisibility(driver, firstCameraInList);
         GestureUtils.longPress(driver, camera);

@@ -57,20 +57,14 @@ public class MyProfileTest extends BaseTest {
         logger.info("Initial Video Search date (before timezone change): {}", initialVideoSearchDate);
         devicesPage = new DevicesPage(driver);
         myProfilePage = devicesPage.navigateToMyProfile();
-        myProfilePage.clickProfileSection();
-        myProfilePage.scrollToTimezoneOption();
-        myProfilePage.clickTimezoneOption();
+        // Step 2: Go to the TIME section and click the Time zone item
+        myProfilePage.openTimezonePicker();
         timeZonePage = new TimeZonePage(driver);
-        timeZonePage.verifyTimezonePopupDisplayed();
-        timeZonePage.verifySearchPlaceholderDisplayed();
-        timeZonePage.clickSearchBar();
-        timeZonePage.enterSearchTerm(searchTerm);
-        timeZonePage.verifyTimezoneListAdjustedToInput(searchTerm);
-        timeZonePage.enterSearchTerm(invalidSearchTerm);
-        timeZonePage.verifyEmptyStateDisplayed();
-        timeZonePage.clearSearchField();
-        timeZonePage.enterSearchTerm(testTimezone);
-        timeZonePage.selectAndVerifyFirstTimezone(testTimezone);
+        timeZonePage.verifyPopupAndSearchPlaceholder();
+        // Step 3: Tap the search bar and type a search term
+        timeZonePage.searchTimezonesAndVerify(searchTerm, invalidSearchTerm);
+        // Step 4: Set the time zone by tapping on it
+        timeZonePage.selectTimezone(testTimezone);
         myProfilePage.verifyTimezoneChanged(testTimezone);
         vspEventsPage.navigateBackFromProfile();
         vspEventsPage.verifyVSPSectionVisible();

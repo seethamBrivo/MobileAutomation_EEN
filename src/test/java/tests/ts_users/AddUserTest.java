@@ -33,9 +33,9 @@ public class AddUserTest extends BaseTest {
     public void addNewUserToVMSApp() {
         existingUserEmail = getTestDataValue("existingUserInSystemButNotExistingInCurrentLogin");
         usersPage.deleteUserIfExists(existingUserEmail);
-        usersPage.clickUsersAddIconAtTheTopRightCorner();
-        usersPage.verifyNewUserHeadingDisplayed();
-        usersPage.verifyAddButtonDisabled();
+        // Step 3: Tap the plus icon; the New user form opens
+        usersPage.openNewUserForm();
+        // Step 4: Fill in the form fields
         usersPage.enterEmailAtTheInputField(getTestDataValue("invalidEmailFormatText"));
         // The form no longer shows "Enter a valid email address": Add simply stays disabled for an
         // invalid email (verified on BrowserStack build #14's UI hierarchy). Confirm with the app team
@@ -43,23 +43,16 @@ public class AddUserTest extends BaseTest {
         usersPage.verifyAddButtonDisabled();
         String firstName = TestDataGenerator.generateFirstName();
         String lastName = TestDataGenerator.generateLastName();
-        usersPage.enterEmailAtTheInputField(firstName + "+");
-        usersPage.verifyEmailPlusHintDisplayed();
+        usersPage.verifyEmailPlusHint(firstName);
         // Add stays disabled until first and last name are filled, so it is not checked here any more.
         // The 55-character name limit check was removed: the new form accepts 55 characters and shows
         // no error (UI hierarchy of build #14); the real limit needs confirming before re-adding it.
         generatedUserEmail = usersPage.addUserWithDetails(firstName, lastName);
-        usersPage.verifyUserWasAddedMessageDisplayed();
-        // Wait for app to return to users list before adding next user
-        usersPage.verifyUsersOptionAtBottomScreenDisplayed();
-        usersPage.clickUsersAddIconAtTheTopRightCorner();
-        usersPage.enterEmailAtTheInputField(existingUserEmail);
-        usersPage.enterFirstNameInputField(firstName);
-        usersPage.enterLastNameInputField(lastName);
-        usersPage.clickAddButton();
-        usersPage.verifyUserWasAddedMessageDisplayed();
-        // Ensure we're back on the users list before searching
-        usersPage.verifyUsersOptionAtBottomScreenDisplayed();
+        // Step 5: The "User was added" message shows and the app is back on the users list
+        usersPage.verifyUserAddedAndBackOnUsersList();
+        // Step 6: Add a user whose email exists in the system but not in the current account
+        usersPage.addUserWithExistingEmail(existingUserEmail, firstName, lastName);
+        usersPage.verifyUserAddedAndBackOnUsersList();
         usersPage.searchAndDeleteUser(existingUserEmail);
         existingUserEmail = null;
         usersPage.verifyUsersOptionAtBottomScreenDisplayed();

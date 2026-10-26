@@ -26,19 +26,12 @@ public class CameraContextMenuTest extends BaseTest {
     @Test(description = "EEPD-TC-12355: POS-Cameras - display context menu after long press on camera in Dashboard in mobile VMS app",
           groups = {"regression", "cameras"})
     public void verifyCameraContextMenuAfterLongPress() {
-        camerasPage.clickCamerasItem();
-        camerasPage.verifyCameraListDisplayed();
-        camerasPage.longPressOnCamera();
-        camerasPage.verifyContextMenuDisplayed();
-        camerasPage.verifyAllContextMenuOptions();
-        camerasPage.verifyCameraPreviewDisplayed();
-        camerasPage.verifyCameraNameDisplayed();
-        camerasPage.verifyCameraStatusAndIndicators();
-        camerasPage.dismissContextMenu();
-        camerasPage.verifyOnlineCameraFound();
-        camerasPage.longPressOnOnlineCamera();
-        camerasPage.verifyContextMenuDisplayed();
-        camerasPage.verifyTimestampDisplayed();
+        // Step 3: Tap on the Cameras item
+        camerasPage.openCamerasList();
+        // Step 4: Long press on a camera to launch the context menu
+        camerasPage.longPressAndVerifyContextMenu();
+        // Step 4 (online camera): the menu preview also shows a timestamp
+        camerasPage.verifyOnlineCameraContextMenu();
     }
 
     @AfterMethod(alwaysRun = true)

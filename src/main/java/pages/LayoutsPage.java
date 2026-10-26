@@ -27,6 +27,32 @@ public class LayoutsPage {
                 "Three dots menu button should be visible on layouts screen");
     }
 
+    // ---- step-level groups (EEPD-TC-9005) -------------------------------------------------
+
+    /** Steps "Click the 3 dots button" and "Click New Layout": the New layout form is open. */
+    public void openNewLayoutForm() {
+        clickThreeDotsMenuButton();
+        verifyMenuPopupDisplayed();
+        verifyMenuOptions();
+        clickNewLayoutOption();
+        verifyNewLayoutScreenDisplayed();
+    }
+
+    /** Steps "Set name", "Aspect ratio", "Max cameras per row" and "Show Camera Title Bars". */
+    public void setLayoutDetails(String layoutName, String aspectRatio, int maxCamerasPerRow, boolean showCameraTitleBars) {
+        setLayoutName(layoutName);
+        selectAspectRatio(aspectRatio);
+        selectMaxCamerasPerRow(maxCamerasPerRow);
+        toggleShowCameraTitleBars(showCameraTitleBars);
+    }
+
+    /** Steps "Add cameras" and "Save": adds the first camera and saves the selection. */
+    public void addFirstCameraAndSave() {
+        clickAddCamerasIcon();
+        selectFirstCamera();
+        clickSaveButton();
+    }
+
     public void clickAllCamerasTab() {
         WaitUtils.click(driver, LayoutsLocators.ALL_CAMERAS_TAB);
     }

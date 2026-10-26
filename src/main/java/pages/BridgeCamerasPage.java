@@ -112,6 +112,28 @@ public class BridgeCamerasPage {
         searchHelper.dismissContextMenu();
     }
 
+    // ---- step-level groups ----------------------------------------------------------------
+
+    public String captureCounterAndVerifyFormat() {
+        return searchHelper.captureCounterAndVerifyFormat();
+    }
+
+    public void tapSearchBarAndVerify() {
+        searchHelper.tapSearchBarAndVerify();
+    }
+
+    public void searchAndVerifyResults(String searchTerm, String initialCount) {
+        searchHelper.searchAndVerifyResults(searchTerm, initialCount);
+    }
+
+    public void clearSearchAndVerifyRestored(String initialCount) {
+        searchHelper.clearSearchAndVerifyRestored(initialCount);
+    }
+
+    public void searchWithNoResultsAndVerifyEmptyState(String searchTerm) {
+        searchHelper.searchWithNoResultsAndVerifyEmptyState(searchTerm);
+    }
+
     public void verifyCanInteractWithFilteredCamera() {
         longPressFirstCamera();
         // Verify context menu opened - use normal wait, not SHORT_TIMEOUT

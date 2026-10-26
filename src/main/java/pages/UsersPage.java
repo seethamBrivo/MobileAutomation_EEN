@@ -31,6 +31,36 @@ public class UsersPage {
         WaitUtils.click(driver, UsersLocators.USERS_ADD_ICON_AT_THE_TOP_RIGHT_CORNER);
     }
 
+    // ---- step-level groups (EEPD-TC-4170) -------------------------------------------------
+
+    /** Step "Tap the plus icon": the New user form is open and Add is still disabled. */
+    public void openNewUserForm() {
+        clickUsersAddIconAtTheTopRightCorner();
+        verifyNewUserHeadingDisplayed();
+        verifyAddButtonDisabled();
+    }
+
+    /** Typing "name+" in the email field shows the plus-alias hint. */
+    public void verifyEmailPlusHint(String firstName) {
+        enterEmailAtTheInputField(firstName + "+");
+        verifyEmailPlusHintDisplayed();
+    }
+
+    /** The "User was added" message shows and the app is back on the users list. */
+    public void verifyUserAddedAndBackOnUsersList() {
+        verifyUserWasAddedMessageDisplayed();
+        verifyUsersOptionAtBottomScreenDisplayed();
+    }
+
+    /** Step "Add a user whose email exists in the system but not in the current account". */
+    public void addUserWithExistingEmail(String existingEmail, String firstName, String lastName) {
+        clickUsersAddIconAtTheTopRightCorner();
+        enterEmailAtTheInputField(existingEmail);
+        enterFirstNameInputField(firstName);
+        enterLastNameInputField(lastName);
+        clickAddButton();
+    }
+
     public void clickBackButton() {
         WaitUtils.click(driver, UsersLocators.BACK_BUTTON);
     }

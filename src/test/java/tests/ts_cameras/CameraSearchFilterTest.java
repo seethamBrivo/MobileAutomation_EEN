@@ -27,31 +27,18 @@ public class CameraSearchFilterTest extends BaseTest {
     public void verifyCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
-        camerasPage.clickCamerasItem();
-        camerasPage.verifyCameraListDisplayed();
-        String initialCount = camerasPage.getCameraCounterText();
-        camerasPage.validateCounterFormat(initialCount);
-        camerasPage.clickSearchBar();
-        camerasPage.verifySearchPlaceholderDisplayed();
-        camerasPage.verifySearchFieldEditable();
-        camerasPage.enterSearchTerm(validSearchTerm);
-        camerasPage.verifyCameraFoundInFilter(validSearchTerm);
-        camerasPage.verifyFilteredListDisplayed();
-        camerasPage.verifyAllVisibleCamerasContainSearchTerm(validSearchTerm);
-        camerasPage.verifyCameraCounterDisplayed();
-        String filteredCount = camerasPage.getCameraCounterText();
-        camerasPage.validateCounterFormat(filteredCount);
-        camerasPage.verifyFilteredCountLessThanInitial(filteredCount, initialCount);
+        // Step 2: Go to All devices via the More menu and tap Cameras
+        camerasPage.openCamerasList();
+        String initialCount = camerasPage.captureCounterAndVerifyFormat();
+        // Step 3: Tap on the search bar
+        camerasPage.tapSearchBarAndVerify();
+        // Step 4: Provide a search term
+        camerasPage.searchAndVerifyResults(validSearchTerm, initialCount);
+        // Step 5: Interact with a camera from the filtered list
         camerasPage.verifyCanInteractWithFilteredCamera();
-        camerasPage.clearSearchIfNeeded();
-        camerasPage.verifyDefaultCameraListRestored();
-        camerasPage.verifyCameraCounterDisplayed();
-        String restoredCount = camerasPage.getCameraCounterText();
-        camerasPage.validateCounterFormat(restoredCount);
-        camerasPage.verifyCountersMatch(restoredCount, initialCount);
-        camerasPage.enterSearchTerm(invalidSearchTerm);
-        camerasPage.verifyEmptyStateDisplayed();
-        camerasPage.clearSearchIfNeeded();
-        camerasPage.verifyDefaultCameraListRestored();
+        // Step 6: Cancel the filtering
+        camerasPage.clearSearchAndVerifyRestored(initialCount);
+        // Step 4 (no results): a term that matches nothing shows the empty state
+        camerasPage.searchWithNoResultsAndVerifyEmptyState(invalidSearchTerm);
     }
 }

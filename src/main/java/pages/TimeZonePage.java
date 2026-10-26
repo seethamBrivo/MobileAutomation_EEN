@@ -22,6 +22,30 @@ public class TimeZonePage {
         this.driver = driver;
     }
 
+    // ---- step-level groups (EEPD-TC-3920) -------------------------------------------------
+
+    /** The Time zone popup is open and its search field shows the placeholder. */
+    public void verifyPopupAndSearchPlaceholder() {
+        verifyTimezonePopupDisplayed();
+        verifySearchPlaceholderDisplayed();
+    }
+
+    /** Step "Tap on search bar and start typing": results follow the term; a no-match term shows the empty state. */
+    public void searchTimezonesAndVerify(String searchTerm, String invalidSearchTerm) {
+        clickSearchBar();
+        enterSearchTerm(searchTerm);
+        verifyTimezoneListAdjustedToInput(searchTerm);
+        enterSearchTerm(invalidSearchTerm);
+        verifyEmptyStateDisplayed();
+        clearSearchField();
+    }
+
+    /** Step "Set the time zone by tapping on it". */
+    public void selectTimezone(String timezone) {
+        enterSearchTerm(timezone);
+        selectAndVerifyFirstTimezone(timezone);
+    }
+
     public void verifyTimezonePopupDisplayed() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, TimeZoneLocators.TIMEZONE_POPUP).isDisplayed(),
                 "Time zone popup should be displayed");

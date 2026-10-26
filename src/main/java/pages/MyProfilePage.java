@@ -24,6 +24,13 @@ public class MyProfilePage {
         logger.info("Profile section expanded");
     }
 
+    /** Steps "Go to the TIME section and click the Time zone item". */
+    public void openTimezonePicker() {
+        clickProfileSection();
+        scrollToTimezoneOption();
+        clickTimezoneOption();
+    }
+
     public void scrollToTimezoneOption() {
         // Wait for profile screen to render before swiping to avoid exhausting scroll budget
         if (!WaitUtils.isVisible(driver, MyProfileLocators.TIMEZONE_OPTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
