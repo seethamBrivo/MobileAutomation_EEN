@@ -88,6 +88,9 @@ jobs:
               "aspect_ratio": "16:9",
               "max_cameras_per_row": 2,
               "show_camera_title_bars": true
+            },
+            "mechanical_zoom_camera_data": {
+              "camera_name": "${{ secrets.MECHANICAL_ZOOM_CAMERA_NAME || 'EN-CDUB-011a' }}"
             }
           }
           EOF
