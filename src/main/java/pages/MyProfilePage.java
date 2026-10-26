@@ -1,11 +1,10 @@
 package pages;
 
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import locators.MyProfileLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.By;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
@@ -15,38 +14,37 @@ public class MyProfilePage {
     private static final Logger logger = LogManager.getLogger(MyProfilePage.class);
     private final AppiumDriver driver;
 
-    // Stable: Profile section is always first [1] child in ScrollView on My Profile screen
-    private final By profileDetailsHeading = AppiumBy.xpath("//android.widget.TextView[@text='Profile details']");
-    private final By profileSection = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.view.View");
-    private final By timezoneOption = AppiumBy.xpath("//android.widget.TextView[@text='Time zone']");
-    private final By currentTimezoneValue = AppiumBy.xpath("//android.widget.TextView[@text='Time zone']/following-sibling::android.widget.TextView[1]");
-    private final By timeFormatOption = AppiumBy.xpath("//android.widget.TextView[@text='Time format']");
-    private final By currentTimeFormatValue = AppiumBy.xpath("//android.widget.TextView[@text='Time format']/following-sibling::android.widget.TextView[1]");
-
     public MyProfilePage(AppiumDriver driver) {
         this.driver = driver;
     }
 
     public void clickProfileSection() {
-        WaitUtils.click(driver, profileSection);
-        WaitUtils.waitForVisibility(driver, profileDetailsHeading, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
+        WaitUtils.click(driver, MyProfileLocators.PROFILE_SECTION);
+        WaitUtils.waitForVisibility(driver, MyProfileLocators.PROFILE_DETAILS_HEADING, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
         logger.info("Profile section expanded");
+    }
+
+    /** Steps "Go to the TIME section and click the Time zone item". */
+    public void openTimezonePicker() {
+        clickProfileSection();
+        scrollToTimezoneOption();
+        clickTimezoneOption();
     }
 
     public void scrollToTimezoneOption() {
         // Wait for profile screen to render before swiping to avoid exhausting scroll budget
-        if (!WaitUtils.isVisible(driver, timezoneOption, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
-            boolean found = GestureUtils.scrollUntilPresent(driver, timezoneOption);
+        if (!WaitUtils.isVisible(driver, MyProfileLocators.TIMEZONE_OPTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
+            boolean found = GestureUtils.scrollUntilPresent(driver, MyProfileLocators.TIMEZONE_OPTION);
             Assert.assertTrue(found, "Could not find timezone option even after scrolling");
         }
     }
 
     public void clickTimezoneOption() {
-        WaitUtils.click(driver, timezoneOption);
+        WaitUtils.click(driver, MyProfileLocators.TIMEZONE_OPTION);
     }
 
     public String getCurrentTimezone() {
-        String timezone = WaitUtils.waitForVisibility(driver, currentTimezoneValue).getText();
+        String timezone = WaitUtils.waitForVisibility(driver, MyProfileLocators.CURRENT_TIMEZONE_VALUE).getText();
         logger.info("Current timezone: {}", timezone);
         return timezone;
     }
@@ -67,25 +65,24 @@ public class MyProfilePage {
 
     public void scrollToTimeFormatOption() {
         // SAFETY FIX: Removed blind swipeUp when visible - it was unnecessary and cost 3s per probe
-        if (!WaitUtils.isVisible(driver, timeFormatOption, TimeoutConstants.SHORT_TIMEOUT)) {
-            boolean found = GestureUtils.scrollUntilVisible(driver, timeFormatOption);
+        if (!WaitUtils.isVisible(driver, MyProfileLocators.TIME_FORMAT_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
+            boolean found = GestureUtils.scrollUntilVisible(driver, MyProfileLocators.TIME_FORMAT_OPTION);
             Assert.assertTrue(found, "Could not find time format option even after scrolling");
         }
     }
 
     public void clickTimeFormatOption() {
-        WaitUtils.click(driver, timeFormatOption);
+        WaitUtils.click(driver, MyProfileLocators.TIME_FORMAT_OPTION);
     }
 
     public String getCurrentTimeFormat() {
-        String timeFormat = WaitUtils.getTextWithRetry(driver, currentTimeFormatValue, TimeoutConstants.SHORT_TIMEOUT);
+        String timeFormat = WaitUtils.getTextWithRetry(driver, MyProfileLocators.CURRENT_TIME_FORMAT_VALUE, TimeoutConstants.SHORT_TIMEOUT);
         logger.info("Current time format: {}", timeFormat);
         return timeFormat;
     }
 
     public void selectTimeFormat(String format) {
-        By formatOption = AppiumBy.xpath("//android.widget.TextView[@text='" + format + "']");
-        WaitUtils.click(driver, formatOption);
+        WaitUtils.click(driver, MyProfileLocators.timeFormatOption(format));
         logger.info("Selected time format: {}", format);
     }
 
