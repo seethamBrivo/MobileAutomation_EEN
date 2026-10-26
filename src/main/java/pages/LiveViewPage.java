@@ -28,7 +28,7 @@ public class LiveViewPage {
         clickSearchFilter();
         enterCameraSearch(cameraName);
         clickCameraCard(cameraName);
-        verifyLiveViewDisplayed();
+        verifyMechanicalZoomLiveViewDisplayed();
         logger.info("Successfully navigated to live view");
     }
 
@@ -46,13 +46,13 @@ public class LiveViewPage {
         WaitUtils.click(driver, LiveViewLocators.cameraCardByName(cameraName));
     }
 
-    public void verifyLiveViewDisplayed() {
+    public void verifyMechanicalZoomLiveViewDisplayed() {
         boolean isDisplayed = WaitUtils.isVisible(
                 driver,
                 LiveViewLocators.MECHANICAL_ZOOM_BUTTON,
                 TimeoutConstants.LIST_LOAD_TIMEOUT
         );
-        Assert.assertTrue(isDisplayed, "Live view screen should be displayed (mechanical zoom button visible)");
+        Assert.assertTrue(isDisplayed, "Mechanical zoom live view screen should be displayed");
     }
 
     public void verifyMechanicalZoomButtonInBothOrientationsAndClick() {

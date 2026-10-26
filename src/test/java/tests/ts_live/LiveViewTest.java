@@ -9,7 +9,7 @@ import pages.LiveViewPage;
 import utils.DeviceUtils;
 import utils.JsonDataReader;
 
-public class LiveViewTests extends BaseTest {
+public class LiveViewTest extends BaseTest {
 
     private LiveViewPage liveViewPage;
     private String cameraName;

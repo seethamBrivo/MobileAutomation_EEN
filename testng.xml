@@ -71,7 +71,7 @@
 
     <test name="Live View Tests">
         <classes>
-            <class name="tests.ts_live.LiveViewTests"/>
+            <class name="tests.ts_live.LiveViewTest"/>
         </classes>
     </test>
 </suite>

@@ -23,8 +23,12 @@ public final class XPathUtils {
     }
 
     /**
-     * XPath 1.0 string literal for {@code value}, which may contain quotes.
-     * Handles single quotes, double quotes, and mixed quotes correctly.
+     * Escapes a string value for safe use in an XPath expression.
+     * XPath 1.0 has no escape mechanism, so strings containing both single and double quotes
+     * must be built with concat().
+     *
+     * @param value the string to escape
+     * @return an XPath string literal (quoted or concat expression)
      */
     public static String xpathLiteral(String value) {
         if (!value.contains("'")) {
