@@ -2,7 +2,6 @@ package pages.ios;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
-import java.util.Map;
 import locators.ios.IosDevicesLocators;
 import locators.ios.IosResellerDashboardLocators;
 import org.apache.logging.log4j.LogManager;
@@ -53,7 +52,7 @@ public class IosResellerDashboardPage {
 
     /** Taps the dimmed area beside the menu, which closes it without choosing an option. */
     private void dismissContextMenu() {
-        driver.executeScript("mobile: tap", Map.of("x", 12.0, "y", 440.0));
+        IosGestures.tapOutsideContextMenu(driver);
         Assert.assertTrue(WaitUtils.waitForInvisibility(driver, IosResellerDashboardLocators.CONTEXT_MENU_SETTINGS,
                 TimeoutConstants.SHORT_TIMEOUT), "Context menu should close");
         logger.info("Context menu dismissed");

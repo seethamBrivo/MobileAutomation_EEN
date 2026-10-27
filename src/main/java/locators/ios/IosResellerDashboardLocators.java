@@ -39,8 +39,7 @@ public final class IosResellerDashboardLocators {
         if (position < 1 || position > 4) {
             throw new IllegalArgumentException("Status dot position must be 1-4, got: " + position);
         }
-        String name = accountName.replace("'", "\\'");
-        return AppiumBy.xpath("//XCUIElementTypeStaticText[@name='" + name + "']"
+        return AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + xpathLiteral(accountName) + "]"
                 + "/following-sibling::XCUIElementTypeImage[@name='ic_camera'][1]"
                 + "/following-sibling::XCUIElementTypeImage[not(@name) or @name=''][" + position + "]");
     }
@@ -68,4 +67,23 @@ public final class IosResellerDashboardLocators {
 
     public static final By NAV_BUSINESS_PORTAL = AppiumBy.iOSNsPredicateString(
             "type == 'XCUIElementTypeButton' AND name == 'Business Portal'");
+
+    /** An XPath 1.0 string literal for any text: XPath has no backslash escape, so a quote needs {@code concat()}. */
+    private static String xpathLiteral(String value) {
+        if (!value.contains("'")) {
+            return "'" + value + "'";
+        }
+        if (!value.contains("\"")) {
+            return "\"" + value + "\"";
+        }
+        StringBuilder result = new StringBuilder("concat(");
+        String[] parts = value.split("'", -1);
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) {
+                result.append(", \"'\", ");
+            }
+            result.append("'").append(parts[i]).append("'");
+        }
+        return result.append(")").toString();
+    }
 }

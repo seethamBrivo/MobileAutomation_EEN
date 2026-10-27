@@ -4,7 +4,6 @@ import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumDriver;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import locators.ios.IosCamerasLocators;
@@ -12,7 +11,6 @@ import locators.ios.IosDevicesLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
@@ -183,9 +181,7 @@ public class IosCamerasPage {
     }
 
     private void longPress(WebElement element) {
-        Rectangle rect = element.getRect();
-        driver.executeScript("mobile: touchAndHold", Map.of(
-                "x", (double) (rect.x + rect.width / 2), "y", (double) (rect.y + rect.height / 2), "duration", 2.0));
+        IosGestures.longPress(driver, element);
     }
 
     public void verifyContextMenuDisplayed() {
@@ -198,7 +194,7 @@ public class IosCamerasPage {
         if (!WaitUtils.isVisible(driver, IosCamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
             return;
         }
-        driver.executeScript("mobile: tap", Map.of("x", 12.0, "y", 440.0));
+        IosGestures.tapOutsideContextMenu(driver);
         Assert.assertTrue(WaitUtils.waitForInvisibility(driver, IosCamerasLocators.CAMERA_SETTINGS_OPTION,
                 TimeoutConstants.SHORT_TIMEOUT), "Context menu should close");
         logger.info("Context menu dismissed");
