@@ -10,20 +10,18 @@ import utils.JsonDataReader;
 public class ArchiveTest extends BaseTest {
 
     private ArchivePage archivePage;
-    private String validSearchTerm;
-    private String noResultsSearchTerm;
 
     @BeforeMethod(alwaysRun = true)
     public void setupArchiveTest() {
         loginAs(TestDataConstants.ENDUSER_CREDS);
         archivePage = new ArchivePage(driver);
-        validSearchTerm = JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_VALID_SEARCH_TERM);
-        noResultsSearchTerm = JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_NO_RESULTS_SEARCH_TERM);
     }
 
     @Test(description = "EEPD-TC-19978: POS-Archive - Searching for files in mobile app",
           groups = {"regression", "archive", "search"})
     public void verifyArchiveFileSearch() {
+        String validSearchTerm = JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_VALID_SEARCH_TERM);
+        String noResultsSearchTerm = JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_NO_RESULTS_SEARCH_TERM);
         archivePage.verifyCompleteArchiveSearchFlow(validSearchTerm, noResultsSearchTerm);
     }
 
