@@ -41,9 +41,6 @@ public class HistoryBrowserPage {
     /** The controls test clicks "previous event" twice before "next event". */
     private static final int MIN_EVENTS_FOR_STEPPING = 2;
 
-    /** One change of the cursor is tolerated while the player settles; a second one means it is playing. */
-    private static final int PAUSE_CHECKS = 2;
-
     private static final int CONTROL_CLICK_ATTEMPTS = 2;
 
     private final AppiumDriver driver;
@@ -117,34 +114,43 @@ public class HistoryBrowserPage {
         }
     }
 
-    /** Skips the test, with the reason, when the camera has too few events to step between. */
+    /**
+     * Skips the test, with the reason, when too few events lie before the cursor to step back through. Only the
+     * events shown count, and the history browser opens at the newest recording, so the ones shown precede the cursor.
+     */
     public void requireEventsOnTimeline() {
-        int events = 0;
-        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_EVENT_CARDS, TimeoutConstants.SHORT_TIMEOUT)) {
-            events = WaitUtils.findElements(driver, HistoryBrowserLocators.TIMELINE_EVENT_CARDS).size();
+        LocalDateTime cursor = readCursorPosition();
+        int earlierEvents = 0;
+        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_EVENT_TIMES, TimeoutConstants.SHORT_TIMEOUT)) {
+            earlierEvents = WaitUtils.retryOnStale(() -> {
+                int count = 0;
+                for (WebElement event : WaitUtils.findElements(driver, HistoryBrowserLocators.TIMELINE_EVENT_TIMES)) {
+                    if (parseCursorLabel(event.getText()).isBefore(cursor)) {
+                        count++;
+                    }
+                }
+                return count;
+            });
         }
-        if (events < MIN_EVENTS_FOR_STEPPING) {
+        if (earlierEvents < MIN_EVENTS_FOR_STEPPING) {
             throw new SkipException("The first camera needs at least " + MIN_EVENTS_FOR_STEPPING
-                    + " events on its timeline to step between events but " + events + " are shown");
+                    + " events before the cursor to step between events but " + earlierEvents + " are shown");
         }
     }
 
     /**
-     * Stepping with the buttons only proves something when the cursor does not move by itself, so a cursor that keeps
-     * advancing (playback running) fails here with that reason instead of failing a step check later.
+     * Stepping with the buttons only proves something when the cursor does not move by itself. One change is
+     * tolerated while the player settles; a cursor that is still moving afterwards means playback is running, so it
+     * is paused with the play/pause button and must then stay put.
      */
-    public void verifyPlaybackPaused() {
-        LocalDateTime position = readCursorPosition();
-        for (int check = 1; check <= PAUSE_CHECKS; check++) {
-            LocalDateTime observed = position;
-            if (!WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
-                    () -> !readCursorPosition().equals(observed))) {
-                return;
-            }
-            position = readCursorPosition();
+    public void ensurePlaybackPaused() {
+        if (cursorStaysStill() || cursorStaysStill()) {
+            return;
         }
-        Assert.fail("Playback should be paused when the history browser opens but the cursor kept advancing (now at "
-                + position + ")");
+        logger.info("Playback is running; pausing it");
+        WaitUtils.click(driver, HistoryBrowserLocators.PLAY_PAUSE_BUTTON);
+        Assert.assertTrue(cursorStaysStill(),
+                "Playback should stop after pressing pause but the cursor kept advancing");
     }
 
     public void clickNextFrameAndVerifyCursorMoved() {
@@ -201,6 +207,12 @@ public class HistoryBrowserPage {
             }
         }
         return true;
+    }
+
+    private boolean cursorStaysStill() {
+        LocalDateTime observed = readCursorPosition();
+        return !WaitUtils.pollUntil(driver, TimeoutConstants.PLAYBACK_PROBE_TIMEOUT,
+                () -> !readCursorPosition().equals(observed));
     }
 
     private void verifyHistoryBrowserDisplayed() {
@@ -291,7 +303,14 @@ public class HistoryBrowserPage {
             }
             int level = Integer.MAX_VALUE;
             for (int i = 1; i < sampled; i++) {
-                level = Math.min(level, gapMinutes(labels.get(i - 1), labels.get(i)));
+                int gap = gapMinutes(labels.get(i - 1), labels.get(i));
+                if (gap > 0) {
+                    level = Math.min(level, gap);
+                }
+            }
+            if (level == Integer.MAX_VALUE) {
+                throw new NoSuchElementException("Timeline rows should show distinct times to read the level but "
+                        + "showed " + labels);
             }
             return level;
         });

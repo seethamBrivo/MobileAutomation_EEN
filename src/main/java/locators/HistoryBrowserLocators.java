@@ -65,9 +65,11 @@ public final class HistoryBrowserLocators {
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
                     + "//androidx.recyclerview.widget.RecyclerView");
 
-    public static final By TIMELINE_EVENT_CARDS =
+    // The full "yyyy-MM-dd HH:mm:ss" time of each event card, so events can be counted against the cursor.
+    public static final By TIMELINE_EVENT_TIMES =
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
-                    + "//*[@resource-id='com.een.vms.android:id/event_card']");
+                    + "//*[@resource-id='com.een.vms.android:id/event_card']"
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/timestamp']");
 
     // Event cards reuse the "timestamp" id; only a row label sits next to the row's recordings_line bar.
     public static final By TIMELINE_ROW_TIMESTAMPS =

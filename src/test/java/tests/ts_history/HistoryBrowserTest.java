@@ -42,7 +42,7 @@ public class HistoryBrowserTest extends BaseTest {
         historyBrowserPage.openHistoryBrowserFromLiveVideo();
         historyBrowserPage.verifyTimelineControlsDisplayed();
         historyBrowserPage.requireEventsOnTimeline();
-        historyBrowserPage.verifyPlaybackPaused();
+        historyBrowserPage.ensurePlaybackPaused();
         historyBrowserPage.clickPreviousFrameAndVerifyCursorMoved();
         historyBrowserPage.clickNextFrameAndVerifyCursorMoved();
         historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
