@@ -26,14 +26,10 @@ public final class HistoryBrowserLocators {
     public static final By LIVE_STREAM_SCREEN =
             AppiumBy.accessibilityId("LiveStream");
 
-    // The same navigation_button reads "Live" on the history browser and "History" on the live video.
-    public static final By LIVE_BUTTON =
-            AppiumBy.xpath("//android.widget.Button[@resource-id='com.een.vms.android:id/navigation_button'"
-                    + " and @text='Live']");
-
-    public static final By HISTORY_BUTTON =
-            AppiumBy.xpath("//android.widget.Button[@resource-id='com.een.vms.android:id/navigation_button'"
-                    + " and @text='History']");
+    // One toggle button: it opens the history browser from the live video and the live video from the history
+    // browser. Its text changes with the screen, so it is found by id and the screen is checked by content-desc.
+    public static final By NAVIGATION_BUTTON =
+            AppiumBy.id("com.een.vms.android:id/navigation_button");
 
     // --- History browser -------------------------------------------------------
 
@@ -68,6 +64,10 @@ public final class HistoryBrowserLocators {
     public static final By TIMELINE_LIST =
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
                     + "//androidx.recyclerview.widget.RecyclerView");
+
+    public static final By TIMELINE_EVENT_CARDS =
+            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
+                    + "//*[@resource-id='com.een.vms.android:id/event_card']");
 
     // Event cards reuse the "timestamp" id; only a row label sits next to the row's recordings_line bar.
     public static final By TIMELINE_ROW_TIMESTAMPS =

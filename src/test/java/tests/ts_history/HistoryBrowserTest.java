@@ -2,6 +2,8 @@ package tests.ts_history;
 
 import base.BaseTest;
 import constants.TestDataConstants;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.HistoryBrowserPage;
@@ -20,13 +22,13 @@ public class HistoryBrowserTest extends BaseTest {
         layoutsPage = new LayoutsPage(driver);
         historyBrowserPage = new HistoryBrowserPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();
+        layoutsPage.verifyCameraPreviewsLoaded();
     }
 
     @Test(description = "EEPD-TC-2606: POS-History Browser - Pinch on timeline to change timeline level "
             + "in History Browser in mobile VMS app",
           groups = {"regression", "history"})
     public void verifyPinchChangesTimelineLevel() {
-        layoutsPage.verifyCameraPreviewsLoaded();
         historyBrowserPage.openHistoryBrowserFromFirstCameraPreview();
         historyBrowserPage.verifyDefaultTimelineLevel();
         historyBrowserPage.pinchInAndVerifyMaxTimelineLevel();
@@ -36,14 +38,28 @@ public class HistoryBrowserTest extends BaseTest {
     @Test(description = "EEPD-TC-2907: POS-History Browser - User is able to use Players/Controllers in mobile VMS app",
           groups = {"regression", "history"})
     public void verifyTimelineControlsMoveRedCursor() {
-        layoutsPage.verifyCameraPreviewsLoaded();
         historyBrowserPage.openLiveVideoOfFirstCameraPreview();
         historyBrowserPage.openHistoryBrowserFromLiveVideo();
         historyBrowserPage.verifyTimelineControlsDisplayed();
+        historyBrowserPage.requireEventsOnTimeline();
+        historyBrowserPage.verifyPlaybackPaused();
         historyBrowserPage.clickPreviousFrameAndVerifyCursorMoved();
         historyBrowserPage.clickNextFrameAndVerifyCursorMoved();
         historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.clickNextEventAndVerifyCursorMoved();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(ITestResult testResult) {
+        try {
+            if (driver != null && historyBrowserPage != null) {
+                historyBrowserPage.returnToLiveVideoIfInHistoryBrowser();
+            }
+        } catch (Throwable t) {
+            logger.warn("Cleanup: could not switch the camera back to live video: {}", t.toString());
+        } finally {
+            super.tearDown(testResult);
+        }
     }
 }
