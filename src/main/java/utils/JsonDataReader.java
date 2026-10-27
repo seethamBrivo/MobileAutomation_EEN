@@ -167,6 +167,18 @@ public final class JsonDataReader {
         ).getAsString();
     }
 
+    /**
+     * A string value from {@code archive_search_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing or null.
+     */
+    public static String getArchiveSearchValue(String key) {
+        return getBlockValue(
+                TestDataConstants.ARCHIVE_SEARCH_DATA,
+                "archive_search_data",
+                key
+        ).getAsString();
+    }
+
     private static String loadResourceAsString(String resourcePath) {
         try (InputStream inputStream = Thread.currentThread()
                 .getContextClassLoader()

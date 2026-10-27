@@ -74,4 +74,10 @@
             <class name="tests.ts_live.LiveViewTest"/>
         </classes>
     </test>
+
+    <test name="Archive Tests">
+        <classes>
+            <class name="tests.ts_archive.ArchiveTest"/>
+        </classes>
+    </test>
 </suite>
