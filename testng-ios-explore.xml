@@ -1,0 +1,13 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- iOS discovery: signs in and replays a script of taps/dumps (see tests.ios_ts_diagnostics.IosExploreTest).
+     mvn test -Dplatform=ios -DexecutionProvider=browserstack -Dsuite.file=testng-ios-explore.xml -Dexplore.script=steps.txt -->
+<suite name="iOS Explore" parallel="false">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+    </listeners>
+    <test name="iOS Explore">
+        <classes>
+            <class name="tests.ios_ts_diagnostics.IosExploreTest"/>
+        </classes>
+    </test>
+</suite>

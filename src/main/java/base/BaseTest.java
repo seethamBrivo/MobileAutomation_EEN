@@ -19,6 +19,7 @@ import org.testng.annotations.BeforeMethod;
 import pages.AccountVerificationRequiredException;
 import pages.LoginPage;
 import pages.ResellerDashboardPage;
+import pages.ios.IosLoginPage;
 import utils.BrowserStackStatus;
 import utils.ConfigReader;
 import utils.JsonDataReader;
@@ -108,6 +109,66 @@ public abstract class BaseTest {
             return signIn(accountType);
         }
         return ensureLoggedInAs(accountType);
+    }
+
+    /**
+     * iOS counterpart of {@link #loginAs}. In method scope that is a plain sign-in. In class scope an existing login
+     * is reused: the app is relaunched and, if it comes back signed in, nothing more is done. iOS has no UI logout,
+     * so a different account (or an app that is in an unknown state) gets a new session instead, which starts signed out.
+     */
+    protected void iosLoginAs(String accountType) {
+        if (SessionScope.current() == SessionScope.METHOD) {
+            iosSignIn(accountType);
+            return;
+        }
+        IosLoginPage loginPage = new IosLoginPage(driver);
+        if (AuthSession.isSignedInAs(accountType)) {
+            loginPage.restartApp();
+            switch (loginPage.waitForStartScreen(TimeoutConstants.SIGN_IN_LANDING_TIMEOUT)) {
+                case SIGNED_IN -> {
+                    logger.info("Reusing the existing login for {}", accountType);
+                    return;
+                }
+                case SIGN_IN -> logger.warn("Login did not survive the app relaunch; signing in again as {}", accountType);
+                case UNKNOWN -> {
+                    logger.warn("App did not reach a known screen after relaunch; starting a new session");
+                    replaceSession();
+                }
+            }
+        } else if (AuthSession.account() != null) {
+            logger.info("Switching account from {} to {}; starting a new session", AuthSession.account(), accountType);
+            replaceSession();
+        }
+        iosSignInReplacingDeadSession(accountType);
+    }
+
+    private void replaceSession() {
+        DriverManager.quitDriver();
+        openSession(getClass().getSimpleName(), null, new Object[0]);
+    }
+
+    /** A BrowserStack session can stop answering during sign-in; if it is really dead, sign in once more on a new one. */
+    private void iosSignInReplacingDeadSession(String accountType) {
+        try {
+            iosSignIn(accountType);
+        } catch (org.openqa.selenium.WebDriverException e) {
+            if (DriverManager.isSessionAlive()) {
+                throw e;
+            }
+            logger.warn("Appium session died during sign-in ({}); starting a new one and signing in again",
+                    firstLine(e.getMessage()));
+            replaceSession();
+            iosSignIn(accountType);
+        }
+    }
+
+    private void iosSignIn(String accountType) {
+        AuthSession.reset();
+        String username = JsonDataReader.getCredentialValue(accountType, "username");
+        String password = JsonDataReader.getCredentialValue(accountType, "password");
+        logger.info("Logging in on iOS using account type: {}", accountType);
+        new IosLoginPage(driver).loginAs(username, password);
+        AuthSession.signedInAs(accountType);
     }
 
     private ResellerDashboardPage ensureLoggedInAs(String accountType) {
@@ -261,13 +322,13 @@ public abstract class BaseTest {
             }
             return;
         }
+        // Report the status first: a slow cleanup can outlast the session, and BrowserStack then records a timeout.
+        if (driver != null && isBrowserStackExecution()) {
+            updateBrowserStackStatus(testResult);
+        }
         try {
             resetAppStateForNextTest();
         } finally {
-            // Update BrowserStack status before quitting driver - ensures status is reported even if cleanup fails
-            if (driver != null && isBrowserStackExecution()) {
-                updateBrowserStackStatus(testResult);
-            }
             DriverManager.quitDriver();
             driver = null;
             logger.info("Test teardown completed for {}", getClass().getSimpleName());
@@ -305,6 +366,11 @@ public abstract class BaseTest {
      * StackOverflowError) during teardown the way a bare Throwable catch would.
      */
     private void resetAppStateForNextTest() {
+        if ("ios".equalsIgnoreCase(ConfigReader.getPlatform())) {
+            // The UI logout is Android-only for now; a fresh session starts signed out anyway.
+            clearAppState(false);
+            return;
+        }
         try {
             new ResellerDashboardPage(driver).logout();
             logger.info("Logged out after test");

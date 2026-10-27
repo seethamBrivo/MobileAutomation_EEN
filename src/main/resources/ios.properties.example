@@ -1,11 +1,13 @@
 # iOS Configuration
 automationName=XCUITest
 deviceName=iPhone 15
-platformVersion=17.0
+platformVersion=27
 udid=YOUR_IOS_DEVICE_UDID
 
 # Application Setup
-app=apps/YourApp.app
+app=src/ios Application/EagleEye.ipa
+# The IPA must be uploaded to BrowserStack with -F "ios_app_groups_support=true" (the dashboard toggle alone is not
+# enough), otherwise the app cannot read its keychain group and sign-in hangs on a spinner. Re-upload for every new build.
 browserstackApp=bs://YOUR_IOS_APP_ID
 
 # Bundle ID
@@ -17,3 +19,7 @@ fullReset=false
 newCommandTimeout=120
 # NOTE: when noReset is omitted the framework defaults to noReset=true (Appium's own default is
 # false). BaseTest.tearDown logs out or terminates the app (needs bundleId) between tests.
+
+# BrowserStack: keep network logs OFF for iOS. With them on, the device traffic goes through BrowserStack's
+# logging proxy and the camera video never loads (tiles stay on spinners), although sign-in and the API calls work.
+browserstackNetworkLogs=false

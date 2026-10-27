@@ -147,7 +147,7 @@ A test that only passes on retry is flaky: check the earlier attempt's session b
 
 ### Session scope: one session and login per class
 
-By default (`-DsessionScope=class`, Android only) a test class runs in **one Appium session**, and its
+By default (`-DsessionScope=class`, Android and iOS) a test class runs in **one Appium session**, and its
 tests reuse the login:
 
 - `BaseTest` opens the session in `@BeforeClass` and quits it in `@AfterClass`. The session name is the
@@ -159,9 +159,26 @@ tests reuse the login:
   with `mobile: clearApp`. Cleanup of test data is unchanged (the `@AfterMethod` hooks).
 - A dead Appium session is replaced at the start of the next test.
 - `-DsessionScope=method` restores the old behaviour (new session, UI login and logout per test); use it
-  to compare timings. iOS always uses `method`.
+  to compare timings.
+- iOS follows the same scope through `iosLoginAs(account)`: it relaunches the app (`mobile: terminateApp` +
+  `activateApp`) and reuses the login if the app comes back signed in. iOS has no UI logout, so a different
+  account gets a new session.
 - The app has no deep link to its dashboard (its manifest only declares `/camera_history/`,
   `/camera_history_status/` and `/notification/` links), so relaunching `MainActivity` is the way back.
+
+### iOS tests
+
+The iOS tests live next to the Android ones, with an `Ios` prefix: `locators/ios`, `pages/ios` and
+`tests/ios_ts_*`. They reuse `BaseTest`, `WaitUtils` and the config, and sign in with `iosLoginAs(...)`.
+
+```bash
+mvn test -Dplatform=ios -DexecutionProvider=browserstack -Dsuite.file=testng-ios.xml
+```
+
+- Upload the IPA with `-F "ios_app_groups_support=true"`, put its `bs://` id in `ios.properties`
+  (`browserstackApp`), and keep `browserstackNetworkLogs=false` for iOS (see `ios.properties.example`).
+- `testng-ios-explore.xml` with `IosExploreTest` replays a step script (`-Dexplore.script=steps.txt`) and saves
+  page sources and screenshots to `target/page-sources/`; use it to find locators for the next screen.
 
 BrowserStack debug logs, network logs and video are off by default because they slow sessions down:
 set `browserstackDebug`, `browserstackNetworkLogs` and `browserstackVideo` to `true` (or tick

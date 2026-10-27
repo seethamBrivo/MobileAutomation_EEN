@@ -1,0 +1,81 @@
+package tests.ios_ts_layouts;
+
+import base.BaseTest;
+import constants.TestDataConstants;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import pages.ios.IosLayoutsPage;
+import utils.JsonDataReader;
+
+/** iOS counterpart of {@code tests.ts_layouts.LayoutsTest}: same test cases and steps. */
+public class IosLayoutsTest extends BaseTest {
+
+    private IosLayoutsPage layoutsPage;
+    private boolean layoutCreated = false;
+    private String uniqueLayoutName;
+
+    @BeforeMethod(alwaysRun = true)
+    public void loginAndVerifyLayoutsScreen() {
+        layoutCreated = false;
+        iosLoginAs(TestDataConstants.ENDUSER_CREDS);
+        layoutsPage = new IosLayoutsPage(driver);
+        layoutsPage.verifyLayoutsScreenDisplayed();
+        layoutsPage.clickFirstLayoutTab();
+    }
+
+    @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app",
+          groups = {"ios", "layouts"})
+    public void verifyAddNewLayoutFunctionality() {
+        String baseLayoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
+        uniqueLayoutName = utils.TestDataGenerator.generateUniqueName(baseLayoutName);
+        String aspectRatio = JsonDataReader.getLayoutDataValue(TestDataConstants.ASPECT_RATIO);
+        int maxCamerasPerRow = JsonDataReader.getLayoutDataIntValue(TestDataConstants.MAX_CAMERAS_PER_ROW);
+        boolean showCameraTitleBars = JsonDataReader.getLayoutDataBooleanValue(TestDataConstants.SHOW_CAMERA_TITLE_BARS);
+
+        // Steps 2 and 3: Open the 3-dots menu and choose New Layout
+        layoutsPage.openNewLayoutForm();
+        // Steps 4 to 7: Name, aspect ratio, max cameras per row and camera title bars
+        layoutsPage.setLayoutDetails(uniqueLayoutName, aspectRatio, maxCamerasPerRow, showCameraTitleBars);
+        // Steps 8 and 9: Add a camera and save
+        layoutsPage.addFirstCameraAndSave();
+        // Step 10: Add the layout
+        layoutsPage.clickAddButton();
+        layoutCreated = true;
+        layoutsPage.verifyLayoutCreatedSuccessfully(uniqueLayoutName);
+    }
+
+    @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app",
+          groups = {"ios", "layouts"})
+    public void verifyCameraPreviewsDisplayedInLayouts() {
+        // Steps 2 and 3: Stay in the Layouts section and wait for the camera previews
+        layoutsPage.verifyCameraPreviewsLoaded();
+        // Same check on the All cameras tab
+        layoutsPage.clickAllCamerasTab();
+        layoutsPage.verifyCameraPreviewsLoaded();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(ITestResult testResult) {
+        try {
+            if (layoutCreated && uniqueLayoutName != null && driver != null) {
+                layoutsPage.deleteLayout(uniqueLayoutName);
+                logger.info("Successfully deleted layout '{}' in teardown", uniqueLayoutName);
+            } else {
+                logger.info("No layout created in this test, skipping cleanup");
+            }
+        } catch (org.openqa.selenium.NoSuchSessionException |
+                 org.openqa.selenium.SessionNotCreatedException e) {
+            logger.warn("Driver session closed, skipping cleanup for layout '{}'", uniqueLayoutName);
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.warn("Teardown failed to delete layout '{}': {}", uniqueLayoutName, e.getMessage());
+        } catch (Throwable t) {
+            logger.error("Unexpected error during teardown for layout '{}': {}", uniqueLayoutName, t.getMessage());
+        } finally {
+            layoutCreated = false;
+            uniqueLayoutName = null;
+            super.tearDown(testResult);
+        }
+    }
+}

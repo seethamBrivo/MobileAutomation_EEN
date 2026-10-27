@@ -10,8 +10,8 @@ import utils.ConfigReader;
  *   <li>{@link #CLASS} (default): one session per test class. The first test logs in; later tests of the
  *       class reuse the login and only relaunch the app to get back to the landing screen.</li>
  *   <li>{@link #METHOD}: the original behaviour, a fresh session plus a UI login and logout per test.
- *       Select with {@code -DsessionScope=method}; also used on platforms other than Android, whose page
- *       objects do not implement the relaunch/landing-screen checks.</li>
+ *       Select with {@code -DsessionScope=method}; also used on platforms other than Android and iOS, whose
+ *       page objects do not implement the relaunch/landing-screen checks.</li>
  * </ul>
  */
 public enum SessionScope {
@@ -23,7 +23,8 @@ public enum SessionScope {
     }
 
     static SessionScope resolve(String configured, String platform) {
-        if (!"android".equalsIgnoreCase(platform == null ? "" : platform.trim())) {
+        String normalized = platform == null ? "" : platform.trim();
+        if (!"android".equalsIgnoreCase(normalized) && !"ios".equalsIgnoreCase(normalized)) {
             return METHOD;
         }
         if (configured == null || configured.isBlank()) {

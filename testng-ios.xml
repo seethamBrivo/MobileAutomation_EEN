@@ -1,0 +1,29 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- iOS suite: the iOS counterparts of the Android tests (classes named Ios*Test under tests.ios_ts_*).
+     mvn test -Dplatform=ios -DexecutionProvider=browserstack -Dsuite.file=testng-ios.xml -->
+<suite name="iOS Regression" parallel="false">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+    </listeners>
+    <test name="iOS Login">
+        <classes>
+            <class name="tests.ios_ts_login.IosLoginTest"/>
+        </classes>
+    </test>
+    <test name="iOS Cameras">
+        <classes>
+            <class name="tests.ios_ts_cameras.IosCameraSearchFilterTest"/>
+            <class name="tests.ios_ts_cameras.IosCameraContextMenuTest"/>
+        </classes>
+    </test>
+    <test name="iOS Reseller Dashboard">
+        <classes>
+            <class name="tests.ios_ts_dashboard.IosResellerDashboardTest"/>
+        </classes>
+    </test>
+    <test name="iOS Layouts">
+        <classes>
+            <class name="tests.ios_ts_layouts.IosLayoutsTest"/>
+        </classes>
+    </test>
+</suite>
