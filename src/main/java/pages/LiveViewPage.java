@@ -2,6 +2,7 @@ package pages;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
 import locators.LiveViewLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,8 +29,29 @@ public class LiveViewPage {
         clickSearchFilter();
         enterCameraSearch(cameraName);
         clickCameraCard(cameraName);
+        waitForLiveStreamToLoad();
         verifyMechanicalZoomLiveViewDisplayed();
         logger.info("Successfully navigated to live view");
+    }
+
+    /**
+     * Waits for the camera live stream to finish loading.
+     * The stream shows a loading spinner which must disappear before controls are available.
+     * This is especially important in CI/BrowserStack where network conditions may be slower.
+     */
+    public void waitForLiveStreamToLoad() {
+        logger.info("Waiting for live stream to load...");
+        // Wait for loading spinner to disappear (up to 45 seconds for slow networks)
+        boolean spinnerGone = WaitUtils.waitForInvisibility(
+                driver,
+                LiveViewLocators.LOADING_SPINNER,
+                Duration.ofSeconds(45)
+        );
+        if (spinnerGone) {
+            logger.info("Live stream loaded successfully");
+        } else {
+            logger.warn("Loading spinner still present after timeout - stream may be slow");
+        }
     }
 
     public void clickSearchFilter() {
