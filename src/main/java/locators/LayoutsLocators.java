@@ -25,7 +25,7 @@ public final class LayoutsLocators {
     // iOS: the nav-bar button is also "Add" / "Save" on the form screens, so it is told apart by its label.
     public static final By THREE_DOTS_MENU_BUTTON = PlatformLocator.get(
             AppiumBy.id("com.een.vms.android:id/img_more"), // android
-            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'More'")); // ios
+            NavigationLocators.iosTopBarButton("More")); // ios
 
     // iOS: the id of this entry differs between the layouts and layout-tab menus, the label does not.
     public static final By ADD_CAMERAS_OPTION = PlatformLocator.get(
@@ -106,11 +106,11 @@ public final class LayoutsLocators {
 
     public static final By SAVE_BUTTON = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Save']"), // android
-            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Save'")); // ios
+            NavigationLocators.iosTopBarButton("Save")); // ios
 
     public static final By ADD_BUTTON = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Add']"), // android
-            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Add'")); // ios
+            NavigationLocators.iosTopBarButton("Add")); // ios
 
     // Android only: iOS shows no snackbar; it lists the new layout among the tabs instead (see layoutTabByName).
     public static final By SUCCESS_MESSAGE =
@@ -170,7 +170,12 @@ public final class LayoutsLocators {
                 + "//androidx.cardview.widget.CardView[descendant::*[contains(@text, " + xpathValue + ")]]");
     }
 
-    /** iOS only: the layout's tab on the layouts screen (selected or not). */
+    /**
+     * iOS only: the layout's tab on the layouts screen (selected or not). The two names are the ones the app really
+     * exposes and are not parallel: {@code tab_cell_label_selected} for the selected tab but plain
+     * {@code _label_not_selected} for the others (read from saved screens; {@code tab_cell_label_not_selected}
+     * never occurs, so do not "fix" the second name to match the first).
+     */
     public static By layoutTabByName(String layoutName) {
         return AppiumBy.iOSNsPredicateString(
                 "type == 'XCUIElementTypeStaticText'"

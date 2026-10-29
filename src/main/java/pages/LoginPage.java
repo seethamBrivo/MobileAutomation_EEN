@@ -62,10 +62,10 @@ public class LoginPage {
         String emptyFieldValue = readValueAttributeIfSupported(WaitUtils.waitForVisibility(driver, locator));
         for (int attempt = 1; attempt <= TYPE_ATTEMPTS; attempt++) {
             WebElement field = WaitUtils.waitForVisibility(driver, locator);
-            if (attempt > 1) {
-                field.clear();
-            }
             try {
+                if (attempt > 1) {
+                    field.clear();
+                }
                 if (PlatformLocator.isIos()) {
                     field.click(); // a web input on iOS ignores keys until it has focus
                 }

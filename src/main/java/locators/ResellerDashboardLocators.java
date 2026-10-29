@@ -97,7 +97,7 @@ public final class ResellerDashboardLocators {
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
                     + "/android.view.View[5]/android.view.View/android.view.View"), // android
-            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Add'")); // ios
+            NavigationLocators.iosTopBarButton("Add")); // ios
 
     // --- Bottom navigation bar -------------------------------------------------------
 
@@ -115,9 +115,7 @@ public final class ResellerDashboardLocators {
 
     public static final By NAV_MORE = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]"), // android
-            AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeButton'"
-                            + " AND label == 'More' AND name != 'navigationBar_customButton'")); // ios
+            NavigationLocators.IOS_TAB_BAR_MORE_BUTTON); // ios
 
     // --- Add account form ------------------------------------------------------------
 

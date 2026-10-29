@@ -196,10 +196,11 @@ public final class GestureUtils {
     }
 
     /**
-     * iOS: taps the dimmed area beside an open context menu, which closes it without choosing an option. The point is
+     * iOS only ({@code mobile: tap} is an XCUITest command and throws on Android; the name carries that, and the
+     * callers check the platform): taps the dimmed area beside an open context menu, which closes it without choosing an option. The point is
      * derived from the screen size (a few percent in from the left edge, at mid height), where menus never reach.
      */
-    public static void tapOutsideContextMenu(AppiumDriver driver) {
+    public static void tapOutsideContextMenuIos(AppiumDriver driver) {
         Dimension size = driver.manage().window().getSize();
         driver.executeScript("mobile: tap", Map.of(
                 "x", Math.max(5.0, size.width * 0.03),

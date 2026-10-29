@@ -344,7 +344,7 @@ public class CameraSearchHelper {
         if (PlatformLocator.isIos()) {
             // iOS: tap the dimmed area beside the menu; nothing to do when no menu is open.
             if (WaitUtils.isVisible(driver, CamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
-                GestureUtils.tapOutsideContextMenu(driver);
+                GestureUtils.tapOutsideContextMenuIos(driver);
                 Assert.assertTrue(WaitUtils.waitForInvisibility(driver, CamerasLocators.CAMERA_SETTINGS_OPTION,
                         TimeoutConstants.SHORT_TIMEOUT), "Context menu should close");
             }

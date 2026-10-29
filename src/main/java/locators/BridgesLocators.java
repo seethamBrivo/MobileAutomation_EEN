@@ -19,9 +19,7 @@ public final class BridgesLocators {
     // iOS: the tab bar's button; its name varies, and the top bar has its own "More" button.
     public static final By MORE_MENU_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='More']"), // android
-            AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeButton'"
-                            + " AND label == 'More' AND name != 'navigationBar_customButton'")); // ios
+            NavigationLocators.IOS_TAB_BAR_MORE_BUTTON); // ios
 
     public static final By DASHBOARD_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"), // android

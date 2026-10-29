@@ -56,9 +56,7 @@ public final class LoginLocators {
     public static final By SIGNED_IN_MARKER = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='More']"), // android
             // iOS: the tab bar's button; its name varies, and the top bar has its own "More" button.
-            AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeButton'"
-                            + " AND label == 'More' AND name != 'navigationBar_customButton'")); // ios
+            NavigationLocators.IOS_TAB_BAR_MORE_BUTTON); // ios
 
     /**
      * The identity provider can answer a correct password with "Account verification - we need to verify

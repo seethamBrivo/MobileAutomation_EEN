@@ -471,7 +471,7 @@ public class ResellerDashboardPage {
     public void dismissContextMenu() {
         if (PlatformLocator.isIos()) {
             // iOS: tap the dimmed area beside the menu, which closes it without choosing an option.
-            GestureUtils.tapOutsideContextMenu(driver);
+            GestureUtils.tapOutsideContextMenuIos(driver);
             Assert.assertTrue(WaitUtils.waitForInvisibility(driver, ResellerDashboardLocators.CONTEXT_MENU_SETTINGS,
                     TimeoutConstants.SHORT_TIMEOUT), "Context menu should close");
             return;
