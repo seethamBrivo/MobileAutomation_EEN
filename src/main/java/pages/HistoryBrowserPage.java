@@ -3,6 +3,7 @@ package pages;
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -14,10 +15,12 @@ import locators.HistoryBrowserLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
+import utils.DeviceUtils;
 import utils.GestureUtils;
 import utils.WaitUtils;
 
@@ -42,6 +45,13 @@ public class HistoryBrowserPage {
     private static final int MIN_EVENTS_FOR_STEPPING = 2;
 
     private static final int CONTROL_CLICK_ATTEMPTS = 2;
+
+
+    private static final String MULTI_WINDOWS_SETTING = "enableMultiWindows";
+
+    private static final List<By> CONTEXT_MENU_OPTIONS = List.of(
+            CamerasLocators.CAMERA_SETTINGS_OPTION, CamerasLocators.HISTORY_BROWSER_OPTION,
+            CamerasLocators.LIVE_VIDEO_OPTION);
 
     private final AppiumDriver driver;
 
@@ -153,6 +163,124 @@ public class HistoryBrowserPage {
                 "Playback should stop after pressing pause but the cursor kept advancing");
     }
 
+    /**
+     * Long press on the first camera preview: the context menu with the camera's options appears. The menu is a
+     * popup window, and UiAutomator2 reports only the app window (so the menu is invisible on BrowserStack) unless
+     * multi-window is on; it stays on until the menu has been used.
+     */
+    public void openContextMenuOfFirstCameraPreview() {
+        driver.setSetting(MULTI_WINDOWS_SETTING, true);
+        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FIRST_PREVIEW_CARD));
+        for (By option : CONTEXT_MENU_OPTIONS) {
+            Assert.assertTrue(WaitUtils.waitForVisibility(driver, option).isDisplayed(),
+                    "Context menu option " + option + " should be displayed");
+        }
+        boolean hasTurnOnOrOff =
+                WaitUtils.isVisible(driver, CamerasLocators.TURN_ON_CAMERA_OPTION, TimeoutConstants.SHORT_TIMEOUT)
+                        || WaitUtils.isVisible(driver, CamerasLocators.TURN_OFF_CAMERA_OPTION,
+                                TimeoutConstants.SHORT_TIMEOUT);
+        Assert.assertTrue(hasTurnOnOrOff,
+                "Expected either 'Turn on camera' or 'Turn off camera' in the context menu");
+    }
+
+    public void openHistoryBrowserFromContextMenu() {
+        try {
+            WaitUtils.click(driver, CamerasLocators.HISTORY_BROWSER_OPTION);
+        } finally {
+            driver.setSetting(MULTI_WINDOWS_SETTING, false);
+        }
+        verifyHistoryBrowserDisplayed();
+    }
+
+    public void verifyTimelineAndControlsDisplayedInPortrait() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+                "Timeline should be displayed in the history browser");
+        verifyTimelineControlsDisplayed();
+        Dimension screen = driver.manage().window().getSize();
+        Assert.assertTrue(screen.height > screen.width,
+                "History browser should be in portrait but the screen is " + screen.width + "x" + screen.height);
+    }
+
+    public void rotateToLandscapeAndVerifyHistoryBrowser() {
+        DeviceUtils.rotateToLandscape(driver);
+        verifyHistoryBrowserDisplayed();
+    }
+
+    /**
+     * The app opens the landscape history browser with the timeline side panel already showing, so the panel is
+     * closed first; the timeline must then be hidden until the timeline button is tapped.
+     */
+    public void verifyTimelineHiddenInLandscape() {
+        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+            logger.info("Landscape history browser opened with the timeline showing; closing it");
+            WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON);
+        }
+        Assert.assertTrue(WaitUtils.waitForInvisibility(
+                        driver, HistoryBrowserLocators.TIMELINE_CONTAINER, TimeoutConstants.SHORT_TIMEOUT),
+                "Timeline should not be visible in landscape until the timeline button is tapped");
+    }
+
+    /** The landscape history browser shows the timeline panel by default, with a close icon that hides it. */
+    public void verifyTimelineShowsByDefaultAndClosesInLandscape() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+                "Timeline should be visible by default in landscape");
+        WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON);
+        Assert.assertTrue(WaitUtils.waitForInvisibility(
+                        driver, HistoryBrowserLocators.TIMELINE_CONTAINER, TimeoutConstants.SHORT_TIMEOUT),
+                "Timeline should be closed after tapping the close icon");
+    }
+
+    public void showTimelineAndVerifyControlsInLandscape() {
+        WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_BUTTON);
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+                "Timeline should be displayed after tapping the timeline button");
+        verifyTimelineControlsDisplayed();
+    }
+
+    public void verifyFilterButtonWithoutIndication() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILTER_BUTTON).isDisplayed(),
+                "Filter button should be displayed in the history browser");
+        Assert.assertFalse(WaitUtils.isVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION,
+                        TimeoutConstants.OPTIONAL_FIELD_TIMEOUT),
+                "Filter button should show no indication number");
+    }
+
+    /**
+     * Every event card must sit on the part of the timeline that is shown: its time is within one timeline level of a
+     * visible row label. Row labels carry no date, so the distance is taken on the time of day, around midnight.
+     */
+    public void verifyEventCardsMatchTimelineRange() {
+        int levelSeconds = readLevelMinutes() * 60;
+        List<Integer> rowSeconds = timesOfDay(HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS, false);
+        List<Integer> cardSeconds = timesOfDay(HistoryBrowserLocators.TIMELINE_EVENT_TIMES, true);
+        Assert.assertFalse(cardSeconds.isEmpty(), "Timeline should show at least one event card");
+        for (int card : cardSeconds) {
+            boolean onTimeline = rowSeconds.stream().anyMatch(row -> circularDistance(card, row) <= levelSeconds);
+            Assert.assertTrue(onTimeline, "Event card at second " + card + " of the day should be within "
+                    + levelSeconds + " s of a timeline row but the rows are at " + rowSeconds);
+        }
+    }
+
+    public void verifyPlaybackPaused() {
+        Assert.assertTrue(cursorStaysStill(), "Player should be in paused state but the cursor kept advancing");
+    }
+
+    public void tapPreviousFrameAndVerifyMoment() {
+        tapStepButtonAndVerifyMoment(HistoryBrowserLocators.PREVIOUS_FRAME_BUTTON, false, "previous frame");
+    }
+
+    public void tapNextFrameAndVerifyMoment() {
+        tapStepButtonAndVerifyMoment(HistoryBrowserLocators.NEXT_FRAME_BUTTON, true, "next frame");
+    }
+
+    public void longPressPreviousFrameAndVerifyFastMove() {
+        longPressStepButtonAndVerifyFastMove(HistoryBrowserLocators.PREVIOUS_FRAME_BUTTON, false, "previous frame");
+    }
+
+    public void longPressNextFrameAndVerifyFastMove() {
+        longPressStepButtonAndVerifyFastMove(HistoryBrowserLocators.NEXT_FRAME_BUTTON, true, "next frame");
+    }
+
     public void clickNextFrameAndVerifyCursorMoved() {
         clickAndVerifyCursorMoved(HistoryBrowserLocators.NEXT_FRAME_BUTTON, true, "next frame");
     }
@@ -209,6 +337,20 @@ public class HistoryBrowserPage {
         return true;
     }
 
+    private List<Integer> timesOfDay(By locator, boolean withDate) {
+        List<Integer> seconds = new ArrayList<>();
+        for (String text : WaitUtils.textsOf(driver, locator)) {
+            seconds.add(withDate ? parseCursorLabel(text).toLocalTime().toSecondOfDay()
+                    : parseTimeLabel(text).toSecondOfDay());
+        }
+        return seconds;
+    }
+
+    private static int circularDistance(int firstSecond, int secondSecond) {
+        int difference = Math.floorMod(firstSecond - secondSecond, SECONDS_PER_DAY);
+        return Math.min(difference, SECONDS_PER_DAY - difference);
+    }
+
     private boolean cursorStaysStill() {
         LocalDateTime observed = readCursorPosition();
         return !WaitUtils.pollUntil(driver, TimeoutConstants.PLAYBACK_PROBE_TIMEOUT,
@@ -227,6 +369,52 @@ public class HistoryBrowserPage {
      */
     private void clickAndVerifyCursorMoved(By button, boolean forward, String description) {
         LocalDateTime before = readCursorPosition();
+        LocalDateTime after = clickUntilCursorMoves(button, before, description);
+        verifyCursorMoved(before, after, forward, description);
+    }
+
+    /** One tap on a frame button: the cursor, the time above the video and so the shown frame all move together. */
+    private void tapStepButtonAndVerifyMoment(By button, boolean forward, String description) {
+        LocalDateTime cursorBefore = readCursorPosition();
+        LocalDateTime previewBefore = readPreviewTime();
+        LocalDateTime cursorAfter = clickUntilCursorMoves(button, cursorBefore, description);
+        verifyCursorMoved(cursorBefore, cursorAfter, forward, description);
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
+                () -> !readPreviewTime().equals(previewBefore));
+        LocalDateTime previewAfter = readPreviewTime();
+        Assert.assertNotEquals(previewAfter, previewBefore,
+                "Preview time above the video should update after tapping " + description + " but stayed at "
+                        + previewBefore);
+    }
+
+    /**
+     * A long press keeps stepping, so it must travel further than the single tap that precedes it. The tap gives the
+     * size of one step; vibration is not observable.
+     */
+    private void longPressStepButtonAndVerifyFastMove(By button, boolean forward, String description) {
+        LocalDateTime start = readCursorPosition();
+        LocalDateTime afterTap = clickUntilCursorMoves(button, start, description);
+        long tapSeconds = Math.abs(Duration.between(start, afterTap).getSeconds());
+        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, button));
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
+                () -> !readCursorPosition().equals(afterTap));
+        LocalDateTime afterHold = readSettledCursorPosition();
+        long heldSeconds = Math.abs(Duration.between(afterTap, afterHold).getSeconds());
+        boolean inDirection = forward ? afterHold.isAfter(afterTap) : afterHold.isBefore(afterTap);
+        Assert.assertTrue(inDirection && heldSeconds > tapSeconds,
+                "Long press on " + description + " should keep moving the cursor " + (forward ? "forward" : "backward")
+                        + " further than one tap (" + tapSeconds + " s) but moved " + heldSeconds + " s from "
+                        + afterTap + " to " + afterHold);
+    }
+
+    private void verifyCursorMoved(LocalDateTime before, LocalDateTime after, boolean forward, String description) {
+        boolean moved = forward ? after.isAfter(before) : after.isBefore(before);
+        Assert.assertTrue(moved,
+                "Red cursor should move to the " + description + " (" + (forward ? "later" : "earlier")
+                        + " than " + before + ") but is at " + after);
+    }
+
+    private LocalDateTime clickUntilCursorMoves(By button, LocalDateTime before, String description) {
         for (int attempt = 1; attempt <= CONTROL_CLICK_ATTEMPTS; attempt++) {
             WaitUtils.click(driver, button);
             if (WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
@@ -236,11 +424,24 @@ public class HistoryBrowserPage {
             logger.warn("Cursor did not move after clicking {} (attempt {} of {})",
                     description, attempt, CONTROL_CLICK_ATTEMPTS);
         }
-        LocalDateTime after = readCursorPosition();
-        boolean moved = forward ? after.isAfter(before) : after.isBefore(before);
-        Assert.assertTrue(moved,
-                "Red cursor should move to the " + description + " (" + (forward ? "later" : "earlier")
-                        + " than " + before + ") but is at " + after);
+        return readCursorPosition();
+    }
+
+    private LocalDateTime readPreviewTime() {
+        return WaitUtils.retryOnStale(() -> parseCursorLabel(
+                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.PREVIEW_TIME).getText()));
+    }
+
+    /** The cursor label lags the repeated steps of a long press, so it is read once two reads in a row agree. */
+    private LocalDateTime readSettledCursorPosition() {
+        LocalDateTime[] last = {null};
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> {
+            LocalDateTime now = readCursorPosition();
+            boolean settled = now.equals(last[0]);
+            last[0] = now;
+            return settled;
+        });
+        return readCursorPosition();
     }
 
     private LocalDateTime readCursorPosition() {

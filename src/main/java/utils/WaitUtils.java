@@ -3,6 +3,7 @@ package utils;
 import constants.FrameworkConstants;
 import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -296,6 +297,22 @@ public final class WaitUtils {
         } catch (TimeoutException e) {
             return false;
         }
+    }
+
+    /** The text of every match once at least one is visible; repeated if the list re-renders under it. */
+    public static List<String> textsOf(AppiumDriver driver, By locator) {
+        return retryOnStale(() -> {
+            List<String> texts = new ArrayList<>();
+            for (WebElement element : findElements(driver, locator)) {
+                texts.add(element.getText());
+            }
+            return texts;
+        });
+    }
+
+    /** Everything on screen in one round trip, instead of one call per element, and from a single moment. */
+    public static String pageSource(AppiumDriver driver) {
+        return driver.getPageSource();
     }
 
     private static WebDriverWait wait(AppiumDriver driver, Duration timeout) {
