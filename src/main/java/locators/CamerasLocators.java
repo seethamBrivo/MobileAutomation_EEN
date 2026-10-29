@@ -49,6 +49,9 @@ public final class CamerasLocators {
             ), // android
             AppiumBy.xpath("//XCUIElementTypeStaticText[@visible='true'][following-sibling::*[1][@name='ic_contextMenu']]")); // ios
 
+    /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
+    public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
+
     // --- Context menu ----------------------------------------------------------
 
     public static final By CONTEXT_MENU_CONTAINER = PlatformLocator.get(
@@ -121,6 +124,10 @@ public final class CamerasLocators {
     public static final By TURNED_OFF_STATUS = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Turned off']"), // android
             iosStatusLabelWithText("Turned off")); // ios
+
+    public static final By CAMERA_ERROR_STATUS = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Camera error']"), // android
+            iosStatusLabelWithText("Camera error")); // ios
 
     // iOS: no visible filter here, because the rows behind an open context menu are not reported as visible.
     private static By iosStatusLabelWithText(String text) {
