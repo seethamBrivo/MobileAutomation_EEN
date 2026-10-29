@@ -49,6 +49,13 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      - name: Reject the BrowserStack SDK on iOS
+        # browserstack.yml describes an Android device matrix, so the SDK path would start the wrong device for iOS.
+        if: matrix.platform == 'ios' && inputs.use_sdk == true
+        run: |
+          echo "::error::use_sdk is Android only. Run iOS without it (direct capabilities)."
+          exit 1
+
       - name: Check the iOS app secret
         # First step of the job, so it fails within seconds with a clear message, not an obscure BrowserStack error,
         # when the secret is missing, has extra lines or is not a bs:// id (the uploaded IPA expires after about

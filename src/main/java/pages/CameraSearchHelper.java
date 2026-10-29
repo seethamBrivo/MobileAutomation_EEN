@@ -184,7 +184,7 @@ public class CameraSearchHelper {
         if (PlatformLocator.isIos()) {
             // iOS: the field has a "Clear text" button, which is used instead of clearing the text by typing.
             // It only exists while the field holds text, so an already empty field has nothing to clear.
-            if (!WaitUtils.isVisible(driver, CamerasLocators.CLEAR_TEXT_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+            if (!WaitUtils.isVisible(driver, CamerasLocators.CLEAR_TEXT_BUTTON, TimeoutConstants.FILTER_RESULT_TIMEOUT)) {
                 logger.info("Search field is already empty; nothing to clear");
                 return;
             }
