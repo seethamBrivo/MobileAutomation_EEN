@@ -75,7 +75,7 @@ public class HistoryBrowserTest extends BaseTest {
         historyBrowserPage.verifyPlaybackPaused();
         landscapeUsed = true;
         historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
-        historyBrowserPage.verifyTimelineHiddenInLandscape();
+        historyBrowserPage.verifyTimelineShowsByDefaultAndClosesInLandscape();
         historyBrowserPage.showTimelineAndVerifyControlsInLandscape();
         historyBrowserPage.tapPreviousFrameAndVerifyMoment();
         historyBrowserPage.tapNextFrameAndVerifyMoment();
@@ -91,16 +91,15 @@ public class HistoryBrowserTest extends BaseTest {
     public void verifyFilterEventsUsingMultiselection() {
         historyBrowserPage.openContextMenuOfFirstCameraPreview();
         historyBrowserPage.openHistoryBrowserFromContextMenu();
+        List<String> onTimeline = eventFilterPage.eventTypesOnTimeline();
         historyBrowserPage.verifyFilterButtonWithoutIndication();
         historyBrowserPage.verifyEventCardsMatchTimelineRange();
-        List<String> onTimeline = eventFilterPage.eventTypesOnTimeline();
         eventFilterUsed = true;
         eventFilterPage.openEventFilter();
         List<String> listedTypes = eventFilterPage.verifyEventFilterListDefaultsAndReadTypes();
         List<String> eventTypes = eventFilterPage.chooseEventTypes(onTimeline, listedTypes, 2);
-        List<String> otherTypes = eventFilterPage.unselectedEventTypes(onTimeline, eventTypes);
         eventFilterPage.multiSelectEventTypes(eventTypes, true);
-        eventFilterPage.confirmEventFilterAndVerifyTimeline(eventTypes, otherTypes);
+        eventFilterPage.confirmEventFilterAndVerifyTimeline(eventTypes);
         eventFilterPage.discardEventFilterChangesAndVerifyUnchanged(eventTypes, true);
         eventFilterPage.selectAllEventTypesAndVerify();
         eventFilterPage.deselectAllEventTypesAndVerify();
@@ -113,7 +112,7 @@ public class HistoryBrowserTest extends BaseTest {
         historyBrowserPage.verifyEventCardsMatchTimelineRange();
         eventFilterPage.openEventFilter();
         eventFilterPage.multiSelectEventTypes(eventTypes, false);
-        eventFilterPage.confirmEventFilterAndVerifyTimeline(eventTypes, otherTypes);
+        eventFilterPage.confirmEventFilterAndVerifyTimeline(eventTypes);
         eventFilterPage.discardEventFilterChangesAndVerifyUnchanged(eventTypes, false);
         eventFilterPage.selectAllEventTypesAndVerify();
         eventFilterPage.deselectAllEventTypesAndVerify();
@@ -123,6 +122,9 @@ public class HistoryBrowserTest extends BaseTest {
     @AfterMethod(alwaysRun = true)
     public void tearDown(ITestResult testResult) {
         try {
+            if (driver != null && historyBrowserPage != null) {
+                restore("multi-window setting", historyBrowserPage::resetMultiWindowSetting);
+            }
             if (driver != null && landscapeUsed) {
                 restore("portrait orientation", () -> DeviceUtils.rotateToPortrait(driver));
             }

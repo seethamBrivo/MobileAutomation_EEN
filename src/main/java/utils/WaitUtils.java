@@ -310,6 +310,14 @@ public final class WaitUtils {
         });
     }
 
+    /**
+     * Like {@link #textsOf}, but an empty list when nothing matches within the timeout instead of waiting the full
+     * explicit wait and throwing, for lists that may legitimately have no entries.
+     */
+    public static List<String> textsOfOrEmpty(AppiumDriver driver, By locator, Duration timeout) {
+        return isVisible(driver, locator, timeout) ? textsOf(driver, locator) : List.of();
+    }
+
     /** Everything on screen in one round trip, instead of one call per element, and from a single moment. */
     public static String pageSource(AppiumDriver driver) {
         return driver.getPageSource();

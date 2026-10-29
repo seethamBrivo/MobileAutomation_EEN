@@ -199,7 +199,7 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-2606 | ts_history.HistoryBrowserTest | Pinch on timeline to change timeline level in History Browser (first camera on All cameras must be online) |
 | EEPD-TC-2907 | ts_history.HistoryBrowserTest | Use Players/Controllers in History Browser (fast-forward step not automated; first camera needs at least 2 events) |
 | EEPD-TC-2605 | ts_history.HistoryBrowserTest | Navigate between previews using Previous/Next Frame buttons in History Browser (steps 1-12; the "button becomes disabled" steps 6 and 11 are not automated because the app shows no disabled state; needs allowAdbShell=true for local rotation) |
-| EEPD-TC-29058 | ts_history.HistoryBrowserTest | Filter the events using multiselection in History Browser (steps 1-18; the app selects every event type by default, not only Motion; the one-card-per-period rule is not automated; needs allowAdbShell=true for local rotation and at least one event on the first camera's timeline) |
+| EEPD-TC-29058 | ts_history.HistoryBrowserTest | Filter the events using multiselection in History Browser (steps 1-18; the default selection (the app selects every type, the test case says Motion only) is logged, not asserted; the one-card-per-period rule is not automated; needs allowAdbShell=true for local rotation and at least one event on the first camera's timeline) |
 | EEPD-TC-37646 | ts_vsp_events.VSPEventsTest | VSP Events - Card display, pagination, and orientation testing |
 | EEPD-TC-37714 | ts_vsp_events.VSPEventsTest | VSP Events - More info detail page verification with 17 fields |
 | EEPD-TC-3920 | ts_my_profile.MyProfileTest | POS-My Profile - setting 'Time zone' in VMS mobile app |

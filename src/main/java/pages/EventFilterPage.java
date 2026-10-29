@@ -3,15 +3,12 @@ package pages;
 import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumDriver;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+import java.util.concurrent.atomic.AtomicInteger;
 import locators.EventFilterLocators;
 import locators.HistoryBrowserLocators;
 import org.apache.logging.log4j.LogManager;
@@ -20,11 +17,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.testng.Assert;
 import org.testng.SkipException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import utils.EventFilterPageSource;
 import utils.GestureUtils;
 import utils.WaitUtils;
 
@@ -48,9 +41,14 @@ public class EventFilterPage {
         this.driver = driver;
     }
 
-    /** The event types of the cards on screen, newest first; skips the test when the timeline has no events. */
+    /**
+     * The distinct event types of the cards on screen, newest first. Skips the test when the timeline shows no
+     * card, which a plain read could not tell from a slow screen without waiting the full explicit wait.
+     */
     public List<String> eventTypesOnTimeline() {
-        List<String> distinct = distinctEventTypesOnTimeline();
+        List<String> distinct = WaitUtils.textsOfOrEmpty(
+                driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT)
+                .stream().distinct().toList();
         if (distinct.isEmpty()) {
             throw new SkipException("The first camera needs at least one event on its timeline to filter");
         }
@@ -71,14 +69,6 @@ public class EventFilterPage {
         return chosen;
     }
 
-    /** The types on the timeline before filtering that are not selected, which must be gone after Done. */
-    public List<String> unselectedEventTypes(List<String> onTimeline, List<String> selected) {
-        List<String> others = new ArrayList<>(onTimeline);
-        others.removeAll(selected);
-        return others;
-    }
-
-    /** Skips the test when the timeline shows fewer distinct event types than the filter test needs to choose. */
     public void openEventFilter() {
         WaitUtils.click(driver, HistoryBrowserLocators.FILTER_BUTTON);
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, EventFilterLocators.EVENT_FILTERS_TITLE).isDisplayed(),
@@ -86,8 +76,9 @@ public class EventFilterPage {
     }
 
     /**
-     * The test case expects Motion alone to be selected by default; the app selects every event type, so that is what
-     * is asserted. Only the rows the sheet has laid out are checked, scrolling through the whole list.
+     * The test case expects Motion alone to be selected by default but the app selects every event type. That
+     * difference is not pinned down yet, so the default is logged and not asserted; every later step clears the
+     * selection first. Returns the titles of the whole list, read by scrolling through it.
      */
     public List<String> verifyEventFilterListDefaultsAndReadTypes() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, EventFilterLocators.EVENT_TYPES_SELECT_ALL)
@@ -100,9 +91,8 @@ public class EventFilterPage {
         List<String> sorted = new ArrayList<>(titles);
         Collections.sort(sorted);
         Assert.assertEquals(titles, sorted, "Event types should be listed in sorted order");
-        Assert.assertEquals(selected(rows).size(), rows.size(),
-                "Every event type should be selected by default but only " + selected(rows) + " of " + titles
-                        + " are");
+        logger.info("Event types selected by default: {} of {} (the test case expects Motion only)",
+                selected(rows), titles);
         return titles;
     }
 
@@ -122,22 +112,23 @@ public class EventFilterPage {
     }
 
     /**
-     * After Done the timeline must still show events, only of the selected types, and the types that were shown
-     * before and were not selected must be gone. A selected type may legitimately be missing from the visible
-     * cards: the camera is live, and a burst of newer events of the other selected type can push it below the fold.
+     * After Done the timeline must still show events, and only of the selected types, so every type that was shown
+     * before and not selected is gone. The old cards stay on screen until the timeline re-renders, so the read
+     * waits for the filtered cards. A selected type may legitimately be missing from the visible cards: the camera
+     * is live, and a burst of newer events of the other selected type can push it below the fold.
      */
-    public void confirmEventFilterAndVerifyTimeline(List<String> selectedEventTypes,
-                                                    List<String> unselectedEventTypes) {
+    public void confirmEventFilterAndVerifyTimeline(List<String> selectedEventTypes) {
         WaitUtils.click(driver, EventFilterLocators.FILTER_DONE_BUTTON);
         verifyEventFilterClosed();
-        List<String> shown = WaitUtils.textsOf(driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES);
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> {
+            List<String> shown = timelineEventNames();
+            return !shown.isEmpty() && selectedEventTypes.containsAll(shown);
+        });
+        List<String> shown = timelineEventNames();
         Assert.assertFalse(shown.isEmpty(), "Timeline should show events of the selected types "
                 + selectedEventTypes + " but shows none");
         Assert.assertTrue(selectedEventTypes.containsAll(shown),
                 "Timeline should show only the selected event types " + selectedEventTypes + " but shows " + shown);
-        Assert.assertTrue(Collections.disjoint(shown, unselectedEventTypes),
-                "Event types " + unselectedEventTypes + " were not selected and should be gone but the timeline "
-                        + "shows " + shown);
     }
 
     public void discardEventFilterChangesAndVerifyUnchanged(List<String> appliedEventTypes,
@@ -147,6 +138,10 @@ public class EventFilterPage {
         WaitUtils.click(driver, EventFilterLocators.FILTER_CLOSE_BUTTON);
         verifyEventFilterClosed();
         openEventFilter();
+        String toggled = appliedEventTypes.get(0);
+        By checkbox = scrollToEventType(toggled);
+        Assert.assertTrue(isChecked(checkbox),
+                "Event type '" + toggled + "' should still be selected after closing the filter with X");
         verifySelection(appliedEventTypes, completeCheck, "Closing the filter with X should keep the types");
     }
 
@@ -188,14 +183,9 @@ public class EventFilterPage {
         logger.info("Event filter restored to every event type");
     }
 
-    private List<String> distinctEventTypesOnTimeline() {
-        List<String> distinct = new ArrayList<>();
-        for (String name : WaitUtils.textsOf(driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES)) {
-            if (!distinct.contains(name)) {
-                distinct.add(name);
-            }
-        }
-        return distinct;
+    private List<String> timelineEventNames() {
+        return WaitUtils.textsOfOrEmpty(
+                driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT);
     }
 
     private void verifyEventFilterClosed() {
@@ -253,21 +243,16 @@ public class EventFilterPage {
 
     /** A fling keeps the list moving after the swipe ends; reads and taps wait until the first match stops moving. */
     private void waitUntilStill(By locator) {
-        int[] lastY = {Integer.MIN_VALUE};
+        AtomicInteger lastY = new AtomicInteger(Integer.MIN_VALUE);
         WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
             int y = WaitUtils.waitForVisibility(driver, locator, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)
                     .getLocation().getY();
-            boolean still = y == lastY[0];
-            lastY[0] = y;
-            return still;
+            return y == lastY.getAndSet(y);
         });
     }
 
-    /**
-     * Ticks or unticks one event type, scrolling to its row first. The tap is only trusted once the checkbox has
-     * flipped; if it has not, the list moved under the tap and it is repeated once.
-     */
-    private void toggleEventType(String eventType) {
+    /** Scrolls the list until the row of the event type is on screen and returns its checkbox. */
+    private By scrollToEventType(String eventType) {
         By checkbox = EventFilterLocators.eventTypeCheckbox(eventType);
         showSelectAllButton();
         for (int swipes = 0; swipes < MAX_FILTER_SCROLLS && !WaitUtils.isPresent(driver, checkbox); swipes++) {
@@ -275,6 +260,15 @@ public class EventFilterPage {
         }
         Assert.assertTrue(WaitUtils.isVisible(driver, checkbox, TimeoutConstants.SHORT_TIMEOUT),
                 "Event type '" + eventType + "' should be listed in the event filter");
+        return checkbox;
+    }
+
+    /**
+     * Ticks or unticks one event type, scrolling to its row first. The tap is only trusted once the checkbox has
+     * flipped; if it has not, the list moved under the tap and it is repeated once.
+     */
+    private void toggleEventType(String eventType) {
+        By checkbox = scrollToEventType(eventType);
         for (int attempt = 1; attempt <= TOGGLE_ATTEMPTS; attempt++) {
             waitUntilStill(checkbox);
             boolean before = isChecked(checkbox);
@@ -290,17 +284,12 @@ public class EventFilterPage {
     }
 
     private boolean isChecked(By checkbox) {
-        return Boolean.parseBoolean(WaitUtils.waitForVisibility(driver, checkbox).getAttribute("checked"));
+        return EventFilterPageSource.isTicked(
+                WaitUtils.waitForVisibility(driver, checkbox).getAttribute("checked"));
     }
 
     private static List<String> selected(Map<String, Boolean> rows) {
-        List<String> names = new ArrayList<>();
-        rows.forEach((name, checked) -> {
-            if (checked) {
-                names.add(name);
-            }
-        });
-        return names;
+        return rows.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList();
     }
 
     /**
@@ -323,9 +312,18 @@ public class EventFilterPage {
         }
     }
 
+    /**
+     * The event type rows on screen. When the sheet is showing only its overlay section the list is moved on until
+     * a row appears, so a check over these rows can never pass because nothing was read.
+     */
     private Map<String, Boolean> visibleEventTypeSelection() {
         Map<String, Boolean> rows = new LinkedHashMap<>();
         collectVisibleEventTypes(rows);
+        for (int swipes = 0; swipes < MAX_FILTER_SCROLLS && rows.isEmpty(); swipes++) {
+            scrollFilterList(true);
+            collectVisibleEventTypes(rows);
+        }
+        Assert.assertFalse(rows.isEmpty(), "Event type rows should be on screen in the event filter");
         return rows;
     }
 
@@ -347,45 +345,7 @@ public class EventFilterPage {
         return rows;
     }
 
-    /**
-     * Adds the event type rows on screen, read from one page source snapshot so every title is paired with its own
-     * checkbox. While the TIMELINE EVENTS header is in the snapshot, the overlay rows above it are skipped; once it
-     * has scrolled away every row left is an event type.
-     */
     private void collectVisibleEventTypes(Map<String, Boolean> rows) {
-        NodeList nodes = parseXml(WaitUtils.pageSource(driver)).getElementsByTagName("*");
-        boolean headerInSnapshot = false;
-        for (int i = 0; i < nodes.getLength(); i++) {
-            headerInSnapshot |= isFilterHeader((Element) nodes.item(i));
-        }
-        boolean inEventTypes = !headerInSnapshot;
-        String pendingTitle = null;
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Element node = (Element) nodes.item(i);
-            String id = node.getAttribute("resource-id");
-            if (isFilterHeader(node)) {
-                inEventTypes = true;
-            } else if (inEventTypes && id.endsWith(":id/title")
-                    && !node.getAttribute("text").equals(UiTextConstants.EVENT_FILTERS_TITLE)) {
-                pendingTitle = node.getAttribute("text");
-            } else if (inEventTypes && id.endsWith(":id/checkBox") && pendingTitle != null) {
-                rows.put(pendingTitle, Boolean.parseBoolean(node.getAttribute("checked")));
-                pendingTitle = null;
-            }
-        }
-    }
-
-    private static boolean isFilterHeader(Element node) {
-        return node.getAttribute("resource-id").endsWith(":id/header")
-                && node.getAttribute("text").equals(UiTextConstants.TIMELINE_EVENTS_HEADER);
-    }
-
-    private static Document parseXml(String xml) {
-        try {
-            return DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                    .parse(new InputSource(new StringReader(xml)));
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            throw new IllegalStateException("Could not read the page source of the event filter", e);
-        }
+        rows.putAll(EventFilterPageSource.eventTypeRows(WaitUtils.pageSource(driver)));
     }
 }

@@ -166,7 +166,8 @@ public class HistoryBrowserPage {
     /**
      * Long press on the first camera preview: the context menu with the camera's options appears. The menu is a
      * popup window, and UiAutomator2 reports only the app window (so the menu is invisible on BrowserStack) unless
-     * multi-window is on; it stays on until the menu has been used.
+     * multi-window is on; it stays on until the menu has been used, and is switched off at the end of every test by
+     * {@link #resetMultiWindowSetting()}, so a failure in between cannot leave it on for the rest of the session.
      */
     public void openContextMenuOfFirstCameraPreview() {
         driver.setSetting(MULTI_WINDOWS_SETTING, true);
@@ -181,6 +182,11 @@ public class HistoryBrowserPage {
                                 TimeoutConstants.SHORT_TIMEOUT);
         Assert.assertTrue(hasTurnOnOrOff,
                 "Expected either 'Turn on camera' or 'Turn off camera' in the context menu");
+    }
+
+    /** Cleanup step: switches multi-window reporting off again if a test stopped with the context menu open. */
+    public void resetMultiWindowSetting() {
+        driver.setSetting(MULTI_WINDOWS_SETTING, false);
     }
 
     public void openHistoryBrowserFromContextMenu() {
@@ -207,20 +213,9 @@ public class HistoryBrowserPage {
     }
 
     /**
-     * The app opens the landscape history browser with the timeline side panel already showing, so the panel is
-     * closed first; the timeline must then be hidden until the timeline button is tapped.
+     * The landscape history browser shows the timeline panel by default, with a close icon that hides it. The test
+     * case words this as hidden until the timeline button is tapped; the app's behaviour is what is asserted.
      */
-    public void verifyTimelineHiddenInLandscape() {
-        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
-            logger.info("Landscape history browser opened with the timeline showing; closing it");
-            WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON);
-        }
-        Assert.assertTrue(WaitUtils.waitForInvisibility(
-                        driver, HistoryBrowserLocators.TIMELINE_CONTAINER, TimeoutConstants.SHORT_TIMEOUT),
-                "Timeline should not be visible in landscape until the timeline button is tapped");
-    }
-
-    /** The landscape history browser shows the timeline panel by default, with a close icon that hides it. */
     public void verifyTimelineShowsByDefaultAndClosesInLandscape() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
                 "Timeline should be visible by default in landscape");
@@ -237,11 +232,13 @@ public class HistoryBrowserPage {
         verifyTimelineControlsDisplayed();
     }
 
+    /** The timeline is waited for first, so a number that renders late is not mistaken for an absent one. */
     public void verifyFilterButtonWithoutIndication() {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILTER_BUTTON).isDisplayed(),
                 "Filter button should be displayed in the history browser");
+        WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS);
         Assert.assertFalse(WaitUtils.isVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION,
-                        TimeoutConstants.OPTIONAL_FIELD_TIMEOUT),
+                        TimeoutConstants.SHORT_TIMEOUT),
                 "Filter button should show no indication number");
     }
 
@@ -253,7 +250,6 @@ public class HistoryBrowserPage {
         int levelSeconds = readLevelMinutes() * 60;
         List<Integer> rowSeconds = timesOfDay(HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS, false);
         List<Integer> cardSeconds = timesOfDay(HistoryBrowserLocators.TIMELINE_EVENT_TIMES, true);
-        Assert.assertFalse(cardSeconds.isEmpty(), "Timeline should show at least one event card");
         for (int card : cardSeconds) {
             boolean onTimeline = rowSeconds.stream().anyMatch(row -> circularDistance(card, row) <= levelSeconds);
             Assert.assertTrue(onTimeline, "Event card at second " + card + " of the day should be within "
@@ -389,7 +385,8 @@ public class HistoryBrowserPage {
 
     /**
      * A long press keeps stepping, so it must travel further than the single tap that precedes it. The tap gives the
-     * size of one step; vibration is not observable.
+     * size of one step; vibration is not observable. The cursor label lags the repeated steps, so it is polled until
+     * it has passed the tap's distance, and the assert then reads it afresh.
      */
     private void longPressStepButtonAndVerifyFastMove(By button, boolean forward, String description) {
         LocalDateTime start = readCursorPosition();
@@ -397,14 +394,18 @@ public class HistoryBrowserPage {
         long tapSeconds = Math.abs(Duration.between(start, afterTap).getSeconds());
         GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, button));
         WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
-                () -> !readCursorPosition().equals(afterTap));
-        LocalDateTime afterHold = readSettledCursorPosition();
-        long heldSeconds = Math.abs(Duration.between(afterTap, afterHold).getSeconds());
-        boolean inDirection = forward ? afterHold.isAfter(afterTap) : afterHold.isBefore(afterTap);
-        Assert.assertTrue(inDirection && heldSeconds > tapSeconds,
+                () -> movedFurther(afterTap, readCursorPosition(), forward, tapSeconds));
+        LocalDateTime afterHold = readCursorPosition();
+        Assert.assertTrue(movedFurther(afterTap, afterHold, forward, tapSeconds),
                 "Long press on " + description + " should keep moving the cursor " + (forward ? "forward" : "backward")
-                        + " further than one tap (" + tapSeconds + " s) but moved " + heldSeconds + " s from "
-                        + afterTap + " to " + afterHold);
+                        + " further than one tap (" + tapSeconds + " s) but moved "
+                        + Math.abs(Duration.between(afterTap, afterHold).getSeconds()) + " s from " + afterTap
+                        + " to " + afterHold);
+    }
+
+    private static boolean movedFurther(LocalDateTime from, LocalDateTime to, boolean forward, long thanSeconds) {
+        boolean inDirection = forward ? to.isAfter(from) : to.isBefore(from);
+        return inDirection && Math.abs(Duration.between(from, to).getSeconds()) > thanSeconds;
     }
 
     private void verifyCursorMoved(LocalDateTime before, LocalDateTime after, boolean forward, String description) {
@@ -430,18 +431,6 @@ public class HistoryBrowserPage {
     private LocalDateTime readPreviewTime() {
         return WaitUtils.retryOnStale(() -> parseCursorLabel(
                 WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.PREVIEW_TIME).getText()));
-    }
-
-    /** The cursor label lags the repeated steps of a long press, so it is read once two reads in a row agree. */
-    private LocalDateTime readSettledCursorPosition() {
-        LocalDateTime[] last = {null};
-        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> {
-            LocalDateTime now = readCursorPosition();
-            boolean settled = now.equals(last[0]);
-            last[0] = now;
-            return settled;
-        });
-        return readCursorPosition();
     }
 
     private LocalDateTime readCursorPosition() {
