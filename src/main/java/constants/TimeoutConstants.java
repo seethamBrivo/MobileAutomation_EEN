@@ -40,6 +40,12 @@ public final class TimeoutConstants {
     /** Budget for a list to re-render after typing into its filter field. */
     public static final Duration FILTER_RESULT_TIMEOUT = Duration.ofSeconds(5);
 
+    /** How long the history browser cursor must stay put to count as paused; it advances once a second when playing. */
+    public static final Duration PLAYBACK_PROBE_TIMEOUT = Duration.ofSeconds(2);
+
+    /** Budget for the history browser timeline to re-render its rows after a pinch. */
+    public static final Duration TIMELINE_SETTLE_TIMEOUT = Duration.ofSeconds(5);
+
     /** Budget for "is a back button visible" probes when the screen may already be at the top. */
     public static final Duration BACK_BUTTON_CHECK_TIMEOUT = Duration.ofSeconds(1);
 

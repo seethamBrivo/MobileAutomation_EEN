@@ -5,6 +5,7 @@ import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -282,6 +283,19 @@ public final class WaitUtils {
             }
         }
         throw new AssertionError("Unreachable");
+    }
+
+    /**
+     * Polls {@code condition} until it returns true or {@code timeout} passes, and returns whether it did. WebDriver
+     * errors raised by the condition (an element gone or re-rendering) count as "not yet", not as failures.
+     */
+    public static boolean pollUntil(AppiumDriver driver, Duration timeout, Supplier<Boolean> condition) {
+        try {
+            wait(driver, timeout).ignoring(WebDriverException.class).until(d -> condition.get());
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
     }
 
     private static WebDriverWait wait(AppiumDriver driver, Duration timeout) {

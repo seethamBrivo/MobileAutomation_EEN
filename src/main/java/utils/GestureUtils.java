@@ -207,6 +207,38 @@ public final class GestureUtils {
                 "y", size.height * 0.5));
     }
 
+    public static void pinchIn(AppiumDriver driver, WebElement target) {
+        pinch(driver, target, GestureConstants.PINCH_WIDE_SPREAD_PERCENT, GestureConstants.PINCH_NARROW_SPREAD_PERCENT);
+    }
+
+    public static void pinchOut(AppiumDriver driver, WebElement target) {
+        pinch(driver, target, GestureConstants.PINCH_NARROW_SPREAD_PERCENT, GestureConstants.PINCH_WIDE_SPREAD_PERCENT);
+    }
+
+    private static void pinch(AppiumDriver driver, WebElement target, double startSpreadPercent,
+                              double endSpreadPercent) {
+        Point center = getElementCenter(target);
+        int height = target.getSize().height;
+        int startOffset = (int) (height * startSpreadPercent);
+        int endOffset = (int) (height * endSpreadPercent);
+
+        Sequence upperFinger = fingerMove("finger1", center.x, center.y - startOffset, center.y - endOffset);
+        Sequence lowerFinger = fingerMove("finger2", center.x, center.y + startOffset, center.y + endOffset);
+        driver.perform(List.of(upperFinger, lowerFinger));
+    }
+
+    private static Sequence fingerMove(String fingerId, int x, int startY, int endY) {
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, fingerId);
+        Sequence sequence = new Sequence(finger, 1);
+        sequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, startY));
+        sequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        sequence.addAction(new Pause(finger, TimeoutConstants.SWIPE_PAUSE));
+        sequence.addAction(
+                finger.createPointerMove(TimeoutConstants.SWIPE_MOVE, PointerInput.Origin.viewport(), x, endY));
+        sequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        return sequence;
+    }
+
     public static Point getElementCenter(WebElement element) {
         Point location = element.getLocation();
         Dimension size = element.getSize();

@@ -226,6 +226,8 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-12355 | ts_cameras.CameraContextMenuTest | Display context menu after long press on camera |
 | EEPD-TC-9005 | ts_layouts.LayoutsTest | Add new layout in mobile VMS app |
 | EEPD-TC-9163 | ts_layouts.LayoutsTest | Show camera previews in Layouts/Tags sections |
+| EEPD-TC-2606 | ts_history.HistoryBrowserTest | Pinch on timeline to change timeline level in History Browser (first camera on All cameras must be online) |
+| EEPD-TC-2907 | ts_history.HistoryBrowserTest | Use Players/Controllers in History Browser (fast-forward step not automated; first camera needs at least 2 events) |
 | EEPD-TC-37646 | ts_vsp_events.VSPEventsTest | VSP Events - Card display, pagination, and orientation testing |
 | EEPD-TC-37714 | ts_vsp_events.VSPEventsTest | VSP Events - More info detail page verification with 17 fields |
 | EEPD-TC-3920 | ts_my_profile.MyProfileTest | POS-My Profile - setting 'Time zone' in VMS mobile app |
