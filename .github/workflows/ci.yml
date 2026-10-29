@@ -21,7 +21,7 @@ on:
       diagnostics:
         description: 'Turn BrowserStack debug logs, network logs and video back on (slower sessions)'
         type: boolean
-        default: false
+        default: true
 
 # The suite uses 2 BrowserStack sessions and shared test accounts/bridges, so two CI runs must never overlap.
 # A later push waits for the running one instead of cancelling it half-way through its tests.
