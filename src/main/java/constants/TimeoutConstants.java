@@ -43,6 +43,15 @@ public final class TimeoutConstants {
     /** Budget for "is a back button visible" probes when the screen may already be at the top. */
     public static final Duration BACK_BUTTON_CHECK_TIMEOUT = Duration.ofSeconds(1);
 
+    /** Budget for checking if cancel icon is available during fast video downloads. */
+    public static final Duration FAST_DOWNLOAD_CANCEL_CHECK = Duration.ofSeconds(2);
+
+    /** Max wait for archive/folder download to complete (polls for "Saved to Files" message). */
+    public static final Duration DOWNLOAD_COMPLETE_TIMEOUT = Duration.ofSeconds(60);
+
+    /** Max wait for video download to complete - videos take longer than folders. */
+    public static final Duration VIDEO_DOWNLOAD_COMPLETE_TIMEOUT = Duration.ofSeconds(180);
+
     public static final Duration SWIPE_PAUSE = Duration.ofMillis(300);
     public static final Duration SWIPE_MOVE = Duration.ofMillis(700);
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);
