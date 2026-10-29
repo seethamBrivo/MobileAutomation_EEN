@@ -42,10 +42,12 @@ public class EventFilterPage {
     }
 
     /**
-     * The distinct event types of the cards on screen, newest first. Skips the test when the timeline shows no
-     * card, which a plain read could not tell from a slow screen without waiting the full explicit wait.
+     * The distinct event types of the cards on screen, newest first. The timeline rows are waited for with the full
+     * explicit wait first, so a timeline that is slow to load fails instead of being reported as a skip; rows with no
+     * card after the short probe are a camera without events, and the test is skipped.
      */
     public List<String> eventTypesOnTimeline() {
+        WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS);
         List<String> distinct = WaitUtils.textsOfOrEmpty(
                 driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT)
                 .stream().distinct().toList();

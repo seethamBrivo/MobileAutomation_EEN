@@ -55,6 +55,9 @@ public class HistoryBrowserPage {
 
     private final AppiumDriver driver;
 
+    /** Set while the multi-window setting is on, so cleanup only has to switch it off when a test turned it on. */
+    private boolean multiWindowEnabled;
+
     public HistoryBrowserPage(AppiumDriver driver) {
         this.driver = driver;
     }
@@ -170,6 +173,7 @@ public class HistoryBrowserPage {
      * {@link #resetMultiWindowSetting()}, so a failure in between cannot leave it on for the rest of the session.
      */
     public void openContextMenuOfFirstCameraPreview() {
+        multiWindowEnabled = true;
         driver.setSetting(MULTI_WINDOWS_SETTING, true);
         GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FIRST_PREVIEW_CARD));
         for (By option : CONTEXT_MENU_OPTIONS) {
@@ -186,14 +190,17 @@ public class HistoryBrowserPage {
 
     /** Cleanup step: switches multi-window reporting off again if a test stopped with the context menu open. */
     public void resetMultiWindowSetting() {
-        driver.setSetting(MULTI_WINDOWS_SETTING, false);
+        if (multiWindowEnabled) {
+            multiWindowEnabled = false;
+            driver.setSetting(MULTI_WINDOWS_SETTING, false);
+        }
     }
 
     public void openHistoryBrowserFromContextMenu() {
         try {
             WaitUtils.click(driver, CamerasLocators.HISTORY_BROWSER_OPTION);
         } finally {
-            driver.setSetting(MULTI_WINDOWS_SETTING, false);
+            resetMultiWindowSetting();
         }
         verifyHistoryBrowserDisplayed();
     }
