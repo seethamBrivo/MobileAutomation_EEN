@@ -123,7 +123,7 @@ public class LayoutsPage {
         }
         By aspectRatioLocator = ratio.equals("16:9") ? LayoutsLocators.ASPECT_RATIO_16_9 : LayoutsLocators.ASPECT_RATIO_4_3;
         if (PlatformLocator.isIos()) {
-            WaitUtils.click(driver, LayoutsLocators.ASPECT_RATIO_ROW); // iOS opens a list of values first
+            openIosValueList(LayoutsLocators.ASPECT_RATIO_ROW, aspectRatioLocator, "Aspect ratio");
         }
         WaitUtils.click(driver, aspectRatioLocator);
         ensureOnNewLayoutScreen();
@@ -134,10 +134,21 @@ public class LayoutsPage {
             throw new IllegalArgumentException("Max cameras per row must be between 1 and 6");
         }
         if (PlatformLocator.isIos()) {
-            WaitUtils.click(driver, LayoutsLocators.CAMERAS_PER_ROW_ROW); // iOS opens a list of values first
+            openIosValueList(LayoutsLocators.CAMERAS_PER_ROW_ROW, LayoutsLocators.camerasPerRowOption(count),
+                    "Max cameras per row");
         }
         WaitUtils.click(driver, LayoutsLocators.camerasPerRowOption(count));
         ensureOnNewLayoutScreen();
+    }
+
+    /**
+     * iOS: a settings row opens a list of values on its own screen. Waits for a value of that list, so a list that
+     * did not open (or opens slowly) fails as "list did not open", not as a missing value.
+     */
+    private void openIosValueList(By settingRow, By expectedValue, String settingName) {
+        WaitUtils.click(driver, settingRow);
+        Assert.assertTrue(WaitUtils.isVisible(driver, expectedValue, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                settingName + " list did not open after tapping its row");
     }
 
     private void ensureOnNewLayoutScreen() {
