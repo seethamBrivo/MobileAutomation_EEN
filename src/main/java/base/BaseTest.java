@@ -278,6 +278,8 @@ public abstract class BaseTest {
             return;
         }
         // Report the status first: a slow cleanup can outlast the session, and BrowserStack then records a timeout.
+        // BrowserStackStatus.setStatus never throws (it logs and carries on), which keeps the cleanup and the
+        // driver quit below always reached. Keep it that way if that method changes.
         if (driver != null && isBrowserStackExecution()) {
             updateBrowserStackStatus(testResult);
         }

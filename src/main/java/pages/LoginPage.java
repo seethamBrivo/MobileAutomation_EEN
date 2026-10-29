@@ -5,12 +5,15 @@ import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import locators.LoginLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import utils.ConfigReader;
@@ -22,7 +25,6 @@ public class LoginPage {
     private static final Logger logger = LogManager.getLogger(LoginPage.class);
     private static final int LOGIN_ATTEMPTS = 3;
     private static final int TYPE_ATTEMPTS = 3;
-    private static final String EMAIL_PLACEHOLDER = "Email";
     private static final Duration TYPE_SETTLE = Duration.ofSeconds(4);
     /** Launcher activity; the CI android.properties leaves appActivity unset on purpose (Android 15). */
     private static final String DEFAULT_APP_ACTIVITY = "com.een.core.MainActivity";
@@ -55,6 +57,9 @@ public class LoginPage {
      */
     private void typeAndVerify(By locator, String text) {
         int lastSeenLength = -1;
+        // iOS reports the placeholder as the value of an empty web input, so what the empty field says is read once
+        // here and not counted as typed text (no hard-coded "Email"). Android has no "value" attribute: null.
+        String emptyFieldValue = readValueAttributeIfSupported(WaitUtils.waitForVisibility(driver, locator));
         for (int attempt = 1; attempt <= TYPE_ATTEMPTS; attempt++) {
             WebElement field = WaitUtils.waitForVisibility(driver, locator);
             if (attempt > 1) {
@@ -65,13 +70,13 @@ public class LoginPage {
                     field.click(); // a web input on iOS ignores keys until it has focus
                 }
                 field.sendKeys(text);
-            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+            } catch (StaleElementReferenceException e) {
                 continue; // the page re-rendered while typing; look the field up again
             }
             long deadline = System.nanoTime() + TYPE_SETTLE.toNanos();
             while (System.nanoTime() < deadline) {
                 try {
-                    lastSeenLength = countTypedCharacters(field);
+                    lastSeenLength = countTypedCharacters(field, emptyFieldValue);
                     if (lastSeenLength >= text.length()) {
                         return;
                     }
@@ -97,21 +102,26 @@ public class LoginPage {
 
     /**
      * Length of what the field holds, on both platforms: Android web inputs report their text via getText, iOS web
-     * inputs only through the "value" attribute. An empty iOS input reports its placeholder ("Email") as its value.
+     * inputs only through the "value" attribute. An empty iOS input reports its placeholder as its value, which is
+     * {@code emptyFieldValue} (read before typing) and counts as no characters.
      */
-    private static int countTypedCharacters(WebElement field) {
+    private static int countTypedCharacters(WebElement field, String emptyFieldValue) {
         String typed = field.getText();
         if (typed == null || typed.isEmpty()) {
             typed = readValueAttributeIfSupported(field);
         }
-        return typed == null || typed.equals(EMAIL_PLACEHOLDER) ? 0 : typed.length();
+        return typed == null || typed.equals(emptyFieldValue) ? 0 : typed.length();
     }
 
-    /** The "value" attribute exists on iOS only; Android answers with an "unknown attribute" error, which means empty. */
+    /**
+     * The "value" attribute exists on iOS only; Android answers with an "unknown attribute" error, which is
+     * {@link UnsupportedCommandException} and means empty. Any other driver error (session gone, driver crash) is
+     * not caught here and fails the sign-in with its real cause.
+     */
     private static String readValueAttributeIfSupported(WebElement field) {
         try {
             return field.getAttribute("value");
-        } catch (WebDriverException e) {
+        } catch (UnsupportedCommandException e) {
             return null;
         }
     }
@@ -140,8 +150,16 @@ public class LoginPage {
      */
     private boolean dismissBiometricsPromptIfShown() {
         if (PlatformLocator.isIos()) {
-            // iOS shows no biometrics prompt or security-code step; wait for the signed-in screen.
-            return WaitUtils.isVisible(driver, LoginLocators.SIGNED_IN_MARKER, TimeoutConstants.SIGN_IN_LANDING_TIMEOUT);
+            // iOS shows no biometrics prompt; wait for the signed-in screen, or stop early if the account is asked to verify.
+            Optional<By> shown = WaitUtils.waitForFirstVisible(driver,
+                    List.of(LoginLocators.SIGNED_IN_MARKER, LoginLocators.VERIFICATION_PROMPT),
+                    TimeoutConstants.SIGN_IN_LANDING_TIMEOUT);
+            if (shown.isPresent() && shown.get() == LoginLocators.VERIFICATION_PROMPT) {
+                throw new AccountVerificationRequiredException("Sign-in stopped at the identity provider's "
+                        + "'Account verification' (security code) step. A test cannot complete it; use an account "
+                        + "without verification or whitelist this device.");
+            }
+            return shown.isPresent();
         }
         List<By> prompt = List.of(
                 LoginLocators.NO_THANKS_OPTION_IN_BIOMETRICS_AUTHENTICATION_POP_UP,
@@ -245,7 +263,7 @@ public class LoginPage {
         try {
             driver.executeScript("mobile: startActivity",
                     java.util.Map.of("intent", appPackage + "/" + activity, "stop", true));
-        } catch (org.openqa.selenium.WebDriverException e) {
+        } catch (WebDriverException e) {
             logger.warn("Could not relaunch the app ({}); retrying login in place",
                     e.getMessage().lines().findFirst().orElse(""));
         }
@@ -259,8 +277,8 @@ public class LoginPage {
             return;
         }
         try {
-            driver.executeScript("mobile: terminateApp", java.util.Map.of("bundleId", bundleId));
-            driver.executeScript("mobile: activateApp", java.util.Map.of("bundleId", bundleId));
+            driver.executeScript("mobile: terminateApp", Map.of("bundleId", bundleId));
+            driver.executeScript("mobile: activateApp", Map.of("bundleId", bundleId));
         } catch (org.openqa.selenium.WebDriverException e) {
             logger.warn("Could not relaunch the app ({}); retrying login in place",
                     e.getMessage().lines().findFirst().orElse(""));

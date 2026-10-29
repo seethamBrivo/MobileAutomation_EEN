@@ -210,6 +210,7 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 
 | Test ID | Test Class | Description |
 |---------|------------|-------------|
+| (none) | ts_login.LoginTest | Sign-in smoke test, iOS suite only (`testng-ios.xml`) |
 | EEPD-TC-4516 | ts_dashboard.ResellerDashboardTest | View Dashboard for Reseller |
 | EEPD-TC-40220 | ts_dashboard.ResellerDashboardTest | Verify account creation for Admin / Account-access users |
 | EEPD-TC-4170 | ts_users.AddUserTest | Adding a new user |

@@ -20,6 +20,7 @@ import org.openqa.selenium.interactions.Sequence;
 public final class GestureUtils {
 
     private static final Logger logger = LogManager.getLogger(GestureUtils.class);
+    private static final int LONG_PRESS_ATTEMPTS = 3;
 
     private GestureUtils() {
     }
@@ -49,16 +50,28 @@ public final class GestureUtils {
 
     /**
      * Long presses the element found by {@code pressTarget} and waits for {@code expectedAfterPress} (for example a
-     * context menu). A long press that lands while the screen is still settling can be missed, so if nothing
-     * appears the target is found again and pressed once more. The caller still asserts the result.
+     * context menu). A long press that lands while the screen is still settling can be missed (seen on both
+     * platforms), so if nothing appears within a few seconds the target is found again and pressed once more, up to
+     * {@code LONG_PRESS_ATTEMPTS} presses in all, with a short pause before each repeat. The caller still asserts the
+     * result, so a menu that never opens still fails the test.
      */
     public static void longPressUntilVisible(AppiumDriver driver, By pressTarget, By expectedAfterPress) {
         longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
-        if (WaitUtils.isVisible(driver, expectedAfterPress, TimeoutConstants.FILTER_RESULT_TIMEOUT)) {
-            return;
+        for (int attempt = 2; attempt <= LONG_PRESS_ATTEMPTS
+                && !WaitUtils.isVisible(driver, expectedAfterPress, TimeoutConstants.FILTER_RESULT_TIMEOUT); attempt++) {
+            logger.warn("Nothing appeared after the long press on {}; pressing again (press {} of {})",
+                    pressTarget, attempt, LONG_PRESS_ATTEMPTS);
+            pause(TimeoutConstants.SWIPE_PAUSE.multipliedBy(3));
+            longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
         }
-        logger.warn("Nothing appeared after the long press on {}; pressing once more", pressTarget);
-        longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
+    }
+
+    private static void pause(Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public static void swipeUp(AppiumDriver driver) {

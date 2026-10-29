@@ -18,26 +18,21 @@ public final class BridgesLocators {
 
     // iOS: the tab bar's button; its name varies, and the top bar has its own "More" button.
     public static final By MORE_MENU_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='More']"),
-            // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='More']"), // android
             AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeButton' AND label == 'More' AND name != 'navigationBar_customButton'"));
+                    "type == 'XCUIElementTypeButton'"
+                            + " AND label == 'More' AND name != 'navigationBar_customButton'")); // ios
 
     public static final By DASHBOARD_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"),
-            // ios
-            AppiumBy.accessibilityId("dashboard_button"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"), // android
+            AppiumBy.accessibilityId("dashboard_button")); // ios
 
     public static final By ALL_DEVICES_PAGE =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View");
 
     public static final By ALL_DEVICES_SECTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='All devices']"),
-            // ios
-            AppiumBy.accessibilityId("All devices"));
+            AppiumBy.xpath("//android.widget.TextView[@text='All devices']"), // android
+            AppiumBy.accessibilityId("All devices")); // ios
 
     public static final By BRIDGES_TAB =
             AppiumBy.xpath("//android.widget.TextView[@text='Bridges']");

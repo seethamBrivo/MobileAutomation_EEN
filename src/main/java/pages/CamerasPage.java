@@ -179,7 +179,8 @@ public class CamerasPage {
             default:
                 return false;
         }
-        // iOS: the rows behind an open context menu are in the hierarchy but not reported as visible.
+        // iOS: the rows behind an open context menu are in the hierarchy but not reported as visible. This is a
+        // weaker check than on Android: the label could belong to another row, not the one that was pressed.
         return PlatformLocator.isIos()
                 ? WaitUtils.isPresent(driver, statusLocator)
                 : WaitUtils.isVisible(driver, statusLocator, TimeoutConstants.SHORT_TIMEOUT);

@@ -15,38 +15,28 @@ public final class LoginLocators {
     // --- Sign-in entry and identity provider pages ------------------------------
 
     public static final By SIGN_IN_BUTTON = PlatformLocator.get(
-            // android
-            AppiumBy.accessibilityId("sign_in_btn_button"),
-            // ios
-            AppiumBy.accessibilityId("sign_in_button"));
+            AppiumBy.accessibilityId("sign_in_btn_button"), // android
+            AppiumBy.accessibilityId("sign_in_button")); // ios
 
     public static final By EMAIL_INPUT_FIELD = PlatformLocator.get(
-            // android
-            AppiumBy.className("android.widget.EditText"),
-            // ios
+            AppiumBy.className("android.widget.EditText"), // android
             // The iOS web field has no name/label. Its value is the "Email" placeholder until typed, then the address.
             AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeTextField' AND (value == 'Email' OR value CONTAINS '@')"));
+                    "type == 'XCUIElementTypeTextField' AND (value == 'Email' OR value CONTAINS '@')")); // ios
 
     public static final By NEXT_BUTTON = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.Button[@text=\"Next\"]"),
-            // ios
+            AppiumBy.xpath("//android.widget.Button[@text=\"Next\"]"), // android
             // iOS: scoped to the web page, because the keyboard also has a "Next" key.
-            AppiumBy.xpath("//XCUIElementTypeWebView//XCUIElementTypeButton[@name='Next']"));
+            AppiumBy.xpath("//XCUIElementTypeWebView//XCUIElementTypeButton[@name='Next']")); // ios
 
     public static final By PASSWORD_FIELD = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]"),
-            // ios
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeSecureTextField'"));
+            AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeSecureTextField'")); // ios
 
     public static final By SIGN_IN_BUTTON_TO_LOGIN = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]"),
-            // ios
+            AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]"), // android
             // iOS: the welcome screen's native button is named "sign_in_button", so this only matches the web page's button.
-            AppiumBy.xpath("//XCUIElementTypeButton[@name=\"Sign in\"]"));
+            AppiumBy.xpath("//XCUIElementTypeButton[@name=\"Sign in\"]")); // ios
 
     // --- Biometrics prompt ------------------------------------------------------
 
@@ -64,18 +54,21 @@ public final class LoginLocators {
 
     /** Bottom-navigation "More" tab: shown on every signed-in landing screen, never on the sign-in screen. */
     public static final By SIGNED_IN_MARKER = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='More']"),
-            // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='More']"), // android
             // iOS: the tab bar's button; its name varies, and the top bar has its own "More" button.
             AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeButton' AND label == 'More' AND name != 'navigationBar_customButton'"));
+                    "type == 'XCUIElementTypeButton'"
+                            + " AND label == 'More' AND name != 'navigationBar_customButton'")); // ios
 
     /**
      * The identity provider can answer a correct password with "Account verification - we need to verify
      * you with a Security Code" (sent by email). A test cannot finish that step, so it is recognised and
      * reported as such instead of being waited out as a missing landing screen.
      */
-    public static final By VERIFICATION_PROMPT = AppiumBy.xpath(
-            "//*[contains(@text,'Account verification') or contains(@text,'Security Code')]");
+    public static final By VERIFICATION_PROMPT = PlatformLocator.get(
+            AppiumBy.xpath("//*[contains(@text,'Account verification') or contains(@text,'Security Code')]"), // android
+            // Not seen on iOS yet: written from the Android text, so it only matters if an account is asked to verify.
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeStaticText'"
+                            + " AND (label CONTAINS 'Account verification' OR label CONTAINS 'Security Code')")); // ios
 }

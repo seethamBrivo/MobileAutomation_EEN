@@ -24,62 +24,45 @@ public final class LayoutsLocators {
 
     // iOS: the nav-bar button is also "Add" / "Save" on the form screens, so it is told apart by its label.
     public static final By THREE_DOTS_MENU_BUTTON = PlatformLocator.get(
-            // android
-            AppiumBy.id("com.een.vms.android:id/img_more"),
-            // ios
-            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'More'"));
+            AppiumBy.id("com.een.vms.android:id/img_more"), // android
+            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'More'")); // ios
 
     // iOS: the id of this entry differs between the layouts and layout-tab menus, the label does not.
     public static final By ADD_CAMERAS_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Add cameras']"),
-            // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='Add cameras']"), // android
             AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeButton' AND name BEGINSWITH 'contextMenu' AND label == 'Add cameras'"));
+                    "type == 'XCUIElementTypeButton'"
+                            + " AND name BEGINSWITH 'contextMenu' AND label == 'Add cameras'")); // ios
 
     public static final By NEW_LAYOUT_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='New layout']"),
-            // ios
-            AppiumBy.accessibilityId("contextMenuNewLayout"));
+            AppiumBy.xpath("//android.widget.TextView[@text='New layout']"), // android
+            AppiumBy.accessibilityId("contextMenuNewLayout")); // ios
 
     public static final By EDIT_LAYOUT_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Edit layout']"),
-            // ios
-            AppiumBy.accessibilityId("contextMenuEditLayout"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Edit layout']"), // android
+            AppiumBy.accessibilityId("contextMenuEditLayout")); // ios
 
     public static final By LAYOUT_SETTINGS_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Layout settings']"),
-            // ios
-            AppiumBy.accessibilityId("contextMenuLayoutSettings"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Layout settings']"), // android
+            AppiumBy.accessibilityId("contextMenuLayoutSettings")); // ios
 
     public static final By MAP_VIEW_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Map view']"),
-            // ios
-            AppiumBy.accessibilityId("contextMenuMaps"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Map view']"), // android
+            AppiumBy.accessibilityId("contextMenuMaps")); // ios
 
     public static final By ZOOM_IN_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Zoom in']"),
-            // ios
-            AppiumBy.accessibilityId("contextMenuZoomIn"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Zoom in']"), // android
+            AppiumBy.accessibilityId("contextMenuZoomIn")); // ios
 
     public static final By ZOOM_OUT_OPTION = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Zoom out']"),
-            // ios
-            AppiumBy.accessibilityId("contextMenuZoomOut"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Zoom out']"), // android
+            AppiumBy.accessibilityId("contextMenuZoomOut")); // ios
 
     // --- New layout form -------------------------------------------------------
 
     public static final By LAYOUT_NAME_LABEL = PlatformLocator.get(
-            // android
-            AppiumBy.accessibilityId("row_name_header"),
-            // ios
-            AppiumBy.accessibilityId("layoutSettingsName_nameText"));
+            AppiumBy.accessibilityId("row_name_header"), // android
+            AppiumBy.accessibilityId("layoutSettingsName_nameText")); // ios
 
     // The name row's tag carried a generated suffix ("row_name_dj0") that changed between app builds, so
     // the editable field is found by its type first, then by the stable "row_name_" prefix.
@@ -100,48 +83,34 @@ public final class LayoutsLocators {
 
     // iOS: inside the opened list the value text is named after its value (the row on the form is not).
     public static final By ASPECT_RATIO_16_9 = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='16:9']"),
-            // ios
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '16:9'"));
+            AppiumBy.xpath("//android.widget.TextView[@text='16:9']"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '16:9'")); // ios
 
     public static final By ASPECT_RATIO_4_3 = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='4:3']"),
-            // ios
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '4:3'"));
+            AppiumBy.xpath("//android.widget.TextView[@text='4:3']"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '4:3'")); // ios
 
     // 10.5.2: the switch lost its "row_show_cameras_title_item_switch" accessibility id, so it is addressed by position.
     // iOS: the switch reports its state as the value "1" (on) or "0" (off).
     public static final By SHOW_CAMERA_TITLE_BARS_TOGGLE = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View"),
-            // ios
-            AppiumBy.accessibilityId("layoutSettingsShowCameraTitleBars_switch"));
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View"), // android
+            AppiumBy.accessibilityId("layoutSettingsShowCameraTitleBars_switch")); // ios
 
     public static final By ADD_CAMERAS_ICON = PlatformLocator.get(
-            // android
-            AppiumBy.accessibilityId("row_add_cameras_end_icon"),
-            // ios
-            AppiumBy.accessibilityId("layoutSettingsAddCameras"));
+            AppiumBy.accessibilityId("row_add_cameras_end_icon"), // android
+            AppiumBy.accessibilityId("layoutSettingsAddCameras")); // ios
 
     public static final By SELECT_CAMERA = PlatformLocator.get(
-            // android
-            AppiumBy.accessibilityId("cell_at_0_add_camera_check_box"),
-            // ios
-            AppiumBy.accessibilityId("cell_at_0_add_camera"));
+            AppiumBy.accessibilityId("cell_at_0_add_camera_check_box"), // android
+            AppiumBy.accessibilityId("cell_at_0_add_camera")); // ios
 
     public static final By SAVE_BUTTON = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Save']"),
-            // ios
-            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Save'"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Save']"), // android
+            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Save'")); // ios
 
     public static final By ADD_BUTTON = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.TextView[@text='Add']"),
-            // ios
-            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Add'"));
+            AppiumBy.xpath("//android.widget.TextView[@text='Add']"), // android
+            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Add'")); // ios
 
     // Android only: iOS shows no snackbar; it lists the new layout among the tabs instead (see layoutTabByName).
     public static final By SUCCESS_MESSAGE =
@@ -150,58 +119,42 @@ public final class LayoutsLocators {
     // --- Layouts search filter and delete --------------------------------------
 
     public static final By FILTER_ICON = PlatformLocator.get(
-            // android
-            AppiumBy.id("com.een.vms.android:id/img_search"),
-            // ios
-            AppiumBy.accessibilityId("navigationBar_searchButton"));
+            AppiumBy.id("com.een.vms.android:id/img_search"), // android
+            AppiumBy.accessibilityId("navigationBar_searchButton")); // ios
 
     // iOS: the "Layouts" segment of the filter screen (the bottom tab bar's own button is "layouts_button").
     public static final By LAYOUTS_TAB = PlatformLocator.get(
-            // android
-            AppiumBy.xpath(XPathUtils.textViewIgnoreCase("Layouts")),
-            // ios
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Layouts'"));
+            AppiumBy.xpath(XPathUtils.textViewIgnoreCase("Layouts")), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Layouts'")); // ios
 
     public static final By SEARCH_BAR = PlatformLocator.get(
-            // android
-            AppiumBy.id("com.een.vms.android:id/search_bar"),
-            // ios
-            AppiumBy.accessibilityId("navigationBar_searchField"));
+            AppiumBy.id("com.een.vms.android:id/search_bar"), // android
+            AppiumBy.accessibilityId("navigationBar_searchField")); // ios
 
     public static final By DELETE_BUTTON = PlatformLocator.get(
-            // android
-            AppiumBy.accessibilityId("delete_header"),
-            // ios
-            AppiumBy.accessibilityId("layoutSettingsDeleteLayout"));
+            AppiumBy.accessibilityId("delete_header"), // android
+            AppiumBy.accessibilityId("layoutSettingsDeleteLayout")); // ios
 
     // iOS: the confirmation is a native alert with "Cancel" and "Delete".
     public static final By CONFIRM_BUTTON = PlatformLocator.get(
-            // android
-            AppiumBy.accessibilityId("negative_button"),
-            // ios
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Delete'"));
+            AppiumBy.accessibilityId("negative_button"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Delete'")); // ios
 
     // --- Camera previews -------------------------------------------------------
 
     public static final By CAMERA_PREVIEW_CARDS = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']"),
-            // ios
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeCell' AND name ENDSWITH '_preview_view'"));
+            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeCell' AND name ENDSWITH '_preview_view'")); // ios
 
     public static final By CAMERA_PREVIEW_IMAGES = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']"),
-            // ios
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeImage' AND name ENDSWITH '_previewImage'"));
+            AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.een.vms.android:id/camera_preview']"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeImage' AND name ENDSWITH '_previewImage'")); // ios
 
     // iOS: the time label is drawn over the live video, so it only appears once the stream has started.
     public static final By CAMERA_TIMESTAMPS = PlatformLocator.get(
-            // android
-            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 3 and string-length(@text) < 25 and (contains(@text, '0') or contains(@text, '1') or contains(@text, '2') or contains(@text, '3') or contains(@text, '4') or contains(@text, '5') or contains(@text, '6') or contains(@text, '7') or contains(@text, '8') or contains(@text, '9'))]"),
-            // ios
+            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 3 and string-length(@text) < 25 and (contains(@text, '0') or contains(@text, '1') or contains(@text, '2') or contains(@text, '3') or contains(@text, '4') or contains(@text, '5') or contains(@text, '6') or contains(@text, '7') or contains(@text, '8') or contains(@text, '9'))]"), // android
             AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeStaticText' AND name ENDSWITH '_timeLabel'"));
+                    "type == 'XCUIElementTypeStaticText' AND name ENDSWITH '_timeLabel'")); // ios
 
     // --- Dynamic locators ------------------------------------------------------
 
@@ -220,7 +173,8 @@ public final class LayoutsLocators {
     /** iOS only: the layout's tab on the layouts screen (selected or not). */
     public static By layoutTabByName(String layoutName) {
         return AppiumBy.iOSNsPredicateString(
-                "type == 'XCUIElementTypeStaticText' AND (name == 'tab_cell_label_selected' OR name == '_label_not_selected')"
+                "type == 'XCUIElementTypeStaticText'"
+                        + " AND (name == 'tab_cell_label_selected' OR name == '_label_not_selected')"
                         + " AND label == " + quoteAsPredicateString(layoutName));
     }
 
@@ -256,10 +210,9 @@ public final class LayoutsLocators {
             throw new IllegalArgumentException("Invalid camera count for locator: " + count + " (must be 1-6)");
         }
         return PlatformLocator.get(
-                // android
-                AppiumBy.xpath("//android.widget.TextView[@text='" + count + "']"),
-                // ios
+                AppiumBy.xpath("//android.widget.TextView[@text='" + count + "']"), // android
                 // iOS: the value text inside the opened "Max cameras per row" list.
-                AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + count + "'"));
+                AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText'"
+                        + " AND name == '" + count + "'")); // ios
     }
 }
