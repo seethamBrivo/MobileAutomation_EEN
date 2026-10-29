@@ -468,6 +468,13 @@ public class ResellerDashboardPage {
     }
 
     public void dismissContextMenu() {
+        if (utils.PlatformLocator.isIos()) {
+            // iOS: tap the dimmed area beside the menu, which closes it without choosing an option.
+            GestureUtils.tapOutsideContextMenu(driver);
+            Assert.assertTrue(WaitUtils.waitForInvisibility(driver, ResellerDashboardLocators.CONTEXT_MENU_SETTINGS,
+                    TimeoutConstants.SHORT_TIMEOUT), "Context menu should close");
+            return;
+        }
         ((io.appium.java_client.android.AndroidDriver) driver).pressKey(
             new io.appium.java_client.android.nativekey.KeyEvent(
                 io.appium.java_client.android.nativekey.AndroidKey.BACK

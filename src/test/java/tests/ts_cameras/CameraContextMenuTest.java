@@ -24,7 +24,7 @@ public class CameraContextMenuTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-12355: POS-Cameras - display context menu after long press on camera in Dashboard in mobile VMS app",
-          groups = {"regression", "cameras"})
+          groups = {"regression", "cameras", "ios"})
     public void verifyCameraContextMenuAfterLongPress() {
         // Step 3: Tap on the Cameras item
         camerasPage.openCamerasList();

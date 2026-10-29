@@ -9,6 +9,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class CamerasPage {
@@ -55,20 +56,30 @@ public class CamerasPage {
 
     public boolean scrollToFirstOfflineOrErrorCamera() {
         logger.info("Looking for first offline or error camera");
-        return GestureUtils.scrollUntilPresent(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
+        return scrollUntilElementIsVisible(CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
     }
 
     public void longPressFirstOfflineOrErrorCamera() {
         boolean found = scrollToFirstOfflineOrErrorCamera();
         Assert.assertTrue(found, "Could not find an offline or error camera even after scrolling");
-        WebElement camera = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
-        GestureUtils.longPress(driver, camera);
+        GestureUtils.longPressUntilVisible(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA,
+                CamerasLocators.CONTEXT_MENU_CONTAINER);
         logger.info("Long pressed on offline/error camera");
     }
 
     public boolean scrollToFirstOnlineCamera() {
         logger.info("Looking for first online camera");
-        return GestureUtils.scrollUntilPresent(driver, CamerasLocators.FIRST_ONLINE_CAMERA);
+        return scrollUntilElementIsVisible(CamerasLocators.FIRST_ONLINE_CAMERA);
+    }
+
+    /**
+     * Android scrolls until the row is in the hierarchy. iOS keeps rows just outside the screen in the hierarchy, so
+     * it scrolls until the row is actually visible (and nudges it away from the screen edge).
+     */
+    private boolean scrollUntilElementIsVisible(By locator) {
+        return PlatformLocator.isIos()
+                ? GestureUtils.scrollUntilVisible(driver, locator)
+                : GestureUtils.scrollUntilPresent(driver, locator);
     }
 
     public boolean scrollToFirstCamera() {
@@ -87,8 +98,8 @@ public class CamerasPage {
     }
 
     public void longPressFirstOnlineCamera() {
-        WebElement onlineCamera = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_ONLINE_CAMERA);
-        GestureUtils.longPress(driver, onlineCamera);
+        GestureUtils.longPressUntilVisible(driver, CamerasLocators.FIRST_ONLINE_CAMERA,
+                CamerasLocators.CONTEXT_MENU_CONTAINER);
         logger.info("Long pressed on online camera");
     }
 
@@ -134,6 +145,12 @@ public class CamerasPage {
     }
 
     public void verifyTimestampDisplayed() {
+        if (PlatformLocator.isIos()) {
+            // iOS: the preview floats in its own layer, so its timestamp is in the hierarchy but not "visible".
+            Assert.assertTrue(WaitUtils.isPresent(driver, CamerasLocators.TIMESTAMP),
+                    "Timestamp should be displayed in camera preview");
+            return;
+        }
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.TIMESTAMP).isDisplayed(),
                 "Timestamp should be displayed in camera preview");
     }
@@ -162,7 +179,10 @@ public class CamerasPage {
             default:
                 return false;
         }
-        return WaitUtils.isVisible(driver, statusLocator, TimeoutConstants.SHORT_TIMEOUT);
+        // iOS: the rows behind an open context menu are in the hierarchy but not reported as visible.
+        return PlatformLocator.isIos()
+                ? WaitUtils.isPresent(driver, statusLocator)
+                : WaitUtils.isVisible(driver, statusLocator, TimeoutConstants.SHORT_TIMEOUT);
     }
 
     public void verifyCameraStatusAndIndicators() {

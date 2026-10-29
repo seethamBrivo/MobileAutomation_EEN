@@ -11,8 +11,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import utils.ConfigReader;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class LoginPage {
@@ -20,6 +22,7 @@ public class LoginPage {
     private static final Logger logger = LogManager.getLogger(LoginPage.class);
     private static final int LOGIN_ATTEMPTS = 3;
     private static final int TYPE_ATTEMPTS = 3;
+    private static final String EMAIL_PLACEHOLDER = "Email";
     private static final Duration TYPE_SETTLE = Duration.ofSeconds(4);
     /** Launcher activity; the CI android.properties leaves appActivity unset on purpose (Android 15). */
     private static final String DEFAULT_APP_ACTIVITY = "com.een.core.MainActivity";
@@ -57,11 +60,18 @@ public class LoginPage {
             if (attempt > 1) {
                 field.clear();
             }
-            field.sendKeys(text);
+            try {
+                if (PlatformLocator.isIos()) {
+                    field.click(); // a web input on iOS ignores keys until it has focus
+                }
+                field.sendKeys(text);
+            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+                continue; // the page re-rendered while typing; look the field up again
+            }
             long deadline = System.nanoTime() + TYPE_SETTLE.toNanos();
             while (System.nanoTime() < deadline) {
                 try {
-                    lastSeenLength = field.getText().length();
+                    lastSeenLength = countTypedCharacters(field);
                     if (lastSeenLength >= text.length()) {
                         return;
                     }
@@ -83,6 +93,27 @@ public class LoginPage {
         // reports that. Lengths only: the text may be a password.
         logger.warn("The field reports {} of {} typed characters after {} attempts; continuing with the sign-in",
                 lastSeenLength, text.length(), TYPE_ATTEMPTS);
+    }
+
+    /**
+     * Length of what the field holds, on both platforms: Android web inputs report their text via getText, iOS web
+     * inputs only through the "value" attribute. An empty iOS input reports its placeholder ("Email") as its value.
+     */
+    private static int countTypedCharacters(WebElement field) {
+        String typed = field.getText();
+        if (typed == null || typed.isEmpty()) {
+            typed = readValueAttributeIfSupported(field);
+        }
+        return typed == null || typed.equals(EMAIL_PLACEHOLDER) ? 0 : typed.length();
+    }
+
+    /** The "value" attribute exists on iOS only; Android answers with an "unknown attribute" error, which means empty. */
+    private static String readValueAttributeIfSupported(WebElement field) {
+        try {
+            return field.getAttribute("value");
+        } catch (WebDriverException e) {
+            return null;
+        }
     }
 
     public LoginPage tapNextButton() {
@@ -108,6 +139,10 @@ public class LoginPage {
      * NOTE: negative_button is intentionally excluded - it's used as confirm delete in UsersPage
      */
     private boolean dismissBiometricsPromptIfShown() {
+        if (PlatformLocator.isIos()) {
+            // iOS shows no biometrics prompt or security-code step; wait for the signed-in screen.
+            return WaitUtils.isVisible(driver, LoginLocators.SIGNED_IN_MARKER, TimeoutConstants.SIGN_IN_LANDING_TIMEOUT);
+        }
         List<By> prompt = List.of(
                 LoginLocators.NO_THANKS_OPTION_IN_BIOMETRICS_AUTHENTICATION_POP_UP,
                 LoginLocators.NO_THANKS_BUTTON_BY_TEXT,
@@ -190,8 +225,12 @@ public class LoginPage {
      * refused the caller simply retries on the current screen.
      */
     public void restartApp() {
+        if (PlatformLocator.isIos()) {
+            restartIosApp();
+            return;
+        }
         if (!"android".equalsIgnoreCase(ConfigReader.getPlatform())) {
-            logger.warn("App restart is only implemented for Android; retrying login in place");
+            logger.warn("App restart is only implemented for Android and iOS; retrying login in place");
             return;
         }
         String appPackage = ConfigReader.getProperty("appPackage");
@@ -206,6 +245,22 @@ public class LoginPage {
         try {
             driver.executeScript("mobile: startActivity",
                     java.util.Map.of("intent", appPackage + "/" + activity, "stop", true));
+        } catch (org.openqa.selenium.WebDriverException e) {
+            logger.warn("Could not relaunch the app ({}); retrying login in place",
+                    e.getMessage().lines().findFirst().orElse(""));
+        }
+    }
+
+    /** iOS: terminate and activate the app by bundle id; app data is kept. Never throws. */
+    private void restartIosApp() {
+        String bundleId = ConfigReader.getProperty("bundleId");
+        if (bundleId.isBlank()) {
+            logger.warn("bundleId not configured; retrying login without restarting the app");
+            return;
+        }
+        try {
+            driver.executeScript("mobile: terminateApp", java.util.Map.of("bundleId", bundleId));
+            driver.executeScript("mobile: activateApp", java.util.Map.of("bundleId", bundleId));
         } catch (org.openqa.selenium.WebDriverException e) {
             logger.warn("Could not relaunch the app ({}); retrying login in place",
                     e.getMessage().lines().findFirst().orElse(""));

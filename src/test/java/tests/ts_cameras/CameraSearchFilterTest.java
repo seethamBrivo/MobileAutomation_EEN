@@ -23,7 +23,7 @@ public class CameraSearchFilterTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-15581: POS-Cameras - Filter for cameras by search term under Cameras screen in Dashboard in VMS mobile app",
-          groups = {"regression", "cameras"})
+          groups = {"regression", "cameras", "ios"})
     public void verifyCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);

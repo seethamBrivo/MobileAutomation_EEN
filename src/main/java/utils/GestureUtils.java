@@ -5,15 +5,21 @@ import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
 
 public final class GestureUtils {
+
+    private static final Logger logger = LogManager.getLogger(GestureUtils.class);
 
     private GestureUtils() {
     }
@@ -23,6 +29,14 @@ public final class GestureUtils {
     }
 
     public static void longPress(AppiumDriver driver, WebElement element, Duration holdDuration) {
+        if (PlatformLocator.isIos()) {
+            // XCUITest opens a long-press context menu with touchAndHold; the centre is kept in points (no int rounding).
+            Rectangle rect = element.getRect();
+            driver.executeScript("mobile: touchAndHold", Map.of(
+                    "x", rect.x + rect.width / 2.0, "y", rect.y + rect.height / 2.0,
+                    "duration", holdDuration.toMillis() / 1000.0));
+            return;
+        }
         Point center = getElementCenter(element);
         PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
         Sequence longPressSequence = new Sequence(finger, 1);
@@ -31,6 +45,20 @@ public final class GestureUtils {
         longPressSequence.addAction(new Pause(finger, holdDuration));
         longPressSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
         driver.perform(List.of(longPressSequence));
+    }
+
+    /**
+     * Long presses the element found by {@code pressTarget} and waits for {@code expectedAfterPress} (for example a
+     * context menu). A long press that lands while the screen is still settling can be missed, so if nothing
+     * appears the target is found again and pressed once more. The caller still asserts the result.
+     */
+    public static void longPressUntilVisible(AppiumDriver driver, By pressTarget, By expectedAfterPress) {
+        longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
+        if (WaitUtils.isVisible(driver, expectedAfterPress, TimeoutConstants.FILTER_RESULT_TIMEOUT)) {
+            return;
+        }
+        logger.warn("Nothing appeared after the long press on {}; pressing once more", pressTarget);
+        longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
     }
 
     public static void swipeUp(AppiumDriver driver) {
@@ -152,6 +180,17 @@ public final class GestureUtils {
         tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
         tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
         driver.perform(List.of(tapSequence));
+    }
+
+    /**
+     * iOS: taps the dimmed area beside an open context menu, which closes it without choosing an option. The point is
+     * derived from the screen size (a few percent in from the left edge, at mid height), where menus never reach.
+     */
+    public static void tapOutsideContextMenu(AppiumDriver driver) {
+        Dimension size = driver.manage().window().getSize();
+        driver.executeScript("mobile: tap", Map.of(
+                "x", Math.max(5.0, size.width * 0.03),
+                "y", size.height * 0.5));
     }
 
     public static Point getElementCenter(WebElement element) {

@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.PlatformLocator;
 
 /**
  * Locators for the Reseller Dashboard screen used by TC-4516.
@@ -16,86 +17,140 @@ public final class ResellerDashboardLocators {
 
     // --- Dashboard summary -----------------------------------------------------------
 
-    public static final By TOTAL_ACCOUNTS =
-            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'accounts')]");
+    public static final By TOTAL_ACCOUNTS = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'accounts')]"),
+            // ios
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeStaticText' AND name MATCHES '^[0-9]+ accounts?$'"));
 
     // --- Account card (first row in list) --------------------------------------------
 
     // TODO: Replace with testTag - no content-desc on this Compose node yet
-    public static final By TRANSFORMATION_ICON =
+    public static final By TRANSFORMATION_ICON = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[2]/android.view.View/android.view.View");
+                    + "/android.view.View[2]/android.view.View/android.view.View"),
+            // ios
+            AppiumBy.accessibilityId("largeCardIcon"));
 
     // TODO: Replace with testTag - positional paths for resource icons and status dots
-    public static final By BRIDGE_ICON =
+    public static final By BRIDGE_ICON = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[3]/android.view.View[1]/android.view.View[1]");
+                    + "/android.view.View[3]/android.view.View[1]/android.view.View[1]"),
+            // ios
+            AppiumBy.accessibilityId("ic_bridgeDevice"));
 
-    public static final By CAMERA_ICON =
+    public static final By CAMERA_ICON = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[3]/android.view.View[1]/android.view.View[4]");
+                    + "/android.view.View[3]/android.view.View[1]/android.view.View[4]"),
+            // ios
+            AppiumBy.accessibilityId("ic_camera"));
 
-    public static final By DOT_GREEN =
+    public static final By DOT_GREEN = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[3]/android.view.View[1]/android.view.View[2]");
+                    + "/android.view.View[3]/android.view.View[1]/android.view.View[2]"),
+            // ios
+            iosCameraStatusDotAtPosition(1));
 
-    public static final By DOT_RED =
+    public static final By DOT_RED = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[3]/android.view.View[1]/android.view.View[3]");
+                    + "/android.view.View[3]/android.view.View[1]/android.view.View[3]"),
+            // ios
+            iosCameraStatusDotAtPosition(2));
 
-    public static final By DOT_YELLOW =
+    public static final By DOT_YELLOW = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[3]/android.view.View[1]/android.view.View[7]");
+                    + "/android.view.View[3]/android.view.View[1]/android.view.View[7]"),
+            // ios
+            iosCameraStatusDotAtPosition(3));
 
-    public static final By DOT_GREY =
+    public static final By DOT_GREY = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[3]/android.view.View[1]/android.view.View[8]");
+                    + "/android.view.View[3]/android.view.View[1]/android.view.View[8]"),
+            // ios
+            iosCameraStatusDotAtPosition(4));
 
     // TODO: Replace with testTag - positional path for the three-dots menu button
-    public static final By THREE_DOTS_BUTTON =
+    public static final By THREE_DOTS_BUTTON = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[3]/android.view.View[1]/android.view.View[9]");
+                    + "/android.view.View[3]/android.view.View[1]/android.view.View[9]"),
+            // ios
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeButton' AND name == 'ic_contextMenu' AND visible == 1"));
 
     // --- Context menu options --------------------------------------------------------
 
-    public static final By CONTEXT_MENU_SETTINGS =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Settings\"]");
+    public static final By CONTEXT_MENU_SETTINGS = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Settings\"]"),
+            // ios
+            AppiumBy.accessibilityId("Settings"));
 
-    public static final By CONTEXT_MENU_DELETE_ACCOUNT =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Delete account\"]");
+    public static final By CONTEXT_MENU_DELETE_ACCOUNT = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Delete account\"]"),
+            // ios
+            AppiumBy.accessibilityId("Delete account"));
 
     // --- Toolbar ---------------------------------------------------------------------
 
-    public static final By FILTER_BY_ACCOUNT_NAME =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by account name\"]");
+    public static final By FILTER_BY_ACCOUNT_NAME = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Filter by account name\"]"),
+            // ios
+            AppiumBy.accessibilityId("Filter by account"));
 
     // TODO: Replace with testTag - no content-desc on this Compose button yet
-    public static final By ADD_ACCOUNT_BUTTON =
+    public static final By ADD_ACCOUNT_BUTTON = PlatformLocator.get(
+            // android
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ResellerDashboardMainScreen\"]"
                     + "/android.view.View/android.view.View/android.view.View/android.view.View"
-                    + "/android.view.View[5]/android.view.View/android.view.View");
+                    + "/android.view.View[5]/android.view.View/android.view.View"),
+            // ios
+            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Add'"));
 
     // --- Bottom navigation bar -------------------------------------------------------
 
-    public static final By NAV_DASHBOARD =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Dashboard\"]");
+    public static final By NAV_DASHBOARD = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Dashboard\"]"),
+            // ios
+            AppiumBy.accessibilityId("dashboard_button"));
 
-    public static final By NAV_USERS =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]");
+    public static final By NAV_USERS = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]"),
+            // ios
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Users'"));
 
-    public static final By NAV_BUSINESS_PORTAL =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Business Portal\"]");
+    public static final By NAV_BUSINESS_PORTAL = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Business Portal\"]"),
+            // ios
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Business Portal'"));
 
-    public static final By NAV_MORE =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]");
+    public static final By NAV_MORE = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]"),
+            // ios
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeButton' AND label == 'More' AND name != 'navigationBar_customButton'"));
 
     // --- Add account form ------------------------------------------------------------
 
@@ -228,8 +283,11 @@ public final class ResellerDashboardLocators {
 
     // --- Page title / logout / delete feedback ----------------------------------------
 
-    public static final By RESELLER_DASHBOARD_TITLE =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]");
+    public static final By RESELLER_DASHBOARD_TITLE = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]"),
+            // ios
+            AppiumBy.accessibilityId("Reseller dashboard"));
 
     public static final By LAYOUTS_SCREEN =
             AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]");
@@ -255,9 +313,23 @@ public final class ResellerDashboardLocators {
     // --- Dynamic account locators ----------------------------------------------------
 
     public static By accountByName(String accountName) {
+        if (PlatformLocator.isIos()) {
+            // iOS: an account's name is a text named after itself.
+            return AppiumBy.accessibilityId(accountName);
+        }
         return AppiumBy.xpath(
                 "//android.widget.TextView[@text=\"" + accountName + "\"]"
         );
+    }
+
+    /**
+     * iOS: the status dots of the first account card's camera row, in order 1 green (online), 2 red (offline),
+     * 3 yellow (warning), 4 grey (other). They are unlabelled images placed after the card's camera icon, so they are
+     * found by that position; their colour is not exposed to the accessibility tree.
+     */
+    private static By iosCameraStatusDotAtPosition(int position) {
+        return AppiumBy.xpath("(//XCUIElementTypeImage[@name='ic_camera'])[1]"
+                + "/following-sibling::XCUIElementTypeImage[not(@name) or @name=''][" + position + "]");
     }
 
     /** {@code xpathSafeText} must already be an XPath string literal (quoted/escaped by the caller). */

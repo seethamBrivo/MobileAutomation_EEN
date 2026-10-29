@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.PlatformLocator;
 
 /**
  * Locators for the sign-in flow: the app's sign-in entry point, the web identity-provider pages
@@ -13,20 +14,39 @@ public final class LoginLocators {
 
     // --- Sign-in entry and identity provider pages ------------------------------
 
-    public static final By SIGN_IN_BUTTON =
-            AppiumBy.accessibilityId("sign_in_btn_button");
+    public static final By SIGN_IN_BUTTON = PlatformLocator.get(
+            // android
+            AppiumBy.accessibilityId("sign_in_btn_button"),
+            // ios
+            AppiumBy.accessibilityId("sign_in_button"));
 
-    public static final By EMAIL_INPUT_FIELD =
-            AppiumBy.className("android.widget.EditText");
+    public static final By EMAIL_INPUT_FIELD = PlatformLocator.get(
+            // android
+            AppiumBy.className("android.widget.EditText"),
+            // ios
+            // The iOS web field has no name/label. Its value is the "Email" placeholder until typed, then the address.
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeTextField' AND (value == 'Email' OR value CONTAINS '@')"));
 
-    public static final By NEXT_BUTTON =
-            AppiumBy.xpath("//android.widget.Button[@text=\"Next\"]");
+    public static final By NEXT_BUTTON = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.Button[@text=\"Next\"]"),
+            // ios
+            // iOS: scoped to the web page, because the keyboard also has a "Next" key.
+            AppiumBy.xpath("//XCUIElementTypeWebView//XCUIElementTypeButton[@name='Next']"));
 
-    public static final By PASSWORD_FIELD =
-            AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]");
+    public static final By PASSWORD_FIELD = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.EditText[@resource-id=\"authentication--input__password\"]"),
+            // ios
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeSecureTextField'"));
 
-    public static final By SIGN_IN_BUTTON_TO_LOGIN =
-            AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]");
+    public static final By SIGN_IN_BUTTON_TO_LOGIN = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.Button[@resource-id=\"next\"]"),
+            // ios
+            // iOS: the welcome screen's native button is named "sign_in_button", so this only matches the web page's button.
+            AppiumBy.xpath("//XCUIElementTypeButton[@name=\"Sign in\"]"));
 
     // --- Biometrics prompt ------------------------------------------------------
 
@@ -43,8 +63,13 @@ public final class LoginLocators {
     // --- Signed-in landing and verification ------------------------------------
 
     /** Bottom-navigation "More" tab: shown on every signed-in landing screen, never on the sign-in screen. */
-    public static final By SIGNED_IN_MARKER =
-            AppiumBy.xpath("//android.widget.TextView[@text='More']");
+    public static final By SIGNED_IN_MARKER = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text='More']"),
+            // ios
+            // iOS: the tab bar's button; its name varies, and the top bar has its own "More" button.
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeButton' AND label == 'More' AND name != 'navigationBar_customButton'"));
 
     /**
      * The identity provider can answer a correct password with "Account verification - we need to verify

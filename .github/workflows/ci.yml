@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # Allows manual trigger from GitHub UI
     inputs:
       platform:
-        description: 'android = the Android suite (default, also what runs on push); ios = the iOS suite on BrowserStack (needs the IOS_BROWSERSTACK_APP_URL secret)'
+        description: 'platform for a manual run: android (default) or ios (needs the IOS_BROWSERSTACK_APP_URL secret). A merge to main runs both, Android first, then iOS'
         type: choice
         options: [android, ios]
         default: android
@@ -36,6 +36,15 @@ concurrency:
 
 jobs:
   build:
+    # A merge to main runs the Android suite first and then the iOS suite (max-parallel 1: the BrowserStack plan has
+    # 2 parallel sessions, and each suite uses both of them for its own parallel workers). Both always run: an Android
+    # failure does not skip iOS. A manual run does only the platform chosen in the form.
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        platform: ${{ fromJSON(github.event_name == 'push' && '["android","ios"]' || format('["{0}"]', inputs.platform)) }}
+    name: ${{ matrix.platform }} tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -111,7 +120,7 @@ jobs:
           browserstackUserName=${{ secrets.BROWSERSTACK_USERNAME }}
           browserstackAccessKey=${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           browserstackProjectName=EEN Mobile Automation
-          browserstackBuildName=CI Build ${{ github.run_number }}${{ inputs.platform == 'ios' && ' (iOS)' || '' }}
+          browserstackBuildName=CI Build ${{ github.run_number }}${{ matrix.platform == 'ios' && ' (iOS)' || '' }}
           browserstackIdleTimeout=120
           browserstackDebug=${{ inputs.diagnostics == true && 'true' || 'false' }}
           browserstackNetworkLogs=${{ inputs.diagnostics == true && 'true' || 'false' }}
@@ -119,7 +128,7 @@ jobs:
           EOF
 
       - name: Create android.properties for BrowserStack
-        if: inputs.platform != 'ios'
+        if: matrix.platform != 'ios'
         run: |
           mkdir -p src/main/resources
           cat > src/main/resources/android.properties << 'EOF'
@@ -144,7 +153,7 @@ jobs:
         # The IPA is not in the repo: IOS_BROWSERSTACK_APP_URL is the bs:// id of an IPA that was uploaded with
         # -F "ios_app_groups_support=true" (without it sign-in hangs on a spinner). Network logs stay off:
         # with them on the camera video never loads.
-        if: inputs.platform == 'ios'
+        if: matrix.platform == 'ios'
         run: |
           mkdir -p src/main/resources
           cat > src/main/resources/ios.properties << 'EOF'
@@ -169,15 +178,15 @@ jobs:
           # Read by the BrowserStack SDK when use_sdk is set; ignored otherwise.
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-          BROWSERSTACK_APP_URL: ${{ inputs.platform == 'ios' && secrets.IOS_BROWSERSTACK_APP_URL || secrets.BROWSERSTACK_APP_URL }}
+          BROWSERSTACK_APP_URL: ${{ matrix.platform == 'ios' && secrets.IOS_BROWSERSTACK_APP_URL || secrets.BROWSERSTACK_APP_URL }}
           BROWSERSTACK_BUILD_NUMBER: ${{ github.run_number }}
-        run: mvn test -Dplatform=${{ inputs.platform || 'android' }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (inputs.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml') }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
+        run: mvn test -Dplatform=${{ matrix.platform }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (matrix.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml') }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
+          name: test-reports-${{ matrix.platform }}
           path: |
             target/surefire-reports/
             target/page-sources/
@@ -187,6 +196,6 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: maven-build
+          name: maven-build-${{ matrix.platform }}
           path: target/
           if-no-files-found: warn

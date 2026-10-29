@@ -15,6 +15,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**
@@ -51,6 +52,13 @@ public class CameraSearchHelper {
     }
 
     public void verifySearchPlaceholderDisplayed() {
+        if (PlatformLocator.isIos()) {
+            // iOS: the placeholder is the empty field's value, not a separate element.
+            String placeholder = WaitUtils.waitForVisibility(driver, searchBar).getAttribute("value");
+            Assert.assertEquals(placeholder, UiTextConstants.SEARCH_PLACEHOLDER,
+                    "Search placeholder '" + UiTextConstants.SEARCH_PLACEHOLDER + "' should be displayed");
+            return;
+        }
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, searchPlaceholder).isDisplayed(),
                 "Search placeholder '" + UiTextConstants.SEARCH_PLACEHOLDER + "' should be displayed");
     }
@@ -64,7 +72,14 @@ public class CameraSearchHelper {
     public void enterSearchTerm(String searchTerm) {
         String previousCount = getCurrentCounterText();
         boolean wasEmptyStateVisible = isEmptyStateCurrentlyVisible();
-        WaitUtils.clearAndType(driver, searchBar, searchTerm);
+        if (PlatformLocator.isIos()) {
+            // iOS: the field is empty when the search starts, so it is tapped and typed into without clearing.
+            WebElement field = WaitUtils.waitForVisibility(driver, searchBar);
+            field.click();
+            field.sendKeys(searchTerm);
+        } else {
+            WaitUtils.clearAndType(driver, searchBar, searchTerm);
+        }
         Assert.assertTrue(waitForCounterToChangeFrom(previousCount, wasEmptyStateVisible, searchTerm),
                 "Camera counter should change after entering search term '" + searchTerm + "' - filter may not have re-rendered");
     }
@@ -162,11 +177,16 @@ public class CameraSearchHelper {
     public void clearSearchIfNeeded() {
         String previousCount = getCurrentCounterText();
         boolean wasEmptyStateVisible = isEmptyStateCurrentlyVisible();
-        WaitUtils.clearAndType(driver, searchBar, "");
-        try {
-            driver.executeScript("mobile: hideKeyboard");
-        } catch (Exception e) {
-            // Keyboard already hidden or not present
+        if (PlatformLocator.isIos()) {
+            // iOS: the field has a "Clear text" button, which is used instead of clearing the text by typing.
+            WaitUtils.click(driver, CamerasLocators.CLEAR_TEXT_BUTTON);
+        } else {
+            WaitUtils.clearAndType(driver, searchBar, "");
+            try {
+                driver.executeScript("mobile: hideKeyboard");
+            } catch (Exception e) {
+                // Keyboard already hidden or not present
+            }
         }
         Assert.assertTrue(waitForCounterToChangeFrom(previousCount, wasEmptyStateVisible, ""),
                 "Camera counter should change after clearing search - filter may not have reset");
@@ -251,6 +271,10 @@ public class CameraSearchHelper {
     }
 
     public void longPressFirstCamera() {
+        if (PlatformLocator.isIos()) {
+            // iOS: close the keyboard (left open after a search) before pressing a camera row.
+            closeIosKeyboard();
+        }
         WebElement camera = WaitUtils.waitForVisibility(driver, firstCameraInList);
         GestureUtils.longPress(driver, camera);
     }
@@ -263,7 +287,9 @@ public class CameraSearchHelper {
         // The keyboard stays up after typing a search term and covers the empty-state message (CI Build 103, BrowserStack),
         // so close it first. Then fall back to presence: with the IME resizing the window the message can sit below the
         // visible area even though it is rendered.
-        hideKeyboard();
+        if (!PlatformLocator.isIos()) { // the Android keyboard hides the message; on iOS it is not hidden
+            hideKeyboard();
+        }
         boolean shown = isEmptyStateDisplayed() || WaitUtils.isPresent(driver, emptyStateMessage);
         Assert.assertTrue(shown, "Empty state message should be displayed when no cameras match search");
     }
@@ -298,7 +324,24 @@ public class CameraSearchHelper {
         logger.info("Verified {} visible cameras all contain search term '{}'", cameraElements.size(), searchTerm);
     }
 
+    /** iOS: closes the keyboard with its "search" key, which is disabled while the field is empty. */
+    private void closeIosKeyboard() {
+        if (WaitUtils.isVisible(driver, CamerasLocators.KEYBOARD_SEARCH_KEY, TimeoutConstants.SHORT_TIMEOUT)) {
+            WaitUtils.click(driver, CamerasLocators.KEYBOARD_SEARCH_KEY);
+        }
+    }
+
     public void dismissContextMenu() {
+        if (PlatformLocator.isIos()) {
+            // iOS: tap the dimmed area beside the menu; nothing to do when no menu is open.
+            if (WaitUtils.isVisible(driver, CamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
+                GestureUtils.tapOutsideContextMenu(driver);
+                Assert.assertTrue(WaitUtils.waitForInvisibility(driver, CamerasLocators.CAMERA_SETTINGS_OPTION,
+                        TimeoutConstants.SHORT_TIMEOUT), "Context menu should close");
+            }
+            logger.info("Context menu dismissed");
+            return;
+        }
         try {
             driver.executeScript("mobile: hideKeyboard");
         } catch (Exception e) {

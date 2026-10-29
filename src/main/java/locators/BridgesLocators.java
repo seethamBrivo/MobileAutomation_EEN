@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.PlatformLocator;
 
 /**
  * Locators for the bridge screens: the devices list, the add-bridge form, the bridge list and the bridge settings.
@@ -15,17 +16,28 @@ public final class BridgesLocators {
 
     // --- Bottom navigation and tabs --------------------------------------------
 
-    public static final By MORE_MENU_OPTION =
-            AppiumBy.xpath("//android.widget.TextView[@text='More']");
+    // iOS: the tab bar's button; its name varies, and the top bar has its own "More" button.
+    public static final By MORE_MENU_OPTION = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text='More']"),
+            // ios
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeButton' AND label == 'More' AND name != 'navigationBar_customButton'"));
 
-    public static final By DASHBOARD_OPTION =
-            AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']");
+    public static final By DASHBOARD_OPTION = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"),
+            // ios
+            AppiumBy.accessibilityId("dashboard_button"));
 
     public static final By ALL_DEVICES_PAGE =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View");
 
-    public static final By ALL_DEVICES_SECTION =
-            AppiumBy.xpath("//android.widget.TextView[@text='All devices']");
+    public static final By ALL_DEVICES_SECTION = PlatformLocator.get(
+            // android
+            AppiumBy.xpath("//android.widget.TextView[@text='All devices']"),
+            // ios
+            AppiumBy.accessibilityId("All devices"));
 
     public static final By BRIDGES_TAB =
             AppiumBy.xpath("//android.widget.TextView[@text='Bridges']");
