@@ -43,9 +43,6 @@ public final class ArchiveLocators {
     public static final By BACK_ARROW_BUTTON_EMPTY_STATE =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ArchiveMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View");
 
-    public static final By CANCEL_BUTTON =
-            AppiumBy.accessibilityId("Cancel");
-
     // Brittle: positional XPath - no resource-id or content-desc available
     public static final By THREE_DOTS_MENU =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ArchiveMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[1]/android.view.View[2]");
@@ -82,20 +79,17 @@ public final class ArchiveLocators {
     public static final By DOWNLOAD_OPTION =
             AppiumBy.xpath("//android.widget.TextView[@text=\"Download\"]");
 
-    public static final By DOWNLOAD_DIALOG =
-            AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View");
-
     public static final By DOWNLOAD_BUTTON_DIALOG =
             AppiumBy.xpath("//android.widget.TextView[@text=\"DOWNLOAD\"]");
-
-    public static final By CANCEL_BUTTON_DIALOG =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"CANCEL\"]");
 
     public static final By SNACKBAR_TEXT =
             AppiumBy.xpath("//android.widget.TextView[@content-desc=\"snackbar_een_text\"]");
 
     public static final By IN_PROGRESS_STATUS =
             AppiumBy.xpath("//android.widget.TextView[@text=\"In progress\"]");
+
+    public static final By COMPLETED_STATUS =
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Complete\"]");
 
     // Brittle: positional XPath - no resource-id or content-desc available
     // NOTE: This locator is identical to FIRST_FOLDER_THREE_DOTS because the cancel icon

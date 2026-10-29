@@ -174,7 +174,7 @@ public final class JsonDataReader {
     public static String getArchiveSearchValue(String key) {
         return getBlockValue(
                 TestDataConstants.ARCHIVE_SEARCH_DATA,
-                "archive_search_data",
+                TestDataConstants.ARCHIVE_SEARCH_DATA,
                 key
         ).getAsString();
     }

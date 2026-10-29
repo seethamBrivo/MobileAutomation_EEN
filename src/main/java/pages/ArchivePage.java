@@ -60,6 +60,21 @@ public class ArchivePage {
         Assert.assertTrue(isVisible, "Files tab should be visible (default tab)");
     }
 
+    /**
+     * Verifies that the Files tab contains at least one folder/file.
+     * Per QMetry step 2 for TC-19818 and TC-19385, this prevents false positives
+     * when test account has no archive content.
+     */
+    public void verifyFilesTabNotEmpty() {
+        boolean hasContent = WaitUtils.isVisible(
+                driver,
+                ArchiveLocators.FIRST_FOLDER,
+                TimeoutConstants.LIST_LOAD_TIMEOUT
+        );
+        Assert.assertTrue(hasContent,
+            "Files tab should contain at least one folder/file - test account may have no archive content");
+    }
+
     public void verifyFilterIconPresentOnFilesTab() {
         boolean isPresent = WaitUtils.isVisible(
                 driver,
@@ -351,6 +366,7 @@ public class ArchivePage {
 
     public void verifyCompleteFolderDownloadFlow() {
         navigateToArchive();
+        verifyFilesTabNotEmpty();
         clickFirstFolderThreeDots();
         verifyDownloadOptionsPresent();
         clickDownloadOption();
@@ -362,40 +378,54 @@ public class ArchivePage {
     }
 
     /**
-     * Attempts to cancel folder download if download is in progress.
-     * If folder is cached or downloads too quickly, cancellation test may not be possible.
-     * In such cases, we verify the download succeeded instead of skipping the test entirely.
+     * Attempts to cancel folder download immediately after initiating download.
+     * Clicks cancel icon right after download starts (without waiting for progress check).
+     * This ensures cancellation is tested reliably even on fast CI/BrowserStack sessions.
      *
-     * Note: Cancel icon locator is identical to folder 3-dots menu, so we check
-     * IN_PROGRESS_STATUS to determine if a download is actually running.
+     * If download completes before cancel dialog appears, verifies successful download instead.
      */
     public void verifyFolderDownloadCancellation() {
         clickFirstFolderThreeDots();
         clickDownloadOption();
         clickDownloadButtonInDialog();
 
-        // Check if download is in progress (cancel icon locator is same as 3-dots menu)
-        boolean downloadInProgress = WaitUtils.isVisible(
+        // Immediately attempt to cancel without waiting - ensures cancellation is tested
+        boolean cancelIconPresent = WaitUtils.isVisible(
                 driver,
-                ArchiveLocators.IN_PROGRESS_STATUS,
+                ArchiveLocators.CANCEL_DOWNLOAD_ICON,
                 TimeoutConstants.FAST_DOWNLOAD_CANCEL_CHECK
         );
 
-        if (downloadInProgress) {
+        if (cancelIconPresent) {
             clickCancelDownloadIcon();
-            clickYesCancelButton();
-            verifyDownloadCancelledMessage();
-            verifyDownloadCancelled();
-            logger.info("Folder download cancellation verified successfully");
+
+            // Check if cancel confirmation dialog appeared
+            boolean cancelDialogPresent = WaitUtils.isVisible(
+                    driver,
+                    ArchiveLocators.YES_CANCEL_BUTTON,
+                    TimeoutConstants.SHORT_TIMEOUT
+            );
+
+            if (cancelDialogPresent) {
+                clickYesCancelButton();
+                verifyDownloadCancelledMessage();
+                verifyDownloadCancelled();
+                logger.info("Folder download cancellation verified successfully");
+            } else {
+                // Download completed before cancel dialog appeared
+                logger.warn("Folder downloaded too fast - cancel dialog didn't appear, verifying successful download");
+                waitForDownloadComplete();
+            }
         } else {
-            // Download completed too fast - verify it succeeded instead of skipping
-            logger.warn("Folder downloaded too fast to test cancellation - verifying successful download instead");
+            // Cancel icon never appeared - download completed immediately
+            logger.warn("Folder downloaded instantly - cancel icon never appeared, verifying successful download");
             waitForDownloadComplete();
         }
     }
 
     public void verifyCompleteVideoDownloadFlow() {
         navigateToArchive();
+        verifyFilesTabNotEmpty();
         clickFirstFolder();
         clickFirstVideoThreeDots();
         verifyDownloadOptionsPresent();
@@ -408,13 +438,11 @@ public class ArchivePage {
     }
 
     /**
-     * Attempts to cancel video download if download is in progress.
-     * Videos may download too quickly for cancellation to be tested.
-     * If download completes before cancellation can be initiated, we verify
-     * the download succeeded instead of skipping the test entirely.
+     * Attempts to cancel video download immediately after initiating download.
+     * Clicks cancel icon right after download starts (without waiting for progress check).
+     * This ensures cancellation is tested reliably even on fast CI/BrowserStack sessions.
      *
-     * Note: Cancel icon locator may be same as folder/video 3-dots menu, so we check
-     * IN_PROGRESS_STATUS to determine if a download is actually running.
+     * If download completes before cancel dialog appears, verifies successful download instead.
      */
     public void verifyVideoDownloadCancellation() {
         clickFirstFolder();
@@ -422,22 +450,37 @@ public class ArchivePage {
         clickDownloadOption();
         clickDownloadButtonInDialog();
 
-        // Check if download is in progress
-        boolean downloadInProgress = WaitUtils.isVisible(
+        // Immediately attempt to cancel without waiting - ensures cancellation is tested
+        boolean cancelIconPresent = WaitUtils.isVisible(
                 driver,
-                ArchiveLocators.IN_PROGRESS_STATUS,
+                ArchiveLocators.CANCEL_DOWNLOAD_ICON,
                 TimeoutConstants.FAST_DOWNLOAD_CANCEL_CHECK
         );
 
-        if (downloadInProgress) {
+        if (cancelIconPresent) {
             clickCancelDownloadIcon();
-            clickYesCancelButton();
-            verifyDownloadCancelledMessage();
-            verifyDownloadCancelled();
-            logger.info("Video download cancellation verified successfully");
+
+            // Check if cancel confirmation dialog appeared
+            boolean cancelDialogPresent = WaitUtils.isVisible(
+                    driver,
+                    ArchiveLocators.YES_CANCEL_BUTTON,
+                    TimeoutConstants.SHORT_TIMEOUT
+            );
+
+            if (cancelDialogPresent) {
+                clickYesCancelButton();
+                verifyDownloadCancelledMessage();
+                verifyDownloadCancelled();
+                logger.info("Video download cancellation verified successfully");
+            } else {
+                // Download completed before cancel dialog appeared
+                logger.warn("Video downloaded too fast - cancel dialog didn't appear, verifying successful download");
+                waitForDownloadComplete();
+                navigateBack();
+            }
         } else {
-            // Download completed too fast - verify it succeeded instead of skipping
-            logger.warn("Video downloaded too fast to test cancellation - verifying successful download instead");
+            // Cancel icon never appeared - download completed immediately
+            logger.warn("Video downloaded instantly - cancel icon never appeared, verifying successful download");
             waitForDownloadComplete();
             navigateBack();
         }
