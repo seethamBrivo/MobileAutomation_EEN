@@ -125,6 +125,10 @@ jobs:
             },
             "mechanical_zoom_camera_data": {
               "camera_name": "${{ secrets.MECHANICAL_ZOOM_CAMERA_NAME || 'EN-CDUB-011a' }}"
+            },
+            "archive_search_data": {
+              "valid_search_term": "test",
+              "no_results_search_term": "xyznonexistent12345"
             }
           }
           EOF

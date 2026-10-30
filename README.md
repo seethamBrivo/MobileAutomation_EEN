@@ -104,6 +104,8 @@ mvn test -Dplatform=android -Dgroups=dashboard     # only dashboard tests
 mvn test -Dplatform=android -Dgroups=profile       # only profile tests
 mvn test -Dplatform=android -Dgroups=vsp           # only VSP tests
 mvn test -Dplatform=android -Dgroups=events        # only event-related tests
+mvn test -Dplatform=android -Dgroups=live          # only live view tests
+mvn test -Dplatform=android -Dgroups=archive       # only archive tests
 ```
 
 **BrowserStack execution:**
@@ -233,6 +235,11 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-37646 | ts_vsp_events.VSPEventsTest | VSP Events - Card display, pagination, and orientation testing |
 | EEPD-TC-37714 | ts_vsp_events.VSPEventsTest | VSP Events - More info detail page verification with 17 fields |
 | EEPD-TC-3920 | ts_my_profile.MyProfileTest | POS-My Profile - setting 'Time zone' in VMS mobile app |
+| EEPD-TC-36684 | ts_live.LiveViewTest | POS-Live Stream - Mechanical Zoom of Auto focus functionality of live stream |
+| EEPD-TC-36681 | ts_live.LiveViewTest | POS-Live Stream - Mechanical Zoom of Zoom In/out functionality of live stream |
+| EEPD-TC-19978 | ts_archive.ArchiveTest | POS-Archive - Searching for files in mobile app |
+| EEPD-TC-19818 | ts_archive.ArchiveTest | POS-Archive - downloading a folder in mobile app |
+| EEPD-TC-19385 | ts_archive.ArchiveTest | POS-Archive - downloading a video - video type in mobile app |
 
 ### Conventions
 
