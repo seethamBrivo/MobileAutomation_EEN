@@ -88,9 +88,6 @@ public final class ArchiveLocators {
     public static final By IN_PROGRESS_STATUS =
             AppiumBy.xpath("//android.widget.TextView[@text=\"In progress\"]");
 
-    public static final By COMPLETED_STATUS =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Complete\"]");
-
     // Brittle: positional XPath - no resource-id or content-desc available
     // NOTE: This locator is identical to FIRST_FOLDER_THREE_DOTS because the cancel icon
     // appears at the same position as the folder's 3-dots menu during folder downloads.

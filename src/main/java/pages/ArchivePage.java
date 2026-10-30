@@ -324,6 +324,10 @@ public class ArchivePage {
         // Don't assert - fast downloads may skip this status entirely
     }
 
+    /**
+     * NOTE: Downloaded files go directly to device local storage (Files app), NOT to Archive Progress tab.
+     * Progress tab only tracks Archive-specific operations. Snackbar "Saved to Files" confirms download to device.
+     */
     public void waitForDownloadComplete() {
         String snackbarText = WaitUtils.pollText(
                 driver,
