@@ -99,7 +99,9 @@ public class EventFilterPage {
     }
 
     /**
-     * Clears the selection, then ticks the given types. A complete check scrolls through the whole list; a visible
+     * Clears the selection, then ticks the given types. The button toggles: it reads "Select" while some type is
+     * unticked and ticks them all, and "Deselect" once every type is ticked and clears them, so from "Select" it is
+     * pressed twice to end with nothing ticked. A complete check scrolls through the whole list; a visible
      * check looks at the rows on screen, which is enough once the complete one has passed in another orientation.
      */
     public void multiSelectEventTypes(List<String> eventTypes, boolean completeCheck) {
@@ -135,12 +137,14 @@ public class EventFilterPage {
 
     public void discardEventFilterChangesAndVerifyUnchanged(List<String> appliedEventTypes,
                                                             boolean completeCheck) {
+        Assert.assertFalse(appliedEventTypes.isEmpty(),
+                "At least one applied event type is needed to change and discard");
+        String toggled = appliedEventTypes.get(0);
         openEventFilter();
-        toggleEventType(appliedEventTypes.get(0));
+        toggleEventType(toggled);
         WaitUtils.click(driver, EventFilterLocators.FILTER_CLOSE_BUTTON);
         verifyEventFilterClosed();
         openEventFilter();
-        String toggled = appliedEventTypes.get(0);
         By checkbox = scrollToEventType(toggled);
         Assert.assertTrue(isChecked(checkbox),
                 "Event type '" + toggled + "' should still be selected after closing the filter with X");
@@ -338,7 +342,7 @@ public class EventFilterPage {
         for (int swipes = 0; swipes <= MAX_FILTER_SCROLLS; swipes++) {
             int before = rows.size();
             collectVisibleEventTypes(rows);
-            if (swipes > 0 && rows.size() == before || swipes == MAX_FILTER_SCROLLS) {
+            if ((swipes > 0 && rows.size() == before) || swipes == MAX_FILTER_SCROLLS) {
                 break;
             }
             scrollFilterList(true);
