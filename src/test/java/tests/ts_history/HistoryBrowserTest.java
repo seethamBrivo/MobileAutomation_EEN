@@ -7,9 +7,12 @@ import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import pages.CamerasPage;
+import pages.DevicesPage;
 import pages.EventFilterPage;
 import pages.HistoryBrowserPage;
 import pages.LayoutsPage;
+import pages.VideoSearchPage;
 import utils.DeviceUtils;
 
 public class HistoryBrowserTest extends BaseTest {
@@ -17,6 +20,9 @@ public class HistoryBrowserTest extends BaseTest {
     private LayoutsPage layoutsPage;
     private HistoryBrowserPage historyBrowserPage;
     private EventFilterPage eventFilterPage;
+    private DevicesPage devicesPage;
+    private CamerasPage camerasPage;
+    private VideoSearchPage videoSearchPage;
     private boolean landscapeUsed;
     private boolean eventFilterUsed;
 
@@ -27,7 +33,13 @@ public class HistoryBrowserTest extends BaseTest {
         layoutsPage = null;
         historyBrowserPage = null;
         eventFilterPage = null;
+        devicesPage = null;
+        camerasPage = null;
+        videoSearchPage = null;
         loginAs(TestDataConstants.ENDUSER_CREDS);
+        devicesPage = new DevicesPage(driver);
+        camerasPage = new CamerasPage(driver);
+        videoSearchPage = new VideoSearchPage(driver);
         layoutsPage = new LayoutsPage(driver);
         historyBrowserPage = new HistoryBrowserPage(driver);
         eventFilterPage = new EventFilterPage(driver);
@@ -117,6 +129,36 @@ public class HistoryBrowserTest extends BaseTest {
         eventFilterPage.selectAllEventTypesAndVerify();
         eventFilterPage.deselectAllEventTypesAndVerify();
         eventFilterPage.closeEventFilterWithX();
+    }
+
+    @Test(description = "EEPD-TC-28549: POS-History Browser - Navigate to the current moment in History Browser "
+            + "using Long Press Menu in Dashboard in mobile VMS app",
+          groups = {"regression", "history"})
+    public void verifyHistoryBrowserOpensFromLongPressMenuInCameras() {
+        devicesPage.navigateToDashboard();
+        devicesPage.verifyAllDevicesSectionIsDisplayed();
+        camerasPage.openCamerasList();
+        camerasPage.longPressFirstOnlineCameraAndVerifyContextMenu();
+        String cameraName = camerasPage.readCameraNameInContextMenu();
+        historyBrowserPage.openHistoryBrowserFromContextMenu();
+        historyBrowserPage.verifyPausedHistoryBrowserElementsInPortrait(cameraName);
+        landscapeUsed = true;
+        historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
+        historyBrowserPage.verifyPausedHistoryBrowserElementsInLandscape(cameraName);
+    }
+
+    @Test(description = "EEPD-TC-5497: POS-History Browser - Navigate to the specific moment in the History Browser "
+            + "based on the event selected in Video Search in mobile VMS app",
+          groups = {"regression", "history"})
+    public void verifyHistoryBrowserOpensAtEventSelectedInVideoSearch() {
+        videoSearchPage.openVideoSearch();
+        VideoSearchPage.OpenedEvent event = videoSearchPage.openFirstPersonEvent();
+        videoSearchPage.openHistoryBrowserFromEvent();
+        historyBrowserPage.verifyOpenedAtEventMoment(event.time());
+        historyBrowserPage.verifyPausedHistoryBrowserElementsInPortrait(event.cameraName());
+        landscapeUsed = true;
+        historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
+        historyBrowserPage.verifyPausedHistoryBrowserElementsInLandscape(event.cameraName());
     }
 
     @AfterMethod(alwaysRun = true)

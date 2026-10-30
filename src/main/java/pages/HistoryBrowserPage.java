@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import locators.CamerasLocators;
 import locators.HistoryBrowserLocators;
 import org.apache.logging.log4j.LogManager;
@@ -46,6 +47,13 @@ public class HistoryBrowserPage {
 
     private static final int CONTROL_CLICK_ATTEMPTS = 2;
 
+    private static final String LIVE_BUTTON_TEXT = "Live";
+
+    /** Time zone offsets move in 15 minute steps, the smallest step in use. */
+    private static final int TIME_ZONE_STEP_SECONDS = 15 * 60;
+
+    /** The calendar picker shows the cursor as a full 24-hour date and time. */
+    private static final Pattern CALENDAR_TIMESTAMP = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
 
     private static final String MULTI_WINDOWS_SETTING = "enableMultiWindows";
 
@@ -214,6 +222,45 @@ public class HistoryBrowserPage {
                 "History browser should be in portrait but the screen is " + screen.width + "x" + screen.height);
     }
 
+    /**
+     * Paused video, the screen's header and action bar, the "Timeline" label, the timeline and its controls.
+     *
+     * @param cameraName the name the camera showed before it was opened
+     */
+    public void verifyPausedHistoryBrowserElementsInPortrait(String cameraName) {
+        verifyPlaybackPaused();
+        verifyCameraNameInBackButton(cameraName);
+        verifyHistoryBrowserHeaderAndActions();
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_LABEL).isDisplayed(),
+                "'Timeline' label should be displayed above the timeline");
+        verifyTimelineAndControlsDisplayedInPortrait();
+    }
+
+    /** The same list in landscape; the test case leaves the timeline and its label out, so they are not asserted. */
+    public void verifyPausedHistoryBrowserElementsInLandscape(String cameraName) {
+        verifyPlaybackPaused();
+        verifyCameraNameInBackButton(cameraName);
+        verifyHistoryBrowserHeaderAndActions();
+        verifyTimelineControlsDisplayed();
+    }
+
+    /**
+     * The history browser opens at the moment of the event that was selected. Video Search shows the account's time
+     * and this screen the device's, so on BrowserStack the hours differ. Every time zone's offset is a whole number
+     * of {@value #TIME_ZONE_STEP_SECONDS} s steps, so the two times must differ by such a number; that still fails
+     * for another event, and it holds in any zone. The full time on both screens is logged, and whether the two
+     * screens should agree is a question for the test case author.
+     */
+    public void verifyOpenedAtEventMoment(LocalTime eventTime) {
+        verifyHistoryBrowserDisplayed();
+        LocalDateTime cursor = readCursorPosition();
+        logger.info("Event time on the event page: {}; history browser cursor: {}", eventTime, cursor);
+        int differenceSeconds = eventTime.toSecondOfDay() - cursor.toLocalTime().toSecondOfDay();
+        Assert.assertEquals(Math.floorMod(differenceSeconds, TIME_ZONE_STEP_SECONDS), 0,
+                "History browser should open at the selected event (" + eventTime + ") apart from a time zone "
+                        + "offset, but the cursor is at " + cursor);
+    }
+
     public void rotateToLandscapeAndVerifyHistoryBrowser() {
         DeviceUtils.rotateToLandscape(driver);
         verifyHistoryBrowserDisplayed();
@@ -358,6 +405,49 @@ public class HistoryBrowserPage {
         LocalDateTime observed = readCursorPosition();
         return !WaitUtils.pollUntil(driver, TimeoutConstants.PLAYBACK_PROBE_TIMEOUT,
                 () -> !readCursorPosition().equals(observed));
+    }
+
+    /** A long name is cut with an ellipsis in one place and maybe not in the other, so the shared start is compared. */
+    private void verifyCameraNameInBackButton(String expectedName) {
+        String shown = withoutEllipsis(
+                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CAMERA_NAME).getText());
+        String expected = withoutEllipsis(expectedName);
+        Assert.assertFalse(shown.isBlank(), "Camera name should be shown in the back navigation button");
+        Assert.assertTrue(shown.startsWith(expected) || expected.startsWith(shown),
+                "Back navigation button should show the camera name '" + expected + "' but showed '" + shown + "'");
+    }
+
+    private static String withoutEllipsis(String name) {
+        return name.trim().replaceAll("(\\.\\.\\.|\\u2026)$", "");
+    }
+
+    private void verifyHistoryBrowserHeaderAndActions() {
+        Assert.assertEquals(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.NAVIGATION_BUTTON).getText(),
+                LIVE_BUTTON_TEXT, "Button to switch to the live video should read '" + LIVE_BUTTON_TEXT + "'");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.PLAYER_PREVIEW).isDisplayed(),
+                "Camera preview should be displayed");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SAVE_BUTTON).isDisplayed(),
+                "Save button should be displayed");
+        String calendarTimestamp = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CURRENT_POSITION)
+                .getText();
+        Assert.assertTrue(CALENDAR_TIMESTAMP.matcher(calendarTimestamp).matches(),
+                "Calendar picker should show a 'YYYY-MM-DD HH:MM:SS' timestamp but showed '" + calendarTimestamp + "'");
+        verifyFilterButtonEnabledWhenEventsShown();
+    }
+
+    /**
+     * The test case enables the filter only when an event is available, and disables it otherwise. Only the shown
+     * part of the timeline is visible, so an empty view does not prove there are no events anywhere: the enabled
+     * state is asserted when an event card is shown and only logged when none is.
+     */
+    private void verifyFilterButtonEnabledWhenEventsShown() {
+        WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS);
+        boolean enabled = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILTER_BUTTON).isEnabled();
+        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES, TimeoutConstants.SHORT_TIMEOUT)) {
+            Assert.assertTrue(enabled, "Filter button should be enabled while the timeline shows events");
+        } else {
+            logger.info("No event card on the shown timeline; filter button enabled: {} (not asserted)", enabled);
+        }
     }
 
     private void verifyHistoryBrowserDisplayed() {

@@ -353,6 +353,20 @@ public class CamerasPage {
         verifyTimestampDisplayed();
     }
 
+    /** Long presses the first online camera and checks the context menu: foreground menu, options and preview. */
+    public void longPressFirstOnlineCameraAndVerifyContextMenu() {
+        verifyFirstOnlineCameraFound();
+        longPressFirstOnlineCamera();
+        verifyContextMenuDisplayed();
+        verifyAllContextMenuOptions(true);
+        verifyCameraPreviewDisplayed();
+    }
+
+    /** The camera's name as the open context menu shows it, which the history browser must show again. */
+    public String readCameraNameInContextMenu() {
+        return WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_NAME_IN_PREVIEW).getText();
+    }
+
     public void verifyCanInteractWithFilteredCamera() {
         longPressFirstCamera();
         verifyContextMenuDisplayed();

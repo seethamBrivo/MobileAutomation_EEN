@@ -36,6 +36,18 @@ public final class HistoryBrowserLocators {
     public static final By HISTORY_BROWSER_SCREEN =
             AppiumBy.accessibilityId("HistoryBrowser");
 
+    // The back button's label: the camera's name.
+    public static final By CAMERA_NAME =
+            AppiumBy.id("com.een.vms.android:id/camera_name");
+
+    // The player holds the camera preview (a still frame while paused) and the event overlay.
+    public static final By PLAYER_PREVIEW =
+            AppiumBy.id("com.een.vms.android:id/player_container");
+
+    // The save (export) button of the action bar, left of the calendar picker.
+    public static final By SAVE_BUTTON =
+            AppiumBy.id("com.een.vms.android:id/export");
+
     // The red line stays fixed while the rows scroll under it, so the cursor position is the time shown here.
     public static final By CURRENT_POSITION =
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/calendar']"
@@ -89,6 +101,11 @@ public final class HistoryBrowserLocators {
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
                     + "//*[@resource-id='com.een.vms.android:id/event_card']"
                     + "//android.widget.TextView[@resource-id='com.een.vms.android:id/name']");
+
+    // The title above the rows shares the "timeline" id with the panel around it, so the text tells them apart.
+    public static final By TIMELINE_LABEL =
+            AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/timeline'"
+                    + " and @text='Timeline']");
 
     // The "content" id is shared with other screens, so the list is scoped to the timeline container.
     public static final By TIMELINE_LIST =

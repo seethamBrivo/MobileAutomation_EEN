@@ -1,23 +1,39 @@
 package pages;
 
+import constants.TimeoutConstants;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import io.appium.java_client.AppiumDriver;
 import locators.VideoSearchLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
+import org.testng.SkipException;
 import utils.WaitUtils;
 
 public class VideoSearchPage {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH);
 
+    private static final DateTimeFormatter EVENT_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH);
+
+    /** The test case says the event time never carries milliseconds. */
+    private static final Pattern EVENT_TIME_FORMAT = Pattern.compile("\\d{2}:\\d{2}:\\d{2}");
+
+    private static final Pattern EVENT_COUNTER_FORMAT = Pattern.compile("\\d+/\\d+");
+
     private static final Logger logger = LogManager.getLogger(VideoSearchPage.class);
     private final AppiumDriver driver;
+
+    /** What the event page showed, so the history browser can be compared with it. */
+    public record OpenedEvent(String cameraName, LocalTime time) {}
 
     public VideoSearchPage(AppiumDriver driver) {
         this.driver = driver;
@@ -29,6 +45,59 @@ public class VideoSearchPage {
 
     public void clickSearch() {
         WaitUtils.click(driver, VideoSearchLocators.SEARCH_OPTION);
+    }
+
+    public void openVideoSearch() {
+        clickSearch();
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VideoSearchLocators.VIDEO_SEARCH_SCREEN).isDisplayed(),
+                "Video Search home page should be displayed");
+    }
+
+    /**
+     * Opens the first card of the Person section. The sections are waited for first, so a slow load fails here
+     * and only an empty section is skipped.
+     */
+    public OpenedEvent openFirstPersonEvent() {
+        WaitUtils.waitForVisibility(driver, VideoSearchLocators.LATEST_EVENTS_HEADLINE);
+        Assert.assertTrue(WaitUtils.waitForInvisibility(
+                        driver, VideoSearchLocators.PEOPLE_LOADING, TimeoutConstants.LIST_LOAD_TIMEOUT),
+                "Person section should finish loading within " + TimeoutConstants.LIST_LOAD_TIMEOUT);
+        if (!WaitUtils.isVisible(driver, VideoSearchLocators.FIRST_PERSON_CARD, TimeoutConstants.SHORT_TIMEOUT)) {
+            throw new SkipException("Video Search shows no Person event, so there is no event to open");
+        }
+        WaitUtils.click(driver, VideoSearchLocators.FIRST_PERSON_CARD);
+        return verifyEventPageDetails();
+    }
+
+    public void openHistoryBrowserFromEvent() {
+        WaitUtils.click(driver, VideoSearchLocators.VIEW_IN_HISTORY_BROWSER_BUTTON);
+    }
+
+    /** Camera name, date, time of day, event counter, relevant tags and the button to the history browser. */
+    private OpenedEvent verifyEventPageDetails() {
+        String cameraName = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_CAMERA_NAME).getText();
+        Assert.assertFalse(cameraName.isBlank(), "Event page should show the camera name");
+        String date = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_DATE).getText();
+        try {
+            EVENT_DATE_FORMAT.parse(date.trim());
+        } catch (DateTimeParseException e) {
+            throw new AssertionError("Event page date '" + date + "' is not in the 'MMMM d, yyyy' format", e);
+        }
+        String time = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
+        Assert.assertTrue(EVENT_TIME_FORMAT.matcher(time).matches(),
+                "Event timestamp should be HH:mm:ss without milliseconds but was '" + time + "'");
+        String counter = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_COUNTER).getText();
+        Assert.assertTrue(EVENT_COUNTER_FORMAT.matcher(counter).matches(),
+                "Event counter should read 'current/total' but was '" + counter + "'");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TAGS_TITLE).isDisplayed(),
+                "'Relevant tags' title should be displayed on the event page");
+        Assert.assertFalse(WaitUtils.findElements(driver, VideoSearchLocators.EVENT_TAGS).isEmpty(),
+                "Event page should show at least one relevant tag");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VideoSearchLocators.VIEW_IN_HISTORY_BROWSER_BUTTON)
+                        .isDisplayed(),
+                "'View in history browser' button should be displayed on the event page");
+        logger.info("Event page: camera '{}', date '{}', time {}, counter {}", cameraName, date, time, counter);
+        return new OpenedEvent(cameraName, LocalTime.parse(time));
     }
 
     public String captureDateFieldText() {
