@@ -10,6 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import locators.CamerasLocators;
 import locators.HistoryBrowserLocators;
@@ -51,6 +53,9 @@ public class HistoryBrowserPage {
 
     /** Time zone offsets move in 15 minute steps, the smallest step in use. */
     private static final int TIME_ZONE_STEP_SECONDS = 15 * 60;
+
+    /** The history browser opens a moment after the menu whose frame time it is compared with. */
+    private static final int CURRENT_MOMENT_TOLERANCE_SECONDS = 120;
 
     /** The widest gap between two zones: UTC+14 and UTC-12 are 26 hours apart. */
     private static final long MAX_TIME_ZONE_GAP_SECONDS = 26 * 60 * 60;
@@ -260,16 +265,16 @@ public class HistoryBrowserPage {
      * and this screen the device's, so on BrowserStack the two read hours apart (16:23:44 against 03:53:44) and an
      * exact match would fail on every run. Both are the same instant in two zones, so their date-times must differ
      * by a time zone gap: a whole number of {@value #TIME_ZONE_STEP_SECONDS} s steps, at most
-     * {@value #MAX_TIME_ZONE_GAP_SECONDS} s (UTC+14 against UTC-12). That also catches a wrong day. The screen may
-     * still show its first position while it seeks to the event, so the cursor is polled until the gap is valid and
-     * then read again for the assert. Both times are logged, and whether the two screens should agree is a question
-     * for the test case author.
+     * {@value #MAX_TIME_ZONE_GAP_SECONDS} s (UTC+14 against UTC-12). That rejects another event more than that apart;
+     * an event exactly one day away at the same time of day would still pass, because a day is a whole number of
+     * steps and within the limit. The screen may still show its first position while it seeks to the event, so the
+     * cursor is polled until the gap is valid, and the value that ended the poll is the one asserted. Both times are
+     * logged, and whether the two screens should agree is a question for the test case author.
      */
     public void verifyOpenedAtEventMoment(LocalDateTime eventTime) {
         verifyHistoryBrowserDisplayed();
-        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
-                () -> isTimeZoneGap(Duration.between(readCursorPosition(), eventTime).getSeconds()));
-        LocalDateTime cursor = readCursorPosition();
+        LocalDateTime cursor = pollCursor(
+                position -> isTimeZoneGap(Duration.between(position, eventTime).getSeconds()));
         long gapSeconds = Duration.between(cursor, eventTime).getSeconds();
         logger.info("Event time on the event page: {}; history browser cursor: {}; gap {} s",
                 eventTime, cursor, gapSeconds);
@@ -281,9 +286,50 @@ public class HistoryBrowserPage {
                         + " s apart, more than any two time zones");
     }
 
+    /**
+     * The test case calls this "the current moment": the history browser opens at the frame the long press menu
+     * showed. The menu carries no date, so only the time of day is compared. On BrowserStack both screens showed the
+     * device's zone (43 s apart), but a whole time zone gap is still allowed so that an account zone cannot fail
+     * the test. The screen opens a moment after the menu, so the cursor may be up to
+     * {@value #CURRENT_MOMENT_TOLERANCE_SECONDS} s from the menu's time. Both times are logged.
+     */
+    public void verifyOpenedAtCurrentMoment(LocalTime menuFrameTime) {
+        verifyHistoryBrowserDisplayed();
+        LocalDateTime cursor = pollCursor(
+                position -> secondsOffTimeZoneGap(menuFrameTime, position) <= CURRENT_MOMENT_TOLERANCE_SECONDS);
+        long offSeconds = secondsOffTimeZoneGap(menuFrameTime, cursor);
+        logger.info("Frame time in the context menu: {}; history browser cursor: {}; {} s off a time zone gap",
+                menuFrameTime, cursor, offSeconds);
+        Assert.assertTrue(offSeconds <= CURRENT_MOMENT_TOLERANCE_SECONDS,
+                "History browser should open at the current moment (" + menuFrameTime + " in the menu) apart from a "
+                        + "time zone gap, but the cursor is at " + cursor + ", " + offSeconds + " s off");
+    }
+
+    /**
+     * Polls the cursor until {@code accepted} holds and returns the last position read, so the assert that follows
+     * sees the value the poll ended on and not a later read that may have moved. When it never holds, the last
+     * position is returned and the assert fails with it.
+     */
+    private LocalDateTime pollCursor(Predicate<LocalDateTime> accepted) {
+        AtomicReference<LocalDateTime> last = new AtomicReference<>();
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> {
+            last.set(readCursorPosition());
+            return accepted.test(last.get());
+        });
+        LocalDateTime position = last.get();
+        return position != null ? position : readCursorPosition();
+    }
+
     private static boolean isTimeZoneGap(long gapSeconds) {
         return Math.floorMod(gapSeconds, (long) TIME_ZONE_STEP_SECONDS) == 0
                 && Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS;
+    }
+
+    /** How far the two times of day are from the nearest whole time zone step: 0 when they differ by a pure gap. */
+    private static long secondsOffTimeZoneGap(LocalTime menuTime, LocalDateTime cursor) {
+        int differenceSeconds = menuTime.toSecondOfDay() - cursor.toLocalTime().toSecondOfDay();
+        int half = TIME_ZONE_STEP_SECONDS / 2;
+        return Math.abs(Math.floorMod(differenceSeconds + half, TIME_ZONE_STEP_SECONDS) - half);
     }
 
     public void rotateToLandscapeAndVerifyHistoryBrowser() {

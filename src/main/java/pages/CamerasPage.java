@@ -2,6 +2,11 @@ package pages;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Locale;
 import locators.CamerasLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,6 +37,10 @@ public class CamerasPage {
         STATUS_ONLINE, STATUS_OFFLINE, STATUS_INVALID_CREDENTIALS,
         STATUS_DEVICE_ERROR, STATUS_CONNECTIVITY_ISSUE, STATUS_TURNED_OFF, STATUS_CAMERA_ERROR
     };
+
+    /** The menu shows the frame time in the account's time format: 12 hour with AM/PM, or 24 hour. */
+    private static final List<DateTimeFormatter> FRAME_TIME_FORMATS = List.of(
+            DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH), DateTimeFormatter.ofPattern("HH:mm:ss"));
 
     public CamerasPage(AppiumDriver driver) {
         this.driver = driver;
@@ -367,6 +376,24 @@ public class CamerasPage {
     /** The camera's name as the open context menu shows it, which the history browser must show again. */
     public String readCameraNameInContextMenu() {
         return WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_NAME_IN_PREVIEW).getText();
+    }
+
+    /**
+     * The time of the frame the open context menu of an online camera shows, in the account's 12 or 24 hour format
+     * ("07:15:10 AM" or "19:15:10").
+     */
+    public LocalTime readFrameTimeInContextMenu() {
+        String shown = WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_FRAME_TIME_IN_PREVIEW)
+                .getText().trim();
+        for (DateTimeFormatter format : FRAME_TIME_FORMATS) {
+            try {
+                return LocalTime.parse(shown, format);
+            } catch (DateTimeParseException e) {
+                logger.debug("Frame time '{}' is not in format {}", shown, format);
+            }
+        }
+        throw new AssertionError("Frame time '" + shown + "' in the context menu is neither 'hh:mm:ss a' nor "
+                + "'HH:mm:ss'; check the account's time format");
     }
 
     public void verifyCanInteractWithFilteredCamera() {

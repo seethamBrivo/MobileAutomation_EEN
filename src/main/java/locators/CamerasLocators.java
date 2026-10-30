@@ -98,6 +98,11 @@ public final class CamerasLocators {
                     + "/preceding-sibling::android.view.View[1]/android.widget.TextView[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeButton[@name='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
 
+    /** Android only: the time of the frame, the card's second direct-child text on an online camera. */
+    public static final By CAMERA_FRAME_TIME_IN_PREVIEW =
+            AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
+                    + "/preceding-sibling::android.view.View[1]/android.widget.TextView[2]");
+
     // iOS: the timestamp exists in the hierarchy but is reported as not visible, so it is checked for presence.
     public static final By TIMESTAMP = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[contains(@text, ':')]"), // android

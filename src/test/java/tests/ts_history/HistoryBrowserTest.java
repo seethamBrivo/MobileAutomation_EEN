@@ -2,6 +2,7 @@ package tests.ts_history;
 
 import base.BaseTest;
 import constants.TestDataConstants;
+import java.time.LocalTime;
 import java.util.List;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
@@ -140,7 +141,9 @@ public class HistoryBrowserTest extends BaseTest {
         camerasPage.openCamerasList();
         camerasPage.longPressFirstOnlineCameraAndVerifyContextMenu();
         String cameraName = camerasPage.readCameraNameInContextMenu();
+        LocalTime frameTime = camerasPage.readFrameTimeInContextMenu();
         historyBrowserPage.openHistoryBrowserFromContextMenu();
+        historyBrowserPage.verifyOpenedAtCurrentMoment(frameTime);
         verifyPausedHistoryBrowserInPortraitAndLandscape(cameraName);
     }
 

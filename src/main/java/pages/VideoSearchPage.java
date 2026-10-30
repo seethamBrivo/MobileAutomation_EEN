@@ -65,8 +65,7 @@ public class VideoSearchPage {
     public OpenedEvent openFirstPersonEvent() {
         WaitUtils.waitForVisibility(driver, VideoSearchLocators.LATEST_EVENTS_HEADLINE);
         if (!WaitUtils.isVisible(driver, VideoSearchLocators.FIRST_PERSON_CARD, TimeoutConstants.LIST_LOAD_TIMEOUT)) {
-            Assert.assertFalse(
-                    WaitUtils.isVisible(driver, VideoSearchLocators.PEOPLE_LOADING, TimeoutConstants.SHORT_TIMEOUT),
+            Assert.assertFalse(WaitUtils.isPresent(driver, VideoSearchLocators.PEOPLE_LOADING),
                     "Person section should finish loading within " + TimeoutConstants.LIST_LOAD_TIMEOUT.toSeconds()
                             + " s");
             throw new SkipException("Video Search shows no Person event, so there is no event to open");
@@ -90,8 +89,11 @@ public class VideoSearchPage {
         } catch (DateTimeParseException e) {
             throw new AssertionError("Event page date '" + date + "' is not in the 'MMMM d, yyyy' format", e);
         }
-        // Only the shown key image has a time. Reading one of several would compare the wrong moment.
-        List<WebElement> times = WaitUtils.findElements(driver, VideoSearchLocators.EVENT_TIME);
+        // Only the shown key image has a time, and a neighbouring key image kept in the hierarchy off-screen must not
+        // count. Reading one of several would compare the wrong moment.
+        List<WebElement> times = WaitUtils.findElements(driver, VideoSearchLocators.EVENT_TIME).stream()
+                .filter(WebElement::isDisplayed)
+                .toList();
         Assert.assertEquals(times.size(), 1,
                 "Event page should show the time of one key image but shows " + times.size());
         String time = times.get(0).getText();
