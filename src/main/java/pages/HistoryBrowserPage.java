@@ -52,6 +52,15 @@ public class HistoryBrowserPage {
     /** Time zone offsets move in 15 minute steps, the smallest step in use. */
     private static final int TIME_ZONE_STEP_SECONDS = 15 * 60;
 
+    /** The widest gap between two zones: UTC+14 and UTC-12 are 26 hours apart. */
+    private static final long MAX_TIME_ZONE_GAP_SECONDS = 26 * 60 * 60;
+
+    /** What must be left of a cut camera name before it can stand for a longer one. */
+    private static final int MIN_CUT_NAME_PREFIX_LENGTH = 3;
+
+    /** A long camera name is cut with three dots or the ellipsis character. */
+    private static final Pattern NAME_CUT_MARK = Pattern.compile("(\\.\\.\\.|\\u2026)$");
+
     /** The calendar picker shows the cursor as a full 24-hour date and time. */
     private static final Pattern CALENDAR_TIMESTAMP = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
 
@@ -228,9 +237,7 @@ public class HistoryBrowserPage {
      * @param cameraName the name the camera showed before it was opened
      */
     public void verifyPausedHistoryBrowserElementsInPortrait(String cameraName) {
-        verifyPlaybackPaused();
-        verifyCameraNameInBackButton(cameraName);
-        verifyHistoryBrowserHeaderAndActions();
+        verifyCommonPausedElements(cameraName);
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_LABEL).isDisplayed(),
                 "'Timeline' label should be displayed above the timeline");
         verifyTimelineAndControlsDisplayedInPortrait();
@@ -238,27 +245,45 @@ public class HistoryBrowserPage {
 
     /** The same list in landscape; the test case leaves the timeline and its label out, so they are not asserted. */
     public void verifyPausedHistoryBrowserElementsInLandscape(String cameraName) {
+        verifyCommonPausedElements(cameraName);
+        verifyTimelineControlsDisplayed();
+    }
+
+    private void verifyCommonPausedElements(String cameraName) {
         verifyPlaybackPaused();
         verifyCameraNameInBackButton(cameraName);
         verifyHistoryBrowserHeaderAndActions();
-        verifyTimelineControlsDisplayed();
     }
 
     /**
      * The history browser opens at the moment of the event that was selected. Video Search shows the account's time
-     * and this screen the device's, so on BrowserStack the hours differ. Every time zone's offset is a whole number
-     * of {@value #TIME_ZONE_STEP_SECONDS} s steps, so the two times must differ by such a number; that still fails
-     * for another event, and it holds in any zone. The full time on both screens is logged, and whether the two
-     * screens should agree is a question for the test case author.
+     * and this screen the device's, so on BrowserStack the two read hours apart (16:23:44 against 03:53:44) and an
+     * exact match would fail on every run. Both are the same instant in two zones, so their date-times must differ
+     * by a time zone gap: a whole number of {@value #TIME_ZONE_STEP_SECONDS} s steps, at most
+     * {@value #MAX_TIME_ZONE_GAP_SECONDS} s (UTC+14 against UTC-12). That also catches a wrong day. The screen may
+     * still show its first position while it seeks to the event, so the cursor is polled until the gap is valid and
+     * then read again for the assert. Both times are logged, and whether the two screens should agree is a question
+     * for the test case author.
      */
-    public void verifyOpenedAtEventMoment(LocalTime eventTime) {
+    public void verifyOpenedAtEventMoment(LocalDateTime eventTime) {
         verifyHistoryBrowserDisplayed();
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
+                () -> isTimeZoneGap(Duration.between(readCursorPosition(), eventTime).getSeconds()));
         LocalDateTime cursor = readCursorPosition();
-        logger.info("Event time on the event page: {}; history browser cursor: {}", eventTime, cursor);
-        int differenceSeconds = eventTime.toSecondOfDay() - cursor.toLocalTime().toSecondOfDay();
-        Assert.assertEquals(Math.floorMod(differenceSeconds, TIME_ZONE_STEP_SECONDS), 0,
+        long gapSeconds = Duration.between(cursor, eventTime).getSeconds();
+        logger.info("Event time on the event page: {}; history browser cursor: {}; gap {} s",
+                eventTime, cursor, gapSeconds);
+        Assert.assertEquals(Math.floorMod(gapSeconds, (long) TIME_ZONE_STEP_SECONDS), 0L,
                 "History browser should open at the selected event (" + eventTime + ") apart from a time zone "
-                        + "offset, but the cursor is at " + cursor);
+                        + "gap, but the cursor is at " + cursor);
+        Assert.assertTrue(Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS,
+                "Event time " + eventTime + " and cursor " + cursor + " are " + gapSeconds
+                        + " s apart, more than any two time zones");
+    }
+
+    private static boolean isTimeZoneGap(long gapSeconds) {
+        return Math.floorMod(gapSeconds, (long) TIME_ZONE_STEP_SECONDS) == 0
+                && Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS;
     }
 
     public void rotateToLandscapeAndVerifyHistoryBrowser() {
@@ -407,18 +432,30 @@ public class HistoryBrowserPage {
                 () -> !readCursorPosition().equals(observed));
     }
 
-    /** A long name is cut with an ellipsis in one place and maybe not in the other, so the shared start is compared. */
+    /**
+     * The names must be equal. The one exception is a name that one screen cut short with an ellipsis: the other
+     * screen's name must then start with what is left, and that must be at least
+     * {@value #MIN_CUT_NAME_PREFIX_LENGTH} characters, so a short name cannot match a longer one by accident.
+     */
     private void verifyCameraNameInBackButton(String expectedName) {
-        String shown = withoutEllipsis(
-                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CAMERA_NAME).getText());
-        String expected = withoutEllipsis(expectedName);
-        Assert.assertFalse(shown.isBlank(), "Camera name should be shown in the back navigation button");
-        Assert.assertTrue(shown.startsWith(expected) || expected.startsWith(shown),
+        String shown = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CAMERA_NAME).getText().trim();
+        String expected = expectedName.trim();
+        Assert.assertFalse(expected.isEmpty(), "The camera name seen before opening should not be empty");
+        Assert.assertFalse(shown.isEmpty(), "Camera name should be shown in the back navigation button");
+        boolean sameCamera = shown.equals(expected)
+                || (isCut(expected) && startsWithCutName(shown, expected))
+                || (isCut(shown) && startsWithCutName(expected, shown));
+        Assert.assertTrue(sameCamera,
                 "Back navigation button should show the camera name '" + expected + "' but showed '" + shown + "'");
     }
 
-    private static String withoutEllipsis(String name) {
-        return name.trim().replaceAll("(\\.\\.\\.|\\u2026)$", "");
+    private static boolean isCut(String name) {
+        return NAME_CUT_MARK.matcher(name).find();
+    }
+
+    private static boolean startsWithCutName(String fullName, String cutName) {
+        String kept = NAME_CUT_MARK.matcher(cutName).replaceAll("");
+        return kept.length() >= MIN_CUT_NAME_PREFIX_LENGTH && fullName.startsWith(kept);
     }
 
     private void verifyHistoryBrowserHeaderAndActions() {
@@ -438,12 +475,15 @@ public class HistoryBrowserPage {
     /**
      * The test case enables the filter only when an event is available, and disables it otherwise. Only the shown
      * part of the timeline is visible, so an empty view does not prove there are no events anywhere: the enabled
-     * state is asserted when an event card is shown and only logged when none is.
+     * state is asserted when an event card is shown and only logged when none is. The cards get the settling
+     * budget after the rows, so a slow render does not read as "no events", and the button is read last.
      */
     private void verifyFilterButtonEnabledWhenEventsShown() {
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS);
+        boolean eventsShown = WaitUtils.isVisible(
+                driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT);
         boolean enabled = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILTER_BUTTON).isEnabled();
-        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_EVENT_NAMES, TimeoutConstants.SHORT_TIMEOUT)) {
+        if (eventsShown) {
             Assert.assertTrue(enabled, "Filter button should be enabled while the timeline shows events");
         } else {
             logger.info("No event card on the shown timeline; filter button enabled: {} (not asserted)", enabled);

@@ -141,10 +141,7 @@ public class HistoryBrowserTest extends BaseTest {
         camerasPage.longPressFirstOnlineCameraAndVerifyContextMenu();
         String cameraName = camerasPage.readCameraNameInContextMenu();
         historyBrowserPage.openHistoryBrowserFromContextMenu();
-        historyBrowserPage.verifyPausedHistoryBrowserElementsInPortrait(cameraName);
-        landscapeUsed = true;
-        historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
-        historyBrowserPage.verifyPausedHistoryBrowserElementsInLandscape(cameraName);
+        verifyPausedHistoryBrowserInPortraitAndLandscape(cameraName);
     }
 
     @Test(description = "EEPD-TC-5497: POS-History Browser - Navigate to the specific moment in the History Browser "
@@ -154,11 +151,8 @@ public class HistoryBrowserTest extends BaseTest {
         videoSearchPage.openVideoSearch();
         VideoSearchPage.OpenedEvent event = videoSearchPage.openFirstPersonEvent();
         videoSearchPage.openHistoryBrowserFromEvent();
-        historyBrowserPage.verifyOpenedAtEventMoment(event.time());
-        historyBrowserPage.verifyPausedHistoryBrowserElementsInPortrait(event.cameraName());
-        landscapeUsed = true;
-        historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
-        historyBrowserPage.verifyPausedHistoryBrowserElementsInLandscape(event.cameraName());
+        historyBrowserPage.verifyOpenedAtEventMoment(event.dateTime());
+        verifyPausedHistoryBrowserInPortraitAndLandscape(event.cameraName());
     }
 
     @AfterMethod(alwaysRun = true)
@@ -179,6 +173,14 @@ public class HistoryBrowserTest extends BaseTest {
         } finally {
             super.tearDown(testResult);
         }
+    }
+
+    /** The portrait screen, then the rotation, then the landscape screen: the last steps of both opening tests. */
+    private void verifyPausedHistoryBrowserInPortraitAndLandscape(String cameraName) {
+        historyBrowserPage.verifyPausedHistoryBrowserElementsInPortrait(cameraName);
+        landscapeUsed = true;
+        historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
+        historyBrowserPage.verifyPausedHistoryBrowserElementsInLandscape(cameraName);
     }
 
     /** One cleanup step: a failure is logged and the next step still runs. */

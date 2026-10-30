@@ -22,6 +22,11 @@ public final class VideoSearchLocators {
 
     // --- Video Search home -----------------------------------------------------------
 
+    // The bottom bar's Search tab, found by its content-desc inside the bar so no other "Search" text can match.
+    public static final By SEARCH_TAB =
+            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/bottom_navigation']"
+                    + "//*[@content-desc='Search']");
+
     public static final By VIDEO_SEARCH_SCREEN = AppiumBy.accessibilityId("VideoSearchMain");
 
     public static final By LATEST_EVENTS_HEADLINE = AppiumBy.id("com.een.vms.android:id/latest_events_headline");

@@ -91,10 +91,11 @@ public final class CamerasLocators {
                     + "/preceding-sibling::android.view.View[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeButton[@name='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
 
-    // Android: the name is the card's first text; the time of the frame follows it.
+    // Android: the name is the first text that is a direct child of the card. An offline or error card also holds a
+    // status text ("Offline"), but it sits inside a nested View, so only a direct child is the name on every card.
     public static final By CAMERA_NAME_IN_PREVIEW = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
-                    + "/preceding-sibling::android.view.View[1]//android.widget.TextView[1]"), // android
+                    + "/preceding-sibling::android.view.View[1]/android.widget.TextView[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeButton[@name='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
 
     // iOS: the timestamp exists in the hierarchy but is reported as not visible, so it is checked for presence.

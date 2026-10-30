@@ -347,19 +347,21 @@ public class CamerasPage {
     /** Closes the menu, finds the first online camera, long presses it and checks the timestamp. */
     public void verifyFirstOnlineCameraContextMenu() {
         dismissContextMenu();
-        verifyFirstOnlineCameraFound();
-        longPressFirstOnlineCamera();
-        verifyContextMenuDisplayed();
+        openContextMenuOfFirstOnlineCamera();
         verifyTimestampDisplayed();
     }
 
     /** Long presses the first online camera and checks the context menu: foreground menu, options and preview. */
     public void longPressFirstOnlineCameraAndVerifyContextMenu() {
+        openContextMenuOfFirstOnlineCamera();
+        verifyAllContextMenuOptions(true);
+        verifyCameraPreviewDisplayed();
+    }
+
+    private void openContextMenuOfFirstOnlineCamera() {
         verifyFirstOnlineCameraFound();
         longPressFirstOnlineCamera();
         verifyContextMenuDisplayed();
-        verifyAllContextMenuOptions(true);
-        verifyCameraPreviewDisplayed();
     }
 
     /** The camera's name as the open context menu shows it, which the history browser must show again. */
