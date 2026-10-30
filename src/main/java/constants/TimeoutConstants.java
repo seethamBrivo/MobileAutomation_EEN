@@ -53,6 +53,9 @@ public final class TimeoutConstants {
     public static final Duration SWIPE_MOVE = Duration.ofMillis(700);
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);
 
+    /** Pause before lifting the finger at the end of a drag, so a list stops where the finger does. */
+    public static final Duration DRAG_HOLD = Duration.ofMillis(200);
+
     /** Max wait for device to stabilize after rotation (detects window size change, not a sleep). */
     public static final Duration ROTATION_STABILIZE = Duration.ofMillis(2000);
 }

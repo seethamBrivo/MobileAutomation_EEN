@@ -132,6 +132,21 @@ public final class GestureUtils {
         driver.perform(List.of(swipeSequence));
     }
 
+    /** Like {@link #swipe}, but holds still before lifting the finger so the list stops instead of flinging. */
+    public static void dragAndHold(AppiumDriver driver, int startX, int startY, int endX, int endY) {
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+        Sequence dragSequence = new Sequence(finger, 1);
+        dragSequence.addAction(
+                finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY));
+        dragSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        dragSequence.addAction(new Pause(finger, TimeoutConstants.SWIPE_PAUSE));
+        dragSequence.addAction(
+                finger.createPointerMove(TimeoutConstants.SWIPE_MOVE, PointerInput.Origin.viewport(), endX, endY));
+        dragSequence.addAction(new Pause(finger, TimeoutConstants.DRAG_HOLD));
+        dragSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        driver.perform(List.of(dragSequence));
+    }
+
     /**
      * Taps the center of the screen.
      */

@@ -14,4 +14,10 @@ public final class UiTextConstants {
     public static final String SEARCH_PLACEHOLDER = "Filter by camera";
     public static final String EMPTY_STATE_MESSAGE = "No matching cameras";
     public static final String CAMERA_COUNTER_TEXT = " camera";
+
+    // History browser event filter sheet
+    public static final String EVENT_FILTERS_TITLE = "Event filters";
+    public static final String TIMELINE_EVENTS_HEADER = "TIMELINE EVENTS";
+    public static final String SELECT_ALL_LABEL = "Select";
+    public static final String DESELECT_ALL_LABEL = "Deselect";
 }
