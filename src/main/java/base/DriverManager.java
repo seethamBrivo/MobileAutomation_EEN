@@ -22,6 +22,7 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriverException;
 import utils.BrowserStackSessionNameHelper;
 import utils.ConfigReader;
+import utils.PlatformLocator;
 
 public final class DriverManager {
 
@@ -308,7 +309,10 @@ public final class DriverManager {
         }
 
         String networkLogs = ConfigReader.getProperty("browserstackNetworkLogs");
-        if (isValidProperty(networkLogs)) {
+        if (PlatformLocator.isIos()) {
+            // On iOS the logging proxy stops the camera video from loading, so it stays off whatever the config says.
+            browserStackOptions.put("networkLogs", false);
+        } else if (isValidProperty(networkLogs)) {
             browserStackOptions.put("networkLogs", Boolean.parseBoolean(networkLogs));
         }
 

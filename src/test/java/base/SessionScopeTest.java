@@ -17,9 +17,12 @@ public class SessionScopeTest {
                 {"method", "android", SessionScope.METHOD},
                 {" Method ", "android", SessionScope.METHOD},
                 {"anything-else", "android", SessionScope.CLASS},
-                // Only the Android page objects implement relaunch / landing-screen checks.
-                {null, "ios", SessionScope.METHOD},
-                {"class", "ios", SessionScope.METHOD},
+                // iOS follows the same rule as Android (its login page implements relaunch / landing-screen checks).
+                {null, "ios", SessionScope.CLASS},
+                {"class", "ios", SessionScope.CLASS},
+                {"method", "ios", SessionScope.METHOD},
+                // Any other platform has no relaunch / landing-screen checks.
+                {null, "windows", SessionScope.METHOD},
                 {"class", null, SessionScope.METHOD},
         };
     }

@@ -24,7 +24,7 @@ public class ResellerDashboardTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-4516: POS-Reseller Dashboard - (View Dashboard for Reseller) in mobile VMS app",
-          groups = {"regression", "dashboard"})
+          groups = {"regression", "dashboard", "ios"})
     public void verifyResellerDashboard() {
         resellerDashboardPage.verifyDashboardSummary();
         resellerDashboardPage.verifyAccountCardContents(getTestDataValue("bridge-account-name"));

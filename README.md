@@ -147,7 +147,7 @@ A test that only passes on retry is flaky: check the earlier attempt's session b
 
 ### Session scope: one session and login per class
 
-By default (`-DsessionScope=class`, Android only) a test class runs in **one Appium session**, and its
+By default (`-DsessionScope=class`, Android and iOS) a test class runs in **one Appium session**, and its
 tests reuse the login:
 
 - `BaseTest` opens the session in `@BeforeClass` and quits it in `@AfterClass`. The session name is the
@@ -159,13 +159,42 @@ tests reuse the login:
   with `mobile: clearApp`. Cleanup of test data is unchanged (the `@AfterMethod` hooks).
 - A dead Appium session is replaced at the start of the next test.
 - `-DsessionScope=method` restores the old behaviour (new session, UI login and logout per test); use it
-  to compare timings. iOS always uses `method`.
+  to compare timings.
+- iOS follows the same scope through the same `loginAs(account)`: it relaunches the app (`mobile: terminateApp` +
+  `activateApp`) and reuses the login if the app comes back signed in. iOS has no UI logout, so a different
+  account gets a new session.
 - The app has no deep link to its dashboard (its manifest only declares `/camera_history/`,
   `/camera_history_status/` and `/notification/` links), so relaunching `MainActivity` is the way back.
+
+### iOS tests
+
+Android and iOS share the same locator, page and test classes. Each element in a locator class holds both
+platforms' values, picked once by `PlatformLocator.get(android, ios)` from `-Dplatform`; pages only branch where the
+iOS flow really differs (for example, aspect ratio is chosen from a list screen on iOS). `BaseTest.loginAs` and the
+class-level session logic work for both.
+
+```bash
+mvn test -Dplatform=ios -DexecutionProvider=browserstack -Dsuite.file=testng-ios.xml
+```
+
+- `testng-ios.xml` runs the shared test classes, limited to the methods in the **`ios`** group. To run another
+  test on iOS, add `"ios"` to its `groups` (after its screens have iOS locators); the Android suites are unchanged.
+- Upload the IPA with `-F "ios_app_groups_support=true"`, put its `bs://` id in `ios.properties`
+  (`browserstackApp`), and keep `browserstackNetworkLogs=false` for iOS (see `ios.properties.example`).
 
 BrowserStack debug logs, network logs and video are off by default because they slow sessions down:
 set `browserstackDebug`, `browserstackNetworkLogs` and `browserstackVideo` to `true` (or tick
 `diagnostics` when running the CI workflow) to diagnose a failure.
+
+### CI after a merge
+
+A merge to `main` runs the CI workflow's two platform jobs one after the other (`max-parallel: 1`): first the
+Android suite (`testng-parallel.xml`), then the iOS suite (`testng-ios.xml`). Each suite uses both of the BrowserStack
+plan's 2 parallel sessions (2 workers, each taking the next waiting test class). Both platforms always run, so an
+Android failure does not skip iOS. The iOS job needs the repository secret `IOS_BROWSERSTACK_APP_URL` (the
+single-line `bs://` id of an IPA uploaded with `ios_app_groups_support=true`; uploads expire after about 30 days, so
+re-upload when it does). A manual
+run (Actions > CI > Run workflow) does only the platform picked in the form.
 
 ### Parallel run (what CI runs)
 
@@ -181,6 +210,7 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 
 | Test ID | Test Class | Description |
 |---------|------------|-------------|
+| (none) | ts_login.LoginTest | Sign-in smoke test, iOS suite only (`testng-ios.xml`) |
 | EEPD-TC-4516 | ts_dashboard.ResellerDashboardTest | View Dashboard for Reseller |
 | EEPD-TC-40220 | ts_dashboard.ResellerDashboardTest | Verify account creation for Admin / Account-access users |
 | EEPD-TC-4170 | ts_users.AddUserTest | Adding a new user |

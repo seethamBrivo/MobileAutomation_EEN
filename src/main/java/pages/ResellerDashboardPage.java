@@ -6,6 +6,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 import java.time.Duration;
@@ -468,6 +469,13 @@ public class ResellerDashboardPage {
     }
 
     public void dismissContextMenu() {
+        if (PlatformLocator.isIos()) {
+            // iOS: tap the dimmed area beside the menu, which closes it without choosing an option.
+            GestureUtils.tapOutsideContextMenuIos(driver);
+            Assert.assertTrue(WaitUtils.waitForInvisibility(driver, ResellerDashboardLocators.CONTEXT_MENU_SETTINGS,
+                    TimeoutConstants.SHORT_TIMEOUT), "Context menu should close");
+            return;
+        }
         ((io.appium.java_client.android.AndroidDriver) driver).pressKey(
             new io.appium.java_client.android.nativekey.KeyEvent(
                 io.appium.java_client.android.nativekey.AndroidKey.BACK

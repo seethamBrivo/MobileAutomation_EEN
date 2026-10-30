@@ -11,6 +11,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class LayoutsPage {
@@ -121,6 +122,9 @@ public class LayoutsPage {
             throw new IllegalArgumentException("Aspect ratio must be '16:9' or '4:3', got: " + ratio);
         }
         By aspectRatioLocator = ratio.equals("16:9") ? LayoutsLocators.ASPECT_RATIO_16_9 : LayoutsLocators.ASPECT_RATIO_4_3;
+        if (PlatformLocator.isIos()) {
+            openIosValueList(LayoutsLocators.ASPECT_RATIO_ROW, aspectRatioLocator, "Aspect ratio");
+        }
         WaitUtils.click(driver, aspectRatioLocator);
         ensureOnNewLayoutScreen();
     }
@@ -129,8 +133,22 @@ public class LayoutsPage {
         if (count < 1 || count > 6) {
             throw new IllegalArgumentException("Max cameras per row must be between 1 and 6");
         }
+        if (PlatformLocator.isIos()) {
+            openIosValueList(LayoutsLocators.CAMERAS_PER_ROW_ROW, LayoutsLocators.camerasPerRowOption(count),
+                    "Max cameras per row");
+        }
         WaitUtils.click(driver, LayoutsLocators.camerasPerRowOption(count));
         ensureOnNewLayoutScreen();
+    }
+
+    /**
+     * iOS: a settings row opens a list of values on its own screen. Waits for a value of that list, so a list that
+     * did not open (or opens slowly) fails as "list did not open", not as a missing value.
+     */
+    private void openIosValueList(By settingRow, By expectedValue, String settingName) {
+        WaitUtils.click(driver, settingRow);
+        Assert.assertTrue(WaitUtils.isVisible(driver, expectedValue, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                settingName + " list did not open after tapping its row");
     }
 
     private void ensureOnNewLayoutScreen() {
@@ -140,7 +158,7 @@ public class LayoutsPage {
         }
         logger.debug("New Layout screen not visible, navigating back to close dialog");
         try {
-            driver.navigate().back();
+            navigateBack();
             WaitUtils.waitForVisibility(driver, LayoutsLocators.LAYOUT_NAME_LABEL, FrameworkConstants.EXPLICIT_WAIT);
             logger.debug("Confirmed on New Layout screen after back navigation");
         } catch (org.openqa.selenium.TimeoutException e) {
@@ -152,7 +170,8 @@ public class LayoutsPage {
 
     public void toggleShowCameraTitleBars(boolean enable) {
         WebElement toggle = WaitUtils.waitForVisibility(driver, LayoutsLocators.SHOW_CAMERA_TITLE_BARS_TOGGLE);
-        boolean isEnabled = toggle.isSelected();
+        // iOS reports a switch's state as its value ("1" / "0"); Android as the selected flag.
+        boolean isEnabled = PlatformLocator.isIos() ? "1".equals(toggle.getAttribute("value")) : toggle.isSelected();
 
         if (enable != isEnabled) {
             WaitUtils.click(driver, LayoutsLocators.SHOW_CAMERA_TITLE_BARS_TOGGLE);
@@ -177,6 +196,10 @@ public class LayoutsPage {
     }
 
     public void verifyLayoutCreatedSuccessfully(String layoutName) {
+        if (PlatformLocator.isIos()) {
+            verifyLayoutCreatedOnIos(layoutName);
+            return;
+        }
         if (WaitUtils.isVisible(driver, LayoutsLocators.SUCCESS_MESSAGE, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.info("Layout creation confirmed via snackbar message");
             ensureOnLayoutsListScreen();
@@ -196,6 +219,38 @@ public class LayoutsPage {
         ensureOnLayoutsListScreen();
     }
 
+    /**
+     * iOS shows no snackbar. The app returns to the layouts screen with the new layout among the tabs; which tab is
+     * selected afterwards varies, so the check is that the new layout exists. If its tab is not on screen it is looked
+     * up through the filter, like the Android fallback.
+     */
+    private void verifyLayoutCreatedOnIos(String layoutName) {
+        By tab = LayoutsLocators.layoutTabByName(layoutName);
+        if (WaitUtils.isVisible(driver, tab, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
+            logger.info("Layout creation confirmed - tab '{}' is listed", layoutName);
+        } else {
+            logger.info("Tab not on screen, verifying layout '{}' exists through the filter", layoutName);
+            clickFilterIcon();
+            clickLayoutsTab();
+            enterLayoutNameInSearchFilter(layoutName);
+            By result = LayoutsLocators.layoutByName(layoutName);
+            Assert.assertTrue(WaitUtils.isVisible(driver, result, FrameworkConstants.EXPLICIT_WAIT),
+                    "Layout '" + layoutName + "' should appear in layouts list after creation");
+            WaitUtils.click(driver, result);
+            logger.info("Layout creation confirmed - '{}' found through the filter", layoutName);
+        }
+        ensureOnLayoutsListScreen();
+    }
+
+    /** Android: the system back button. iOS: the navigation bar's back button. */
+    private void navigateBack() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, LayoutsLocators.BACK_BUTTON);
+        } else {
+            driver.navigate().back();
+        }
+    }
+
     private void ensureOnLayoutsListScreen() {
         int maxAttempts = 3;
         for (int i = 0; i < maxAttempts; i++) {
@@ -204,7 +259,7 @@ public class LayoutsPage {
                 return;
             }
             logger.debug("Not on layouts list screen, navigating back (attempt {}/{})", i + 1, maxAttempts);
-            driver.navigate().back();
+            navigateBack();
         }
         throw new IllegalStateException(
                 "Failed to navigate to layouts list screen after " + maxAttempts +
@@ -247,7 +302,9 @@ public class LayoutsPage {
         clickDeleteLayoutButton();
         confirmDeleteLayout();
 
-        boolean isDeleted = !WaitUtils.isVisible(driver, targetLayout, TimeoutConstants.SHORT_TIMEOUT);
+        // iOS: the search results are gone once the layout is deleted, so its tab is checked instead.
+        By deletedMarker = PlatformLocator.isIos() ? LayoutsLocators.layoutTabByName(layoutName) : targetLayout;
+        boolean isDeleted = !WaitUtils.isVisible(driver, deletedMarker, TimeoutConstants.SHORT_TIMEOUT);
         Assert.assertTrue(isDeleted,
                 "Layout '" + layoutName + "' should be deleted but is still visible");
         logger.info("Verified layout '{}' was successfully deleted", layoutName);
@@ -261,6 +318,10 @@ public class LayoutsPage {
 
     public void waitForCameraPreviewsToLoad() {
         WaitUtils.waitForVisibility(driver, LayoutsLocators.CAMERA_PREVIEW_CARDS);
+        if (PlatformLocator.isIos()) {
+            // The time label is drawn over the video, so it appears a few seconds after the tile.
+            WaitUtils.waitForVisibility(driver, LayoutsLocators.CAMERA_TIMESTAMPS);
+        }
     }
 
     public void verifyFirstCameraPreviewElements() {

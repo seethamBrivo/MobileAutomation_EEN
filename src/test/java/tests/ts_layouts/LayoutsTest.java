@@ -27,7 +27,7 @@ public class LayoutsTest extends BaseTest {
     // TODO: Parameterize with @DataProvider to cover multiple aspect ratios (16:9, 4:3, 1:1)
     // and cameras-per-row values. Requires teardown to track List<String> createdLayoutNames.
     @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app",
-          groups = {"regression", "layouts"})
+          groups = {"regression", "layouts", "ios"})
     public void verifyAddNewLayoutFunctionality() {
         String baseLayoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
         uniqueLayoutName = utils.TestDataGenerator.generateUniqueName(baseLayoutName);
@@ -48,7 +48,7 @@ public class LayoutsTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-9163: POS-Layouts/Tags - show camera previews in Layouts/Tags sections in mobile app",
-          groups = {"regression", "layouts"})
+          groups = {"regression", "layouts", "ios"})
     public void verifyCameraPreviewsDisplayedInLayouts() {
         // Steps 2 and 3: Stay in the Layouts section and wait for the camera previews
         layoutsPage.verifyCameraPreviewsLoaded();

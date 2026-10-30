@@ -9,6 +9,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class CamerasPage {
@@ -23,9 +24,13 @@ public class CamerasPage {
     public static final String STATUS_DEVICE_ERROR = "Device error";
     public static final String STATUS_CONNECTIVITY_ISSUE = "Connectivity issue";
     public static final String STATUS_TURNED_OFF = "Turned off";
+    public static final String STATUS_CAMERA_ERROR = "Camera error";
+    // Status of the camera pressed by longPressFirstOfflineOrErrorCamera: true = "Offline", false = "Camera error".
+    private boolean pressedCameraIsOffline;
+
     private static final String[] CAMERA_STATUSES = {
         STATUS_ONLINE, STATUS_OFFLINE, STATUS_INVALID_CREDENTIALS,
-        STATUS_DEVICE_ERROR, STATUS_CONNECTIVITY_ISSUE, STATUS_TURNED_OFF
+        STATUS_DEVICE_ERROR, STATUS_CONNECTIVITY_ISSUE, STATUS_TURNED_OFF, STATUS_CAMERA_ERROR
     };
 
     public CamerasPage(AppiumDriver driver) {
@@ -55,20 +60,44 @@ public class CamerasPage {
 
     public boolean scrollToFirstOfflineOrErrorCamera() {
         logger.info("Looking for first offline or error camera");
-        return GestureUtils.scrollUntilPresent(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
+        return scrollUntilElementIsVisible(CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
     }
 
     public void longPressFirstOfflineOrErrorCamera() {
         boolean found = scrollToFirstOfflineOrErrorCamera();
         Assert.assertTrue(found, "Could not find an offline or error camera even after scrolling");
-        WebElement camera = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA);
-        GestureUtils.longPress(driver, camera);
+        pressedCameraIsOffline = isOfflineCamera(
+                WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA));
+        GestureUtils.longPressUntilVisible(driver, CamerasLocators.FIRST_OFFLINE_OR_ERROR_CAMERA,
+                CamerasLocators.CONTEXT_MENU_CONTAINER);
         logger.info("Long pressed on offline/error camera");
+    }
+
+    /**
+     * The list item found by FIRST_OFFLINE_OR_ERROR_CAMERA is either an "Offline" or a "Camera error" camera,
+     * whichever comes first in the list. Their menus differ (see verifyAllContextMenuOptions), so the status is
+     * read before the press. On iOS that locator is the status label itself; on Android it is the whole card.
+     */
+    private boolean isOfflineCamera(WebElement camera) {
+        if (PlatformLocator.isIos()) {
+            return STATUS_OFFLINE.equals(camera.getAttribute("name"));
+        }
+        return !camera.findElements(CamerasLocators.OFFLINE_STATUS_IN_CAMERA_CARD).isEmpty();
     }
 
     public boolean scrollToFirstOnlineCamera() {
         logger.info("Looking for first online camera");
-        return GestureUtils.scrollUntilPresent(driver, CamerasLocators.FIRST_ONLINE_CAMERA);
+        return scrollUntilElementIsVisible(CamerasLocators.FIRST_ONLINE_CAMERA);
+    }
+
+    /**
+     * Android scrolls until the row is in the hierarchy. iOS keeps rows just outside the screen in the hierarchy, so
+     * it scrolls until the row is actually visible (and nudges it away from the screen edge).
+     */
+    private boolean scrollUntilElementIsVisible(By locator) {
+        return PlatformLocator.isIos()
+                ? GestureUtils.scrollUntilVisible(driver, locator)
+                : GestureUtils.scrollUntilPresent(driver, locator);
     }
 
     public boolean scrollToFirstCamera() {
@@ -87,8 +116,8 @@ public class CamerasPage {
     }
 
     public void longPressFirstOnlineCamera() {
-        WebElement onlineCamera = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_ONLINE_CAMERA);
-        GestureUtils.longPress(driver, onlineCamera);
+        GestureUtils.longPressUntilVisible(driver, CamerasLocators.FIRST_ONLINE_CAMERA,
+                CamerasLocators.CONTEXT_MENU_CONTAINER);
         logger.info("Long pressed on online camera");
     }
 
@@ -134,6 +163,12 @@ public class CamerasPage {
     }
 
     public void verifyTimestampDisplayed() {
+        if (PlatformLocator.isIos()) {
+            // iOS: the preview floats in its own layer, so its timestamp is in the hierarchy but not "visible".
+            Assert.assertTrue(WaitUtils.isPresent(driver, CamerasLocators.TIMESTAMP),
+                    "Timestamp should be displayed in camera preview");
+            return;
+        }
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.TIMESTAMP).isDisplayed(),
                 "Timestamp should be displayed in camera preview");
     }
@@ -159,10 +194,17 @@ public class CamerasPage {
             case STATUS_TURNED_OFF:
                 statusLocator = CamerasLocators.TURNED_OFF_STATUS;
                 break;
+            case STATUS_CAMERA_ERROR:
+                statusLocator = CamerasLocators.CAMERA_ERROR_STATUS;
+                break;
             default:
                 return false;
         }
-        return WaitUtils.isVisible(driver, statusLocator, TimeoutConstants.SHORT_TIMEOUT);
+        // iOS: the rows behind an open context menu are in the hierarchy but not reported as visible. This is a
+        // weaker check than on Android: the label could belong to another row, not the one that was pressed.
+        return PlatformLocator.isIos()
+                ? WaitUtils.isPresent(driver, statusLocator)
+                : WaitUtils.isVisible(driver, statusLocator, TimeoutConstants.SHORT_TIMEOUT);
     }
 
     public void verifyCameraStatusAndIndicators() {
@@ -177,10 +219,20 @@ public class CamerasPage {
         Assert.assertTrue(statusFound, "Expected at least one status indicator to be displayed");
     }
 
-    public void verifyAllContextMenuOptions() {
+    /**
+     * "Camera settings", "History browser" and "Live video" are in every camera's menu. "Turn on camera" and
+     * "Turn off camera" are only there for a camera that can be switched, which an "Offline" camera is and a
+     * "Camera error" camera is not (read from the menus of both on iOS: an offline camera's menu also has
+     * "Replace camera"; a camera in error shows only the three basic options).
+     */
+    public void verifyAllContextMenuOptions(boolean turnOnOrOffExpected) {
         verifyCameraSettingsOptionDisplayed();
         verifyHistoryBrowserOptionDisplayed();
         verifyLiveVideoOptionDisplayed();
+        if (!turnOnOrOffExpected) {
+            logger.info("Camera is in error: the 'Turn on/off camera' options are not expected in its menu");
+            return;
+        }
         boolean hasTurnOnOrOff = WaitUtils.isVisible(driver, CamerasLocators.TURN_ON_CAMERA_OPTION, TimeoutConstants.SHORT_TIMEOUT) ||
                                  WaitUtils.isVisible(driver, CamerasLocators.TURN_OFF_CAMERA_OPTION, TimeoutConstants.SHORT_TIMEOUT);
         Assert.assertTrue(hasTurnOnOrOff, "Expected either 'Turn on camera' or 'Turn off camera' option to be displayed");
@@ -286,7 +338,7 @@ public class CamerasPage {
     public void verifyFirstOfflineOrErrorCameraContextMenu() {
         longPressFirstOfflineOrErrorCamera();
         verifyContextMenuDisplayed();
-        verifyAllContextMenuOptions();
+        verifyAllContextMenuOptions(pressedCameraIsOffline);
         verifyCameraPreviewDisplayed();
         verifyCameraNameDisplayed();
         verifyCameraStatusAndIndicators();
