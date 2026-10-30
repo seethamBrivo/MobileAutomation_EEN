@@ -49,4 +49,9 @@ public final class TestDataConstants {
     // Test-data JSON keys (mechanical_zoom_camera block).
     public static final String MECHANICAL_ZOOM_CAMERA_DATA = "mechanical_zoom_camera_data";
     public static final String MECHANICAL_ZOOM_CAMERA_NAME = "camera_name";
+
+    // Test-data JSON keys (archive_search block).
+    public static final String ARCHIVE_SEARCH_DATA = "archive_search_data";
+    public static final String ARCHIVE_VALID_SEARCH_TERM = "valid_search_term";
+    public static final String ARCHIVE_NO_RESULTS_SEARCH_TERM = "no_results_search_term";
 }

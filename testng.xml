@@ -57,6 +57,12 @@
         </classes>
     </test>
 
+    <test name="History Browser Tests">
+        <classes>
+            <class name="tests.ts_history.HistoryBrowserTest"/>
+        </classes>
+    </test>
+
     <test name="My Profile Tests">
         <classes>
             <class name="tests.ts_my_profile.MyProfileTest"/>

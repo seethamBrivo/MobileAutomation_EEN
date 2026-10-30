@@ -1,0 +1,38 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- iOS suite: the shared test classes, limited to the test methods that are in the "ios" group.
+     mvn test -Dplatform=ios -DexecutionProvider=browserstack -Dsuite.file=testng-ios.xml
+     To run another test on iOS, add "ios" to its groups; the Android suites are unchanged.
+
+     2 workers (the BrowserStack plan allows 2 parallel sessions): each takes the next waiting class as soon as it
+     finishes one, and all methods of a class stay on one thread, so the class-level session is safe.
+
+     The order matters. Two classes that sign in as the same account at the same moment can make the second sign-in
+     time out (seen twice with LayoutsTest and CameraSearchFilterTest, both end user). Classes start in the order
+     below, and with the usual durations (Login about 1 min, Reseller 1.5, Layouts 2, ContextMenu 2, SearchFilter 2)
+     the pairs that run side by side are Login + Reseller, Layouts + Reseller, Layouts + ContextMenu and
+     SearchFilter + ContextMenu, so never two classes of the same account. This follows the timings, it is not
+     enforced: a slow session start can still make two end-user classes overlap. When adding an iOS class, put it
+     where it will not start next to a class that uses the same account (end user: Login, Layouts, SearchFilter;
+     TS02: ContextMenu; reseller: Reseller). -->
+<suite name="iOS Regression (2 workers)" parallel="classes" thread-count="2">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+        <!-- Same as the Android lanes suite: a failed test runs once more (see RetryAnalyzer), which covers the
+             occasional missed gesture or slow screen when two sessions run side by side. -->
+        <listener class-name="listeners.RetryTransformer"/>
+    </listeners>
+    <test name="iOS">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_login.LoginTest"/>
+            <class name="tests.ts_dashboard.ResellerDashboardTest"/>
+            <class name="tests.ts_layouts.LayoutsTest"/>
+            <class name="tests.ts_cameras.CameraContextMenuTest"/>
+            <class name="tests.ts_cameras.CameraSearchFilterTest"/>
+        </classes>
+    </test>
+</suite>

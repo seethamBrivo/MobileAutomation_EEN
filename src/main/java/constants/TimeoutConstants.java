@@ -40,6 +40,12 @@ public final class TimeoutConstants {
     /** Budget for a list to re-render after typing into its filter field. */
     public static final Duration FILTER_RESULT_TIMEOUT = Duration.ofSeconds(5);
 
+    /** How long the history browser cursor must stay put to count as paused; it advances once a second when playing. */
+    public static final Duration PLAYBACK_PROBE_TIMEOUT = Duration.ofSeconds(2);
+
+    /** Budget for the history browser timeline to re-render its rows after a pinch. */
+    public static final Duration TIMELINE_SETTLE_TIMEOUT = Duration.ofSeconds(5);
+
     /** Budget for "is a back button visible" probes when the screen may already be at the top. */
     public static final Duration BACK_BUTTON_CHECK_TIMEOUT = Duration.ofSeconds(1);
 
@@ -52,9 +58,13 @@ public final class TimeoutConstants {
     /** Max wait for video download to complete - videos take longer than folders. */
     public static final Duration VIDEO_DOWNLOAD_COMPLETE_TIMEOUT = Duration.ofSeconds(180);
 
+
     public static final Duration SWIPE_PAUSE = Duration.ofMillis(300);
     public static final Duration SWIPE_MOVE = Duration.ofMillis(700);
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);
+
+    /** Pause before lifting the finger at the end of a drag, so a list stops where the finger does. */
+    public static final Duration DRAG_HOLD = Duration.ofMillis(200);
 
     /** Max wait for device to stabilize after rotation (detects window size change, not a sleep). */
     public static final Duration ROTATION_STABILIZE = Duration.ofMillis(2000);

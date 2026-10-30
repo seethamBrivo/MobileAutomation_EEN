@@ -22,6 +22,7 @@ import pages.ResellerDashboardPage;
 import utils.BrowserStackStatus;
 import utils.ConfigReader;
 import utils.JsonDataReader;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**
@@ -193,6 +194,12 @@ public abstract class BaseTest {
 
     /** Signs out through the UI; if that is not possible (or the state is dirty) wipes the app data. */
     private void leaveCurrentAccount() {
+        if (PlatformLocator.isIos()) {
+            // iOS has no UI logout yet and no clearApp: a new session starts signed out.
+            logger.info("iOS: starting a new session to leave the current account");
+            replaceSession();
+            return;
+        }
         if (!AuthSession.isDirty()) {
             try {
                 new ResellerDashboardPage(driver).logout();
@@ -205,6 +212,15 @@ public abstract class BaseTest {
         }
         clearAppState(true);
         AuthSession.reset();
+    }
+
+    /**
+     * Ends the current Appium session and opens a fresh one for the same class. A new iOS session starts signed
+     * out, which is how iOS leaves an account (there is no UI logout).
+     */
+    private void replaceSession() {
+        DriverManager.quitDriver();
+        openSession(getClass().getSimpleName(), null, new Object[0]);
     }
 
     /** Shared by every test class whose @BeforeMethod logs in as reseller and lands on the dashboard. */
@@ -261,13 +277,15 @@ public abstract class BaseTest {
             }
             return;
         }
+        // Report the status first: a slow cleanup can outlast the session, and BrowserStack then records a timeout.
+        // BrowserStackStatus.setStatus never throws (it logs and carries on), which keeps the cleanup and the
+        // driver quit below always reached. Keep it that way if that method changes.
+        if (driver != null && isBrowserStackExecution()) {
+            updateBrowserStackStatus(testResult);
+        }
         try {
             resetAppStateForNextTest();
         } finally {
-            // Update BrowserStack status before quitting driver - ensures status is reported even if cleanup fails
-            if (driver != null && isBrowserStackExecution()) {
-                updateBrowserStackStatus(testResult);
-            }
             DriverManager.quitDriver();
             driver = null;
             logger.info("Test teardown completed for {}", getClass().getSimpleName());
@@ -305,6 +323,11 @@ public abstract class BaseTest {
      * StackOverflowError) during teardown the way a bare Throwable catch would.
      */
     private void resetAppStateForNextTest() {
+        if ("ios".equalsIgnoreCase(ConfigReader.getPlatform())) {
+            // The UI logout is Android-only for now; a fresh session starts signed out anyway.
+            clearAppState(false);
+            return;
+        }
         try {
             new ResellerDashboardPage(driver).logout();
             logger.info("Logged out after test");

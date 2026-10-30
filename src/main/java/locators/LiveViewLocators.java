@@ -31,4 +31,8 @@ public final class LiveViewLocators {
 
     public static final By AUTO_FOCUS_ICON =
             AppiumBy.xpath("(//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/icon\"])[1]");
+
+    // Loading indicator that appears while camera stream is loading
+    public static final By LOADING_SPINNER =
+            AppiumBy.className("android.widget.ProgressBar");
 }

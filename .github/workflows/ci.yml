@@ -5,10 +5,15 @@ on:
     branches: [main, master]  # Runs only when code is merged to main/master
   workflow_dispatch:  # Allows manual trigger from GitHub UI
     inputs:
+      platform:
+        description: 'platform for a manual run: android (default) or ios (needs the IOS_BROWSERSTACK_APP_URL secret). A merge to main runs both, Android first, then iOS'
+        type: choice
+        options: [android, ios]
+        default: android
       suite_file:
-        description: 'TestNG suite to run (testng-parallel.xml = 2 parallel workers, then BridgesTest alone; testng.xml = everything serially; testng-diagnostics.xml to dump UI hierarchies)'
+        description: 'TestNG suite to run. Leave empty for the platform default: android = testng-parallel.xml (2 parallel workers, then BridgesTest alone), ios = testng-ios.xml. Others: testng.xml = all Android tests serially; testng-diagnostics.xml dumps UI hierarchies'
         type: string
-        default: 'testng-parallel.xml'
+        default: ''
       use_sdk:
         description: 'Run through the BrowserStack SDK (browserstack.yml) instead of direct capabilities'
         type: boolean
@@ -19,9 +24,9 @@ on:
         options: [class, method]
         default: class
       diagnostics:
-        description: 'Turn BrowserStack debug logs, network logs and video back on (slower sessions)'
+        description: 'Turn BrowserStack debug logs, network logs and video back on (slower sessions). Ignored for network logs on iOS: they stop the camera video from loading'
         type: boolean
-        default: false
+        default: true
 
 # The suite uses 2 BrowserStack sessions and shared test accounts/bridges, so two CI runs must never overlap.
 # A later push waits for the running one instead of cancelling it half-way through its tests.
@@ -31,10 +36,39 @@ concurrency:
 
 jobs:
   build:
+    # A merge to main runs the Android suite first and then the iOS suite (max-parallel 1: the BrowserStack plan has
+    # 2 parallel sessions, and each suite uses both of them for its own parallel workers). Both always run: an Android
+    # failure does not skip iOS. A manual run does only the platform chosen in the form.
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        platform: ${{ fromJSON(github.event_name == 'push' && '["android","ios"]' || format('["{0}"]', inputs.platform)) }}
+    name: ${{ matrix.platform }} tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
     steps:
+      - name: Reject the BrowserStack SDK on iOS
+        # browserstack.yml describes an Android device matrix, so the SDK path would start the wrong device for iOS.
+        if: matrix.platform == 'ios' && inputs.use_sdk == true
+        run: |
+          echo "::error::use_sdk is Android only. Run iOS without it (direct capabilities)."
+          exit 1
+
+      - name: Check the iOS app secret
+        # First step of the job, so it fails within seconds with a clear message, not an obscure BrowserStack error,
+        # when the secret is missing, has extra lines or is not a bs:// id (the uploaded IPA expires after about
+        # 30 days; upload it again).
+        if: matrix.platform == 'ios'
+        env:
+          IOS_APP: ${{ secrets.IOS_BROWSERSTACK_APP_URL }}
+        run: |
+          case "$IOS_APP" in
+            bs://*) [ "$(printf '%s' "$IOS_APP" | wc -l)" -eq 0 ] || { echo "::error::IOS_BROWSERSTACK_APP_URL must be a single line (only the bs:// id)"; exit 1; } ;;
+            *) echo "::error::IOS_BROWSERSTACK_APP_URL is missing or is not a bs:// id. Upload the IPA with ios_app_groups_support=true and store its bs:// id in that secret."; exit 1 ;;
+          esac
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -91,6 +125,10 @@ jobs:
             },
             "mechanical_zoom_camera_data": {
               "camera_name": "${{ secrets.MECHANICAL_ZOOM_CAMERA_NAME || 'EN-CDUB-011a' }}"
+            },
+            "archive_search_data": {
+              "valid_search_term": "test",
+              "no_results_search_term": "xyznonexistent12345"
             }
           }
           EOF
@@ -106,7 +144,7 @@ jobs:
           browserstackUserName=${{ secrets.BROWSERSTACK_USERNAME }}
           browserstackAccessKey=${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           browserstackProjectName=EEN Mobile Automation
-          browserstackBuildName=CI Build ${{ github.run_number }}
+          browserstackBuildName=CI Build ${{ github.run_number }}${{ matrix.platform == 'ios' && ' (iOS)' || '' }}
           browserstackIdleTimeout=120
           browserstackDebug=${{ inputs.diagnostics == true && 'true' || 'false' }}
           browserstackNetworkLogs=${{ inputs.diagnostics == true && 'true' || 'false' }}
@@ -114,6 +152,7 @@ jobs:
           EOF
 
       - name: Create android.properties for BrowserStack
+        if: matrix.platform != 'ios'
         run: |
           mkdir -p src/main/resources
           cat > src/main/resources/android.properties << 'EOF'
@@ -134,6 +173,25 @@ jobs:
           autoGrantPermissions=true
           EOF
 
+      - name: Create ios.properties for BrowserStack
+        # The IPA is not in the repo: IOS_BROWSERSTACK_APP_URL is the bs:// id of an IPA that was uploaded with
+        # -F "ios_app_groups_support=true" (without it sign-in hangs on a spinner). Network logs stay off:
+        # with them on the camera video never loads.
+        if: matrix.platform == 'ios'
+        run: |
+          mkdir -p src/main/resources
+          cat > src/main/resources/ios.properties << 'EOF'
+          automationName=XCUITest
+          deviceName=iPhone 15
+          platformVersion=27
+          browserstackApp=${{ secrets.IOS_BROWSERSTACK_APP_URL }}
+          bundleId=com.eagleeyenetworks.eagleeye
+          noReset=false
+          fullReset=false
+          newCommandTimeout=120
+          browserstackNetworkLogs=false
+          EOF
+
       - name: Compile and package
         run: mvn -B -DskipTests package
 
@@ -144,15 +202,15 @@ jobs:
           # Read by the BrowserStack SDK when use_sdk is set; ignored otherwise.
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-          BROWSERSTACK_APP_URL: ${{ secrets.BROWSERSTACK_APP_URL }}
+          BROWSERSTACK_APP_URL: ${{ matrix.platform == 'ios' && secrets.IOS_BROWSERSTACK_APP_URL || secrets.BROWSERSTACK_APP_URL }}
           BROWSERSTACK_BUILD_NUMBER: ${{ github.run_number }}
-        run: mvn test -Dplatform=android -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || 'testng-parallel.xml' }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
+        run: mvn test -Dplatform=${{ matrix.platform }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (matrix.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml') }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
+          name: test-reports-${{ matrix.platform }}
           path: |
             target/surefire-reports/
             target/page-sources/
@@ -162,6 +220,6 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: maven-build
+          name: maven-build-${{ matrix.platform }}
           path: target/
           if-no-files-found: warn

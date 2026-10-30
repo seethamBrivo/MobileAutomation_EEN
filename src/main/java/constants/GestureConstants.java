@@ -11,4 +11,8 @@ public final class GestureConstants {
 
     /** Upper bound on swipes when scrolling to bring an element into view. */
     public static final int MAX_SCROLL_SWIPES = 4;
+
+    /** Finger distance from the pinch centre as a share of the target's height: apart / together. */
+    public static final double PINCH_WIDE_SPREAD_PERCENT = 0.35;
+    public static final double PINCH_NARROW_SPREAD_PERCENT = 0.08;
 }

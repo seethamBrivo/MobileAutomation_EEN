@@ -3,8 +3,10 @@ package utils;
 import constants.FrameworkConstants;
 import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -282,6 +284,43 @@ public final class WaitUtils {
             }
         }
         throw new AssertionError("Unreachable");
+    }
+
+    /**
+     * Polls {@code condition} until it returns true or {@code timeout} passes, and returns whether it did. WebDriver
+     * errors raised by the condition (an element gone or re-rendering) count as "not yet", not as failures.
+     */
+    public static boolean pollUntil(AppiumDriver driver, Duration timeout, Supplier<Boolean> condition) {
+        try {
+            wait(driver, timeout).ignoring(WebDriverException.class).until(d -> condition.get());
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
+    }
+
+    /** The text of every match once at least one is visible; repeated if the list re-renders under it. */
+    public static List<String> textsOf(AppiumDriver driver, By locator) {
+        return retryOnStale(() -> {
+            List<String> texts = new ArrayList<>();
+            for (WebElement element : findElements(driver, locator)) {
+                texts.add(element.getText());
+            }
+            return texts;
+        });
+    }
+
+    /**
+     * Like {@link #textsOf}, but an empty list when nothing matches within the timeout instead of waiting the full
+     * explicit wait and throwing, for lists that may legitimately have no entries.
+     */
+    public static List<String> textsOfOrEmpty(AppiumDriver driver, By locator, Duration timeout) {
+        return isVisible(driver, locator, timeout) ? textsOf(driver, locator) : List.of();
+    }
+
+    /** Everything on screen in one round trip, instead of one call per element, and from a single moment. */
+    public static String pageSource(AppiumDriver driver) {
+        return driver.getPageSource();
     }
 
     private static WebDriverWait wait(AppiumDriver driver, Duration timeout) {

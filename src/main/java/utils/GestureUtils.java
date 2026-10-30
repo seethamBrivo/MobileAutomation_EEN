@@ -5,15 +5,22 @@ import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
 
 public final class GestureUtils {
+
+    private static final Logger logger = LogManager.getLogger(GestureUtils.class);
+    private static final int LONG_PRESS_ATTEMPTS = 3;
 
     private GestureUtils() {
     }
@@ -23,6 +30,14 @@ public final class GestureUtils {
     }
 
     public static void longPress(AppiumDriver driver, WebElement element, Duration holdDuration) {
+        if (PlatformLocator.isIos()) {
+            // XCUITest opens a long-press context menu with touchAndHold; the centre is kept in points (no int rounding).
+            Rectangle rect = element.getRect();
+            driver.executeScript("mobile: touchAndHold", Map.of(
+                    "x", rect.x + rect.width / 2.0, "y", rect.y + rect.height / 2.0,
+                    "duration", holdDuration.toMillis() / 1000.0));
+            return;
+        }
         Point center = getElementCenter(element);
         PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
         Sequence longPressSequence = new Sequence(finger, 1);
@@ -31,6 +46,32 @@ public final class GestureUtils {
         longPressSequence.addAction(new Pause(finger, holdDuration));
         longPressSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
         driver.perform(List.of(longPressSequence));
+    }
+
+    /**
+     * Long presses the element found by {@code pressTarget} and waits for {@code expectedAfterPress} (for example a
+     * context menu). A long press that lands while the screen is still settling can be missed (seen on both
+     * platforms), so if nothing appears within a few seconds the target is found again and pressed once more, up to
+     * {@code LONG_PRESS_ATTEMPTS} presses in all, with a short pause before each repeat. The caller still asserts the
+     * result, so a menu that never opens still fails the test.
+     */
+    public static void longPressUntilVisible(AppiumDriver driver, By pressTarget, By expectedAfterPress) {
+        longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
+        for (int attempt = 2; attempt <= LONG_PRESS_ATTEMPTS
+                && !WaitUtils.isVisible(driver, expectedAfterPress, TimeoutConstants.FILTER_RESULT_TIMEOUT); attempt++) {
+            logger.warn("Nothing appeared after the long press on {}; pressing again (press {} of {})",
+                    pressTarget, attempt, LONG_PRESS_ATTEMPTS);
+            pause(TimeoutConstants.SWIPE_PAUSE.multipliedBy(3));
+            longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
+        }
+    }
+
+    private static void pause(Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public static void swipeUp(AppiumDriver driver) {
@@ -132,6 +173,21 @@ public final class GestureUtils {
         driver.perform(List.of(swipeSequence));
     }
 
+    /** Like {@link #swipe}, but holds still before lifting the finger so the list stops instead of flinging. */
+    public static void dragAndHold(AppiumDriver driver, int startX, int startY, int endX, int endY) {
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+        Sequence dragSequence = new Sequence(finger, 1);
+        dragSequence.addAction(
+                finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY));
+        dragSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        dragSequence.addAction(new Pause(finger, TimeoutConstants.SWIPE_PAUSE));
+        dragSequence.addAction(
+                finger.createPointerMove(TimeoutConstants.SWIPE_MOVE, PointerInput.Origin.viewport(), endX, endY));
+        dragSequence.addAction(new Pause(finger, TimeoutConstants.DRAG_HOLD));
+        dragSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        driver.perform(List.of(dragSequence));
+    }
+
     /**
      * Taps the center of the screen.
      */
@@ -152,6 +208,50 @@ public final class GestureUtils {
         tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
         tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
         driver.perform(List.of(tapSequence));
+    }
+
+    /**
+     * iOS only ({@code mobile: tap} is an XCUITest command and throws on Android; the name carries that, and the
+     * callers check the platform): taps the dimmed area beside an open context menu, which closes it without choosing an option. The point is
+     * derived from the screen size (a few percent in from the left edge, at mid height), where menus never reach.
+     */
+    public static void tapOutsideContextMenuIos(AppiumDriver driver) {
+        Dimension size = driver.manage().window().getSize();
+        driver.executeScript("mobile: tap", Map.of(
+                "x", Math.max(5.0, size.width * 0.03),
+                "y", size.height * 0.5));
+    }
+
+    public static void pinchIn(AppiumDriver driver, WebElement target) {
+        pinch(driver, target, GestureConstants.PINCH_WIDE_SPREAD_PERCENT, GestureConstants.PINCH_NARROW_SPREAD_PERCENT);
+    }
+
+    public static void pinchOut(AppiumDriver driver, WebElement target) {
+        pinch(driver, target, GestureConstants.PINCH_NARROW_SPREAD_PERCENT, GestureConstants.PINCH_WIDE_SPREAD_PERCENT);
+    }
+
+    private static void pinch(AppiumDriver driver, WebElement target, double startSpreadPercent,
+                              double endSpreadPercent) {
+        Point center = getElementCenter(target);
+        int height = target.getSize().height;
+        int startOffset = (int) (height * startSpreadPercent);
+        int endOffset = (int) (height * endSpreadPercent);
+
+        Sequence upperFinger = fingerMove("finger1", center.x, center.y - startOffset, center.y - endOffset);
+        Sequence lowerFinger = fingerMove("finger2", center.x, center.y + startOffset, center.y + endOffset);
+        driver.perform(List.of(upperFinger, lowerFinger));
+    }
+
+    private static Sequence fingerMove(String fingerId, int x, int startY, int endY) {
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, fingerId);
+        Sequence sequence = new Sequence(finger, 1);
+        sequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, startY));
+        sequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        sequence.addAction(new Pause(finger, TimeoutConstants.SWIPE_PAUSE));
+        sequence.addAction(
+                finger.createPointerMove(TimeoutConstants.SWIPE_MOVE, PointerInput.Origin.viewport(), x, endY));
+        sequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        return sequence;
     }
 
     public static Point getElementCenter(WebElement element) {
