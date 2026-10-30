@@ -43,6 +43,11 @@ public final class DownloadsLocators {
     public static final By IN_PROGRESS_STATUS =
             AppiumBy.xpath("//android.widget.TextView[@text=\"In progress\"]");
 
+    // Progress bar displayed during download - text value changes dynamically (0.17, 0.47, etc.)
+    // so we find it by widget type only, scoped to Downloads screen
+    public static final By DOWNLOAD_PROGRESS_BAR =
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]//android.widget.ProgressBar");
+
     // Cancel icons replace download icons at same position during active downloads
     public static final By CANCEL_DOWNLOAD_ICON =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[2]");
@@ -56,6 +61,7 @@ public final class DownloadsLocators {
     public static final By NOTIFICATION_EXPAND_BUTTON =
             AppiumBy.xpath("//android.widget.ImageView[@resource-id=\"android:id/expand_button_icon\"]");
 
+    // Scoped to notification area (status_bar_latest_event_content) to avoid matching app UI
     public static final By NOTIFICATION_DOWNLOAD_TITLE =
-            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Download') or contains(@text, 'download') or contains(@text, '.zip')]");
+            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='android:id/status_bar_latest_event_content']//android.widget.TextView[contains(@text, 'Download') or contains(@text, 'download') or contains(@text, '.zip')]");
 }

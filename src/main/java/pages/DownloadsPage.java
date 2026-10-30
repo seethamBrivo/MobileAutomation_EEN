@@ -146,6 +146,16 @@ public class DownloadsPage {
         }
     }
 
+    public void verifyDownloadProgressBar() {
+        boolean progressBarVisible = WaitUtils.isVisible(
+                driver,
+                DownloadsLocators.DOWNLOAD_PROGRESS_BAR,
+                TimeoutConstants.SHORT_TIMEOUT
+        );
+        Assert.assertTrue(progressBarVisible, "Progress bar should be visible during download");
+        logger.info("Download progress bar is displayed with progress value");
+    }
+
     public void verifyInProgressStatus() {
         boolean inProgress = WaitUtils.isVisible(
                 driver,
@@ -262,6 +272,7 @@ public class DownloadsPage {
         clickDownloadButtonInDialog();
         verifyDownloadingSnackbar();
         verifyInProgressStatus();
+        // Skip "Saved to Files" verification - ZIP downloads take too long. Instead verify in notification panel.
         openNotificationPanel();
         expandNotification();
         verifyDownloadInNotification();
@@ -284,6 +295,7 @@ public class DownloadsPage {
         verifyDownloadDialogDisplayed();
         clickDownloadButtonInDialog();
         verifyDownloadingSnackbar();
+        verifyDownloadProgressBar();
         waitForVideoDownloadComplete();
         navigateBack();
     }
