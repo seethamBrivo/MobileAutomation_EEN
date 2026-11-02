@@ -82,9 +82,6 @@ public final class ArchiveLocators {
     public static final By DOWNLOAD_BUTTON_DIALOG =
             AppiumBy.xpath("//android.widget.TextView[@text=\"DOWNLOAD\"]");
 
-    public static final By SNACKBAR_TEXT =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc=\"snackbar_een_text\"]");
-
     public static final By IN_PROGRESS_STATUS =
             AppiumBy.xpath("//android.widget.TextView[@text=\"In progress\"]");
 

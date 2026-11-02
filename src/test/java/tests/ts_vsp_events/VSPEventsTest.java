@@ -24,8 +24,7 @@ public class VSPEventsTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
-        loginAs(TestDataConstants.TS02_CREDS);
-        devicesPage = new DevicesPage(driver);
+        devicesPage = loginAndCreatePage(TestDataConstants.TS02_CREDS, DevicesPage::new);
         vspEventsPage = new VSPEventsPage(driver);
     }
 
