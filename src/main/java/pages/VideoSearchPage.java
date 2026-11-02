@@ -323,7 +323,6 @@ public class VideoSearchPage {
     }
 
     public void swipeDownToClose() {
-        WaitUtils.click(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST);
         org.openqa.selenium.WebElement titleElement = WaitUtils.waitForVisibility(driver, VideoSearchLocators.CAMERA_NAME);
         org.openqa.selenium.Rectangle rect = titleElement.getRect();
         int x = rect.getX() + (rect.getWidth() / 2);
