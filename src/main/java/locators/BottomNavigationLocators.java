@@ -31,7 +31,6 @@ public final class BottomNavigationLocators {
     // Not scoped to the bar like the end-user tabs: the reseller screens draw the bar as plain Compose views with no
     // id or container to scope to (the end user's bar is the native bottom_navigation widget). MORE_TAB is shared by
     // both bars and is unscoped on Android for the same reason.
-------------------------------------------------------------------
 
     public static final By DASHBOARD_TAB = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"), // android
