@@ -351,7 +351,8 @@ public class ResellerDashboardPage {
         // "More" is part of the bottom navigation, so its presence is all that matters. Give it a moment to show up
         // before pressing Back: right after a relaunch the screen may still be rendering, and Back from the landing
         // screen would leave the app. The wait only costs time when the screen really is somewhere else.
-        for (int i = 0; i < 5 && !WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB, TimeoutConstants.SHORT_TIMEOUT); i++) {
+        for (int i = 0; i < 5
+                && !WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB, TimeoutConstants.SHORT_TIMEOUT); i++) {
             driver.navigate().back();
         }
         WaitUtils.click(driver, BottomNavigationLocators.MORE_TAB);

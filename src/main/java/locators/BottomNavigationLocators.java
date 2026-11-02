@@ -10,18 +10,8 @@ import utils.PlatformLocator;
  */
 public final class BottomNavigationLocators {
 
-    private BottomNavigationLocators() {}
-
     /** Android: the bar's container, so a tab is never confused with a screen title of the same name. */
     private static final String ANDROID_BAR = "//*[@resource-id='com.een.vms.android:id/bottom_navigation']";
-
-    /**
-     * iOS: a button of the tab bar, found by its label. Only Layouts has a stable id ({@code layouts_button}); the
-     * others are named after their label, and the top bar has buttons with similar labels, hence the tab bar scope.
-     */
-    private static By iosTabBarButton(String label) {
-        return AppiumBy.iOSClassChain("**/XCUIElementTypeTabBar/**/XCUIElementTypeButton[`label == \"" + label + "\"`]");
-    }
 
     // --- End user ----------------------------------------------------------------------
 
@@ -38,6 +28,10 @@ public final class BottomNavigationLocators {
             iosTabBarButton("Search")); // ios
 
     // --- Reseller ----------------------------------------------------------------------
+    // Not scoped to the bar like the end-user tabs: the reseller screens draw the bar as plain Compose views with no
+    // id or container to scope to (the end user's bar is the native bottom_navigation widget). MORE_TAB is shared by
+    // both bars and is unscoped on Android for the same reason.
+------------------------------------------------------------------
 
     public static final By DASHBOARD_TAB = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"), // android
@@ -62,4 +56,14 @@ public final class BottomNavigationLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='More']"), // android
             AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton'"
                     + " AND label == 'More' AND name != 'navigationBar_customButton'")); // ios
+
+    private BottomNavigationLocators() {}
+
+    /**
+     * iOS: a button of the tab bar, found by its label. Only Layouts has a stable id ({@code layouts_button}); the
+     * others are named after their label, and the top bar has buttons with similar labels, hence the tab bar scope.
+     */
+    private static By iosTabBarButton(String label) {
+        return AppiumBy.iOSClassChain("**/XCUIElementTypeTabBar/**/XCUIElementTypeButton[`label == \"" + label + "\"`]");
+    }
 }

@@ -8,7 +8,10 @@ import locators.CommonLocators;
 import org.testng.Assert;
 import utils.WaitUtils;
 
-/** The short message that slides in at the bottom of the screen after an action (Android only; iOS shows none). */
+/**
+ * The short message that slides in at the bottom of the screen after an action (Android only; iOS shows none).
+ * The app draws it in two ways, which one locator matches: see {@link locators.CommonLocators#SNACKBAR_TEXT}.
+ */
 public final class Snackbar {
 
     private Snackbar() {
@@ -29,9 +32,14 @@ public final class Snackbar {
         return shownText;
     }
 
-    /** Waits until a snackbar shows exactly {@code expectedText}, for steps whose message appears only at the end. */
+    /**
+     * Waits until a snackbar shows exactly {@code expectedText}, for steps whose message appears only at the end, and
+     * then checks that the last text seen contains it. A slightly different wording ("Saved to Files.") therefore
+     * still passes once the wait has run out, as it did before this helper existed.
+     */
     public static void waitUntilSays(AppiumDriver driver, String expectedText, Duration timeout) {
         String lastSeenText = WaitUtils.pollText(driver, CommonLocators.SNACKBAR_TEXT, expectedText, timeout);
-        Assert.assertEquals(lastSeenText, expectedText, "Snackbar should show '" + expectedText + "'");
+        Assert.assertTrue(lastSeenText.contains(expectedText),
+                "Snackbar should show '" + expectedText + "' but was: " + lastSeenText);
     }
 }

@@ -66,7 +66,6 @@ public final class GestureUtils {
         }
     }
 
-
     public static void swipeUp(AppiumDriver driver) {
         Dimension size = driver.manage().window().getSize();
         int centerX = size.width / 2;

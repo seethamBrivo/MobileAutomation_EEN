@@ -17,6 +17,9 @@ public class LiveViewPage {
     private final Logger logger = LogManager.getLogger(LiveViewPage.class);
 
     public LiveViewPage(AppiumDriver driver) {
+        if (driver == null) {
+            throw new IllegalArgumentException("Driver cannot be null");
+        }
         this.driver = driver;
     }
 

@@ -25,7 +25,8 @@ public class LayoutsPage {
     }
 
     public void verifyLayoutsScreenDisplayed() {
-        WaitUtils.assertVisible(driver, LayoutsLocators.THREE_DOTS_MENU_BUTTON, "Three dots menu button should be visible on layouts screen");
+        WaitUtils.assertVisible(driver, LayoutsLocators.THREE_DOTS_MENU_BUTTON,
+                "Three dots menu button should be visible on layouts screen");
     }
 
     // ---- step-level groups (EEPD-TC-9005) -------------------------------------------------

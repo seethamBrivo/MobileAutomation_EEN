@@ -26,7 +26,7 @@ import utils.WaitUtils;
  * <p>The public methods are the steps of the test cases (EEPD-TC-15581 and EEPD-TC-53382); everything else is
  * private detail of how a step is carried out.
  */
-public class CameraSearchFilter {
+public final class CameraSearchFilter {
 
     private static final Logger logger = LogManager.getLogger(CameraSearchFilter.class);
     /** The counter above the list, for example "12 cameras". */
@@ -137,7 +137,8 @@ public class CameraSearchFilter {
         if (PlatformLocator.isIos()) {
             // iOS: the field has a "Clear text" button, which is used instead of clearing the text by typing.
             // It only exists while the field holds text, so an already empty field has nothing to clear.
-            if (!WaitUtils.isVisible(driver, CamerasLocators.CLEAR_TEXT_BUTTON, TimeoutConstants.FILTER_RESULT_TIMEOUT)) {
+            if (!WaitUtils.isVisible(
+                    driver, CamerasLocators.CLEAR_TEXT_BUTTON, TimeoutConstants.FILTER_RESULT_TIMEOUT)) {
                 logger.info("Search field is already empty; nothing to clear");
                 return;
             }
@@ -156,13 +157,14 @@ public class CameraSearchFilter {
     }
 
     private void verifyDefaultCameraListRestored() {
-        WaitUtils.assertVisible(driver, firstCameraInList, "Default camera list should be restored after clearing search");
+        WaitUtils.assertVisible(driver, firstCameraInList,
+                "Default camera list should be restored after clearing search");
     }
 
     private void verifyEmptyStateDisplayed() {
-        // The keyboard stays up after typing a search term and covers the empty-state message (CI Build 103, BrowserStack),
-        // so close it first. Then fall back to presence: with the IME resizing the window the message can sit below the
-        // visible area even though it is rendered.
+        // The keyboard stays up after typing a search term and covers the empty-state message (CI Build 103,
+        // BrowserStack), so close it first. Then fall back to presence: with the IME resizing the window the message
+        // can sit below the visible area even though it is rendered.
         if (!PlatformLocator.isIos()) { // the Android keyboard hides the message; on iOS it is not hidden
             KeyboardUtils.hideKeyboard(driver);
         }
@@ -172,7 +174,7 @@ public class CameraSearchFilter {
     }
 
     private void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
-        List<WebElement> cameraElements = driver.findElements(CamerasLocators.ALL_VISIBLE_CAMERAS);
+        List<WebElement> cameraElements = WaitUtils.findElements(driver, CamerasLocators.ALL_VISIBLE_CAMERAS);
         Assert.assertFalse(cameraElements.isEmpty(), "Should have at least one visible camera");
         for (WebElement element : cameraElements) {
             String cameraName = element.getText();

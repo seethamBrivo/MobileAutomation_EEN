@@ -16,6 +16,9 @@ public class ArchivePage {
     private final AppiumDriver driver;
 
     public ArchivePage(AppiumDriver driver) {
+        if (driver == null) {
+            throw new IllegalArgumentException("Driver cannot be null");
+        }
         this.driver = driver;
     }
 
@@ -125,7 +128,8 @@ public class ArchivePage {
     }
 
     public void verifySearchResultsDisplayed(String searchText) {
-        WaitUtils.assertVisible(driver, ArchiveLocators.searchResultByFileName(searchText), TimeoutConstants.LIST_LOAD_TIMEOUT,
+        WaitUtils.assertVisible(driver, ArchiveLocators.searchResultByFileName(searchText),
+                TimeoutConstants.LIST_LOAD_TIMEOUT,
                 "Search results should display files containing '" + searchText + "'");
     }
 
@@ -239,7 +243,8 @@ public class ArchivePage {
 
     public void verifyDownloadingSnackbar() {
         // Either "downloading" (in progress) or "saved to files" (a fast download already finished).
-        String snackbarText = Snackbar.verifyContainsAnyOf(driver, TimeoutConstants.SHORT_TIMEOUT, "downloading", "saved to files");
+        String snackbarText = Snackbar.verifyContainsAnyOf(
+                driver, TimeoutConstants.SHORT_TIMEOUT, "downloading", "saved to files");
         if (snackbarText.toLowerCase().contains("saved to files")) {
             logger.info("Download completed very quickly - skipping intermediate status checks");
         }

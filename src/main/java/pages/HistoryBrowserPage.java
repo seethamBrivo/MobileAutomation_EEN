@@ -361,7 +361,8 @@ public class HistoryBrowserPage {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.FILTER_BUTTON,
                 "Filter button should be displayed in the history browser");
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS);
-        WaitUtils.assertNotVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION, TimeoutConstants.SHORT_TIMEOUT,
+        WaitUtils.assertNotVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION,
+                TimeoutConstants.SHORT_TIMEOUT,
                 "Filter button should show no indication number");
     }
 
