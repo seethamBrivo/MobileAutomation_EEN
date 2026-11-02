@@ -91,4 +91,6 @@ public final class VideoSearchLocators {
     public static final By TAGS_TITLE = EVENT_TAGS_TITLE;
     public static final By ANY_TAG = EVENT_TAGS;
     public static final By EVENT_NUMBER_SCOPE = EVENT_COUNTER;
+    public static final By VIEW_HISTORY_BROWSER_BUTTON = VIEW_IN_HISTORY_BROWSER_BUTTON;
+    public static final By SEARCH_OPTION = SEARCH_TAB;
 }
