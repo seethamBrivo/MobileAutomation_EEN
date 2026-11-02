@@ -23,13 +23,13 @@ import utils.WaitUtils;
 public class LoginPage {
 
     private static final Logger logger = LogManager.getLogger(LoginPage.class);
+    private final AppiumDriver driver;
     private static final int LOGIN_ATTEMPTS = 3;
     private static final int TYPE_ATTEMPTS = 3;
     private static final Duration TYPE_SETTLE = Duration.ofSeconds(4);
     /** Launcher activity; the CI android.properties leaves appActivity unset on purpose (Android 15). */
     private static final String DEFAULT_APP_ACTIVITY = "com.een.core.MainActivity";
 
-    private final AppiumDriver driver;
 
     /** What the app shows right after it starts. */
     public enum StartScreen { SIGN_IN, SIGNED_IN, UNKNOWN }

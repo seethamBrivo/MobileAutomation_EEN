@@ -52,11 +52,8 @@ public final class LoginLocators {
 
     // --- Signed-in landing and verification ------------------------------------
 
-    /** Bottom-navigation "More" tab: shown on every signed-in landing screen, never on the sign-in screen. */
-    public static final By SIGNED_IN_MARKER = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text='More']"), // android
-            // iOS: the tab bar's button; its name varies, and the top bar has its own "More" button.
-            NavigationLocators.IOS_TAB_BAR_MORE_BUTTON); // ios
+    /** Signed in: the bottom navigation's More tab is showing (it is never on the sign-in screen). */
+    public static final By SIGNED_IN_MARKER = BottomNavigationLocators.MORE_TAB;
 
     /**
      * The identity provider can answer a correct password with "Account verification - we need to verify

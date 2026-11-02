@@ -21,8 +21,7 @@ public class LayoutsTest extends BaseTest {
     public void loginAndVerifyLayoutsScreen() {
         layoutCreated = false;
         historyBrowserPage = null;
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        layoutsPage = new LayoutsPage(driver);
+        layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
         historyBrowserPage = new HistoryBrowserPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();
         layoutsPage.clickFirstLayoutTab();

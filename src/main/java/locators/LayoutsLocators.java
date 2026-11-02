@@ -112,10 +112,6 @@ public final class LayoutsLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Add']"), // android
             NavigationLocators.iosTopBarButton("Add")); // ios
 
-    // Android only: iOS shows no snackbar; it lists the new layout among the tabs instead (see layoutTabByName).
-    public static final By SUCCESS_MESSAGE =
-            AppiumBy.id("com.een.vms.android:id/snackbar_text");
-
     // --- Layouts search filter and delete --------------------------------------
 
     public static final By FILTER_ICON = PlatformLocator.get(

@@ -37,11 +37,10 @@ public class HistoryBrowserTest extends BaseTest {
         devicesPage = null;
         camerasPage = null;
         videoSearchPage = null;
-        loginAs(TestDataConstants.ENDUSER_CREDS);
+        layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
         devicesPage = new DevicesPage(driver);
         camerasPage = new CamerasPage(driver);
         videoSearchPage = new VideoSearchPage(driver);
-        layoutsPage = new LayoutsPage(driver);
         historyBrowserPage = new HistoryBrowserPage(driver);
         eventFilterPage = new EventFilterPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();

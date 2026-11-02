@@ -1,6 +1,7 @@
 package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import locators.BottomNavigationLocators;
 import locators.ResellerDashboardLocators;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -12,8 +13,8 @@ import utils.WaitUtils;
 import java.time.Duration;
 
 public class ResellerDashboardPage {
-    private final AppiumDriver driver;
 
+    private final AppiumDriver driver;
     public ResellerDashboardPage(AppiumDriver driver) {
         this.driver = driver;
     }
@@ -100,22 +101,6 @@ public class ResellerDashboardPage {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ADD_ACCOUNT_BUTTON).isDisplayed();
     }
 
-    public boolean isDashboardOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_DASHBOARD).isDisplayed();
-    }
-
-    public boolean isUsersOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_USERS).isDisplayed();
-    }
-
-    public boolean isBusinessPortalOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_BUSINESS_PORTAL).isDisplayed();
-    }
-
-    public boolean isMoreOptionDisplayed() {
-        return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.NAV_MORE).isDisplayed();
-    }
-
     public void clickAddAccountButton() {
         WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.ADD_ACCOUNT_BUTTON).click();
     }
@@ -156,10 +141,6 @@ public class ResellerDashboardPage {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EDITION_ENTERPRISE).isDisplayed();
     }
 
-    public void clickEditionSectionBackNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
-    }
-
     public boolean isCameraDefaultsSectionDisplayed() {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CAMERA_DEFAULTS_SECTION).isDisplayed();
     }
@@ -184,10 +165,6 @@ public class ResellerDashboardPage {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.CLOUD_RETENTION_MAX_5_YEARS).isDisplayed();
     }
 
-    public void clickCloudRetentionSectionBackNavigationIcon() {
-        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
-    }
-
     public boolean isMinRetentionOptionDisplayed() {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MIN_RETENTION).isDisplayed();
     }
@@ -208,10 +185,6 @@ public class ResellerDashboardPage {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MIN_RETENTION_MAX_180_DAYS).isDisplayed();
     }
 
-    public void clickMinRetentionSectionBackIcon() {
-        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
-    }
-
     public boolean isMaxRetentionOptionDisplayed() {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MAX_RETENTION).isDisplayed();
     }
@@ -230,10 +203,6 @@ public class ResellerDashboardPage {
 
     public boolean maxValueOptionIs1YearInMaxRetentionDisplayed() {
         return WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.MAX_RETENTION_MAX_1_YEAR).isDisplayed();
-    }
-
-    public void clickMaxRetentionSectionBackIcon() {
-        WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
     }
 
     public boolean previewResolutionOptionIsDisplayed() {
@@ -288,7 +257,8 @@ public class ResellerDashboardPage {
         WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.EMAIL_INPUT_FIELD).sendKeys(email);
     }
 
-    public void clickBackButton() {
+    /** The back chevron at the top left of a Reseller Dashboard form or section screen. */
+    public void clickBackNavigationIcon() {
         WaitUtils.waitForVisibility(driver, ResellerDashboardLocators.GENERIC_BACK_CHEVRON).click();
     }
 
@@ -318,7 +288,7 @@ public class ResellerDashboardPage {
 
     /** Backs out of any add/edit screen so the account list (bottom navigation) is showing. */
     public void recoverToAccountList() {
-        for (int i = 0; i < 3 && !WaitUtils.isPresent(driver, ResellerDashboardLocators.NAV_DASHBOARD); i++) {
+        for (int i = 0; i < 3 && !WaitUtils.isPresent(driver, BottomNavigationLocators.DASHBOARD_TAB); i++) {
             driver.navigate().back();
         }
     }
@@ -381,10 +351,11 @@ public class ResellerDashboardPage {
         // "More" is part of the bottom navigation, so its presence is all that matters. Give it a moment to show up
         // before pressing Back: right after a relaunch the screen may still be rendering, and Back from the landing
         // screen would leave the app. The wait only costs time when the screen really is somewhere else.
-        for (int i = 0; i < 5 && !WaitUtils.isVisible(driver, ResellerDashboardLocators.NAV_MORE, TimeoutConstants.SHORT_TIMEOUT); i++) {
+        for (int i = 0; i < 5
+                && !WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB, TimeoutConstants.SHORT_TIMEOUT); i++) {
             driver.navigate().back();
         }
-        WaitUtils.click(driver, ResellerDashboardLocators.NAV_MORE);
+        WaitUtils.click(driver, BottomNavigationLocators.MORE_TAB);
         if (!WaitUtils.isPresent(driver, ResellerDashboardLocators.LOGOUT_OPTION)) {
             GestureUtils.swipeUp(driver);
         }
@@ -450,22 +421,6 @@ public class ResellerDashboardPage {
 
     public void verifyAddAccountButtonDisplayed() {
         Assert.assertTrue(isAddAccountButtonDisplayed(), "Add account button should be displayed");
-    }
-
-    public void verifyDashboardOptionDisplayed() {
-        Assert.assertTrue(isDashboardOptionDisplayed(), "Dashboard option should be displayed");
-    }
-
-    public void verifyUsersOptionDisplayed() {
-        Assert.assertTrue(isUsersOptionDisplayed(), "Users option should be displayed");
-    }
-
-    public void verifyBusinessPortalOptionDisplayed() {
-        Assert.assertTrue(isBusinessPortalOptionDisplayed(), "Business Portal option should be displayed");
-    }
-
-    public void verifyMoreOptionDisplayed() {
-        Assert.assertTrue(isMoreOptionDisplayed(), "More option should be displayed");
     }
 
     public void dismissContextMenu() {
@@ -633,10 +588,7 @@ public class ResellerDashboardPage {
     }
 
     public void verifyBottomNavigationBar() {
-        verifyDashboardOptionDisplayed();
-        verifyUsersOptionDisplayed();
-        verifyBusinessPortalOptionDisplayed();
-        verifyMoreOptionDisplayed();
+        BottomNavigationBar.verifyResellerTabsDisplayed(driver);
     }
 
     public void verifyAddAccountFormFields() {
@@ -654,7 +606,7 @@ public class ResellerDashboardPage {
         clickEditionSectionNavigationIcon();
         verifyProfessionalOptionDisplayed();
         verifyEnterpriseOptionDisplayed();
-        clickEditionSectionBackNavigationIcon();
+        clickBackNavigationIcon();
     }
 
     public void verifyCloudRetentionRange() {
@@ -665,7 +617,7 @@ public class ResellerDashboardPage {
         verifyMinimumOneDayOptionDisplayed();
         GestureUtils.swipeUp(driver);
         verifyMax5YearsOptionDisplayed();
-        clickCloudRetentionSectionBackNavigationIcon();
+        clickBackNavigationIcon();
     }
 
     public void verifyMinRetentionRange() {
@@ -675,7 +627,7 @@ public class ResellerDashboardPage {
         verifyMinRetentionSectionMinValueNoneDisplayed();
         GestureUtils.swipeUp(driver);
         verifyMinRetentionSectionMaxValue180DaysDisplayed();
-        clickMinRetentionSectionBackIcon();
+        clickBackNavigationIcon();
     }
 
     public void verifyMaxRetentionRange() {
@@ -685,7 +637,7 @@ public class ResellerDashboardPage {
         verifyMinimumValueOptionIsNoneInMaxRetentionDisplayed();
         GestureUtils.swipeUp(driver);
         verifyMaxValueOptionIs1YearInMaxRetentionDisplayed();
-        clickMaxRetentionSectionBackIcon();
+        clickBackNavigationIcon();
     }
 
     public void verifyResolutionAndToggleDefaults() {

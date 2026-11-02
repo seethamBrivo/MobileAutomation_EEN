@@ -5,7 +5,6 @@ import io.appium.java_client.AppiumDriver;
 import locators.UsersLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.TestDataGenerator;
 import utils.WaitUtils;
@@ -24,7 +23,7 @@ public class UsersPage {
     // ---- navigation -----------------------------------------------------------------------
 
     public void clickUsersOptionAtTheBottom() {
-        WaitUtils.click(driver, UsersLocators.USERS_OPTION_AT_THE_BOTTOM_OF_THE_SCREEN);
+        BottomNavigationBar.clickUsersTab(driver);
     }
 
     public void clickUsersAddIconAtTheTopRightCorner() {
@@ -66,14 +65,13 @@ public class UsersPage {
     }
 
     public void verifyUsersOptionAtBottomScreenDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.USERS_OPTION_AT_THE_BOTTOM_OF_THE_SCREEN).isDisplayed(),
-                "Users option should be displayed at the bottom of the screen");
+        BottomNavigationBar.verifyUsersTabDisplayed(driver);
     }
 
     // ---- new-user form --------------------------------------------------------------------
 
     public void verifyNewUserHeadingDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.NEW_USER_HEADING).isDisplayed(), "New user heading should be displayed");
+        WaitUtils.assertVisible(driver, UsersLocators.NEW_USER_HEADING, "New user heading should be displayed");
     }
 
     public void verifyAddButtonDisabled() {
@@ -97,13 +95,12 @@ public class UsersPage {
     }
 
     public void verifyEmailPlusHintDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.EMAIL_PLUS_HINT).isDisplayed(), "Email plus hint should be displayed");
+        WaitUtils.assertVisible(driver, UsersLocators.EMAIL_PLUS_HINT, "Email plus hint should be displayed");
     }
 
     /** The "user was added" snackbar - verify it appears (no text validation). */
     public void verifyUserWasAddedMessageDisplayed() {
-        WebElement snackbar = WaitUtils.waitForVisibility(driver, UsersLocators.SNACKBAR_TEXT);
-        Assert.assertTrue(snackbar.isDisplayed(), "Snackbar should be displayed after adding user");
+        WaitUtils.assertVisible(driver, UsersLocators.SNACKBAR_TEXT, "Snackbar should be displayed after adding user");
     }
 
     /**

@@ -41,23 +41,19 @@ public class DevicesPage {
 
     // ---- navigation -----------------------------------------------------------------------
 
-    public void clickMoreMenuOptionAtTheBottom() {
-        WaitUtils.click(driver, BridgesLocators.MORE_MENU_OPTION);
-    }
-
     public void clickDashboardOptionAtTheBottom() {
         WaitUtils.click(driver, BridgesLocators.DASHBOARD_OPTION);
     }
 
     /** More > Dashboard. Works from any screen that shows the bottom navigation. */
     public void navigateToDashboard() {
-        clickMoreMenuOptionAtTheBottom();
+        BottomNavigationBar.clickMoreTab(driver);
         clickDashboardOptionAtTheBottom();
     }
 
     /** Navigate to My Profile via bottom navigation (More > My Profile). */
     public MyProfilePage navigateToMyProfile() {
-        clickMoreMenuOptionAtTheBottom();
+        BottomNavigationBar.clickMoreTab(driver);
         // Wait for More screen to fully render before returning - prevents timeout when clicking profile section
         // The profile section is positional (TODO: replace with testTag when mobile team adds proper identifiers),
         // so we wait for it to appear to ensure the ScrollView children are in the hierarchy
@@ -101,41 +97,39 @@ public class DevicesPage {
      * screens/dialogs until the bottom navigation is visible, then More > Dashboard.
      */
     public void recoverToDashboard() {
-        for (int i = 0; i < 3 && !WaitUtils.isPresent(driver, BridgesLocators.MORE_MENU_OPTION); i++) {
+        for (int i = 0; i < 3 && !BottomNavigationBar.isShowing(driver); i++) {
             driver.navigate().back();
         }
         navigateToDashboard();
     }
 
     public void verifyAllDevicesSectionIsDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.ALL_DEVICES_SECTION).isDisplayed(),
-                "All devices section should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.ALL_DEVICES_SECTION, "All devices section should be displayed");
     }
 
     public void verifyBridgesOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGES_TAB).isDisplayed(), "Bridges option should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.BRIDGES_TAB, "Bridges option should be displayed");
     }
 
     public void verifyCamerasOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.CAMERAS_OPTION).isDisplayed(), "Cameras option should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.CAMERAS_OPTION, "Cameras option should be displayed");
     }
 
     public void verifySpeakersOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.SPEAKERS_OPTION).isDisplayed(), "Speakers option should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.SPEAKERS_OPTION, "Speakers option should be displayed");
     }
 
     public void verifySwitchesOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.SWITCHES_OPTION).isDisplayed(), "Switches option should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.SWITCHES_OPTION, "Switches option should be displayed");
     }
 
     public void verifyUserNavigatedToOriginScreen() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.ALL_DEVICES_SECTION).isDisplayed(),
+        WaitUtils.assertVisible(driver, BridgesLocators.ALL_DEVICES_SECTION,
                 "User should be navigated back to the All devices screen");
     }
 
     public void verifyUserNavigatedBackToBridgesTab() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGES_TAB).isDisplayed(),
-                "User should be navigated back to Bridges tab");
+        WaitUtils.assertVisible(driver, BridgesLocators.BRIDGES_TAB, "User should be navigated back to Bridges tab");
     }
 
     // ---- add bridge -----------------------------------------------------------------------
@@ -165,9 +159,10 @@ public class DevicesPage {
     }
 
     public void verifyAddDeviceOptionsDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_BRIDGE_OPTION).isDisplayed(), "Add bridge option should be displayed");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_CAMERA_OPTION).isDisplayed(), "Add camera option should be displayed");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_CAMERA_DIRECT_OPTION).isDisplayed(), "Add Camera Direct option should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.ADD_BRIDGE_OPTION, "Add bridge option should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.ADD_CAMERA_OPTION, "Add camera option should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.ADD_CAMERA_DIRECT_OPTION,
+                "Add Camera Direct option should be displayed");
     }
 
     public void clickAddBridgeOption() {
@@ -195,7 +190,7 @@ public class DevicesPage {
     }
 
     public void verifyConflictErrorMessageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.CONFLICT_ERROR_MESSAGE).isDisplayed(),
+        WaitUtils.assertVisible(driver, BridgesLocators.CONFLICT_ERROR_MESSAGE,
                 "Conflict error message should be displayed for a duplicate attach ID");
     }
 
@@ -213,7 +208,7 @@ public class DevicesPage {
             // The server can still be freeing the attach ID of a bridge deleted a moment ago, which answers with a
             // short-lived "conflict" message and leaves the form open. The fields keep their values: wait, tap Add once more.
             logger.warn("The add-bridge form is still open after tapping Add; waiting {} and trying once more", ADD_RETRY_PAUSE);
-            pause(ADD_RETRY_PAUSE);
+            WaitUtils.pauseFor(ADD_RETRY_PAUSE);
             clickAddBridgeButton();
             result = awaitAddResult();
         }
@@ -221,7 +216,7 @@ public class DevicesPage {
             // Neither the form nor the dashboard: the app is still busy (or somewhere unexpected). Do NOT tap Add again, the
             // bridge may already be added; give the dashboard more time to show up.
             logger.warn("Neither the add form nor the dashboard is showing; waiting up to {} for the dashboard", ADD_LANDING_TIMEOUT);
-            Assert.assertTrue(WaitUtils.isVisible(driver, BridgesLocators.ALL_DEVICES_SECTION, ADD_LANDING_TIMEOUT),
+            WaitUtils.assertVisible(driver, BridgesLocators.ALL_DEVICES_SECTION, ADD_LANDING_TIMEOUT,
                     "After adding bridge '" + bridgeName + "' the app did not return to the All devices screen");
         } else {
             Assert.assertSame(result, AddResult.ACCEPTED,
@@ -247,18 +242,11 @@ public class DevicesPage {
                 conflictSeen = true;
                 logger.warn("The app answered the add with a conflict message");
             }
-            pause(Duration.ofMillis(300));
+            WaitUtils.pauseFor(Duration.ofMillis(300));
         }
         return WaitUtils.isPresent(driver, BridgesLocators.BRIDGE_NAME_FIELD) ? AddResult.STILL_OPEN : AddResult.UNKNOWN;
     }
 
-    private static void pause(Duration duration) {
-        try {
-            Thread.sleep(duration.toMillis());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
 
     // ---- bridge list / filter -------------------------------------------------------------
 
@@ -279,13 +267,13 @@ public class DevicesPage {
 
     public void verifyNoMatchingBridgesMessageDisplayed(String bridgeName) {
         WaitUtils.clearAndType(driver, BridgesLocators.FILTER_SEARCH_FIELD, bridgeName);
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE).isDisplayed(),
+        WaitUtils.assertVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE,
                 "No matching bridges message should be displayed after deleting bridge: " + bridgeName);
     }
 
     public void verifyBridgeListDisplayed() {
         WaitUtils.waitForVisibility(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST);
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST).isDisplayed(), "Bridge list should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST, "Bridge list should be displayed");
     }
 
     public String getFirstBridgeName() {
@@ -346,7 +334,7 @@ public class DevicesPage {
     }
 
     public void verifyContextMenuOptionDisplayed(String optionText) {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.contextMenuOption(optionText)).isDisplayed(),
+        WaitUtils.assertVisible(driver, BridgesLocators.contextMenuOption(optionText),
                 "Context menu option should be displayed: " + optionText);
     }
 
