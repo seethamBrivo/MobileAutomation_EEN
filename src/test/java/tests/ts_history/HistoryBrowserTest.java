@@ -27,8 +27,7 @@ public class HistoryBrowserTest extends BaseTest {
         layoutsPage = null;
         historyBrowserPage = null;
         eventFilterPage = null;
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        layoutsPage = new LayoutsPage(driver);
+        layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
         historyBrowserPage = new HistoryBrowserPage(driver);
         eventFilterPage = new EventFilterPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();

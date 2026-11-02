@@ -27,6 +27,7 @@ import utils.WaitUtils;
 public class HistoryBrowserPage {
 
     private static final Logger logger = LogManager.getLogger(HistoryBrowserPage.class);
+    private final AppiumDriver driver;
 
     private static final List<Integer> TIMELINE_LEVEL_MINUTES = List.of(1, 5, 15, 30, 60);
     private static final int MIN_LEVEL_MINUTES = TIMELINE_LEVEL_MINUTES.get(0);
@@ -53,7 +54,6 @@ public class HistoryBrowserPage {
             CamerasLocators.CAMERA_SETTINGS_OPTION, CamerasLocators.HISTORY_BROWSER_OPTION,
             CamerasLocators.LIVE_VIDEO_OPTION);
 
-    private final AppiumDriver driver;
 
     /** Set while the multi-window setting is on, so cleanup only has to switch it off when a test turned it on. */
     private boolean multiWindowEnabled;
@@ -99,7 +99,7 @@ public class HistoryBrowserPage {
             logger.info("Camera reopened in the history browser (its last used mode); switching to live video");
             WaitUtils.click(driver, HistoryBrowserLocators.NAVIGATION_BUTTON);
         }
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.LIVE_STREAM_SCREEN).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.LIVE_STREAM_SCREEN,
                 "Live video of the selected camera should be displayed");
     }
 
@@ -122,7 +122,7 @@ public class HistoryBrowserPage {
 
     public void verifyTimelineControlsDisplayed() {
         for (By control : TIMELINE_CONTROLS) {
-            Assert.assertTrue(WaitUtils.waitForVisibility(driver, control).isDisplayed(),
+            WaitUtils.assertVisible(driver, control,
                     "Timeline control " + control + " should be displayed below the timeline");
         }
     }
@@ -177,8 +177,7 @@ public class HistoryBrowserPage {
         driver.setSetting(MULTI_WINDOWS_SETTING, true);
         GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FIRST_PREVIEW_CARD));
         for (By option : CONTEXT_MENU_OPTIONS) {
-            Assert.assertTrue(WaitUtils.waitForVisibility(driver, option).isDisplayed(),
-                    "Context menu option " + option + " should be displayed");
+            WaitUtils.assertVisible(driver, option, "Context menu option " + option + " should be displayed");
         }
         boolean hasTurnOnOrOff =
                 WaitUtils.isVisible(driver, CamerasLocators.TURN_ON_CAMERA_OPTION, TimeoutConstants.SHORT_TIMEOUT)
@@ -206,7 +205,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyTimelineAndControlsDisplayedInPortrait() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
                 "Timeline should be displayed in the history browser");
         verifyTimelineControlsDisplayed();
         Dimension screen = driver.manage().window().getSize();
@@ -224,7 +223,7 @@ public class HistoryBrowserPage {
      * case words this as hidden until the timeline button is tapped; the app's behaviour is what is asserted.
      */
     public void verifyTimelineShowsByDefaultAndClosesInLandscape() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
                 "Timeline should be visible by default in landscape");
         WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON);
         Assert.assertTrue(WaitUtils.waitForInvisibility(
@@ -234,18 +233,17 @@ public class HistoryBrowserPage {
 
     public void showTimelineAndVerifyControlsInLandscape() {
         WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_BUTTON);
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
                 "Timeline should be displayed after tapping the timeline button");
         verifyTimelineControlsDisplayed();
     }
 
     /** The timeline is waited for first, so a number that renders late is not mistaken for an absent one. */
     public void verifyFilterButtonWithoutIndication() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILTER_BUTTON).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.FILTER_BUTTON,
                 "Filter button should be displayed in the history browser");
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS);
-        Assert.assertFalse(WaitUtils.isVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION,
-                        TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertNotVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION, TimeoutConstants.SHORT_TIMEOUT,
                 "Filter button should show no indication number");
     }
 
@@ -361,8 +359,7 @@ public class HistoryBrowserPage {
     }
 
     private void verifyHistoryBrowserDisplayed() {
-        Assert.assertTrue(
-                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN,
                 "History browser of the selected camera should be displayed");
     }
 

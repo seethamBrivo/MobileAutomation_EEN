@@ -18,8 +18,7 @@ public class LayoutsTest extends BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void loginAndVerifyLayoutsScreen() {
         layoutCreated = false;
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        layoutsPage = new LayoutsPage(driver);
+        layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
         layoutsPage.verifyLayoutsScreenDisplayed();
         layoutsPage.clickFirstLayoutTab();
     }

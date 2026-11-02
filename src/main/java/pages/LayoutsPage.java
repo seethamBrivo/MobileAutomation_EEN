@@ -4,6 +4,7 @@ import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.util.List;
+import locators.CommonLocators;
 import locators.LayoutsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,8 +25,7 @@ public class LayoutsPage {
     }
 
     public void verifyLayoutsScreenDisplayed() {
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, LayoutsLocators.THREE_DOTS_MENU_BUTTON),
-                "Three dots menu button should be visible on layouts screen");
+        WaitUtils.assertVisible(driver, LayoutsLocators.THREE_DOTS_MENU_BUTTON, "Three dots menu button should be visible on layouts screen");
     }
 
     // ---- step-level groups (EEPD-TC-9005) -------------------------------------------------
@@ -67,8 +67,7 @@ public class LayoutsPage {
     }
 
     public void verifyMenuPopupDisplayed() {
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, LayoutsLocators.NEW_LAYOUT_OPTION),
-                "Three dots menu popup should be displayed");
+        WaitUtils.assertVisible(driver, LayoutsLocators.NEW_LAYOUT_OPTION, "Three dots menu popup should be displayed");
     }
 
     public void verifyMenuOptions() {
@@ -80,17 +79,17 @@ public class LayoutsPage {
         Assert.assertTrue(WaitUtils.waitForAny(driver, menuOptions, FrameworkConstants.EXPLICIT_WAIT).isPresent(),
                 "At least one menu option should be displayed");
 
-        Assert.assertTrue(WaitUtils.isVisible(driver, LayoutsLocators.ADD_CAMERAS_OPTION, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, LayoutsLocators.ADD_CAMERAS_OPTION, TimeoutConstants.SHORT_TIMEOUT,
                 "Add Cameras option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, LayoutsLocators.NEW_LAYOUT_OPTION, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, LayoutsLocators.NEW_LAYOUT_OPTION, TimeoutConstants.SHORT_TIMEOUT,
                 "New Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, LayoutsLocators.EDIT_LAYOUT_OPTION, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, LayoutsLocators.EDIT_LAYOUT_OPTION, TimeoutConstants.SHORT_TIMEOUT,
                 "Edit Layout option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, LayoutsLocators.LAYOUT_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, LayoutsLocators.LAYOUT_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT,
                 "Layout Settings option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, LayoutsLocators.MAP_VIEW_OPTION, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, LayoutsLocators.MAP_VIEW_OPTION, TimeoutConstants.SHORT_TIMEOUT,
                 "Map View option should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, LayoutsLocators.ZOOM_IN_OPTION, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, LayoutsLocators.ZOOM_IN_OPTION, TimeoutConstants.SHORT_TIMEOUT,
                 "Zoom In option should be displayed");
 
         if (WaitUtils.isVisible(driver, LayoutsLocators.ZOOM_OUT_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
@@ -105,8 +104,7 @@ public class LayoutsPage {
     }
 
     public void verifyNewLayoutScreenDisplayed() {
-        Assert.assertNotNull(WaitUtils.waitForVisibility(driver, LayoutsLocators.LAYOUT_NAME_LABEL),
-                "New Layout screen should be displayed");
+        WaitUtils.assertVisible(driver, LayoutsLocators.LAYOUT_NAME_LABEL, "New Layout screen should be displayed");
     }
 
     public void setLayoutName(String layoutName) {
@@ -200,7 +198,7 @@ public class LayoutsPage {
             verifyLayoutCreatedOnIos(layoutName);
             return;
         }
-        if (WaitUtils.isVisible(driver, LayoutsLocators.SUCCESS_MESSAGE, TimeoutConstants.SHORT_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, CommonLocators.SNACKBAR_TEXT, TimeoutConstants.SHORT_TIMEOUT)) {
             logger.info("Layout creation confirmed via snackbar message");
             ensureOnLayoutsListScreen();
             return;
@@ -212,7 +210,7 @@ public class LayoutsPage {
         enterLayoutNameInSearchFilter(layoutName);
 
         By targetLayout = LayoutsLocators.layoutByName(layoutName);
-        Assert.assertTrue(WaitUtils.isVisible(driver, targetLayout, FrameworkConstants.EXPLICIT_WAIT),
+        WaitUtils.assertVisible(driver, targetLayout, FrameworkConstants.EXPLICIT_WAIT,
                 "Layout '" + layoutName + "' should appear in layouts list after creation");
         logger.info("Layout creation confirmed - '{}' found in layouts list", layoutName);
 
@@ -234,7 +232,7 @@ public class LayoutsPage {
             clickLayoutsTab();
             enterLayoutNameInSearchFilter(layoutName);
             By result = LayoutsLocators.layoutByName(layoutName);
-            Assert.assertTrue(WaitUtils.isVisible(driver, result, FrameworkConstants.EXPLICIT_WAIT),
+            WaitUtils.assertVisible(driver, result, FrameworkConstants.EXPLICIT_WAIT,
                     "Layout '" + layoutName + "' should appear in layouts list after creation");
             WaitUtils.click(driver, result);
             logger.info("Layout creation confirmed - '{}' found through the filter", layoutName);
@@ -304,8 +302,7 @@ public class LayoutsPage {
 
         // iOS: the search results are gone once the layout is deleted, so its tab is checked instead.
         By deletedMarker = PlatformLocator.isIos() ? LayoutsLocators.layoutTabByName(layoutName) : targetLayout;
-        boolean isDeleted = !WaitUtils.isVisible(driver, deletedMarker, TimeoutConstants.SHORT_TIMEOUT);
-        Assert.assertTrue(isDeleted,
+        WaitUtils.assertNotVisible(driver, deletedMarker, TimeoutConstants.SHORT_TIMEOUT,
                 "Layout '" + layoutName + "' should be deleted but is still visible");
         logger.info("Verified layout '{}' was successfully deleted", layoutName);
     }

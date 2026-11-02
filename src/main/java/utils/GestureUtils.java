@@ -61,18 +61,11 @@ public final class GestureUtils {
                 && !WaitUtils.isVisible(driver, expectedAfterPress, TimeoutConstants.FILTER_RESULT_TIMEOUT); attempt++) {
             logger.warn("Nothing appeared after the long press on {}; pressing again (press {} of {})",
                     pressTarget, attempt, LONG_PRESS_ATTEMPTS);
-            pause(TimeoutConstants.SWIPE_PAUSE.multipliedBy(3));
+            WaitUtils.pauseFor(TimeoutConstants.SWIPE_PAUSE.multipliedBy(3));
             longPress(driver, WaitUtils.waitForVisibility(driver, pressTarget));
         }
     }
 
-    private static void pause(Duration duration) {
-        try {
-            Thread.sleep(duration.toMillis());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
 
     public static void swipeUp(AppiumDriver driver) {
         Dimension size = driver.manage().window().getSize();

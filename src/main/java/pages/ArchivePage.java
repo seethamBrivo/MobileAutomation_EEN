@@ -3,7 +3,6 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import locators.ArchiveLocators;
-import locators.BridgesLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebElement;
@@ -17,21 +16,14 @@ public class ArchivePage {
     private final AppiumDriver driver;
 
     public ArchivePage(AppiumDriver driver) {
-        if (driver == null) {
-            throw new IllegalArgumentException("Driver cannot be null");
-        }
         this.driver = driver;
     }
 
     public void navigateToArchive() {
-        clickMoreTab();
+        BottomNavigationBar.clickMoreTab(driver);
         clickFilesMenu();
         clickArchiveMenu();
         verifyArchiveScreenDisplayed();
-    }
-
-    public void clickMoreTab() {
-        WaitUtils.click(driver, BridgesLocators.MORE_MENU_OPTION);
     }
 
     public void clickFilesMenu() {
@@ -43,21 +35,13 @@ public class ArchivePage {
     }
 
     private void verifyArchiveScreenDisplayed() {
-        boolean isDisplayed = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.FILES_TAB,
-                TimeoutConstants.LIST_LOAD_TIMEOUT
-        );
-        Assert.assertTrue(isDisplayed, "Archive screen should be displayed (Files tab visible)");
+        WaitUtils.assertVisible(driver, ArchiveLocators.FILES_TAB, TimeoutConstants.LIST_LOAD_TIMEOUT,
+                "Archive screen should be displayed (Files tab visible)");
     }
 
     public void verifyFilesTabIsSelected() {
-        boolean isVisible = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.FILES_TAB,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        Assert.assertTrue(isVisible, "Files tab should be visible (default tab)");
+        WaitUtils.assertVisible(driver, ArchiveLocators.FILES_TAB, TimeoutConstants.SHORT_TIMEOUT,
+                "Files tab should be visible (default tab)");
     }
 
     /**
@@ -66,31 +50,18 @@ public class ArchivePage {
      * when test account has no archive content.
      */
     public void verifyFilesTabNotEmpty() {
-        boolean hasContent = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.FIRST_FOLDER,
-                TimeoutConstants.LIST_LOAD_TIMEOUT
-        );
-        Assert.assertTrue(hasContent,
-            "Files tab should contain at least one folder/file - test account may have no archive content");
+        WaitUtils.assertVisible(driver, ArchiveLocators.FIRST_FOLDER, TimeoutConstants.LIST_LOAD_TIMEOUT,
+                "Files tab should contain at least one folder/file - test account may have no archive content");
     }
 
     public void verifyFilterIconPresentOnFilesTab() {
-        boolean isPresent = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.FILTER_ICON_FILES_TAB,
-                TimeoutConstants.LIST_LOAD_TIMEOUT
-        );
-        Assert.assertTrue(isPresent, "Filter icon should be present on Files tab");
+        WaitUtils.assertVisible(driver, ArchiveLocators.FILTER_ICON_FILES_TAB, TimeoutConstants.LIST_LOAD_TIMEOUT,
+                "Filter icon should be present on Files tab");
     }
 
     public void verifyFilterIconPresentOnProgressTab() {
-        boolean isPresent = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.FILTER_ICON_PROGRESS_TAB,
-                TimeoutConstants.LIST_LOAD_TIMEOUT
-        );
-        Assert.assertTrue(isPresent, "Filter icon should be present on Progress tab");
+        WaitUtils.assertVisible(driver, ArchiveLocators.FILTER_ICON_PROGRESS_TAB, TimeoutConstants.LIST_LOAD_TIMEOUT,
+                "Filter icon should be present on Progress tab");
     }
 
     public void clickFilterIcon() {
@@ -125,13 +96,8 @@ public class ArchivePage {
     }
 
     public void verifyScreenBlankBeforeSearch() {
-        boolean hasResults = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.FILE_ITEM,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        Assert.assertFalse(hasResults,
-            "Screen should be blank before typing any search terms");
+        WaitUtils.assertNotVisible(driver, ArchiveLocators.FILE_ITEM, TimeoutConstants.SHORT_TIMEOUT,
+                "Screen should be blank before typing any search terms");
     }
 
     public void verifyBackArrowButtonPresent() {
@@ -159,34 +125,19 @@ public class ArchivePage {
     }
 
     public void verifySearchResultsDisplayed(String searchText) {
-        boolean hasResults = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.searchResultByFileName(searchText),
-                TimeoutConstants.LIST_LOAD_TIMEOUT
-        );
-        Assert.assertTrue(hasResults,
-            "Search results should display files containing '" + searchText + "'");
+        WaitUtils.assertVisible(driver, ArchiveLocators.searchResultByFileName(searchText), TimeoutConstants.LIST_LOAD_TIMEOUT,
+                "Search results should display files containing '" + searchText + "'");
     }
 
     public void verifyThreeDotsButtonPresent() {
-        boolean isPresent = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.THREE_DOTS_MENU,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        Assert.assertTrue(isPresent,
-            "3dots button should be present within results items");
+        WaitUtils.assertVisible(driver, ArchiveLocators.THREE_DOTS_MENU, TimeoutConstants.SHORT_TIMEOUT,
+                "3dots button should be present within results items");
     }
 
     public void verifyNoResultsDisplayed() {
         KeyboardUtils.hideKeyboard(driver);
-        boolean emptyStateDisplayed = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.EMPTY_STATE,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        Assert.assertTrue(emptyStateDisplayed,
-            "Empty state 'No results found' should be displayed when search returns no results");
+        WaitUtils.assertVisible(driver, ArchiveLocators.EMPTY_STATE, TimeoutConstants.SHORT_TIMEOUT,
+                "Empty state 'No results found' should be displayed when search returns no results");
     }
 
     public void navigateBack() {
@@ -204,12 +155,8 @@ public class ArchivePage {
     }
 
     public void verifySearchBarClosed() {
-        boolean isClosed = !WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.SEARCH_BAR,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        Assert.assertTrue(isClosed, "Search bar should be closed after navigation back");
+        WaitUtils.assertNotVisible(driver, ArchiveLocators.SEARCH_BAR, TimeoutConstants.SHORT_TIMEOUT,
+                "Search bar should be closed after navigation back");
     }
 
     public void verifyFilesTabWithFilterIcon() {
@@ -282,13 +229,8 @@ public class ArchivePage {
 
     public void verifyDownloadDialogDisplayed() {
         // Verify dialog by checking for DOWNLOAD button (more specific than generic ViewGroup)
-        boolean downloadButtonPresent = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.DOWNLOAD_BUTTON_DIALOG,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        Assert.assertTrue(downloadButtonPresent,
-            "Download confirmation dialog should display DOWNLOAD button");
+        WaitUtils.assertVisible(driver, ArchiveLocators.DOWNLOAD_BUTTON_DIALOG, TimeoutConstants.SHORT_TIMEOUT,
+                "Download confirmation dialog should display DOWNLOAD button");
     }
 
     public void clickDownloadButtonInDialog() {
@@ -296,18 +238,9 @@ public class ArchivePage {
     }
 
     public void verifyDownloadingSnackbar() {
-        WebElement snackbar = WaitUtils.waitForVisibility(
-                driver,
-                ArchiveLocators.SNACKBAR_TEXT,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        String snackbarText = snackbar.getText().toLowerCase();
-        // Accept either "downloading" (in progress) or "saved to files" (fast download completed)
-        boolean isValidSnackbar = snackbarText.contains("downloading") || snackbarText.contains("saved to files");
-        Assert.assertTrue(isValidSnackbar,
-            "Snackbar should show 'Downloading' or 'Saved to Files' message but was: " + snackbarText);
-
-        if (snackbarText.contains("saved to files")) {
+        // Either "downloading" (in progress) or "saved to files" (a fast download already finished).
+        String snackbarText = Snackbar.verifyContainsAnyOf(driver, TimeoutConstants.SHORT_TIMEOUT, "downloading", "saved to files");
+        if (snackbarText.toLowerCase().contains("saved to files")) {
             logger.info("Download completed very quickly - skipping intermediate status checks");
         }
     }
@@ -329,14 +262,7 @@ public class ArchivePage {
      * Progress tab only tracks Archive-specific operations. Snackbar "Saved to Files" confirms download to device.
      */
     public void waitForDownloadComplete() {
-        String snackbarText = WaitUtils.pollText(
-                driver,
-                ArchiveLocators.SNACKBAR_TEXT,
-                "Saved to Files",
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT
-        );
-        Assert.assertTrue(snackbarText.contains("Saved to Files"),
-            "Success snackbar should show 'Saved to Files' but was: " + snackbarText);
+        Snackbar.waitUntilSays(driver, "Saved to Files", TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
     }
 
     public void clickCancelDownloadIcon() {
@@ -348,24 +274,13 @@ public class ArchivePage {
     }
 
     public void verifyDownloadCancelledMessage() {
-        WebElement snackbar = WaitUtils.waitForVisibility(
-                driver,
-                ArchiveLocators.SNACKBAR_TEXT,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        String snackbarText = snackbar.getText();
-        Assert.assertTrue(snackbarText.toLowerCase().contains("cancel"),
-            "Snackbar should show cancellation message but was: " + snackbarText);
+        String snackbarText = Snackbar.verifyContainsAnyOf(driver, TimeoutConstants.SHORT_TIMEOUT, "cancel");
         logger.info("Download cancelled successfully: " + snackbarText);
     }
 
     public void verifyDownloadCancelled() {
-        boolean inProgressGone = !WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.IN_PROGRESS_STATUS,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        Assert.assertTrue(inProgressGone, "Download should be cancelled - 'In progress' status should not be present");
+        WaitUtils.assertNotVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
+                "Download should be cancelled - 'In progress' status should not be present");
     }
 
     public void verifyCompleteFolderDownloadFlow() {

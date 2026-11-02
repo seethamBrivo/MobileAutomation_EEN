@@ -17,8 +17,7 @@ public class LoginTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void signIn() {
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        layoutsPage = new LayoutsPage(driver);
+        layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
     }
 
     @Test(description = "Sign in as the end user and verify the Layouts landing screen",

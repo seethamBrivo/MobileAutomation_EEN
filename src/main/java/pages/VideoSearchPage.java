@@ -14,10 +14,10 @@ import utils.WaitUtils;
 
 public class VideoSearchPage {
 
+    private final AppiumDriver driver;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH);
 
     private static final Logger logger = LogManager.getLogger(VideoSearchPage.class);
-    private final AppiumDriver driver;
 
     public VideoSearchPage(AppiumDriver driver) {
         this.driver = driver;
@@ -28,7 +28,7 @@ public class VideoSearchPage {
     }
 
     public void clickSearch() {
-        WaitUtils.click(driver, VideoSearchLocators.SEARCH_OPTION);
+        BottomNavigationBar.clickSearchTab(driver);
     }
 
     public String captureDateFieldText() {

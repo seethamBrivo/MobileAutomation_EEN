@@ -24,7 +24,7 @@ public class UsersPage {
     // ---- navigation -----------------------------------------------------------------------
 
     public void clickUsersOptionAtTheBottom() {
-        WaitUtils.click(driver, UsersLocators.USERS_OPTION_AT_THE_BOTTOM_OF_THE_SCREEN);
+        BottomNavigationBar.clickUsersTab(driver);
     }
 
     public void clickUsersAddIconAtTheTopRightCorner() {
@@ -66,14 +66,13 @@ public class UsersPage {
     }
 
     public void verifyUsersOptionAtBottomScreenDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.USERS_OPTION_AT_THE_BOTTOM_OF_THE_SCREEN).isDisplayed(),
-                "Users option should be displayed at the bottom of the screen");
+        BottomNavigationBar.verifyUsersTabDisplayed(driver);
     }
 
     // ---- new-user form --------------------------------------------------------------------
 
     public void verifyNewUserHeadingDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.NEW_USER_HEADING).isDisplayed(), "New user heading should be displayed");
+        WaitUtils.assertVisible(driver, UsersLocators.NEW_USER_HEADING, "New user heading should be displayed");
     }
 
     public void verifyAddButtonDisabled() {
@@ -97,7 +96,7 @@ public class UsersPage {
     }
 
     public void verifyEmailPlusHintDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, UsersLocators.EMAIL_PLUS_HINT).isDisplayed(), "Email plus hint should be displayed");
+        WaitUtils.assertVisible(driver, UsersLocators.EMAIL_PLUS_HINT, "Email plus hint should be displayed");
     }
 
     /** The "user was added" snackbar - verify it appears (no text validation). */
