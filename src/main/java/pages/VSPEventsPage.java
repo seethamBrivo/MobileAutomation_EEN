@@ -340,6 +340,38 @@ public class VSPEventsPage {
                 cameraName, plateReading, plateRegion);
     }
 
+    public void openMoreMenu() {
+        WaitUtils.click(driver, VSPEventsLocators.MORE_MENU_OPTION);
+    }
+
+    public void verifyEventsOptionDisplayed() {
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VSPEventsLocators.EVENTS_OPTION).isDisplayed(),
+                "Events item should be visible in the More menu");
+    }
+
+    public void verifyViewInHistoryBrowserButtonDisplayed() {
+        Assert.assertTrue(
+                WaitUtils.waitForVisibility(driver, VSPEventsLocators.DETAIL_VIEW_HISTORY_LINK).isDisplayed(),
+                "History Browser button ('View in history browser') should be visible on the event details screen");
+    }
+
+    /** The camera the event came from, read before leaving the details screen. */
+    public String readEventCameraName() {
+        return getDetailFieldText(VSPEventsLocators.DETAIL_CAMERA_NAME, "Camera name");
+    }
+
+    /**
+     * The time the event was recorded at, in the camera's time zone, read before leaving the details screen so the
+     * History Browser can be checked against it.
+     */
+    public String readEventTime() {
+        return getDetailFieldText(VSPEventsLocators.DETAIL_TIMESTAMP, "Event time");
+    }
+
+    public void tapViewInHistoryBrowser() {
+        WaitUtils.click(driver, VSPEventsLocators.DETAIL_VIEW_HISTORY_LINK);
+    }
+
     private String getDetailFieldText(By locator, String fieldName) {
         // SAFETY FIX: Use EXPLICIT_WAIT for first required element, then SHORT_TIMEOUT for rest
         // First call is camera name, which is always the first field checked
