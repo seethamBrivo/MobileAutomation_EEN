@@ -64,6 +64,7 @@ public final class BottomNavigationLocators {
      * others are named after their label, and the top bar has buttons with similar labels, hence the tab bar scope.
      */
     private static By iosTabBarButton(String label) {
-        return AppiumBy.iOSClassChain("**/XCUIElementTypeTabBar/**/XCUIElementTypeButton[`label == \"" + label + "\"`]");
+        return AppiumBy.iOSClassChain(
+                "**/XCUIElementTypeTabBar/**/XCUIElementTypeButton[`label == \"" + label + "\"`]");
     }
 }
