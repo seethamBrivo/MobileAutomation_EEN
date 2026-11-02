@@ -435,13 +435,33 @@ public class HistoryBrowserPage {
      * The history browser must open for the license plate event's camera, on the event's moment and not on the newest
      * recording. The camera is compared by name. The time is the details screen's Timestamp row, which, like the
      * history browser, is in the camera's time zone, so the cursor's time of day must fall inside the minute shown
-     * there. That is why this is not {@link #verifyOpenedAtEventMoment}: Video Search shows another time zone, so it
-     * can only compare up to a time zone gap.
+     * there. The check is minute-level because the details screen shows no seconds: an event at 10:05:50 also
+     * passes with the cursor at 10:05:00, but opening on the newest recording does not. That is why this is not
+     * {@link #verifyOpenedAtEventMoment}: Video Search shows another time zone, so it can only compare up to a time
+     * zone gap.
      */
     public void verifyOpenedForLprEvent(String eventCameraName, String eventTime) {
         verifyHistoryBrowserDisplayed();
         verifyCameraNameInBackButton(eventCameraName);
         verifyCursorAtEventMoment(eventTime);
+    }
+
+    /**
+     * Cleanup step: closes the long press menu when a test stopped with it open, the way the repo closes its other
+     * context menus (back). It must run before {@link #resetMultiWindowSetting()}, because with multi-window
+     * reporting off the popup is no longer visible to Appium. Does nothing unless this page opened the menu, and
+     * never asserts.
+     */
+    public void dismissContextMenuIfOpen() {
+        if (!multiWindowEnabled) {
+            return;
+        }
+        if (WaitUtils.isVisible(driver, CamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
+            driver.navigate().back();
+            boolean closed = WaitUtils.waitForInvisibility(
+                    driver, CamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT);
+            logger.info("Long press menu {} after back", closed ? "closed" : "is still open");
+        }
     }
 
     /**

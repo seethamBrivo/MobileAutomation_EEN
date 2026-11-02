@@ -94,13 +94,18 @@ public class LayoutsTest extends BaseTest {
             layoutCreated = false;
             uniqueLayoutName = null;
             try {
-                // The long press turns multi-window reporting on; a failure before the menu is used must not leave it
-                // on for the rest of the class session.
+                // The long press leaves its menu open and turns multi-window reporting on. The menu is closed first,
+                // because it is invisible once reporting is off, and the setting is switched off even if that fails.
                 if (driver != null && historyBrowserPage != null) {
-                    historyBrowserPage.resetMultiWindowSetting();
+                    try {
+                        historyBrowserPage.dismissContextMenuIfOpen();
+                    } finally {
+                        historyBrowserPage.resetMultiWindowSetting();
+                    }
                 }
             } catch (Throwable t) {
-                logger.warn("Cleanup: could not switch multi-window reporting off: {}", t.getMessage(), t);
+                logger.warn("Cleanup: could not close the long press menu or switch multi-window off: {}",
+                        t.getMessage(), t);
             }
             super.tearDown(testResult);
         }

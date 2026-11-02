@@ -87,6 +87,7 @@ public class VSPEventsTest extends BaseTest {
         vspEventsPage.verifyViewInHistoryBrowserButtonDisplayed();
         String cameraName = vspEventsPage.readEventCameraName();
         String eventTime = vspEventsPage.readEventTime();
+        // Set before the tap: if the tap itself fails, cleanup still checks whether the history browser opened.
         historyBrowserOpened = true;
         vspEventsPage.tapViewInHistoryBrowser();
         historyBrowserPage.verifyOpenedForLprEvent(cameraName, eventTime);
