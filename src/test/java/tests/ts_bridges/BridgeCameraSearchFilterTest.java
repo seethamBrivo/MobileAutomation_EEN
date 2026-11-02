@@ -15,10 +15,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToBridgeCameras() {
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        devicesPage = new DevicesPage(driver);
-        devicesPage.navigateToDashboard();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
+        devicesPage = loginAndOpenDevicesDashboard(TestDataConstants.ENDUSER_CREDS);
         devicesPage.clickBridgesTab();
         devicesPage.verifyBridgeListDisplayed();
         devicesPage.clickBridgeThreeDotsButton();
@@ -33,17 +30,17 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
     public void verifyBridgeCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.BRIDGE_VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
-        String initialCount = bridgeCamerasPage.captureCounterAndVerifyFormat();
+        String initialCount = bridgeCamerasPage.cameraSearchFilter().captureCounterAndVerifyFormat();
         // Step 7: Tap on the search bar
-        bridgeCamerasPage.tapSearchBarAndVerify();
+        bridgeCamerasPage.cameraSearchFilter().tapSearchBarAndVerify();
         // Step 8: Provide a search term
-        bridgeCamerasPage.searchAndVerifyResults(validSearchTerm, initialCount);
+        bridgeCamerasPage.cameraSearchFilter().searchAndVerifyResults(validSearchTerm, initialCount);
         // Step 9: Interact with a camera from the filtered list
         bridgeCamerasPage.verifyCanInteractWithFilteredCamera();
         // Step 10: Cancel the filtering
-        bridgeCamerasPage.clearSearchAndVerifyRestored(initialCount);
+        bridgeCamerasPage.cameraSearchFilter().clearSearchAndVerifyRestored(initialCount);
         // Step 8 (no results): a term that matches nothing shows the empty state
-        bridgeCamerasPage.searchWithNoResultsAndVerifyEmptyState(invalidSearchTerm);
+        bridgeCamerasPage.cameraSearchFilter().searchWithNoResultsAndVerifyEmptyState(invalidSearchTerm);
         bridgeCamerasPage.clickBackButton();
         devicesPage.verifyBridgeListDisplayed();
     }

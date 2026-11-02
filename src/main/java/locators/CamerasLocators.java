@@ -83,15 +83,25 @@ public final class CamerasLocators {
     // iOS: the preview exposes only the menu's title button (named after the camera), so the preview check and the
     // name check below find the same element. The lookup is relative to the "Camera settings" button.
     // TODO: Replace with testTag when mobile team adds an identifier to the preview overlay.
-    // Positional: the preview container and its name label carry no content-desc/testTag yet.
+    // Android structural: the preview card carries no content-desc/testTag, so it is the card just above the options
+    // list. The old absolute path (.../View[1]/View[2]) no longer matched: the card now holds a single View.
     // iOS: the preview floats in its own layer; the menu's title button, named after the camera, is what is exposed.
     public static final By CAMERA_PREVIEW = PlatformLocator.get(
-            AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[2]"), // android
+            AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
+                    + "/preceding-sibling::android.view.View[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeButton[@name='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
 
+    // Android: the name is the first text that is a direct child of the card. An offline or error card also holds a
+    // status text ("Offline"), but it sits inside a nested View, so only a direct child is the name on every card.
     public static final By CAMERA_NAME_IN_PREVIEW = PlatformLocator.get(
-            AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View[1]//android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
+                    + "/preceding-sibling::android.view.View[1]/android.widget.TextView[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeButton[@name='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
+
+    /** Android only: the time of the frame, the card's second direct-child text on an online camera. */
+    public static final By CAMERA_FRAME_TIME_IN_PREVIEW =
+            AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
+                    + "/preceding-sibling::android.view.View[1]/android.widget.TextView[2]");
 
     // iOS: the timestamp exists in the hierarchy but is reported as not visible, so it is checked for presence.
     public static final By TIMESTAMP = PlatformLocator.get(

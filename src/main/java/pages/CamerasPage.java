@@ -2,6 +2,11 @@ package pages;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Locale;
 import locators.CamerasLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +20,6 @@ import utils.WaitUtils;
 public class CamerasPage {
 
     private static final Logger logger = LogManager.getLogger(CamerasPage.class);
-    private final AppiumDriver driver;
-    private final CameraSearchHelper searchHelper;
 
     public static final String STATUS_ONLINE = "Online";
     public static final String STATUS_OFFLINE = "Offline";
@@ -33,9 +36,16 @@ public class CamerasPage {
         STATUS_DEVICE_ERROR, STATUS_CONNECTIVITY_ISSUE, STATUS_TURNED_OFF, STATUS_CAMERA_ERROR
     };
 
+    /** The menu shows the frame time in the account's time format: 12 hour with AM/PM, or 24 hour. */
+    private static final List<DateTimeFormatter> FRAME_TIME_FORMATS = List.of(
+            DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH), DateTimeFormatter.ofPattern("HH:mm:ss"));
+
+    private final AppiumDriver driver;
+    private final CameraSearchFilter cameraSearchFilter;
+
     public CamerasPage(AppiumDriver driver) {
         this.driver = driver;
-        this.searchHelper = new CameraSearchHelper(
+        this.cameraSearchFilter = new CameraSearchFilter(
             driver,
             CamerasLocators.SEARCH_BAR,
             CamerasLocators.SEARCH_PLACEHOLDER,
@@ -45,15 +55,24 @@ public class CamerasPage {
         );
     }
 
+    /** Closes the camera context menu; does nothing when none is open. */
+    public void dismissContextMenu() {
+        CameraContextMenu.dismiss(driver);
+    }
+
+    /** The search bar, camera counter and filtered list of this screen. */
+    public CameraSearchFilter cameraSearchFilter() {
+        return cameraSearchFilter;
+    }
+
     public void clickCamerasItem() {
         WaitUtils.click(driver, CamerasLocators.CAMERAS_ITEM);
     }
 
     public void verifyCameraListDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_LIST_CONTAINER).isDisplayed(),
-                "Camera list should be displayed");
+        WaitUtils.assertVisible(driver, CamerasLocators.CAMERA_LIST_CONTAINER, "Camera list should be displayed");
         // Verify we're on cameras screen (not bridges screen) using search placeholder
-        Assert.assertTrue(WaitUtils.isVisible(driver, CamerasLocators.SEARCH_PLACEHOLDER, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, CamerasLocators.SEARCH_PLACEHOLDER, TimeoutConstants.SHORT_TIMEOUT,
                 "Camera search placeholder should be visible on cameras screen");
         Assert.assertTrue(scrollToFirstCamera(), "Could not find any camera in the list");
     }
@@ -122,36 +141,32 @@ public class CamerasPage {
     }
 
     public void verifyContextMenuDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.CONTEXT_MENU_CONTAINER).isDisplayed(),
+        WaitUtils.assertVisible(driver, CamerasLocators.CONTEXT_MENU_CONTAINER,
                 "Context menu should be displayed in the foreground with blurred background");
     }
 
-    public void dismissContextMenu() {
-        searchHelper.dismissContextMenu();
-    }
-
     public void verifyCameraSettingsOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_SETTINGS_OPTION).isDisplayed(),
+        WaitUtils.assertVisible(driver, CamerasLocators.CAMERA_SETTINGS_OPTION,
                 "Camera Settings option should be displayed in context menu");
     }
 
     public void verifyHistoryBrowserOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.HISTORY_BROWSER_OPTION).isDisplayed(),
+        WaitUtils.assertVisible(driver, CamerasLocators.HISTORY_BROWSER_OPTION,
                 "History Browser option should be displayed in context menu");
     }
 
     public void verifyLiveVideoOptionDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.LIVE_VIDEO_OPTION).isDisplayed(),
+        WaitUtils.assertVisible(driver, CamerasLocators.LIVE_VIDEO_OPTION,
                 "Live Video option should be displayed in context menu");
     }
 
     public void verifyCameraPreviewDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_PREVIEW).isDisplayed(),
+        WaitUtils.assertVisible(driver, CamerasLocators.CAMERA_PREVIEW,
                 "Camera preview should be displayed for the selected camera");
     }
 
     public void verifyCameraNameDisplayed() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, CamerasLocators.CAMERA_NAME_IN_PREVIEW, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, CamerasLocators.CAMERA_NAME_IN_PREVIEW, TimeoutConstants.SHORT_TIMEOUT,
                 "Camera name should be visible in the preview");
         String cameraName = WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_NAME_IN_PREVIEW).getText();
         Assert.assertFalse(cameraName.isEmpty(), "Camera name should not be empty");
@@ -169,8 +184,7 @@ public class CamerasPage {
                     "Timestamp should be displayed in camera preview");
             return;
         }
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.TIMESTAMP).isDisplayed(),
-                "Timestamp should be displayed in camera preview");
+        WaitUtils.assertVisible(driver, CamerasLocators.TIMESTAMP, "Timestamp should be displayed in camera preview");
     }
 
     public boolean isDeviceStatusDisplayed(String status) {
@@ -238,100 +252,12 @@ public class CamerasPage {
         Assert.assertTrue(hasTurnOnOrOff, "Expected either 'Turn on camera' or 'Turn off camera' option to be displayed");
     }
 
-    public void clickSearchBar() {
-        searchHelper.clickSearchBar();
-    }
-
-    public void verifySearchPlaceholderDisplayed() {
-        searchHelper.verifySearchPlaceholderDisplayed();
-    }
-
-    public void verifySearchFieldEditable() {
-        searchHelper.verifySearchFieldEditable();
-    }
-
-    public void enterSearchTerm(String searchTerm) {
-        searchHelper.enterSearchTerm(searchTerm);
-    }
-
-    public boolean isCameraFoundInFilter() {
-        return searchHelper.isCameraFoundInFilter();
-    }
-
-    public void verifyCameraFoundInFilter(String searchTerm) {
-        searchHelper.verifyCameraFoundInFilter(searchTerm);
-    }
-
-    public void verifyFilteredListDisplayed() {
-        searchHelper.verifyFilteredListDisplayed();
-    }
-
-    public void verifyAllVisibleCamerasContainSearchTerm(String searchTerm) {
-        searchHelper.verifyAllVisibleCamerasContainSearchTerm(searchTerm);
-    }
-
-    public void verifyCameraCounterDisplayed() {
-        searchHelper.verifyCameraCounterDisplayed();
-    }
-
-    public String getCameraCounterText() {
-        return searchHelper.getCameraCounterText();
-    }
-
-    public void clearSearchIfNeeded() {
-        searchHelper.clearSearchIfNeeded();
-    }
-
-    public void verifyDefaultCameraListRestored() {
-        searchHelper.verifyDefaultCameraListRestored();
-    }
-
-    public void validateCounterFormat(String counterText) {
-        searchHelper.validateCounterFormat(counterText);
-    }
-
-    public int extractCountFromCounterText(String counterText) {
-        return searchHelper.extractCountFromCounterText(counterText);
-    }
-
-    public void verifyFilteredCountLessThanInitial(String filteredCount, String initialCount) {
-        searchHelper.verifyFilteredCountLessThanInitial(filteredCount, initialCount);
-    }
-
-    public void verifyCountersMatch(String actualCount, String expectedCount) {
-        searchHelper.verifyCountersMatch(actualCount, expectedCount);
-    }
-
-    public void longPressFirstCamera() {
-        searchHelper.longPressFirstCamera();
-    }
-
     // ---- step-level groups ----------------------------------------------------------------
 
     /** Step "Tap on Cameras item": opens the cameras list and waits for it. */
     public void openCamerasList() {
         clickCamerasItem();
         verifyCameraListDisplayed();
-    }
-
-    public String captureCounterAndVerifyFormat() {
-        return searchHelper.captureCounterAndVerifyFormat();
-    }
-
-    public void tapSearchBarAndVerify() {
-        searchHelper.tapSearchBarAndVerify();
-    }
-
-    public void searchAndVerifyResults(String searchTerm, String initialCount) {
-        searchHelper.searchAndVerifyResults(searchTerm, initialCount);
-    }
-
-    public void clearSearchAndVerifyRestored(String initialCount) {
-        searchHelper.clearSearchAndVerifyRestored(initialCount);
-    }
-
-    public void searchWithNoResultsAndVerifyEmptyState(String searchTerm) {
-        searchHelper.searchWithNoResultsAndVerifyEmptyState(searchTerm);
     }
 
     /** Long presses the first offline or error camera in the list and checks the context menu: options, preview, name and status. */
@@ -347,23 +273,50 @@ public class CamerasPage {
     /** Closes the menu, finds the first online camera, long presses it and checks the timestamp. */
     public void verifyFirstOnlineCameraContextMenu() {
         dismissContextMenu();
-        verifyFirstOnlineCameraFound();
-        longPressFirstOnlineCamera();
-        verifyContextMenuDisplayed();
+        openContextMenuOfFirstOnlineCamera();
         verifyTimestampDisplayed();
     }
 
+    /** Long presses the first online camera and checks the context menu: foreground menu, options and preview. */
+    public void longPressFirstOnlineCameraAndVerifyContextMenu() {
+        openContextMenuOfFirstOnlineCamera();
+        verifyAllContextMenuOptions(true);
+        verifyCameraPreviewDisplayed();
+    }
+
+    private void openContextMenuOfFirstOnlineCamera() {
+        verifyFirstOnlineCameraFound();
+        longPressFirstOnlineCamera();
+        verifyContextMenuDisplayed();
+    }
+
+    /** The camera's name as the open context menu shows it, which the history browser must show again. */
+    public String readCameraNameInContextMenu() {
+        return WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_NAME_IN_PREVIEW).getText();
+    }
+
+    /**
+     * The time of the frame the open context menu of an online camera shows, in the account's 12 or 24 hour format
+     * ("07:15:10 AM" or "19:15:10").
+     */
+    public LocalTime readFrameTimeInContextMenu() {
+        String shown = WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_FRAME_TIME_IN_PREVIEW)
+                .getText().trim();
+        for (DateTimeFormatter format : FRAME_TIME_FORMATS) {
+            try {
+                return LocalTime.parse(shown, format);
+            } catch (DateTimeParseException e) {
+                logger.debug("Frame time '{}' is not in format {}", shown, format);
+            }
+        }
+        throw new AssertionError("Frame time '" + shown + "' in the context menu is neither 'hh:mm:ss a' nor "
+                + "'HH:mm:ss'; check the account's time format");
+    }
+
     public void verifyCanInteractWithFilteredCamera() {
-        longPressFirstCamera();
+        CameraContextMenu.longPressFirstCamera(driver, CamerasLocators.FIRST_CAMERA_IN_LIST);
         verifyContextMenuDisplayed();
         dismissContextMenu();
     }
 
-    public boolean isEmptyStateDisplayed() {
-        return searchHelper.isEmptyStateDisplayed();
-    }
-
-    public void verifyEmptyStateDisplayed() {
-        searchHelper.verifyEmptyStateDisplayed();
-    }
 }

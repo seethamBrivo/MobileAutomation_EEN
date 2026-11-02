@@ -16,8 +16,7 @@ public class LiveViewTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setupMechanicalZoomTest() {
-        loginAs(TestDataConstants.TS02_CREDS);
-        liveViewPage = new LiveViewPage(driver);
+        liveViewPage = loginAndCreatePage(TestDataConstants.TS02_CREDS, LiveViewPage::new);
         cameraName = JsonDataReader.getMechanicalZoomCameraValue(TestDataConstants.MECHANICAL_ZOOM_CAMERA_NAME);
         if (cameraName == null || cameraName.isEmpty()) {
             throw new IllegalStateException("Camera name cannot be null or empty for mechanical zoom test");

@@ -27,8 +27,7 @@ public class MyProfileTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToMyProfile() {
-        loginAs(TestDataConstants.TS02_CREDS);
-        devicesPage = new DevicesPage(driver);
+        devicesPage = loginAndCreatePage(TestDataConstants.TS02_CREDS, DevicesPage::new);
         myProfilePage = devicesPage.navigateToMyProfile();
     }
 

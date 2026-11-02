@@ -37,10 +37,7 @@ public class BridgesTest extends BaseTest {
         testBridgeName = null;
         renamedBridgeOriginalName = null;
         renamedBridgeNewName = null;
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        devicesPage = new DevicesPage(driver);
-        devicesPage.navigateToDashboard();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
+        devicesPage = loginAndOpenDevicesDashboard(TestDataConstants.ENDUSER_CREDS);
     }
 
     @Test(priority = 1, description = "EEPD-TC-11276: POS-Add Bridge - Adding Bridge to the account in Dashboard in mobile VMS app",

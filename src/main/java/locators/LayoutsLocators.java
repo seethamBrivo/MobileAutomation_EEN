@@ -112,10 +112,6 @@ public final class LayoutsLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Add']"), // android
             NavigationLocators.iosTopBarButton("Add")); // ios
 
-    // Android only: iOS shows no snackbar; it lists the new layout among the tabs instead (see layoutTabByName).
-    public static final By SUCCESS_MESSAGE =
-            AppiumBy.id("com.een.vms.android:id/snackbar_text");
-
     // --- Layouts search filter and delete --------------------------------------
 
     public static final By FILTER_ICON = PlatformLocator.get(
@@ -155,6 +151,19 @@ public final class LayoutsLocators {
             AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card']//android.widget.TextView[contains(@text, ':') and string-length(@text) > 3 and string-length(@text) < 25 and (contains(@text, '0') or contains(@text, '1') or contains(@text, '2') or contains(@text, '3') or contains(@text, '4') or contains(@text, '5') or contains(@text, '6') or contains(@text, '7') or contains(@text, '8') or contains(@text, '9'))]"), // android
             AppiumBy.iOSNsPredicateString(
                     "type == 'XCUIElementTypeStaticText' AND name ENDSWITH '_timeLabel'")); // ios
+
+    // Android only. The first card is addressed by its content-desc, the same one a long press targets, so the name
+    // read here is the camera the menu is expected to belong to.
+    public static final By FIRST_CAMERA_PREVIEW_NAME =
+            AppiumBy.xpath("//*[@content-desc='cell_at_0_preview_view_preview_card']"
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']");
+
+    // Android only. The menu's own preview card has no content-desc, while every card of the Layouts screen behind it
+    // carries "cell_at_<n>_preview_view_preview_card", so a card behind the menu can never match.
+    public static final By CONTEXT_MENU_PREVIEW_NAME =
+            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card'"
+                    + " and not(@content-desc)]"
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']");
 
     // --- Dynamic locators ------------------------------------------------------
 
