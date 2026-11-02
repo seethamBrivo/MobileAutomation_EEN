@@ -152,6 +152,19 @@ public final class LayoutsLocators {
             AppiumBy.iOSNsPredicateString(
                     "type == 'XCUIElementTypeStaticText' AND name ENDSWITH '_timeLabel'")); // ios
 
+    // Android only. The first card is addressed by its content-desc, the same one a long press targets, so the name
+    // read here is the camera the menu is expected to belong to.
+    public static final By FIRST_CAMERA_PREVIEW_NAME =
+            AppiumBy.xpath("//*[@content-desc='cell_at_0_preview_view_preview_card']"
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']");
+
+    // Android only. The menu's own preview card has no content-desc, while every card of the Layouts screen behind it
+    // carries "cell_at_<n>_preview_view_preview_card", so a card behind the menu can never match.
+    public static final By CONTEXT_MENU_PREVIEW_NAME =
+            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card'"
+                    + " and not(@content-desc)]"
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']");
+
     // --- Dynamic locators ------------------------------------------------------
 
     /** Android: the layout's card in the list. iOS: its row in the filter results. */

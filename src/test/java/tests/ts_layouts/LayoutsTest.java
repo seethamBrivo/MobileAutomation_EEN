@@ -6,6 +6,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
+import pages.HistoryBrowserPage;
 import pages.LayoutsPage;
 import utils.JsonDataReader;
 
@@ -14,11 +15,14 @@ public class LayoutsTest extends BaseTest {
     private LayoutsPage layoutsPage;
     private boolean layoutCreated = false;
     private String uniqueLayoutName;
+    private HistoryBrowserPage historyBrowserPage;
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndVerifyLayoutsScreen() {
         layoutCreated = false;
+        historyBrowserPage = null;
         layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
+        historyBrowserPage = new HistoryBrowserPage(driver);
         layoutsPage.verifyLayoutsScreenDisplayed();
         layoutsPage.clickFirstLayoutTab();
     }
@@ -56,6 +60,19 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.verifyCameraPreviewsLoaded();
     }
 
+    @Test(description = "EEPD-TC-9012: POS-Layouts - displaying Context Menu (long press) in Layouts/Tags in mobile "
+            + "VMS app",
+          groups = {"regression", "layouts"})
+    public void verifyContextMenuAfterLongPressInLayouts() {
+        // Step 2: Stay in the Layouts section and wait for the camera previews
+        layoutsPage.clickAllCamerasTab();
+        layoutsPage.verifyCameraPreviewsLoaded();
+        // Step 3: Long press on a camera preview: the menu, its options and the preview of the pressed camera
+        String pressedCameraName = layoutsPage.readFirstCameraPreviewName();
+        historyBrowserPage.openContextMenuOfFirstCameraPreview();
+        layoutsPage.verifyContextMenuPreviewShowsCamera(pressedCameraName);
+    }
+
     @AfterMethod(alwaysRun = true)
     public void tearDown(ITestResult testResult) {
         try {
@@ -75,6 +92,20 @@ public class LayoutsTest extends BaseTest {
         } finally {
             layoutCreated = false;
             uniqueLayoutName = null;
+            try {
+                // The long press leaves its menu open and turns multi-window reporting on. The menu is closed first,
+                // because it is invisible once reporting is off, and the setting is switched off even if that fails.
+                if (driver != null && historyBrowserPage != null) {
+                    try {
+                        historyBrowserPage.dismissContextMenuIfOpen();
+                    } finally {
+                        historyBrowserPage.resetMultiWindowSetting();
+                    }
+                }
+            } catch (Throwable t) {
+                logger.warn("Cleanup: could not close the long press menu or switch multi-window off: {}",
+                        t.getMessage(), t);
+            }
             super.tearDown(testResult);
         }
     }

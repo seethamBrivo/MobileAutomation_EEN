@@ -352,4 +352,21 @@ public class LayoutsPage {
                 "Timestamp should match time format (HH:MM AM/PM or HH:MM), got: " + timestampText);
     }
 
+    /** The camera the next long press selects: the name on the first preview card. */
+    public String readFirstCameraPreviewName() {
+        String name = WaitUtils.retryOnStale(
+                () -> WaitUtils.waitForVisibility(driver, LayoutsLocators.FIRST_CAMERA_PREVIEW_NAME).getText()).trim();
+        Assert.assertFalse(name.isEmpty(), "The first camera preview should show the camera's name");
+        return name;
+    }
+
+    /** The preview in the context menu is the camera that was pressed, not another one of the screen behind. */
+    public void verifyContextMenuPreviewShowsCamera(String pressedCameraName) {
+        String shown = WaitUtils.retryOnStale(
+                () -> WaitUtils.waitForVisibility(driver, LayoutsLocators.CONTEXT_MENU_PREVIEW_NAME).getText()).trim();
+        Assert.assertEquals(shown, pressedCameraName,
+                "Context menu preview should show the camera that was pressed ('" + pressedCameraName
+                        + "') but showed '" + shown + "'");
+    }
+
 }

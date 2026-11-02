@@ -7,6 +7,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.DevicesPage;
+import pages.HistoryBrowserPage;
 import pages.MyProfilePage;
 import pages.VSPEventsPage;
 
@@ -21,11 +22,14 @@ public class VSPEventsTest extends BaseTest {
     private boolean rotationWasUsed = false;
     private boolean timeFormatWasChanged = false;
     private String originalTimeFormat = null; // BLOCKER FIX B3: Store original value to restore, not hardcode
+    private HistoryBrowserPage historyBrowserPage;
+    private boolean historyBrowserOpened = false;
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         devicesPage = loginAndCreatePage(TestDataConstants.TS02_CREDS, DevicesPage::new);
         vspEventsPage = new VSPEventsPage(driver);
+        historyBrowserPage = new HistoryBrowserPage(driver);
     }
 
     @Test(description = "EEPD-TC-37646: POS-VSP-Verify Event Cards in the VSP events page",
@@ -68,6 +72,26 @@ public class VSPEventsTest extends BaseTest {
         vspEventsPage.verifyEventCardsDisplayed();
     }
 
+    @Test(description = "EEPD-TC-37687: POS-History Browser-Navigate to History Browser to specific moment "
+            + "of LPR event",
+          groups = {"regression", "history", "vsp"})
+    public void verifyHistoryBrowserOpensAtLprEventMoment() {
+        vspEventsPage.openMoreMenu();
+        vspEventsPage.verifyEventsOptionDisplayed();
+        vspEventsPage.clickEvents();
+        vspEventsPage.verifyVSPEventsScreenDisplayed();
+        vspEventsPage.verifyEventCardsDisplayed();
+        vspEventsPage.clickFirstEventCard();
+        vspEventsPage.verifyDetailPageDisplayed();
+        vspEventsPage.verifyViewInHistoryBrowserButtonDisplayed();
+        String cameraName = vspEventsPage.readEventCameraName();
+        String eventTime = vspEventsPage.readEventTime();
+        // Set before the tap: if the tap itself fails, cleanup still checks whether the history browser opened.
+        historyBrowserOpened = true;
+        vspEventsPage.tapViewInHistoryBrowser();
+        historyBrowserPage.verifyOpenedForLprEvent(cameraName, eventTime);
+    }
+
     @AfterMethod(alwaysRun = true)
     public void cleanup(ITestResult testResult) {
         try {
@@ -89,6 +113,16 @@ public class VSPEventsTest extends BaseTest {
                     myProfilePage.verifyTimeFormatChanged(originalTimeFormat);
                     timeFormatWasChanged = false;
                     logger.info("Time format reset to {}", originalTimeFormat);
+                }
+
+                if (historyBrowserOpened && historyBrowserPage != null) {
+                    historyBrowserOpened = false;
+                    try {
+                        // The app reopens a camera in the mode it was last used in, and the session is reused.
+                        historyBrowserPage.returnToLiveVideoIfInHistoryBrowser();
+                    } catch (Throwable t) {
+                        logger.warn("Cleanup: could not switch the camera back to live video: {}", t.getMessage(), t);
+                    }
                 }
             }
         } catch (AssertionError | Exception e) { // BLOCKER FIX B5: Catch both - AssertionError escapes plain Exception
