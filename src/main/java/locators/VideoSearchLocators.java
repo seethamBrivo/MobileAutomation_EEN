@@ -40,8 +40,13 @@ public final class VideoSearchLocators {
     // --- Search functionality --------------------------------------------------------
 
     public static final By SEARCH_ICON = AppiumBy.id("com.een.vms.android:id/img_search");
-    public static final By SEARCH_HINT_FIELD = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/hint']");
-    public static final By SEARCH_INPUT_FIELD = AppiumBy.xpath("//android.widget.EditText[@resource-id='com.een.vms.android:id/edit_text']");
+
+    public static final By SEARCH_HINT_FIELD =
+            AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/hint']");
+
+    public static final By SEARCH_INPUT_FIELD =
+            AppiumBy.xpath("//android.widget.EditText[@resource-id='com.een.vms.android:id/edit_text']");
+
     public static final By SEARCH_BACK_BUTTON = AppiumBy.id("com.een.vms.android:id/img_back");
 
     // --- Event page (bottom sheet opened from a card) ------------------------------------
@@ -74,20 +79,23 @@ public final class VideoSearchLocators {
 
     // --- Key image detail screen (overlays in event bottom sheet) -------------------
 
-    private static final String KEY_IMAGE_OVERLAY_BASE = "//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/overlay\"]";
+    private static final String KEY_IMAGE_OVERLAY_BASE =
+            "//android.widget.ImageView[@resource-id='com.een.vms.android:id/overlay']";
+
     public static final By CAMERA_PREVIEW_FIRST = AppiumBy.xpath("(" + KEY_IMAGE_OVERLAY_BASE + ")[1]");
+
     public static final By KEY_IMAGE_OVERLAY = AppiumBy.xpath(KEY_IMAGE_OVERLAY_BASE);
-    public static final By CLOSE_BUTTON = AppiumBy.xpath("//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/close\"]");
+
+    public static final By CLOSE_BUTTON =
+            AppiumBy.xpath(EVENT_SHEET + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/close']");
 
     // --- Helper method for parameterized suggestion locators ------------------------
 
     public static By suggestionByText(String text) {
-        // Escape single quotes in text for XPath
         String escapedText;
         if (!text.contains("'")) {
             escapedText = "'" + text + "'";
         } else {
-            // Use concat() for text containing single quotes
             escapedText = "concat('" + text.replace("'", "',\"'\",'") + "')";
         }
         return AppiumBy.xpath("//android.widget.TextView[@text=" + escapedText + "]");
