@@ -17,6 +17,7 @@ public class VideoSearchTest extends BaseTest {
     public void setupVideoSearchTest() {
         videoSearchPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, VideoSearchPage::new);
         videoSearchPage.verifyVideoSearchInBottomNav();
+        videoSearchPage.navigateToVideoSearch();
     }
 
     @AfterMethod(alwaysRun = true)
@@ -28,8 +29,8 @@ public class VideoSearchTest extends BaseTest {
             if (videoSearchPage != null) {
                 videoSearchPage.dismissAnyOpenScreens();
             }
-        } catch (Throwable t) {
-            logger.warn("@AfterMethod: cleanup failed: {}", t.toString());
+        } catch (RuntimeException e) {
+            logger.warn("@AfterMethod: cleanup failed: {}", e.toString());
         }
     }
 
@@ -37,7 +38,6 @@ public class VideoSearchTest extends BaseTest {
                          " in Video Search in VMS app",
           groups = {"regression", "video_search"})
     public void verifyVideoSearchByContent() {
-        videoSearchPage.navigateToVideoSearch();
         videoSearchPage.openSearchFieldAndVerifyAutosuggestions();
         videoSearchPage.searchForText(VIDEO_SEARCH_TERM);
         videoSearchPage.closeSearchField();
@@ -47,11 +47,10 @@ public class VideoSearchTest extends BaseTest {
                          " with relevant tags in Home Page in Video Search",
           groups = {"regression", "video_search"})
     public void verifyKeyImageWithRelevantTags() {
-        videoSearchPage.navigateToVideoSearch();
         videoSearchPage.openCameraPreviewAndVerifyDetails();
         videoSearchPage.verifySwipeNavigation();
         videoSearchPage.dismissDetailScreenWithXButton();
-        videoSearchPage.reopenCameraPreview();
+        videoSearchPage.clickCameraPreview();
         videoSearchPage.dismissDetailScreenWithSwipeDown();
     }
 }

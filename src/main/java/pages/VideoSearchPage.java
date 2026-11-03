@@ -194,7 +194,7 @@ public class VideoSearchPage {
         ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.ENTER));
     }
 
-    private void waitForSearchToComplete() {
+    private void verifySearchModeActive() {
         WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON,
                 TimeoutConstants.SHORT_TIMEOUT,
                 "Search mode should be active (back button visible)");
@@ -210,7 +210,6 @@ public class VideoSearchPage {
     }
 
     public void navigateToVideoSearch() {
-        verifyVideoSearchInBottomNav();
         clickSearch();
         verifyVideoSearchPageDisplayed();
     }
@@ -225,7 +224,7 @@ public class VideoSearchPage {
         WebElement searchField = enterSearchText(searchText);
         verifySearchTextEntered(searchField, searchText);
         pressEnterKey();
-        waitForSearchToComplete();
+        verifySearchModeActive();
     }
 
     public void closeSearchField() {
@@ -233,7 +232,7 @@ public class VideoSearchPage {
         verifySearchFieldCancelled();
     }
 
-    private void clickCameraPreview() {
+    public void clickCameraPreview() {
         WaitUtils.click(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST);
     }
 
@@ -291,6 +290,9 @@ public class VideoSearchPage {
 
         final String originalTimestamp = timestampBefore;
         boolean changed = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
+            if (!WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_TIME, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                return false;
+            }
             String current = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
             return !current.equals(originalTimestamp);
         });
@@ -335,10 +337,6 @@ public class VideoSearchPage {
         clickTagIfPresent();
     }
 
-    public void reopenCameraPreview() {
-        clickCameraPreview();
-    }
-
     public void verifySwipeNavigation() {
         swipeRightOnKeyImage();
         swipeLeftOnKeyImage();
@@ -359,31 +357,19 @@ public class VideoSearchPage {
      * Uses fast timeout to minimize overhead. Never throws.
      */
     public void dismissAnyOpenScreens() {
-        try {
-            if (WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_CAMERA_NAME,
-                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                clickCloseButton();
-            }
-        } catch (Throwable t) {
-            logger.warn("Could not close detail screen: {}", t.getMessage());
+        if (WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_CAMERA_NAME,
+                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+            clickCloseButton();
         }
 
-        try {
-            if (WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON,
-                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                clickSearchBackButton();
-            }
-        } catch (Throwable t) {
-            logger.warn("Could not close search results: {}", t.getMessage());
+        if (WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON,
+                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+            clickSearchBackButton();
         }
 
-        try {
-            if (WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD,
-                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                clickSearchBackButton();
-            }
-        } catch (Throwable t) {
-            logger.warn("Could not close search field: {}", t.getMessage());
+        if (WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD,
+                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+            clickSearchBackButton();
         }
     }
 }
