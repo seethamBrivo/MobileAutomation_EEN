@@ -3,6 +3,7 @@ package pages;
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -10,8 +11,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import locators.CamerasLocators;
 import locators.HistoryBrowserLocators;
@@ -30,6 +33,7 @@ import utils.WaitUtils;
 public class HistoryBrowserPage {
 
     private static final Logger logger = LogManager.getLogger(HistoryBrowserPage.class);
+    private final AppiumDriver driver;
 
     private static final List<Integer> TIMELINE_LEVEL_MINUTES = List.of(1, 5, 15, 30, 60);
     private static final int MIN_LEVEL_MINUTES = TIMELINE_LEVEL_MINUTES.get(0);
@@ -75,7 +79,15 @@ public class HistoryBrowserPage {
             CamerasLocators.CAMERA_SETTINGS_OPTION, CamerasLocators.HISTORY_BROWSER_OPTION,
             CamerasLocators.LIVE_VIDEO_OPTION);
 
-    private final AppiumDriver driver;
+    /** Hour and minute of a displayed time, then seconds when shown and AM/PM when the account uses 12-hour time. */
+    private static final Pattern TIME_OF_DAY =
+            Pattern.compile("(\\d{1,2}):(\\d{2})(?::(\\d{2}))?(?:\\s*([AaPp])[Mm])?");
+
+    /** The cursor may already have moved on by the time its label is read, so it is not required to be exact. */
+    private static final int EVENT_MOMENT_TOLERANCE_SECONDS = 10;
+
+    /** The event time on the details screen has minutes only, so the event lies anywhere in that minute. */
+    private static final int EVENT_TIME_RESOLUTION_SECONDS = 59;
 
     /** Set while the multi-window setting is on, so cleanup only has to switch it off when a test turned it on. */
     private boolean multiWindowEnabled;
@@ -121,7 +133,7 @@ public class HistoryBrowserPage {
             logger.info("Camera reopened in the history browser (its last used mode); switching to live video");
             WaitUtils.click(driver, HistoryBrowserLocators.NAVIGATION_BUTTON);
         }
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.LIVE_STREAM_SCREEN).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.LIVE_STREAM_SCREEN,
                 "Live video of the selected camera should be displayed");
     }
 
@@ -144,7 +156,7 @@ public class HistoryBrowserPage {
 
     public void verifyTimelineControlsDisplayed() {
         for (By control : TIMELINE_CONTROLS) {
-            Assert.assertTrue(WaitUtils.waitForVisibility(driver, control).isDisplayed(),
+            WaitUtils.assertVisible(driver, control,
                     "Timeline control " + control + " should be displayed below the timeline");
         }
     }
@@ -199,8 +211,7 @@ public class HistoryBrowserPage {
         driver.setSetting(MULTI_WINDOWS_SETTING, true);
         GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FIRST_PREVIEW_CARD));
         for (By option : CONTEXT_MENU_OPTIONS) {
-            Assert.assertTrue(WaitUtils.waitForVisibility(driver, option).isDisplayed(),
-                    "Context menu option " + option + " should be displayed");
+            WaitUtils.assertVisible(driver, option, "Context menu option " + option + " should be displayed");
         }
         boolean hasTurnOnOrOff =
                 WaitUtils.isVisible(driver, CamerasLocators.TURN_ON_CAMERA_OPTION, TimeoutConstants.SHORT_TIMEOUT)
@@ -228,7 +239,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyTimelineAndControlsDisplayedInPortrait() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
                 "Timeline should be displayed in the history browser");
         verifyTimelineControlsDisplayed();
         Dimension screen = driver.manage().window().getSize();
@@ -342,7 +353,7 @@ public class HistoryBrowserPage {
      * case words this as hidden until the timeline button is tapped; the app's behaviour is what is asserted.
      */
     public void verifyTimelineShowsByDefaultAndClosesInLandscape() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
                 "Timeline should be visible by default in landscape");
         WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON);
         Assert.assertTrue(WaitUtils.waitForInvisibility(
@@ -352,18 +363,18 @@ public class HistoryBrowserPage {
 
     public void showTimelineAndVerifyControlsInLandscape() {
         WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_BUTTON);
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_CONTAINER).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
                 "Timeline should be displayed after tapping the timeline button");
         verifyTimelineControlsDisplayed();
     }
 
     /** The timeline is waited for first, so a number that renders late is not mistaken for an absent one. */
     public void verifyFilterButtonWithoutIndication() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILTER_BUTTON).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.FILTER_BUTTON,
                 "Filter button should be displayed in the history browser");
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_ROW_TIMESTAMPS);
-        Assert.assertFalse(WaitUtils.isVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION,
-                        TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertNotVisible(driver, HistoryBrowserLocators.FILTER_BUTTON_INDICATION,
+                TimeoutConstants.SHORT_TIMEOUT,
                 "Filter button should show no indication number");
     }
 
@@ -416,6 +427,40 @@ public class HistoryBrowserPage {
 
     public void clickPreviousEventAndVerifyCursorMoved() {
         clickAndVerifyCursorMoved(HistoryBrowserLocators.PREVIOUS_EVENT_BUTTON, false, "previous event");
+    }
+
+    /**
+     * The history browser must open for the license plate event's camera, on the event's moment and not on the newest
+     * recording. The camera is compared by name. The time is the details screen's Timestamp row, which, like the
+     * history browser, is in the camera's time zone, so the cursor's time of day must fall inside the minute shown
+     * there. The check is minute-level because the details screen shows no seconds: an event at 10:05:50 also
+     * passes with the cursor at 10:05:00, but opening on the newest recording does not. That is why this is not
+     * {@link #verifyOpenedAtEventMoment}: Video Search shows another time zone, so it can only compare up to a time
+     * zone gap.
+     */
+    public void verifyOpenedForLprEvent(String eventCameraName, String eventTime) {
+        verifyHistoryBrowserDisplayed();
+        verifyCameraNameInBackButton(eventCameraName);
+        verifyCursorAtEventMoment(eventTime);
+    }
+
+    /**
+     * Cleanup step: closes the long press menu when a test stopped with it open, with the shared
+     * {@link CameraContextMenu#dismiss}. That presses back on Android whether or not a menu is open, so it is only
+     * called when the menu is visible. It must run before {@link #resetMultiWindowSetting()}, because with
+     * multi-window reporting off the popup is no longer visible to Appium. Does nothing unless this page opened the
+     * menu, and never asserts.
+     */
+    public void dismissContextMenuIfOpen() {
+        if (!multiWindowEnabled) {
+            return;
+        }
+        if (WaitUtils.isVisible(driver, CamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
+            CameraContextMenu.dismiss(driver);
+            boolean closed = WaitUtils.waitForInvisibility(
+                    driver, CamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT);
+            logger.info("Long press menu {} after back", closed ? "closed" : "is still open");
+        }
     }
 
     /**
@@ -537,8 +582,7 @@ public class HistoryBrowserPage {
     }
 
     private void verifyHistoryBrowserDisplayed() {
-        Assert.assertTrue(
-                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN).isDisplayed(),
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN,
                 "History browser of the selected camera should be displayed");
     }
 
@@ -687,5 +731,50 @@ public class HistoryBrowserPage {
             }
             return level;
         });
+    }
+
+    private void verifyCursorAtEventMoment(String eventTime) {
+        int eventSecond = secondOfDay(eventTime).orElseThrow(() -> new AssertionError(
+                "Event time '" + eventTime + "' has no hh:mm part; check the account's time format"));
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
+                () -> isAtEventMoment(readCursorSecond(), eventSecond));
+        int cursorSecond = readCursorSecond();
+        Assert.assertTrue(isAtEventMoment(cursorSecond, eventSecond),
+                "History browser should open at the moment of the event (" + eventTime + ", within that minute and "
+                        + EVENT_MOMENT_TOLERANCE_SECONDS + " s) but the cursor is at "
+                        + LocalTime.ofSecondOfDay(cursorSecond));
+        logger.info("History browser opened at {} for the event shown as '{}'",
+                LocalTime.ofSecondOfDay(cursorSecond), eventTime);
+    }
+
+    /** Read as a time of day, so the account's 12-hour or 24-hour format does not matter. */
+    private int readCursorSecond() {
+        String label = WaitUtils.retryOnStale(
+                () -> WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CURRENT_POSITION).getText());
+        return secondOfDay(label).orElseThrow(() -> new AssertionError(
+                "Cursor time '" + label + "' has no hh:mm part; check the account's time format"));
+    }
+
+    private static OptionalInt secondOfDay(String text) {
+        Matcher time = TIME_OF_DAY.matcher(text);
+        if (!time.find()) {
+            return OptionalInt.empty();
+        }
+        int hour = Integer.parseInt(time.group(1));
+        if (time.group(4) != null) {
+            hour = hour % 12 + (time.group(4).equalsIgnoreCase("p") ? 12 : 0);
+        }
+        int seconds = time.group(3) == null ? 0 : Integer.parseInt(time.group(3));
+        try {
+            return OptionalInt.of(LocalTime.of(hour, Integer.parseInt(time.group(2)), seconds).toSecondOfDay());
+        } catch (DateTimeException e) {
+            return OptionalInt.empty();
+        }
+    }
+
+    private static boolean isAtEventMoment(int cursorSecond, int eventSecond) {
+        int gap = Math.floorMod(cursorSecond - eventSecond, SECONDS_PER_DAY);
+        return gap <= EVENT_TIME_RESOLUTION_SECONDS + EVENT_MOMENT_TOLERANCE_SECONDS
+                || SECONDS_PER_DAY - gap <= EVENT_MOMENT_TOLERANCE_SECONDS;
     }
 }

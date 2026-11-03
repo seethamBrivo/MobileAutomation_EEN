@@ -22,6 +22,7 @@ import utils.WaitUtils;
 
 public class VideoSearchPage {
 
+    private final AppiumDriver driver;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH);
 
     private static final DateTimeFormatter EVENT_DATE_FORMAT =
@@ -33,7 +34,6 @@ public class VideoSearchPage {
     private static final Pattern EVENT_COUNTER_FORMAT = Pattern.compile("\\d+/\\d+");
 
     private static final Logger logger = LogManager.getLogger(VideoSearchPage.class);
-    private final AppiumDriver driver;
 
     /** What the event page showed, so the history browser can be compared with it. */
     public record OpenedEvent(String cameraName, LocalDateTime dateTime) {}
@@ -47,7 +47,7 @@ public class VideoSearchPage {
     }
 
     public void clickSearch() {
-        WaitUtils.click(driver, VideoSearchLocators.SEARCH_OPTION);
+        BottomNavigationBar.clickSearchTab(driver);
     }
 
     public void openVideoSearch() {

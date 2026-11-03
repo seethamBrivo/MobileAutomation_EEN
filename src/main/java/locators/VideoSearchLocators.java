@@ -17,7 +17,6 @@ public final class VideoSearchLocators {
 
     // --- Search ----------------------------------------------------------------------
 
-    public static final By SEARCH_OPTION = AppiumBy.xpath("//android.widget.TextView[@text='Search']");
     public static final By DATE_FIELD = AppiumBy.id("com.een.vms.android:id/date");
 
     // --- Video Search home -----------------------------------------------------------

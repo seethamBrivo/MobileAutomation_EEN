@@ -17,9 +17,6 @@ public final class UsersLocators {
 
     // --- Users list and navigation ----------------------------------------------
 
-    public static final By USERS_OPTION_AT_THE_BOTTOM_OF_THE_SCREEN =
-            AppiumBy.xpath("//android.widget.TextView[@text='Users']");
-
     // The Users screen is Compose now (UsersMainScreen). Its header is [title, sort, add] with no ids,
     // so the add icon is the last clickable sibling after the title. The old view-based id is kept
     // in the union so an older app build still works.

@@ -247,6 +247,17 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 
 - **Waits**: the driver runs with implicit wait `0`. Every lookup goes through `utils.WaitUtils`;
   optional elements use the short timeouts in `constants.TimeoutConstants`.
+- **Page objects**: pages do not inherit from a common parent; they import the shared parts they need.
+  `Snackbar` (checks on the snackbar message) and `BottomNavigationBar` (click and check every bottom tab: Layouts,
+  Tags, Search, More for an end user; Dashboard, Users, Business Portal, More for a reseller) are used by any page. The
+  search bar, counter and filtered list that Dashboard > Cameras and a bridge's Cameras screen share are
+  `CameraSearchFilter` (its public methods are the test-case steps); both pages hand it out through
+  `cameraSearchFilter()`. Long-pressing a camera and closing its menu is `CameraContextMenu`. Locators used by several screens
+  live in `locators.CommonLocators`.
+- **Checks**: "this element must be showing" is `WaitUtils.assertVisible(driver, locator, message)` (and
+  `assertNotVisible`), not a hand-written `isVisible` plus `Assert.assertTrue`.
+- **Test setup**: `@BeforeMethod` uses `loginAndCreatePage(account, SomePage::new)` or
+  `loginAndOpenDevicesDashboard(account)` from `BaseTest` instead of repeating login and page creation.
 - **Cleanup**: tests that create data record it and remove it in `@AfterMethod`. Cleanup code never
   asserts and never throws (a throwing `@AfterMethod` skips the rest of the class in TestNG).
 - **Test data**: `testData.json` is git-ignored; copy `testData.json.example` and fill it in. CI writes

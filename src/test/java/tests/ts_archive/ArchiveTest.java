@@ -13,8 +13,7 @@ public class ArchiveTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setupArchiveTest() {
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        archivePage = new ArchivePage(driver);
+        archivePage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, ArchivePage::new);
     }
 
     @Test(description = "EEPD-TC-19978: POS-Archive - Searching for files in mobile app",
