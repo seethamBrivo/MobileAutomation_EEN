@@ -4,6 +4,7 @@ import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 import utils.PlatformLocator;
+import utils.XPathUtils;
 
 /**
  * Locators for the Cameras screen (reached from the More menu) and the camera search helper shared with the
@@ -51,6 +52,11 @@ public final class CamerasLocators {
 
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
+
+    public static By cameraCardWithName(String name) {
+        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
+                + "/ancestor::android.view.View[@clickable='true'][1]");
+    }
 
     // --- Context menu ----------------------------------------------------------
 
