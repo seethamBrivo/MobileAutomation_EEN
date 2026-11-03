@@ -10,8 +10,6 @@ public final class TestDataConstants {
     // create its bridges through these constants and nothing else.
     public static final String BRIDGE_PREFIX_TEST = "TestBridge_";
     public static final String BRIDGE_PREFIX_DUPLICATE = "DuplicateBridge_";
-    public static final String BRIDGE_PREFIX_FILTER = "FilterTestBridge_";
-    public static final String BRIDGE_PREFIX_CONTEXT_MENU = "ContextMenuBridge_";
     /** Short prefix of the temporary name the rename test gives an existing bridge (the name is `Rn_` + 5 digits). */
     public static final String BRIDGE_PREFIX_RENAMED = "Rn_";
 

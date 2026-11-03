@@ -1,5 +1,5 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<!-- Only the bridge tests that use the enduser account (BridgesTest: 6 tests, the biggest class).
+<!-- Only the bridge tests that use the enduser account (BridgesTest: 3 tests, the biggest class).
      mvn test -Dsuite.file=testng-bridges.xml -->
 <suite name="Bridge Tests Suite" parallel="false" thread-count="1" group-by-instances="true">
     <listeners>
