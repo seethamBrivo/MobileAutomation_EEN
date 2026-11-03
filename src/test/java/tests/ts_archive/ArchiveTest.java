@@ -17,7 +17,7 @@ public class ArchiveTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-19978: POS-Archive - Searching for files in mobile app",
-          groups = {"regression", "archive", "search"})
+          groups = {"regression", "archive", "search", "ios"})
     public void verifyArchiveFileSearch() {
         String validSearchTerm = JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_VALID_SEARCH_TERM);
         String noResultsSearchTerm = JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_NO_RESULTS_SEARCH_TERM);
@@ -25,14 +25,14 @@ public class ArchiveTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-19818: POS-Archive - downloading a folder in mobile app",
-          groups = {"regression", "archive", "download"})
+          groups = {"regression", "archive", "download", "ios"})
     public void verifyArchiveFolderDownload() {
         archivePage.verifyCompleteFolderDownloadFlow();
         archivePage.verifyFolderDownloadCancellation();
     }
 
     @Test(description = "EEPD-TC-19385: POS-Archive - downloading a video - video type in mobile app",
-          groups = {"regression", "archive", "download"})
+          groups = {"regression", "archive", "download", "ios"})
     public void verifyArchiveVideoDownload() {
         archivePage.verifyCompleteVideoDownloadFlow();
         archivePage.verifyVideoDownloadCancellation();

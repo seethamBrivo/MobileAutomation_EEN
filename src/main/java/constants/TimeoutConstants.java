@@ -52,7 +52,10 @@ public final class TimeoutConstants {
     /** Budget for checking if cancel icon is available during fast video downloads. */
     public static final Duration FAST_DOWNLOAD_CANCEL_CHECK = Duration.ofSeconds(2);
 
-    /** Max wait for archive download to complete (polls for "Saved to Files" message). */
+    /** How long to look for the iOS photo-library permission prompt after a download starts (shown on the first one). */
+    public static final Duration PERMISSION_PROMPT_TIMEOUT = Duration.ofSeconds(2);
+
+    /** Max wait for archive download to complete (polls for the "Saved to Files" / "Saved to Photos" message). */
     public static final Duration DOWNLOAD_COMPLETE_TIMEOUT = Duration.ofSeconds(60);
 
     public static final Duration SWIPE_PAUSE = Duration.ofMillis(300);

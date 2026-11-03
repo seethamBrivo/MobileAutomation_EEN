@@ -166,9 +166,6 @@ public final class CamerasLocators {
             AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]"), // android
             AppiumBy.accessibilityId("camera_empty")); // ios
 
-    /** iOS only: clears the search field. */
-    public static final By CLEAR_TEXT_BUTTON = AppiumBy.accessibilityId("Clear text");
-
     /** iOS only: the keyboard's "search" key (disabled while the field is empty), used to close the keyboard. */
     public static final By KEYBOARD_SEARCH_KEY = AppiumBy.iOSNsPredicateString(
             "type == 'XCUIElementTypeButton' AND label == 'search'");
