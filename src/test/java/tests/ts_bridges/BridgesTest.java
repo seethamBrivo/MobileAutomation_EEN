@@ -41,23 +41,40 @@ public class BridgesTest extends BaseTest {
     }
 
     /**
-     * One bridge, added once and checked from every side before it is deleted. This replaces five tests that each added
-     * and deleted a bridge of their own (about five add and delete round trips): EEPD-TC-11276 (add), EEPD-TC-16502
-     * (list), EEPD-TC-15483 (filter), EEPD-TC-12354 (context menu) and EEPD-TC-8890 (delete).
+     * The create and delete halves of one flow, on a bridge this test adds and removes: EEPD-TC-11276 (add) and
+     * EEPD-TC-8890 (delete). A flaky add therefore fails only this test, not the read-only checks below.
      */
-    @Test(priority = 1, description = "EEPD-TC-11276 / EEPD-TC-16502 / EEPD-TC-15483 / EEPD-TC-12354 / EEPD-TC-8890: "
-            + "POS-Bridges - add a bridge, then check the list, filter and context menu, then delete it in mobile VMS app",
+    @Test(priority = 1, description = "EEPD-TC-11276 / EEPD-TC-8890: POS-Bridges - add a bridge to the account, "
+            + "then delete it in mobile VMS app",
           groups = {"regression", "bridges"})
-    public void verifyBridgeLifecycle_addListFilterContextMenuAndDelete() {
+    public void verifyBridgeCanBeAddedAndDeleted() {
         // EEPD-TC-11276: add the bridge; the same attach ID a second time must be rejected.
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
         devicesPage.verifyUserNavigatedToOriginScreen();
         devicesPage.verifyDuplicateAttachIdIsRejected(
                 TestDataGenerator.generateUniqueName(TestDataConstants.BRIDGE_PREFIX_DUPLICATE), getAttachId());
-
-        // EEPD-TC-16502: the Devices overview lists the bridge and its settings open.
         devicesPage.recoverToDashboard();
+        devicesPage.verifyBridgeShownInBridgesTab(bridgeName);
+
+        // EEPD-TC-8890: delete the bridge; the list goes back to the Bridges tab and no longer has it.
+        devicesPage.clickBridgesTab();
+        deleteTestBridge(bridgeName);
+        devicesPage.verifyUserNavigatedBackToBridgesTab();
+        devicesPage.verifyNoMatchingBridgesMessageDisplayed(bridgeName);
+    }
+
+    /**
+     * Read-only checks on a bridge that is already on the account (the first one in the list), so they need no add
+     * or delete: EEPD-TC-16502 (list), EEPD-TC-15483 (filter) and EEPD-TC-12354 (context menu).
+     */
+    @Test(priority = 2, description = "EEPD-TC-16502 / EEPD-TC-15483 / EEPD-TC-12354: POS-Bridges - list, filter "
+            + "and context menu of a bridge in the Bridges tab of mobile VMS app",
+          groups = {"regression", "bridges"})
+    public void verifyBridgeListFilterAndContextMenu() {
+        // EEPD-TC-16502: the Devices overview lists the bridge and its settings open.
         devicesPage.verifyDevicesOverviewOptions();
+        devicesPage.clickBridgesTab();
+        String bridgeName = devicesPage.getFirstBridgeName();
         devicesPage.verifyBridgeShownInBridgesTab(bridgeName);
         devicesPage.openFirstBridgeAndVerifySettings();
         driver.navigate().back();
@@ -78,12 +95,6 @@ public class BridgesTest extends BaseTest {
         devicesPage.openFirstBridgeContextMenu();
         devicesPage.verifyBridgeContextMenuOptions();
         driver.navigate().back();
-
-        // EEPD-TC-8890: delete the bridge; the list goes back to the Bridges tab and no longer has it.
-        devicesPage.clickBridgesTab();
-        deleteTestBridge(bridgeName);
-        devicesPage.verifyUserNavigatedBackToBridgesTab();
-        devicesPage.verifyNoMatchingBridgesMessageDisplayed(bridgeName);
     }
 
     /**
@@ -91,7 +102,7 @@ public class BridgesTest extends BaseTest {
      * bridge stays offline for about an hour, and the app does not let an offline bridge's name be edited. Whatever
      * happens, @AfterMethod restores the original name, looking the bridge up by its exact unique new name.
      */
-    @Test(priority = 2, description = "EEPD-TC-8881: POS-Bridge Settings - changing the name and checking status of the Bridge in mobile VMS app",
+    @Test(priority = 3, description = "EEPD-TC-8881: POS-Bridge Settings - changing the name and checking status of the Bridge in mobile VMS app",
           groups = {"regression", "bridges"})
     public void verifyBridgeNameCanBeChangedAndRestored() {
         devicesPage.clickBridgesTab();
