@@ -40,8 +40,8 @@ public final class VideoSearchLocators {
     // --- Search functionality --------------------------------------------------------
 
     public static final By SEARCH_ICON = AppiumBy.id("com.een.vms.android:id/img_search");
-    public static final By SEARCH_HINT_FIELD = AppiumBy.xpath("//android.widget.TextView[@resource-id=\"com.een.vms.android:id/hint\"]");
-    public static final By SEARCH_INPUT_FIELD = AppiumBy.xpath("//android.widget.EditText[@resource-id=\"com.een.vms.android:id/edit_text\"]");
+    public static final By SEARCH_HINT_FIELD = AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/hint']");
+    public static final By SEARCH_INPUT_FIELD = AppiumBy.xpath("//android.widget.EditText[@resource-id='com.een.vms.android:id/edit_text']");
     public static final By SEARCH_BACK_BUTTON = AppiumBy.id("com.een.vms.android:id/img_back");
 
     // --- Event page (bottom sheet opened from a card) ------------------------------------
@@ -82,6 +82,14 @@ public final class VideoSearchLocators {
     // --- Helper method for parameterized suggestion locators ------------------------
 
     public static By suggestionByText(String text) {
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + text + "']");
+        // Escape single quotes in text for XPath
+        String escapedText;
+        if (!text.contains("'")) {
+            escapedText = "'" + text + "'";
+        } else {
+            // Use concat() for text containing single quotes
+            escapedText = "concat('" + text.replace("'", "',\"'\",'") + "')";
+        }
+        return AppiumBy.xpath("//android.widget.TextView[@text=" + escapedText + "]");
     }
 }

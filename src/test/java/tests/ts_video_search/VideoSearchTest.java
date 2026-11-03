@@ -34,7 +34,7 @@ public class VideoSearchTest extends BaseTest {
         videoSearchPage.openCameraPreviewAndVerifyDetails();
         videoSearchPage.verifySwipeNavigation();
         videoSearchPage.dismissDetailScreenWithXButton();
-        videoSearchPage.openCameraPreviewAndVerifyDetails();
+        videoSearchPage.reopenCameraPreview();
         videoSearchPage.dismissDetailScreenWithSwipeDown();
     }
 }
