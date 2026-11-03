@@ -64,17 +64,18 @@ public class BridgesTest extends BaseTest {
     }
 
     /**
-     * Read-only checks on a bridge that is already on the account (the first one in the list), so they need no add
-     * or delete: EEPD-TC-16502 (list), EEPD-TC-15483 (filter) and EEPD-TC-12354 (context menu).
+     * Adds a bridge and checks how it shows up, then deletes it: EEPD-TC-16502 (list), EEPD-TC-15483 (filter) and
+     * EEPD-TC-12354 (context menu). It adds its own bridge, so it does not depend on what the account already has, and
+     * it is a test of its own so that a failure in the add and delete test above does not hide these checks.
      */
     @Test(priority = 2, description = "EEPD-TC-16502 / EEPD-TC-15483 / EEPD-TC-12354: POS-Bridges - list, filter "
-            + "and context menu of a bridge in the Bridges tab of mobile VMS app",
+            + "and context menu of an added bridge in the Bridges tab of mobile VMS app",
           groups = {"regression", "bridges"})
     public void verifyBridgeListFilterAndContextMenu() {
+        String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
+
         // EEPD-TC-16502: the Devices overview lists the bridge and its settings open.
         devicesPage.verifyDevicesOverviewOptions();
-        devicesPage.clickBridgesTab();
-        String bridgeName = devicesPage.getFirstBridgeName();
         devicesPage.verifyBridgeShownInBridgesTab(bridgeName);
         devicesPage.openFirstBridgeAndVerifySettings();
         driver.navigate().back();
@@ -95,6 +96,10 @@ public class BridgesTest extends BaseTest {
         devicesPage.openFirstBridgeContextMenu();
         devicesPage.verifyBridgeContextMenuOptions();
         driver.navigate().back();
+
+        // Remove the bridge again so the account's single attach ID is free for the next test.
+        devicesPage.clickBridgesTab();
+        deleteTestBridge(bridgeName);
     }
 
     /**
