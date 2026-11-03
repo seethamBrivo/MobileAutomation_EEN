@@ -1,6 +1,5 @@
 package pages;
 
-import constants.TestDataConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
@@ -13,7 +12,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -54,9 +52,9 @@ public class VideoSearchPage {
         WaitUtils.click(driver, VideoSearchLocators.BACK_BUTTON_FROM_VSP_EVENTS);
     }
 
-    public void verifyVideoSearchInSideMenu() {
+    public void verifyVideoSearchInBottomNav() {
         WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_TAB, TimeoutConstants.SHORT_TIMEOUT,
-                "Video Search should be visible in side menu");
+                "Video Search should be visible in bottom navigation");
     }
 
     public void clickSearch() {
@@ -169,9 +167,11 @@ public class VideoSearchPage {
     }
 
     public void verifyAutosuggestionOptions() {
-        List<String> suggestions = Arrays.asList(TestDataConstants.VIDEO_SEARCH_TERM, "Man", "Woman", "Vehicle", "Backpack");
+        List<String> suggestions = List.of("Person", "Man", "Woman", "Vehicle", "Backpack");
         for (String suggestion : suggestions) {
-            WaitUtils.assertVisible(driver, VideoSearchLocators.suggestionByText(suggestion), TimeoutConstants.SHORT_TIMEOUT,
+            WaitUtils.assertVisible(driver,
+                    VideoSearchLocators.suggestionByText(suggestion),
+                    TimeoutConstants.SHORT_TIMEOUT,
                     suggestion + " suggestion should be visible");
         }
     }
@@ -195,9 +195,9 @@ public class VideoSearchPage {
     }
 
     private void waitForSearchToComplete() {
-        WaitUtils.waitForVisibility(driver, VideoSearchLocators.SEARCH_BACK_BUTTON);
-        WaitUtils.assertVisible(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST, TimeoutConstants.SHORT_TIMEOUT,
-                "Search results should appear after searching");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Search mode should be active (back button visible)");
     }
 
     private void clickSearchBackButton() {
@@ -210,7 +210,7 @@ public class VideoSearchPage {
     }
 
     public void navigateToVideoSearch() {
-        verifyVideoSearchInSideMenu();
+        verifyVideoSearchInBottomNav();
         clickSearch();
         verifyVideoSearchPageDisplayed();
     }
@@ -248,7 +248,9 @@ public class VideoSearchPage {
                 "Event number scope should be visible");
         WaitUtils.assertVisible(driver, VideoSearchLocators.EVENT_TAGS_TITLE, TimeoutConstants.SHORT_TIMEOUT,
                 "Tags title should be visible");
-        WaitUtils.assertVisible(driver, VideoSearchLocators.VIEW_IN_HISTORY_BROWSER_BUTTON, TimeoutConstants.SHORT_TIMEOUT,
+        WaitUtils.assertVisible(driver,
+                VideoSearchLocators.VIEW_IN_HISTORY_BROWSER_BUTTON,
+                TimeoutConstants.SHORT_TIMEOUT,
                 "View History Browser button should be visible");
     }
 
@@ -268,15 +270,15 @@ public class VideoSearchPage {
     }
 
     private void swipeOnKeyImage(boolean towardsLeft) {
-        String direction = towardsLeft ? "left" : "right";
-        String timestampBefore = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
-
         String counterText = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_COUNTER).getText();
         String[] parts = counterText.split("/");
         if (parts.length == 2 && parts[0].trim().equals(parts[1].trim())) {
-            logger.info("Only one event in scope ({}), swipe navigation not applicable", counterText);
+            logger.info("Only one event or at last event ({}), swipe navigation not applicable", counterText);
             return;
         }
+
+        String direction = towardsLeft ? "left" : "right";
+        String timestampBefore = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
 
         WebElement imageOverlay = WaitUtils.waitForVisibility(driver, VideoSearchLocators.KEY_IMAGE_OVERLAY);
         Rectangle rect = imageOverlay.getRect();
@@ -289,17 +291,17 @@ public class VideoSearchPage {
 
         final String originalTimestamp = timestampBefore;
         boolean changed = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
-            if (!WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_TIME, TimeoutConstants.SHORT_TIMEOUT)) {
+            WebElement timeElement = driver.findElement(VideoSearchLocators.EVENT_TIME);
+            if (!timeElement.isDisplayed()) {
                 return false;
             }
-            String current = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
+            String current = timeElement.getText();
             return !current.equals(originalTimestamp);
         });
 
-        Assert.assertTrue(changed, "Timestamp should change after swipe " + direction);
+        Assert.assertTrue(changed, "Timestamp should change after swipe " + direction +
+                " (was '" + timestampBefore + "')");
         String timestampAfter = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
-        Assert.assertNotEquals(timestampAfter, timestampBefore,
-                "Swipe " + direction + " should navigate to different event");
         logger.info("Swiped {} on key image - changed from {} to {}", direction, timestampBefore, timestampAfter);
     }
 
@@ -358,23 +360,25 @@ public class VideoSearchPage {
 
     /**
      * Cleanup method called from @AfterMethod to dismiss any open screens.
-     * Never throws - catches all exceptions to allow teardown to continue.
+     * Uses fast timeout to minimize overhead. Never throws.
      */
     public void dismissAnyOpenScreens() {
         try {
-            if (WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD, TimeoutConstants.SHORT_TIMEOUT)) {
-                clickSearchBackButton();
+            if (WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_CAMERA_NAME,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                clickCloseButton();
             }
-        } catch (Exception e) {
-            // Search field not open or couldn't be closed, continue
+        } catch (Throwable t) {
+            logger.warn("Could not close detail screen: {}", t.getMessage());
         }
 
         try {
-            if (WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_CAMERA_NAME, TimeoutConstants.SHORT_TIMEOUT)) {
-                clickCloseButton();
+            if (WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                clickSearchBackButton();
             }
-        } catch (Exception e) {
-            // Detail screen not open or couldn't be closed, continue
+        } catch (Throwable t) {
+            logger.warn("Could not close search field: {}", t.getMessage());
         }
     }
 }

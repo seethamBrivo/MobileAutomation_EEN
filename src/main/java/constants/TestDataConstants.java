@@ -54,7 +54,4 @@ public final class TestDataConstants {
     public static final String ARCHIVE_SEARCH_DATA = "archive_search_data";
     public static final String ARCHIVE_VALID_SEARCH_TERM = "valid_search_term";
     public static final String ARCHIVE_NO_RESULTS_SEARCH_TERM = "no_results_search_term";
-
-    // Video Search constants.
-    public static final String VIDEO_SEARCH_TERM = "Person";
 }

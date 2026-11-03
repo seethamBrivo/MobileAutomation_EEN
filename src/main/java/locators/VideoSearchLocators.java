@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.XPathUtils;
 
 /**
  * Locators for the Video Search screen, its event page and the back navigation from the VSP Events screen.
@@ -92,12 +93,6 @@ public final class VideoSearchLocators {
     // --- Helper method for parameterized suggestion locators ------------------------
 
     public static By suggestionByText(String text) {
-        String escapedText;
-        if (!text.contains("'")) {
-            escapedText = "'" + text + "'";
-        } else {
-            escapedText = "concat('" + text.replace("'", "',\"'\",'") + "')";
-        }
-        return AppiumBy.xpath("//android.widget.TextView[@text=" + escapedText + "]");
+        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(text) + "]");
     }
 }
