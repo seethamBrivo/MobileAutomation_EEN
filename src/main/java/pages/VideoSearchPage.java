@@ -273,7 +273,7 @@ public class VideoSearchPage {
         String counterText = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_COUNTER).getText();
         String[] parts = counterText.split("/");
         if (parts.length == 2 && parts[0].trim().equals(parts[1].trim())) {
-            logger.info("Only one event or at last event ({}), swipe navigation not applicable", counterText);
+            logger.info("Event counter is {} (current equals total), swipe navigation not applicable", counterText);
             return;
         }
 
@@ -291,26 +291,22 @@ public class VideoSearchPage {
 
         final String originalTimestamp = timestampBefore;
         boolean changed = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
-            WebElement timeElement = driver.findElement(VideoSearchLocators.EVENT_TIME);
-            if (!timeElement.isDisplayed()) {
-                return false;
-            }
-            String current = timeElement.getText();
+            String current = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
             return !current.equals(originalTimestamp);
         });
 
-        Assert.assertTrue(changed, "Timestamp should change after swipe " + direction +
-                " (was '" + timestampBefore + "')");
+        Assert.assertTrue(changed, "Timestamp should change after swipe " + direction
+                + " (was '" + timestampBefore + "')");
         String timestampAfter = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
         logger.info("Swiped {} on key image - changed from {} to {}", direction, timestampBefore, timestampAfter);
     }
 
     private void swipeRightOnKeyImage() {
-        swipeOnKeyImage(false); // Swipe towards right
+        swipeOnKeyImage(false);
     }
 
     private void swipeLeftOnKeyImage() {
-        swipeOnKeyImage(true); // Swipe towards left
+        swipeOnKeyImage(true);
     }
 
     private void clickCloseButton() {
@@ -370,6 +366,15 @@ public class VideoSearchPage {
             }
         } catch (Throwable t) {
             logger.warn("Could not close detail screen: {}", t.getMessage());
+        }
+
+        try {
+            if (WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                clickSearchBackButton();
+            }
+        } catch (Throwable t) {
+            logger.warn("Could not close search results: {}", t.getMessage());
         }
 
         try {
