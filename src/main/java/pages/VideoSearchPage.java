@@ -1,6 +1,11 @@
 package pages;
 
+import static constants.TimeoutConstants.SHORT_TIMEOUT;
+
 import constants.TimeoutConstants;
+import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.android.nativekey.AndroidKey;
+import io.appium.java_client.android.nativekey.KeyEvent;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -8,16 +13,21 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
-import io.appium.java_client.AppiumDriver;
 import locators.VideoSearchLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Rectangle;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
+import utils.GestureUtils;
 import utils.WaitUtils;
 
 public class VideoSearchPage {
@@ -47,9 +57,8 @@ public class VideoSearchPage {
     }
 
     public void verifyVideoSearchInSideMenu() {
-        boolean videoSearchVisible = WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_OPTION,
-                constants.TimeoutConstants.SHORT_TIMEOUT);
-        Assert.assertTrue(videoSearchVisible, "Video Search should be visible in side menu");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_TAB, SHORT_TIMEOUT,
+                "Video Search should be visible in side menu");
         logger.info("Video Search option is visible in side menu");
     }
 
@@ -121,9 +130,8 @@ public class VideoSearchPage {
     }
 
     public void verifyVideoSearchPageDisplayed() {
-        boolean searchIconVisible = WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_ICON,
-                constants.TimeoutConstants.SHORT_TIMEOUT);
-        Assert.assertTrue(searchIconVisible, "Video Search page should be displayed");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_ICON, SHORT_TIMEOUT,
+                "Video Search page should be displayed");
         logger.info("Video Search page is displayed");
     }
 
@@ -160,62 +168,53 @@ public class VideoSearchPage {
     }
 
     public void verifySearchFieldOpened() {
-        boolean searchFieldVisible = WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD,
-                constants.TimeoutConstants.SHORT_TIMEOUT);
-        Assert.assertTrue(searchFieldVisible, "Search hint field should be visible");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD, SHORT_TIMEOUT,
+                "Search hint field should be visible");
     }
 
     public void verifyAutosuggestionOptions() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.SUGGESTION_PERSON,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Person suggestion should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.SUGGESTION_MAN,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Man suggestion should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.SUGGESTION_WOMAN,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Woman suggestion should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.SUGGESTION_VEHICLE,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Vehicle suggestion should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.SUGGESTION_BACKPACK,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Backpack suggestion should be visible");
+        List<String> suggestions = Arrays.asList("Person", "Man", "Woman", "Vehicle", "Backpack");
+        for (String suggestion : suggestions) {
+            WaitUtils.assertVisible(driver, VideoSearchLocators.suggestionByText(suggestion), SHORT_TIMEOUT,
+                    suggestion + " suggestion should be visible");
+        }
         logger.info("All 5 autosuggestion options verified");
     }
 
-    public void enterSearchText(String searchText) {
+    private WebElement enterSearchText(String searchText) {
         WaitUtils.click(driver, VideoSearchLocators.SEARCH_HINT_FIELD);
-        WaitUtils.waitForVisibility(driver, VideoSearchLocators.SEARCH_INPUT_FIELD).sendKeys(searchText);
+        WebElement searchField = WaitUtils.waitForVisibility(driver, VideoSearchLocators.SEARCH_INPUT_FIELD);
+        searchField.sendKeys(searchText);
         logger.info("Entered search text: {}", searchText);
+        return searchField;
     }
 
-    public void verifySearchTextEntered(String expectedText) {
-        String actualText = WaitUtils.waitForVisibility(driver, VideoSearchLocators.SEARCH_INPUT_FIELD).getText();
+    private void verifySearchTextEntered(WebElement searchField, String expectedText) {
+        String actualText = searchField.getText();
         Assert.assertEquals(actualText, expectedText, "Search text should match entered text");
         logger.info("Verified search text: {}", actualText);
     }
 
-    public void pressEnterKey() {
-        if (utils.PlatformLocator.isIos()) {
-            WaitUtils.waitForVisibility(driver, VideoSearchLocators.SEARCH_INPUT_FIELD).sendKeys("\n");
-        } else {
-            ((io.appium.java_client.android.AndroidDriver) driver).pressKey(
-                    new io.appium.java_client.android.nativekey.KeyEvent(
-                            io.appium.java_client.android.nativekey.AndroidKey.ENTER));
-        }
+    private void pressEnterKey() {
+        ((io.appium.java_client.android.AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.ENTER));
     }
 
-    public void verifySearchResultsOrEmptyState() {
-        WaitUtils.waitForVisibility(driver, VideoSearchLocators.BACK_BUTTON);
-        boolean hasResults = WaitUtils.isVisible(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST,
-                constants.TimeoutConstants.SHORT_TIMEOUT);
+    private void verifySearchResultsOrEmptyState() {
+        WaitUtils.waitForVisibility(driver, VideoSearchLocators.SEARCH_BACK_BUTTON);
+        boolean hasResults = WaitUtils.isVisible(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST, SHORT_TIMEOUT);
+        if (hasResults) {
+            WaitUtils.assertVisible(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST, SHORT_TIMEOUT,
+                    "Search results should be visible when results exist");
+        }
         logger.info("Search executed - {} results found", hasResults ? "some" : "no");
     }
 
-    public void clickBackButton() {
-        WaitUtils.click(driver, VideoSearchLocators.BACK_BUTTON);
+    private void clickSearchBackButton() {
+        WaitUtils.click(driver, VideoSearchLocators.SEARCH_BACK_BUTTON);
     }
 
-    public void verifySearchFieldCancelled() {
-        boolean searchFieldGone = !WaitUtils.isVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD,
-                constants.TimeoutConstants.SHORT_TIMEOUT);
-        Assert.assertTrue(searchFieldGone, "Search field should be closed after clicking back");
+    private void verifySearchFieldCancelled() {
+        WaitUtils.waitForInvisibility(driver, VideoSearchLocators.SEARCH_HINT_FIELD, SHORT_TIMEOUT);
         logger.info("Search field cancelled successfully");
     }
 
@@ -232,75 +231,77 @@ public class VideoSearchPage {
     }
 
     public void searchForText(String searchText) {
-        enterSearchText(searchText);
-        verifySearchTextEntered(searchText);
+        WebElement searchField = enterSearchText(searchText);
+        verifySearchTextEntered(searchField, searchText);
         pressEnterKey();
         verifySearchResultsOrEmptyState();
     }
 
     public void closeSearchField() {
-        clickBackButton();
+        clickSearchBackButton();
         verifySearchFieldCancelled();
     }
 
-    public void clickCameraPreview() {
+    private void clickCameraPreview() {
         WaitUtils.click(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST);
-        WaitUtils.waitForVisibility(driver, VideoSearchLocators.CAMERA_NAME);
-        logger.info("Clicked on camera preview and detail screen opened");
+        logger.info("Clicked on camera preview");
     }
 
-    public void verifyKeyImageDetailScreen() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.CAMERA_NAME,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Camera name should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.DATE_SUBTITLE,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Date should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.TIMESTAMP,
-                constants.TimeoutConstants.LIST_LOAD_TIMEOUT), "Timestamp should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_NUMBER_SCOPE,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Event number scope should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.TAGS_TITLE,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "Tags title should be visible");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VideoSearchLocators.VIEW_HISTORY_BROWSER_BUTTON,
-                constants.TimeoutConstants.SHORT_TIMEOUT), "View History Browser button should be visible");
+    private void verifyKeyImageDetailScreen() {
+        // Wait for detail screen to fully load by checking for timestamp (key indicator)
+        WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME);
+
+        // Now verify all elements are visible (no additional waits needed)
+        WaitUtils.assertVisible(driver, VideoSearchLocators.EVENT_CAMERA_NAME, SHORT_TIMEOUT,
+                "Camera name should be visible");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.EVENT_DATE, SHORT_TIMEOUT,
+                "Date should be visible");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.EVENT_COUNTER, SHORT_TIMEOUT,
+                "Event number scope should be visible");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.EVENT_TAGS_TITLE, SHORT_TIMEOUT,
+                "Tags title should be visible");
+        WaitUtils.assertVisible(driver, VideoSearchLocators.VIEW_IN_HISTORY_BROWSER_BUTTON, SHORT_TIMEOUT,
+                "View History Browser button should be visible");
         logger.info("Key image detail screen verified with all required elements");
     }
 
-    public void verifyTimestampHasNoMilliseconds() {
-        String timestamp = WaitUtils.waitForVisibility(driver, VideoSearchLocators.TIMESTAMP).getText();
+    private void verifyTimestampHasNoMilliseconds() {
+        String timestamp = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
         Assert.assertFalse(timestamp.contains("."), "Timestamp should not contain milliseconds");
         logger.info("Verified timestamp has no milliseconds: {}", timestamp);
     }
 
-    public byte[] captureScreenshot() {
-        return ((io.appium.java_client.android.AndroidDriver) driver).getScreenshotAs(org.openqa.selenium.OutputType.BYTES);
+    private byte[] captureScreenshot() {
+        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
     }
 
-    public void clickTagAndVerifyHighlight() {
-        if (!WaitUtils.isVisible(driver, VideoSearchLocators.ANY_TAG, constants.TimeoutConstants.SHORT_TIMEOUT)) {
-            logger.info("No tags detected - AI did not detect Person/Vehicle in this frame, skipping tag highlight verification");
-            return;
+    private void clickTagAndVerifyHighlight() {
+        if (!WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_TAGS, SHORT_TIMEOUT)) {
+            throw new SkipException("No tags detected - AI did not detect Person/Vehicle in this frame");
         }
 
         byte[] beforeScreenshot = captureScreenshot();
-        WaitUtils.click(driver, VideoSearchLocators.ANY_TAG);
+        WaitUtils.click(driver, VideoSearchLocators.EVENT_TAGS);
         byte[] afterScreenshot = captureScreenshot();
 
-        if (java.util.Arrays.equals(beforeScreenshot, afterScreenshot)) {
-            logger.info("Tag clicked but no visual highlight change detected - tag may already be selected or no highlight effect");
-        } else {
-            logger.info("Tag clicked and highlight verified via screenshot comparison");
-        }
+        Assert.assertFalse(Arrays.equals(beforeScreenshot, afterScreenshot),
+                "Tag should show visual highlight after click");
+        logger.info("Tag clicked and highlight verified via screenshot comparison");
     }
 
-    private void swipeOnKeyImage(String direction, int startXFraction, int endXFraction) {
-        String timestampBefore = WaitUtils.waitForVisibility(driver, VideoSearchLocators.TIMESTAMP).getText();
-        org.openqa.selenium.WebElement imageOverlay = WaitUtils.waitForVisibility(driver, VideoSearchLocators.KEY_IMAGE_OVERLAY);
-        org.openqa.selenium.Rectangle rect = imageOverlay.getRect();
-        int startX = rect.getX() + (rect.getWidth() * startXFraction / 4);
-        int endX = rect.getX() + (rect.getWidth() * endXFraction / 4);
+    private void swipeOnKeyImage(boolean forward) {
+        String direction = forward ? "right" : "left";
+        String timestampBefore = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
+        WebElement imageOverlay = WaitUtils.waitForVisibility(driver, VideoSearchLocators.KEY_IMAGE_OVERLAY);
+        Rectangle rect = imageOverlay.getRect();
+
+        int startX = forward ? rect.getX() + (rect.getWidth() * 3 / 4) : rect.getX() + (rect.getWidth() / 4);
+        int endX = forward ? rect.getX() + (rect.getWidth() / 4) : rect.getX() + (rect.getWidth() * 3 / 4);
         int y = rect.getY() + (rect.getHeight() / 2);
-        utils.GestureUtils.swipe(driver, startX, y, endX, y);
-        String timestampAfter = WaitUtils.waitForVisibility(driver, VideoSearchLocators.TIMESTAMP).getText();
+
+        GestureUtils.swipe(driver, startX, y, endX, y);
+
+        String timestampAfter = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
         if (timestampAfter.equals(timestampBefore)) {
             logger.info("Swiped {} on key image - same event (no movement detected)", direction);
         } else {
@@ -308,34 +309,32 @@ public class VideoSearchPage {
         }
     }
 
-    public void swipeRightOnKeyImage() {
-        swipeOnKeyImage("right", 3, 1);
+    private void swipeRightOnKeyImage() {
+        swipeOnKeyImage(true);
     }
 
-    public void swipeLeftOnKeyImage() {
-        swipeOnKeyImage("left", 1, 3);
+    private void swipeLeftOnKeyImage() {
+        swipeOnKeyImage(false);
     }
 
-    public void clickCloseButton() {
+    private void clickCloseButton() {
         WaitUtils.click(driver, VideoSearchLocators.CLOSE_BUTTON);
         logger.info("Clicked close button");
     }
 
-    public void verifyDetailScreenDismissed() {
-        boolean detailScreenGone = !WaitUtils.isVisible(driver, VideoSearchLocators.CAMERA_NAME,
-                constants.TimeoutConstants.SHORT_TIMEOUT);
-        Assert.assertTrue(detailScreenGone, "Detail screen should be dismissed");
+    private void verifyDetailScreenDismissed() {
+        WaitUtils.assertNotVisible(driver, VideoSearchLocators.EVENT_CAMERA_NAME, SHORT_TIMEOUT,
+                "Detail screen should be dismissed");
         logger.info("Detail screen dismissed successfully");
     }
 
-    public void swipeDownToClose() {
-        org.openqa.selenium.WebElement titleElement = WaitUtils.waitForVisibility(driver, VideoSearchLocators.CAMERA_NAME);
-        org.openqa.selenium.Rectangle rect = titleElement.getRect();
-        int x = rect.getX() + (rect.getWidth() / 2);
-        int startY = rect.getY() + (rect.getHeight() / 2);
-        int endY = startY + 500;
-        utils.GestureUtils.swipe(driver, x, startY, x, endY);
-        logger.info("Swiped down to close detail screen");
+    private void swipeDownToClose() {
+        Dimension windowSize = driver.manage().window().getSize();
+        int centerX = windowSize.getWidth() / 2;
+        int startY = (int) (windowSize.getHeight() * 0.1); // Start near top (10% from top)
+        int endY = (int) (windowSize.getHeight() * 0.8);   // Swipe down to 80% (long swipe)
+        GestureUtils.swipe(driver, centerX, startY, centerX, endY);
+        logger.info("Swiped down from top to close detail screen");
     }
 
     public void openCameraPreviewAndVerifyDetails() {
@@ -356,7 +355,6 @@ public class VideoSearchPage {
     }
 
     public void dismissDetailScreenWithSwipeDown() {
-        clickCameraPreview();
         swipeDownToClose();
         verifyDetailScreenDismissed();
     }

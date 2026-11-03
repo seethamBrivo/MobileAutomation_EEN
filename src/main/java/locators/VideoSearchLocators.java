@@ -41,15 +41,8 @@ public final class VideoSearchLocators {
 
     public static final By SEARCH_ICON = AppiumBy.id("com.een.vms.android:id/img_search");
     public static final By SEARCH_HINT_FIELD = AppiumBy.xpath("//android.widget.TextView[@resource-id=\"com.een.vms.android:id/hint\"]");
-    // Safe: EditText appears only after clicking hint field, no other EditText elements visible
-    public static final By SEARCH_INPUT_FIELD = AppiumBy.className("android.widget.EditText");
-    public static final By BACK_BUTTON = AppiumBy.id("com.een.vms.android:id/img_back");
-
-    public static final By SUGGESTION_PERSON = AppiumBy.xpath("//android.widget.TextView[@text='Person']");
-    public static final By SUGGESTION_MAN = AppiumBy.xpath("//android.widget.TextView[@text='Man']");
-    public static final By SUGGESTION_WOMAN = AppiumBy.xpath("//android.widget.TextView[@text='Woman']");
-    public static final By SUGGESTION_VEHICLE = AppiumBy.xpath("//android.widget.TextView[@text='Vehicle']");
-    public static final By SUGGESTION_BACKPACK = AppiumBy.xpath("//android.widget.TextView[@text='Backpack']");
+    public static final By SEARCH_INPUT_FIELD = AppiumBy.xpath("//android.widget.EditText[@resource-id=\"com.een.vms.android:id/edit_text\"]");
+    public static final By SEARCH_BACK_BUTTON = AppiumBy.id("com.een.vms.android:id/img_back");
 
     // --- Event page (bottom sheet opened from a card) ------------------------------------
 
@@ -79,18 +72,16 @@ public final class VideoSearchLocators {
 
     public static final By VIEW_IN_HISTORY_BROWSER_BUTTON = AppiumBy.accessibilityId("viewInHistoryBrowser_button");
 
-    // Additional locators for test automation (key image interactions)
-    public static final By CAMERA_PREVIEW_FIRST = AppiumBy.xpath("(//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/overlay\"])[1]");
-    public static final By KEY_IMAGE_OVERLAY = AppiumBy.xpath("//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/overlay\"]");
+    // --- Key image detail screen (overlays in event bottom sheet) -------------------
+
+    private static final String KEY_IMAGE_OVERLAY_BASE = "//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/overlay\"]";
+    public static final By CAMERA_PREVIEW_FIRST = AppiumBy.xpath("(" + KEY_IMAGE_OVERLAY_BASE + ")[1]");
+    public static final By KEY_IMAGE_OVERLAY = AppiumBy.xpath(KEY_IMAGE_OVERLAY_BASE);
     public static final By CLOSE_BUTTON = AppiumBy.xpath("//android.widget.ImageView[@resource-id=\"com.een.vms.android:id/close\"]");
 
-    // Aliases for compatibility with refactored naming
-    public static final By CAMERA_NAME = EVENT_CAMERA_NAME;
-    public static final By DATE_SUBTITLE = EVENT_DATE;
-    public static final By TIMESTAMP = EVENT_TIME;
-    public static final By TAGS_TITLE = EVENT_TAGS_TITLE;
-    public static final By ANY_TAG = EVENT_TAGS;
-    public static final By EVENT_NUMBER_SCOPE = EVENT_COUNTER;
-    public static final By VIEW_HISTORY_BROWSER_BUTTON = VIEW_IN_HISTORY_BROWSER_BUTTON;
-    public static final By SEARCH_OPTION = SEARCH_TAB;
+    // --- Helper method for parameterized suggestion locators ------------------------
+
+    public static By suggestionByText(String text) {
+        return AppiumBy.xpath("//android.widget.TextView[@text='" + text + "']");
+    }
 }

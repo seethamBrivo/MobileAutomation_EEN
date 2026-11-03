@@ -8,6 +8,8 @@ import pages.VideoSearchPage;
 
 public class VideoSearchTest extends BaseTest {
 
+    private static final String VIDEO_SEARCH_TERM = "Person";
+
     private VideoSearchPage videoSearchPage;
 
     @BeforeMethod(alwaysRun = true)
@@ -21,7 +23,7 @@ public class VideoSearchTest extends BaseTest {
     public void verifyVideoSearchByContent() {
         videoSearchPage.navigateToVideoSearch();
         videoSearchPage.openSearchFieldAndVerifyAutosuggestions();
-        videoSearchPage.searchForText("Person");
+        videoSearchPage.searchForText(VIDEO_SEARCH_TERM);
         videoSearchPage.closeSearchField();
     }
 
@@ -32,6 +34,7 @@ public class VideoSearchTest extends BaseTest {
         videoSearchPage.openCameraPreviewAndVerifyDetails();
         videoSearchPage.verifySwipeNavigation();
         videoSearchPage.dismissDetailScreenWithXButton();
+        videoSearchPage.openCameraPreviewAndVerifyDetails();
         videoSearchPage.dismissDetailScreenWithSwipeDown();
     }
 }
