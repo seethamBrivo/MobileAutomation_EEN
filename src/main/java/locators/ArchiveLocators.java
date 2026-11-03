@@ -123,17 +123,23 @@ public final class ArchiveLocators {
             AppiumBy.xpath("//XCUIElementTypeAlert//XCUIElementTypeButton[@name='Download']")); // ios
 
     public static final By IN_PROGRESS_STATUS =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"In progress\"]");
+            PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text=\"In progress\"]"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND label == 'In progress'")); // ios
 
     // Brittle: positional XPath - no resource-id or content-desc available
     // NOTE: This locator is identical to FIRST_FOLDER_THREE_DOTS because the cancel icon
     // appears at the same position as the folder's 3-dots menu during folder downloads.
     // For video downloads inside a folder, the cancel icon position may differ.
     public static final By CANCEL_DOWNLOAD_ICON =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ArchiveMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[2]");
+            PlatformLocator.get(
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"ArchiveMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[2]"), // android
+            AppiumBy.iOSNsPredicateString("name ENDSWITH '_archives_cancel_action'")); // ios
 
     public static final By YES_CANCEL_BUTTON =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"YES, CANCEL\"]");
+            PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text=\"YES, CANCEL\"]"), // android
+            AppiumBy.accessibilityId("Yes, cancel")); // ios
 
     // iOS only: the first download asks for access to the photo library, because iOS saves downloads to Photos.
     public static final By ALLOW_PHOTO_LIBRARY_ACCESS_BUTTON = AppiumBy.accessibilityId("Allow Full Access");

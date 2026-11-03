@@ -1,5 +1,7 @@
 package constants;
 
+import utils.PlatformLocator;
+
 /**
  * UI text constants from the mobile app. These are actual strings displayed in the UI,
  * not test data keys or configuration values.
@@ -23,5 +25,9 @@ public final class UiTextConstants {
 
     // Archive downloads: Android saves to Files, iOS to Photos, and each says so when the download is done.
     public static final String ARCHIVE_DOWNLOAD_SAVED_MESSAGE =
-            utils.PlatformLocator.isIos() ? "Saved to Photos" : "Saved to Files";
+            PlatformLocator.isIos() ? "Saved to Photos" : "Saved to Files";
+
+    /** Fragments of the Archive snackbar, compared in lower case. */
+    public static final String ARCHIVE_DOWNLOADING_MESSAGE = "downloading";
+    public static final String ARCHIVE_CANCELLED_MESSAGE = "cancel";
 }
