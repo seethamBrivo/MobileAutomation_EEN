@@ -58,18 +58,24 @@ public final class CamerasLocators {
             "(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]");
 
     // Android only: a camera card is a full-width clickable row; its name and status are its first two TextViews.
+    // TODO: Replace with testTag when mobile team adds an identifier to the camera card.
     public static final By CAMERA_CARD = AppiumBy.xpath(
             "//android.view.View[@clickable='true'][starts-with(@bounds, '[0,')][android.widget.TextView]");
 
     /** Android only: looked up inside a camera card; in order the name, the status, then the tags. */
     public static final By TEXTS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView");
 
-    // Android only: the 3-dots button is the last clickable child of the card (the first is the preview).
+    // Android only: the 3-dots button is the last clickable child of the card (the first is the preview). The tag
+    // chips sit in a non-clickable row inside the card, so they are not direct children and cannot be matched.
+    // TODO: Replace with testTag when mobile team adds an identifier to the 3-dots button.
     public static final By THREE_DOTS_OF_FIRST_ONLINE_CAMERA = AppiumBy.xpath(
             "(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]"
                     + "/android.view.View[@clickable='true'][last()]");
 
-    /** Android only: the Cameras tile on the Dashboard lists the cameras per status; their sum is the total. */
+    /**
+     * Android only: the Cameras tile on the Dashboard lists the cameras per status; their sum is the total.
+     * TODO: Replace with testTag when mobile team adds identifiers to the tile's numbers.
+     */
     public static final By CAMERAS_TILE_COUNTS = AppiumBy.xpath(
             "//android.widget.TextView[@text='Cameras']/ancestor::android.view.View[@clickable='true'][1]"
                     + "//android.widget.TextView[string-length(@text) > 0"
@@ -206,6 +212,7 @@ public final class CamerasLocators {
             "//android.view.View[@content-desc='trailingIcon']/preceding-sibling::android.widget.TextView[1]");
 
     // Android only: a tag under a camera is a clickable chip with a checkbox; the filter chips have none.
+    // TODO: Replace with testTag when mobile team adds an identifier to the tag chip.
     public static final By FIRST_TAG = AppiumBy.xpath(
             "(//android.view.View[@clickable='true'][android.widget.CheckBox])[1]");
 

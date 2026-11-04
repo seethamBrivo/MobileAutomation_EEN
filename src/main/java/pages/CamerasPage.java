@@ -60,6 +60,10 @@ public class CamerasPage {
     /** The filter row holds 7 chips and about 5 fit on screen; one swipe reaches the end, more is headroom. */
     private static final int FILTER_ROW_MAX_SWIPES = 4;
 
+    /** The filter row is swiped from 80% to 20% of the width: far from the edges, where Android's back gesture is. */
+    private static final double FILTER_ROW_SWIPE_START = 0.8;
+    private static final double FILTER_ROW_SWIPE_END = 0.2;
+
     /** The menu shows the frame time in the account's time format: 12 hour with AM/PM, or 24 hour. */
     private static final List<DateTimeFormatter> FRAME_TIME_FORMATS = List.of(
             DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH), DateTimeFormatter.ofPattern("HH:mm:ss"));
@@ -377,14 +381,16 @@ public class CamerasPage {
         verifyCameraPreviewDisplayed();
     }
 
-    /** The Dashboard's Cameras tile shows the cameras per status, loading from "0" first; returns their sum. */
+    /**
+     * The Dashboard's Cameras tile shows the cameras per status, which load from "0" and may not all arrive at
+     * once; returns their sum once two reads in a row agree.
+     */
     public int readCamerasTileTotal() {
         AtomicInteger total = new AtomicInteger();
         boolean shown = WaitUtils.pollUntil(driver, TimeoutConstants.LIST_LOAD_TIMEOUT, () -> {
             int sum = WaitUtils.textsOfOrEmpty(driver, CamerasLocators.CAMERAS_TILE_COUNTS,
                     TimeoutConstants.SHORT_TIMEOUT).stream().mapToInt(Integer::parseInt).sum();
-            total.set(sum);
-            return sum > 0;
+            return sum > 0 && sum == total.getAndSet(sum);
         });
         Assert.assertTrue(shown, "Cameras tile on the Dashboard should show the number of cameras");
         return total.get();
@@ -437,16 +443,19 @@ public class CamerasPage {
             if (!newChip || swipes == FILTER_ROW_MAX_SWIPES) {
                 break;
             }
-            GestureUtils.swipe(driver, 1000, rowY, 100, rowY);
+            GestureUtils.swipeHorizontal(driver, rowY, FILTER_ROW_SWIPE_START, FILTER_ROW_SWIPE_END);
             swipes++;
             // The row has moved once its first chip changes; at the end of the row it does not move, and the
             // next read adds nothing, which ends the loop.
             String firstChipBefore = shown.get(0);
-            WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
-                    () -> !WaitUtils.textsOf(driver, CamerasLocators.FILTER_CHIP_NAME).get(0).equals(firstChipBefore));
+            WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
+                List<String> now = WaitUtils.textsOfOrEmpty(driver, CamerasLocators.FILTER_CHIP_NAME,
+                        TimeoutConstants.SHORT_TIMEOUT);
+                return !now.isEmpty() && !now.get(0).equals(firstChipBefore);
+            });
         }
         for (int i = 0; i < swipes; i++) {
-            GestureUtils.swipe(driver, 100, rowY, 1000, rowY);
+            GestureUtils.swipeHorizontal(driver, rowY, FILTER_ROW_SWIPE_END, FILTER_ROW_SWIPE_START);
         }
         Assert.assertTrue(chips.containsAll(EXPECTED_FILTER_CHIPS),
                 "Filter row should have the chips " + EXPECTED_FILTER_CHIPS + " but had " + chips);
