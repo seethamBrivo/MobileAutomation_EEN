@@ -86,4 +86,10 @@
             <class name="tests.ts_archive.ArchiveTest"/>
         </classes>
     </test>
+
+    <test name="Video Search Tests">
+        <classes>
+            <class name="tests.ts_video_search.VideoSearchTest"/>
+        </classes>
+    </test>
 </suite>
