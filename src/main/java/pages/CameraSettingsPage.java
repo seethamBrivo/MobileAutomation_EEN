@@ -4,6 +4,8 @@ import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.util.Map;
 import locators.CameraSettingsLocators;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
@@ -14,10 +16,17 @@ import utils.WaitUtils;
 /** The Camera settings screen (Android): header, status and name editing. */
 public class CameraSettingsPage {
 
+    private static final Logger logger = LogManager.getLogger(CameraSettingsPage.class);
+
     private final AppiumDriver driver;
+    private final CamerasPage camerasPage;
+    private final DevicesPage devicesPage;
+    private int enableSwitchTaps;
 
     public CameraSettingsPage(AppiumDriver driver) {
         this.driver = driver;
+        this.camerasPage = new CamerasPage(driver);
+        this.devicesPage = new DevicesPage(driver);
     }
 
     public void verifyCameraSettingsScreenDisplayed() {
@@ -96,5 +105,67 @@ public class CameraSettingsPage {
         WebElement element = WaitUtils.waitForClickability(driver, locator);
         Point centre = GestureUtils.getElementCenter(element);
         GestureUtils.tap(driver, centre.x, centre.y);
+    }
+
+    /** Opens Camera settings from the open context menu and returns the camera's current name. */
+    public String openFromContextMenuAndReadName() {
+        camerasPage.clickCameraSettingsOption();
+        verifyCameraSettingsScreenDisplayed();
+        String name = readName();
+        logger.info("Camera settings opened for camera '{}'", name);
+        return name;
+    }
+
+    /** Counted before the tap, so {@link #isEnableSwitchLeftToggled()} also covers a tap that failed half-way. */
+    public void toggleEnableSwitch() {
+        enableSwitchTaps++;
+        tapEnableSwitch();
+    }
+
+    /** True when an odd number of {@link #toggleEnableSwitch()} taps were made, so the camera needs one more. */
+    public boolean isEnableSwitchLeftToggled() {
+        return enableSwitchTaps % 2 == 1;
+    }
+
+    public int enableSwitchTapCount() {
+        return enableSwitchTaps;
+    }
+
+    /**
+     * The open screen does not refresh its status (the test case says a refresh might be needed), so when the
+     * status is not shown in time the camera's Camera settings are reopened from the cameras list.
+     */
+    public void verifyCameraStatus(String expectedStatus, String cameraName) {
+        if (isStatusShownWithin(expectedStatus)) {
+            return;
+        }
+        logger.warn("Status did not become '{}' on the open screen; reopening Camera settings to refresh it",
+                expectedStatus);
+        goBack();
+        camerasPage.openContextMenuOfCameraNamed(cameraName);
+        camerasPage.clickCameraSettingsOption();
+        verifyStatusBecomes(expectedStatus);
+    }
+
+    /**
+     * For cleanup: the camera has the new name only if the rename got as far as saving, so the names are tried in
+     * order; null names are skipped. Returns the name that opened Camera settings, or null when none did.
+     */
+    public String openFromCamerasListByAnyName(String... names) {
+        for (String name : names) {
+            if (name == null) {
+                continue;
+            }
+            try {
+                devicesPage.recoverToDashboard();
+                camerasPage.openCamerasList();
+                camerasPage.openContextMenuOfCameraNamed(name);
+                camerasPage.clickCameraSettingsOption();
+                return name;
+            } catch (Throwable t) {
+                logger.warn("@AfterMethod: could not open camera '{}' from the cameras list", name, t);
+            }
+        }
+        return null;
     }
 }

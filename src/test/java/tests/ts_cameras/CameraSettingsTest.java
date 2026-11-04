@@ -18,13 +18,11 @@ public class CameraSettingsTest extends BaseTest {
     private CameraSettingsPage settingsPage;
     private String originalCameraName;
     private String renamedCameraName;
-    private int enableSwitchTaps;
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToDashboard() {
         originalCameraName = null;
         renamedCameraName = null;
-        enableSwitchTaps = 0;
         devicesPage = null;
         camerasPage = null;
         settingsPage = null;
@@ -65,10 +63,10 @@ public class CameraSettingsTest extends BaseTest {
         // Step 2: Cameras in Dashboard, long press the second online camera, open Camera settings
         openSettingsOfSecondOnlineCamera();
         // Step 3: tap the switch next to Enable to turn the camera off, then on again
-        toggleEnableSwitch();
-        verifyCameraStatus(CamerasPage.STATUS_TURNED_OFF);
-        toggleEnableSwitch();
-        verifyCameraStatus(CamerasPage.STATUS_ONLINE);
+        settingsPage.toggleEnableSwitch();
+        settingsPage.verifyCameraStatus(CamerasPage.STATUS_TURNED_OFF, originalCameraName);
+        settingsPage.toggleEnableSwitch();
+        settingsPage.verifyCameraStatus(CamerasPage.STATUS_ONLINE, originalCameraName);
     }
 
     /** Step 2 of EEPD-TC-8861. */
@@ -78,7 +76,7 @@ public class CameraSettingsTest extends BaseTest {
             throw new SkipException("An online camera is needed on the End User account; none found in the list");
         }
         camerasPage.longPressFirstOnlineCameraAndVerifyContextMenu();
-        openSettingsFromContextMenu();
+        originalCameraName = settingsPage.openFromContextMenuAndReadName();
         settingsPage.verifyCameraPreviewIconDisplayed();
     }
 
@@ -89,58 +87,10 @@ public class CameraSettingsTest extends BaseTest {
             throw new SkipException("Two online cameras are needed on the End User account; fewer found in the list");
         }
         camerasPage.longPressSecondOnlineCameraAndVerifyContextMenu();
-        openSettingsFromContextMenu();
+        originalCameraName = settingsPage.openFromContextMenuAndReadName();
         // Not asserted: this camera's header sometimes has no preview icon (the app does not draw it), and the
         // icon has nothing to do with turning the camera off and on. It is asserted in EEPD-TC-8861.
         logger.info("Camera preview icon shown: {}", settingsPage.isCameraPreviewIconDisplayed());
-    }
-
-    private void openSettingsFromContextMenu() {
-        camerasPage.clickCameraSettingsOption();
-        settingsPage.verifyCameraSettingsScreenDisplayed();
-        originalCameraName = settingsPage.readName();
-        logger.info("Camera settings opened for camera '{}'", originalCameraName);
-    }
-
-    /** The open screen does not refresh its status (the test case says a refresh might be needed), so reopen it. */
-    private void verifyCameraStatus(String expectedStatus) {
-        if (settingsPage.isStatusShownWithin(expectedStatus)) {
-            return;
-        }
-        logger.warn("Status did not become '{}' on the open screen; reopening Camera settings to refresh it",
-                expectedStatus);
-        settingsPage.goBack();
-        camerasPage.openContextMenuOfCameraNamed(originalCameraName);
-        camerasPage.clickCameraSettingsOption();
-        settingsPage.verifyStatusBecomes(expectedStatus);
-    }
-
-    /** Counted before the tap, so cleanup also undoes a tap that failed half-way. */
-    private void toggleEnableSwitch() {
-        enableSwitchTaps++;
-        settingsPage.tapEnableSwitch();
-    }
-
-    /**
-     * The camera has the new name only if the rename got as far as saving, so the names are tried in order; null
-     * names are skipped. Returns the name that opened Camera settings, or null when none did.
-     */
-    private String openCameraSettingsByAnyName(String... names) {
-        for (String name : names) {
-            if (name == null) {
-                continue;
-            }
-            try {
-                devicesPage.recoverToDashboard();
-                camerasPage.openCamerasList();
-                camerasPage.openContextMenuOfCameraNamed(name);
-                camerasPage.clickCameraSettingsOption();
-                return name;
-            } catch (Throwable t) {
-                logger.warn("@AfterMethod: could not open camera '{}' from the cameras list", name, t);
-            }
-        }
-        return null;
     }
 
     @Override
@@ -148,14 +98,14 @@ public class CameraSettingsTest extends BaseTest {
     public void tearDown(ITestResult testResult) {
         try {
             boolean restoreName = renamedCameraName != null;
-            boolean restoreSwitch = enableSwitchTaps % 2 == 1;
+            boolean restoreSwitch = settingsPage.isEnableSwitchLeftToggled();
             if (driver == null || devicesPage == null || !(restoreName || restoreSwitch)) {
                 return;
             }
-            String currentName = openCameraSettingsByAnyName(renamedCameraName, originalCameraName);
+            String currentName = settingsPage.openFromCamerasListByAnyName(renamedCameraName, originalCameraName);
             if (currentName == null) {
                 logger.error("@AfterMethod: COULD NOT OPEN camera '{}' / '{}' to restore it (switch taps {})",
-                        renamedCameraName, originalCameraName, enableSwitchTaps);
+                        renamedCameraName, originalCameraName, settingsPage.enableSwitchTapCount());
                 return;
             }
             if (restoreName && currentName.equals(renamedCameraName)) {
