@@ -70,4 +70,7 @@ public final class TimeoutConstants {
 
     /** How long to wait for the cancel confirmation after tapping the cancel icon, before tapping it again. */
     public static final Duration CANCEL_CONFIRMATION_CHECK = Duration.ofSeconds(1);
+
+    /** Android: how long to look for the cancel icon right after a download starts (it may already be over). */
+    public static final Duration FAST_DOWNLOAD_CANCEL_CHECK = Duration.ofSeconds(2);
 }

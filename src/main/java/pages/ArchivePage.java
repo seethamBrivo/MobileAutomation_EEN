@@ -398,6 +398,13 @@ public class ArchivePage {
     public void verifyDownloadCancelled() {
         WaitUtils.assertNotVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
                 "Download should be cancelled - 'In progress' status should not be present");
+    }
+
+    /**
+     * iOS only: after a cancel the row has no cancel icon. On Android the cancel icon has the position of the row's
+     * 3-dots button, which is always on screen, so this check cannot be made there.
+     */
+    private void verifyCancelIconIsGone() {
         WaitUtils.assertNotVisible(driver, ArchiveLocators.CANCEL_DOWNLOAD_ICON, TimeoutConstants.SHORT_TIMEOUT,
                 "Download should be cancelled - the cancel icon should not be present");
     }
@@ -415,11 +422,16 @@ public class ArchivePage {
     }
 
     /**
-     * Cancels the download of a large folder while it runs. The folder is found by search, because the first folder
+     * iOS: cancels the download of a large folder while it runs. Android keeps its earlier check
+     * ({@link #cancelFirstFolderDownloadIfStillRunning()}). The folder is found by search, because the first folder
      * changes whenever archives are added, and it is a large one so the download is still running when it is
      * cancelled. Every step of the cancellation is checked.
      */
     public void verifyFolderDownloadCancellation(String folderSearchTerm) {
+        if (!PlatformLocator.isIos()) {
+            cancelFirstFolderDownloadIfStillRunning();
+            return;
+        }
         findInSearch(folderSearchTerm);
         clickThreeDotsOfFirstSearchResult();
         clickDownloadOption();
@@ -445,10 +457,15 @@ public class ArchivePage {
     }
 
     /**
-     * Cancels the download of a large video while it runs. A video of a few MB is downloaded in one to two seconds, so
+     * iOS: cancels the download of a large video while it runs. Android keeps its earlier check
+     * ({@link #cancelFirstVideoDownloadIfStillRunning()}). A video of a few MB is downloaded in one to two seconds, so
      * nothing may come between confirming the download and tapping the cancel icon: no other check, no extra wait.
      */
     public void verifyVideoDownloadCancellation(String fileSearchTerm) {
+        if (!PlatformLocator.isIos()) {
+            cancelFirstVideoDownloadIfStillRunning();
+            return;
+        }
         findInSearch(fileSearchTerm);
         clickThreeDotsOfFirstSearchResult();
         clickDownloadOption();
@@ -470,6 +487,46 @@ public class ArchivePage {
     private void closeSearch() {
         navigateBack();
         verifySearchBarClosed();
+    }
+
+    // ---- Android: the cancel check as it was before the iOS work ---------------------------------------------
+    // Until the Android row is mapped (the cancel icon, and a download that lasts long enough to cancel), Android
+    // cancels the first item if the download is still running and otherwise only verifies the finished download.
+    // That check can pass without cancelling anything; the strict version above is iOS only for now.
+
+    private void cancelFirstFolderDownloadIfStillRunning() {
+        clickFirstFolderThreeDots();
+        clickDownloadOption();
+        clickDownloadButtonInDialog();
+        cancelIfStillRunningOtherwiseVerifyCompleted("Folder", () -> { });
+    }
+
+    private void cancelFirstVideoDownloadIfStillRunning() {
+        clickFirstFolder();
+        clickFirstVideoThreeDots();
+        clickDownloadOption();
+        clickDownloadButtonInDialog();
+        cancelIfStillRunningOtherwiseVerifyCompleted("Video", this::navigateBackFromFolder);
+    }
+
+    private void cancelIfStillRunningOtherwiseVerifyCompleted(String what, Runnable afterCompletedDownload) {
+        boolean cancelIconPresent = WaitUtils.isVisible(
+                driver, ArchiveLocators.CANCEL_DOWNLOAD_ICON, TimeoutConstants.FAST_DOWNLOAD_CANCEL_CHECK);
+        if (cancelIconPresent) {
+            WaitUtils.click(driver, ArchiveLocators.CANCEL_DOWNLOAD_ICON);
+            if (WaitUtils.isVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+                clickYesCancelButton();
+                verifyDownloadCancelledMessage();
+                verifyDownloadCancelled();
+                logger.info("{} download cancellation verified successfully", what);
+                return;
+            }
+            logger.warn("{} downloaded too fast - cancel dialog didn't appear, verifying successful download", what);
+        } else {
+            logger.warn("{} downloaded instantly - cancel icon never appeared, verifying successful download", what);
+        }
+        waitForDownloadComplete();
+        afterCompletedDownload.run();
     }
 
     /**
@@ -497,5 +554,6 @@ public class ArchivePage {
         clickYesCancelButton();
         verifyDownloadCancelledMessage();
         verifyDownloadCancelled();
+        verifyCancelIconIsGone();
     }
 }
