@@ -23,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
@@ -45,6 +44,9 @@ public class HistoryBrowserPage {
             HistoryBrowserLocators.PREVIOUS_FRAME_BUTTON, HistoryBrowserLocators.PREVIOUS_EVENT_BUTTON,
             HistoryBrowserLocators.PLAY_PAUSE_BUTTON, HistoryBrowserLocators.NEXT_EVENT_BUTTON,
             HistoryBrowserLocators.NEXT_FRAME_BUTTON);
+
+    // Export screen constants
+    private static final int SWIPE_EDGE_OFFSET = 5;
 
     /** The level is the smallest gap among the first rows, so a row without a label cannot double it. */
     private static final int LEVEL_SAMPLE_ROWS = 4;
@@ -933,12 +935,11 @@ public class HistoryBrowserPage {
 
         // Use the FULL element height for swipe
         // Swipe DOWN (top to bottom) to scroll numbers UP
-        int startY = rect.getY() + 5;  // Start at very top of element
-        int endY = rect.getY() + rect.getHeight() - 5;  // End at very bottom of element
+        int startY = rect.getY() + SWIPE_EDGE_OFFSET;  // Start at very top of element
+        int endY = rect.getY() + rect.getHeight() - SWIPE_EDGE_OFFSET;  // End at very bottom of element
 
-        // Single full-height swipe - verify it scrolls the seconds
+        // Single full-height swipe to scroll the seconds
         GestureUtils.swipe(driver, centerX, startY, centerX, endY);
-        WaitUtils.pauseFor(java.time.Duration.ofSeconds(1)); // Pause for UI to settle
         logger.info("Scrolled seconds picker (full height swipe)");
     }
 
@@ -1022,7 +1023,6 @@ public class HistoryBrowserPage {
 
     // High-level test flows
     public void exportToArchiveWithDefaultSettings() {
-        verifyExportButtonVisible();
         verifyExportButtonVisible();
         clickExportButton();
         verifyExportScreenOpened();
@@ -1114,7 +1114,6 @@ public class HistoryBrowserPage {
 
     // Downloads export flows (EEPD-TC-23629)
     public void exportToDownloadsWithDefaultSettings() {
-        verifyExportButtonVisible();
         verifyExportButtonVisible();
         clickExportButton();
         verifyExportScreenOpened();
