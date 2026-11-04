@@ -49,10 +49,7 @@ public final class TimeoutConstants {
     /** Budget for "is a back button visible" probes when the screen may already be at the top. */
     public static final Duration BACK_BUTTON_CHECK_TIMEOUT = Duration.ofSeconds(1);
 
-    /** Budget for checking if cancel icon is available during fast video downloads. */
-    public static final Duration FAST_DOWNLOAD_CANCEL_CHECK = Duration.ofSeconds(2);
-
-    /** How long to look for the iOS photo-library permission prompt after a download starts (shown on the first one). */
+    /** How long to look for the iOS photo-library permission prompt after a download starts (first download only). */
     public static final Duration PERMISSION_PROMPT_TIMEOUT = Duration.ofSeconds(2);
 
     /** Max wait for archive download to complete (polls for the "Saved to Files" / "Saved to Photos" message). */
@@ -67,4 +64,7 @@ public final class TimeoutConstants {
 
     /** Max wait for device to stabilize after rotation (detects window size change, not a sleep). */
     public static final Duration ROTATION_STABILIZE = Duration.ofMillis(2000);
+
+    /** How long to wait for the cancel confirmation after tapping the cancel icon, before tapping it again. */
+    public static final Duration CANCEL_CONFIRMATION_CHECK = Duration.ofSeconds(1);
 }

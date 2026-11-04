@@ -3,6 +3,8 @@ package pages;
 import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumDriver;
+import java.util.List;
+import java.util.Locale;
 import locators.ArchiveLocators;
 import locators.CommonLocators;
 import org.apache.logging.log4j.LogManager;
@@ -16,9 +18,13 @@ import utils.WaitUtils;
 public class ArchivePage {
 
     private static final Logger logger = LogManager.getLogger(ArchivePage.class);
+    /** iOS: the first folder holds a folder per archived clip, and the videos are in that: folder, clip folder, video. */
     private static final int MAX_NESTED_FOLDERS = 2;
+    private static final int CANCEL_TAP_ATTEMPTS = 3;
 
     private final AppiumDriver driver;
+    /** iOS: the photo-library prompt comes once, with the first download; after that it is not looked for. */
+    private boolean photoLibraryPromptHandled;
     /** How many folders have been opened below the Archive root, so the same number of back taps return to it. */
     private int openedFolderDepth;
 
@@ -67,7 +73,8 @@ public class ArchivePage {
     }
 
     public void verifyFilterIconPresentOnFilesTab() {
-        if (PlatformLocator.isIos()) { // the filter icon is drawn inside the search field and is not an element of its own
+        if (PlatformLocator.isIos()) {
+            // the filter icon is drawn inside the search field and is not an element of its own
             WaitUtils.assertVisible(driver, ArchiveLocators.SEARCH_BAR, TimeoutConstants.LIST_LOAD_TIMEOUT,
                     "Filter field should be present on Files tab");
             return;
@@ -123,7 +130,10 @@ public class ArchivePage {
 
     public void verifyScreenBlankBeforeSearch() {
         if (PlatformLocator.isIos()) {
-            // iOS keeps the full list while the field is empty and filters it as text is typed, so there is no blank state.
+            // iOS keeps the full list while the field is empty and filters it as text is typed, so there is no
+            // blank state; what is checked instead is that the whole list is showing.
+            WaitUtils.assertVisible(driver, ArchiveLocators.FIRST_FOLDER, TimeoutConstants.SHORT_TIMEOUT,
+                    "The full list should show while the search field is empty");
             return;
         }
         WaitUtils.assertNotVisible(driver, ArchiveLocators.FILE_ITEM, TimeoutConstants.SHORT_TIMEOUT,
@@ -177,9 +187,9 @@ public class ArchivePage {
     public void verifyNoResultsDisplayed() {
         if (PlatformLocator.isIos()) {
             // iOS: the message sits just above the keyboard and can be reported as not visible although it is on
-            // screen, so it counts when it is visible or present.
-            boolean shown = WaitUtils.isVisible(driver, ArchiveLocators.EMPTY_STATE, TimeoutConstants.SHORT_TIMEOUT)
-                    || WaitUtils.isPresent(driver, ArchiveLocators.EMPTY_STATE);
+            // screen, so presence is what counts; the wait is for the list to finish filtering.
+            boolean shown = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
+                    () -> WaitUtils.isPresent(driver, ArchiveLocators.EMPTY_STATE));
             Assert.assertTrue(shown,
                     "Empty state 'No results found' should be displayed when search returns no results");
             return;
@@ -329,53 +339,46 @@ public class ArchivePage {
 
     /** iOS saves downloads to Photos, so the first download asks for access to the photo library. */
     private void allowPhotoLibraryAccessWhenAsked() {
-        if (PlatformLocator.isIos() && WaitUtils.isVisible(driver, ArchiveLocators.ALLOW_PHOTO_LIBRARY_ACCESS_BUTTON,
-                TimeoutConstants.PERMISSION_PROMPT_TIMEOUT)) {
-            WaitUtils.click(driver, ArchiveLocators.ALLOW_PHOTO_LIBRARY_ACCESS_BUTTON);
+        if (!PlatformLocator.isIos() || photoLibraryPromptHandled) {
+            return; // asking again would only use up the seconds a small download needs to be cancelled
         }
+        photoLibraryPromptHandled = true;
+        WaitUtils.tryClickOptionalElement(driver, List.of(ArchiveLocators.ALLOW_PHOTO_LIBRARY_ACCESS_BUTTON),
+                TimeoutConstants.PERMISSION_PROMPT_TIMEOUT);
     }
 
-    /**
-     * Either the "downloading" message (in progress) or the "saved" message (a fast download already finished).
-     * Returns true when it was the saved message: that message may be gone by the time the caller waits for it, so
-     * the caller passes the result to {@link #waitForDownloadComplete(boolean)}.
-     */
-    public boolean verifyDownloadingSnackbar() {
-        String savedMessage = UiTextConstants.ARCHIVE_DOWNLOAD_SAVED_MESSAGE.toLowerCase();
+    /** The "Downloading..." message shows when the download starts. */
+    public void verifyDownloadingSnackbar() {
         String snackbarText = Snackbar.verifyContainsAnyOf(
-                driver, TimeoutConstants.SHORT_TIMEOUT, UiTextConstants.ARCHIVE_DOWNLOADING_MESSAGE, savedMessage);
-        boolean alreadySaved = snackbarText.toLowerCase().contains(savedMessage);
-        if (alreadySaved) {
-            logger.info("Download completed very quickly - skipping intermediate status checks");
-        }
-        return alreadySaved;
+                driver, TimeoutConstants.SHORT_TIMEOUT, UiTextConstants.ARCHIVE_DOWNLOADING_MESSAGE);
+        logger.info("Download started: {}", snackbarText);
     }
 
-    /**
-     * Logs whether the "In progress" status is showing; it asserts nothing, because fast downloads skip it. It must
-     * not wait: the "saved" message shows for only a few seconds, and waiting here for a status that never comes
-     * makes the next step miss it.
-     */
-    public void verifyInProgressStatus() {
-        if (!WaitUtils.isPresent(driver, ArchiveLocators.IN_PROGRESS_STATUS)) {
-            logger.info("'In progress' status not visible - download may have completed very quickly");
-        }
+    /** While the item downloads, its row says "In progress" and offers the cancel icon. */
+    public void verifyDownloadInProgress() {
+        WaitUtils.assertVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
+                "The row should say 'In progress' while the item downloads");
+        WaitUtils.assertVisible(driver, ArchiveLocators.CANCEL_DOWNLOAD_ICON, TimeoutConstants.SHORT_TIMEOUT,
+                "The row should offer the cancel icon while the item downloads");
     }
 
     /**
      * NOTE: Downloaded files go directly to device local storage (Files app), NOT to Archive Progress tab.
      * Progress tab only tracks Archive-specific operations. Snackbar "Saved to Files" confirms download to device.
      */
-    public void waitForDownloadComplete(boolean savedMessageAlreadySeen) {
-        if (savedMessageAlreadySeen) {
-            return;
-        }
-        Snackbar.waitUntilSays(driver, UiTextConstants.ARCHIVE_DOWNLOAD_SAVED_MESSAGE,
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
+    public void waitForDownloadComplete() {
+        Snackbar.waitUntilSays(driver, savedMessage(), TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
     }
 
-    public void clickCancelDownloadIcon() {
-        WaitUtils.click(driver, ArchiveLocators.CANCEL_DOWNLOAD_ICON);
+    /** Android saves downloads to Files, iOS to Photos, and each says so when the download is done. */
+    private static String savedMessage() {
+        return PlatformLocator.isIos() ? UiTextConstants.ARCHIVE_SAVED_MESSAGE_IOS
+                : UiTextConstants.ARCHIVE_SAVED_MESSAGE_ANDROID;
+    }
+
+    public void verifyCancelConfirmationShown() {
+        WaitUtils.assertVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT,
+                "Cancelling a download should ask for confirmation");
     }
 
     public void clickYesCancelButton() {
@@ -385,14 +388,17 @@ public class ArchivePage {
     public void verifyDownloadCancelledMessage() {
         String snackbarText = Snackbar.verifyContainsAnyOf(
                 driver, TimeoutConstants.SHORT_TIMEOUT, UiTextConstants.ARCHIVE_CANCELLED_MESSAGE);
-        logger.info("Download cancelled successfully: " + snackbarText);
+        logger.info("Download cancelled successfully: {}", snackbarText);
     }
 
     public void verifyDownloadCancelled() {
         WaitUtils.assertNotVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
                 "Download should be cancelled - 'In progress' status should not be present");
+        WaitUtils.assertNotVisible(driver, ArchiveLocators.CANCEL_DOWNLOAD_ICON, TimeoutConstants.SHORT_TIMEOUT,
+                "Download should be cancelled - the cancel icon should not be present");
     }
 
+    /** Download of the first folder: options, confirmation, then the saved message. */
     public void verifyCompleteFolderDownloadFlow() {
         navigateToArchive();
         verifyFilesTabNotEmpty();
@@ -401,20 +407,24 @@ public class ArchivePage {
         clickDownloadOption();
         verifyDownloadDialogDisplayed();
         clickDownloadButtonInDialog();
-        boolean savedMessageSeen = verifyDownloadingSnackbar();
-        verifyInProgressStatus();
-        waitForDownloadComplete(savedMessageSeen);
+        waitForDownloadComplete();
     }
 
     /**
-     * Attempts to cancel the folder download immediately after starting it; see
-     * {@link #verifyCancellationOrCompletion(String, Runnable)}.
+     * Cancels the download of a large folder while it runs. The folder is found by search, because the first folder
+     * changes whenever archives are added, and it is a large one so the download is still running when it is
+     * cancelled. Every step of the cancellation is checked.
      */
-    public void verifyFolderDownloadCancellation() {
-        clickFirstFolderThreeDots();
+    public void verifyFolderDownloadCancellation(String folderSearchTerm) {
+        findInSearch(folderSearchTerm);
+        clickThreeDotsOfFirstSearchResult();
         clickDownloadOption();
         clickDownloadButtonInDialog();
-        verifyCancellationOrCompletion("Folder", () -> { });
+        // A large folder keeps downloading for several seconds, so the start message and the row can be checked first.
+        verifyDownloadingSnackbar();
+        verifyDownloadInProgress();
+        cancelTheRunningDownload();
+        closeSearch();
     }
 
     public void verifyCompleteVideoDownloadFlow() {
@@ -426,80 +436,62 @@ public class ArchivePage {
         clickDownloadOption();
         verifyDownloadDialogDisplayed();
         clickDownloadButtonInDialog();
-        boolean savedMessageSeen = verifyDownloadingSnackbar();
-        waitForDownloadComplete(savedMessageSeen);
+        waitForDownloadComplete();
         navigateBackFromFolder();
     }
 
     /**
-     * Attempts to cancel the video download immediately after starting it; see
-     * {@link #verifyCancellationOrCompletion(String, Runnable)}.
+     * Cancels the download of a large video while it runs. A video of a few MB is downloaded in one to two seconds, so
+     * nothing may come between confirming the download and tapping the cancel icon: no other check, no extra wait.
      */
-    public void verifyVideoDownloadCancellation() {
-        clickFirstFolder();
-        clickFirstVideoThreeDots();
+    public void verifyVideoDownloadCancellation(String fileSearchTerm) {
+        findInSearch(fileSearchTerm);
+        clickThreeDotsOfFirstSearchResult();
         clickDownloadOption();
         clickDownloadButtonInDialog();
-        verifyCancellationOrCompletion("Video", this::navigateBackFromFolder);
+        cancelTheRunningDownload();
+        closeSearch();
+    }
+
+    private void findInSearch(String searchTerm) {
+        clickFilterIcon();
+        enterSearchText(searchTerm);
+        verifySearchResultsDisplayed(searchTerm);
+    }
+
+    private void clickThreeDotsOfFirstSearchResult() {
+        WaitUtils.click(driver, ArchiveLocators.THREE_DOTS_MENU);
+    }
+
+    private void closeSearch() {
+        navigateBack();
+        verifySearchBarClosed();
     }
 
     /**
-     * Clicks the cancel icon right after the download starts (without waiting for the progress check), so the
-     * cancellation is tested reliably even on fast CI/BrowserStack sessions. If the download finishes before the
-     * cancel icon or the confirmation dialog appears, the successful download is verified instead and
-     * {@code afterCompletedDownload} runs (for a video: back out of its folder).
+     * Taps the cancel icon and goes through the cancellation. The icon is on the row only while the item downloads, so
+     * finding it is the check that the download is running; if the download is already over, the test fails here.
      *
-     * <p>The flow is the same on both platforms: the cancel icon on the row, a confirmation dialog, then a
-     * "cancelled" message. A small download can finish before the dialog is answered, which is the fall-back.
+     * <p>While it downloads, the row redraws as the progress changes, so the icon can go stale between finding it and
+     * tapping it, or the tap can land on the old row. The tap is repeated (at most {@value #CANCEL_TAP_ATTEMPTS}
+     * times) until the confirmation shows; if it never does, the check below fails.
      */
-    private void verifyCancellationOrCompletion(String what, Runnable afterCompletedDownload) {
-        boolean cancelIconPresent = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.CANCEL_DOWNLOAD_ICON,
-                TimeoutConstants.FAST_DOWNLOAD_CANCEL_CHECK
-        );
-        if (!cancelIconPresent) {
-            logger.warn("{} downloaded instantly - cancel icon never appeared, verifying successful download", what);
-            verifyDownloadCompletedWith(afterCompletedDownload);
-            return;
+    private void cancelTheRunningDownload() {
+        for (int attempt = 1; attempt <= CANCEL_TAP_ATTEMPTS; attempt++) {
+            boolean tapped = WaitUtils.retryOnStale(() -> WaitUtils.tryClickOptionalElement(driver,
+                    List.of(ArchiveLocators.CANCEL_DOWNLOAD_ICON), TimeoutConstants.SHORT_TIMEOUT));
+            if (attempt == 1) {
+                Assert.assertTrue(tapped,
+                        "The cancel icon should show while the item downloads, so that it can be cancelled");
+            }
+            if (!tapped || WaitUtils.isVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON,
+                    TimeoutConstants.CANCEL_CONFIRMATION_CHECK)) {
+                break;
+            }
         }
-        clickCancelDownloadIcon();
-        boolean cancelDialogPresent = WaitUtils.isVisible(
-                driver,
-                ArchiveLocators.YES_CANCEL_BUTTON,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        if (!cancelDialogPresent) {
-            logger.warn("{} downloaded too fast - cancel dialog didn't appear, verifying successful download", what);
-            verifyDownloadCompletedAfterMissedCancel(afterCompletedDownload);
-            return;
-        }
+        verifyCancelConfirmationShown();
         clickYesCancelButton();
         verifyDownloadCancelledMessage();
         verifyDownloadCancelled();
-        logger.info("{} download cancellation verified successfully", what);
-    }
-
-    /**
-     * The cancel attempt took the few seconds the "saved" message is shown, so on iOS that message is already gone;
-     * the finished download is shown by the row instead: its cancel icon and "In progress" status are gone. Android
-     * keeps waiting for the message.
-     */
-    private void verifyDownloadCompletedAfterMissedCancel(Runnable afterCompletedDownload) {
-        if (!PlatformLocator.isIos()) {
-            verifyDownloadCompletedWith(afterCompletedDownload);
-            return;
-        }
-        WaitUtils.assertNotVisible(driver, ArchiveLocators.CANCEL_DOWNLOAD_ICON,
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
-                "The download should finish: the cancel icon on its row should disappear");
-        WaitUtils.assertNotVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
-                "The download should finish: the row should no longer say 'In progress'");
-        afterCompletedDownload.run();
-    }
-
-    private void verifyDownloadCompletedWith(Runnable afterCompletedDownload) {
-        waitForDownloadComplete(false);
-        afterCompletedDownload.run();
     }
 }

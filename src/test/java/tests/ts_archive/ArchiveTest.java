@@ -28,13 +28,15 @@ public class ArchiveTest extends BaseTest {
           groups = {"regression", "archive", "download", "ios"})
     public void verifyArchiveFolderDownload() {
         archivePage.verifyCompleteFolderDownloadFlow();
-        archivePage.verifyFolderDownloadCancellation();
+        archivePage.verifyFolderDownloadCancellation(
+                JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_CANCEL_FOLDER_SEARCH_TERM));
     }
 
     @Test(description = "EEPD-TC-19385: POS-Archive - downloading a video - video type in mobile app",
           groups = {"regression", "archive", "download", "ios"})
     public void verifyArchiveVideoDownload() {
         archivePage.verifyCompleteVideoDownloadFlow();
-        archivePage.verifyVideoDownloadCancellation();
+        archivePage.verifyVideoDownloadCancellation(
+                JsonDataReader.getArchiveSearchValue(TestDataConstants.ARCHIVE_CANCEL_FILE_SEARCH_TERM));
     }
 }

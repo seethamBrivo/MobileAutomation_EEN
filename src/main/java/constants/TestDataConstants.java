@@ -52,4 +52,7 @@ public final class TestDataConstants {
     public static final String ARCHIVE_SEARCH_DATA = "archive_search_data";
     public static final String ARCHIVE_VALID_SEARCH_TERM = "valid_search_term";
     public static final String ARCHIVE_NO_RESULTS_SEARCH_TERM = "no_results_search_term";
+    // A large, old Archive folder and the video in it (1.5 MB): found by search, and used only to cancel a download.
+    public static final String ARCHIVE_CANCEL_FOLDER_SEARCH_TERM = "cancel_folder_search_term";
+    public static final String ARCHIVE_CANCEL_FILE_SEARCH_TERM = "cancel_file_search_term";
 }
