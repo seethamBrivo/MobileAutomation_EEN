@@ -97,6 +97,16 @@ public final class CameraSearchFilter {
         verifyDefaultCameraListRestored();
     }
 
+    /** The counter's number. "1 camera" is singular and any other number is plural, as the test case says. */
+    public int readCameraCountAndVerifyWording() {
+        String counterText = readCameraCounterText();
+        int count = cameraCountFrom(counterText);
+        String expectedText = count + (count == 1 ? " camera" : " cameras");
+        Assert.assertEquals(counterText.trim(), expectedText,
+                "Counter for " + count + " camera(s) should read '" + expectedText + "' but was '" + counterText + "'");
+        return count;
+    }
+
     // ---- how the steps are carried out ----------------------------------------------------
 
     private void verifySearchPlaceholderDisplayed() {
