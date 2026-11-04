@@ -20,6 +20,7 @@ public class ArchivePage {
     private static final Logger logger = LogManager.getLogger(ArchivePage.class);
     /** iOS: the first folder holds a folder per archived clip, and the videos are in that: folder, clip folder, video. */
     private static final int MAX_NESTED_FOLDERS = 2;
+    /** How often the cancel icon is tapped while the confirmation does not show (the row redraws as it downloads). */
     private static final int CANCEL_TAP_ATTEMPTS = 3;
 
     private final AppiumDriver driver;
@@ -74,9 +75,7 @@ public class ArchivePage {
 
     public void verifyFilterIconPresentOnFilesTab() {
         if (PlatformLocator.isIos()) {
-            // the filter icon is drawn inside the search field and is not an element of its own
-            WaitUtils.assertVisible(driver, ArchiveLocators.SEARCH_BAR, TimeoutConstants.LIST_LOAD_TIMEOUT,
-                    "Filter field should be present on Files tab");
+            verifyFilterFieldPresentOnIos("Files");
             return;
         }
         WaitUtils.assertVisible(driver, ArchiveLocators.FILTER_ICON_FILES_TAB, TimeoutConstants.LIST_LOAD_TIMEOUT,
@@ -84,13 +83,18 @@ public class ArchivePage {
     }
 
     public void verifyFilterIconPresentOnProgressTab() {
-        if (PlatformLocator.isIos()) { // same filter field on both tabs
-            WaitUtils.assertVisible(driver, ArchiveLocators.SEARCH_BAR, TimeoutConstants.LIST_LOAD_TIMEOUT,
-                    "Filter field should be present on Progress tab");
+        if (PlatformLocator.isIos()) {
+            verifyFilterFieldPresentOnIos("Progress");
             return;
         }
         WaitUtils.assertVisible(driver, ArchiveLocators.FILTER_ICON_PROGRESS_TAB, TimeoutConstants.LIST_LOAD_TIMEOUT,
                 "Filter icon should be present on Progress tab");
+    }
+
+    /** iOS: the filter icon is drawn inside the search field and is not an element of its own. */
+    private void verifyFilterFieldPresentOnIos(String tabName) {
+        WaitUtils.assertVisible(driver, ArchiveLocators.SEARCH_BAR, TimeoutConstants.LIST_LOAD_TIMEOUT,
+                "Filter field should be present on " + tabName + " tab");
     }
 
     public void clickFilterIcon() {

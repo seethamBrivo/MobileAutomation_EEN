@@ -86,7 +86,6 @@ public final class ArchiveLocators {
     // iOS (FIRST_FOLDER, FIRST_FOLDER_THREE_DOTS, FIRST_VIDEO_THREE_DOTS): a row is told apart by the icon it
     // holds (folderIcon for a folder, ic_play for a video), not by its name or position, so the locators keep
     // working when the account's folders change.
-    // or position, so the locators keep working when the account's folders change.
 
     // Brittle: positional XPath - no resource-id or content-desc available
     // Mobile team should add unique identifier to improve test stability
