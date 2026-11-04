@@ -177,13 +177,6 @@ public final class HistoryBrowserLocators {
     public static final By DURATION_FIELD =
             AppiumBy.xpath("//android.widget.TextView[@content-desc=\"duration_row_header\"]");
 
-    // Time Stamp toggle (ON by default)
-    // TODO: Positional XPath is too generic (matches any View/View/View) - very fragile.
-    //       Request specific testTag or content-desc from developers for reliable identification.
-    public static final By TIME_STAMP_TOGGLE =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View"
-                    + "/android.view.View");
-
     // Time Zone value
     public static final By TIME_ZONE_VALUE =
             AppiumBy.xpath("//android.widget.TextView[@content-desc='timezone_row_value']");

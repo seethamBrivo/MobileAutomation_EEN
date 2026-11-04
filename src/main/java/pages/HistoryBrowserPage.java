@@ -147,22 +147,22 @@ public class HistoryBrowserPage {
      * Handles Export screen, Progress tab, and Archive folder picker states.
      */
     public void recoverFromExportFlow() {
-        // Check current state and navigate back accordingly
+        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN,
+                TimeoutConstants.SHORT_TIMEOUT)) {
+            return;
+        }
+
         if (WaitUtils.isVisible(driver, HistoryBrowserLocators.CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
-            // On Export screen - click Cancel
             WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
             WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
         } else if (WaitUtils.isVisible(driver, HistoryBrowserLocators.PROGRESS_TAB, TimeoutConstants.SHORT_TIMEOUT)) {
-            // On Progress tab - navigate back
             driver.navigate().back();
             WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
         } else if (WaitUtils.isVisible(driver, HistoryBrowserLocators.SELECT_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
-            // On Archive folder picker - navigate back twice
             driver.navigate().back();
             driver.navigate().back();
             WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
         }
-        // If already on History Browser or unknown state, do nothing
     }
 
     /**
@@ -860,12 +860,6 @@ public class HistoryBrowserPage {
         logger.info("Verified folder is selected: {}", folderName);
     }
 
-    public void verifyArchiveRowHighlighted() {
-        // Verify Archive is selected by checking folder name is displayed (only visible when selected)
-        String folderName = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SELECTED_FOLDER_NAME).getText();
-        Assert.assertFalse(folderName.isEmpty(), "Selected folder name should be visible when Archive is selected");
-    }
-
     /**
      * Verifies that Export screen fields are visible.
      * Deliberately not asserted: Start/End time values, Duration value, Time Stamp toggle state
@@ -965,14 +959,9 @@ public class HistoryBrowserPage {
         pickFirstFolder();
         clickSelectButton();
         verifyFolderSelected();
-        verifyArchiveRowHighlighted();
         verifyExportScreenFieldsVisible();
     }
 
-    /**
-     * Starts export, verifies snackbar, navigates to Progress tab, then returns to History Browser.
-     * Deliberately not cleaned: Export continues in background (cleanup requires Progress tab locators).
-     */
     public void completeExportWithProgress() {
         clickExportButtonAtBottom();
         verifyExportingSnackbarAndClickSeeProgress();
@@ -982,7 +971,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyCancelExportFlow() {
-        ensureOnHistoryBrowser();
+        recoverFromExportFlow();
         clickExportButton();
         verifyExportScreenOpened();
         selectArchiveDestination();
@@ -993,7 +982,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyFileNameValidation() {
-        ensureOnHistoryBrowser();
+        recoverFromExportFlow();
         clickExportButton();
         verifyExportScreenOpened();
         enterFileName("test^file/name*");
@@ -1003,7 +992,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyDefaultFileNameExport() {
-        ensureOnHistoryBrowser();
+        recoverFromExportFlow();
         clickExportButton();
         verifyExportScreenOpened();
         verifyDefaultFileNamePattern();
@@ -1040,7 +1029,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyCancelExportFlowForDownloads() {
-        ensureOnHistoryBrowser();
+        recoverFromExportFlow();
         clickExportButton();
         verifyExportScreenOpened();
         clickCancelButton();
@@ -1048,7 +1037,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyFileNameValidationForDownloads() {
-        ensureOnHistoryBrowser();
+        recoverFromExportFlow();
         clickExportButton();
         verifyExportScreenOpened();
         enterFileName("test^file/name*");
@@ -1058,7 +1047,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyDefaultFileNameExportForDownloads() {
-        ensureOnHistoryBrowser();
+        recoverFromExportFlow();
         clickExportButton();
         verifyExportScreenOpened();
         verifyDefaultFileNamePattern();
@@ -1066,13 +1055,4 @@ public class HistoryBrowserPage {
         verifyExportingSnackbar();
     }
 
-    /**
-     * Ensures the app is on History Browser screen before starting a new export flow.
-     * If not on History Browser, recovers by navigating back to it.
-     */
-    private void ensureOnHistoryBrowser() {
-        if (!WaitUtils.isVisible(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN, TimeoutConstants.SHORT_TIMEOUT)) {
-            recoverFromExportFlow();
-        }
-    }
 }

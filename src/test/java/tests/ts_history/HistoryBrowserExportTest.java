@@ -44,15 +44,10 @@ public class HistoryBrowserExportTest extends BaseTest {
         }
     }
 
-    /**
-     * Test 1: Archive export with validations.
-     * Deliberately not cleaned: Creates 2 exports that persist with noReset=true.
-     * Export cleanup not implemented (requires Progress tab cancel button locator).
-     */
     @Test(description = "EEPD-TC-23628: POS-Exports/History Browser - requesting a video export"
                     + " to Archive with default values in VMS mobile app",
           groups = {"regression", "history_browser", "export"})
-    public void test01_VideoExportToArchiveWithValidation() {
+    public void test01_videoExportToArchiveWithValidation() {
         historyBrowserPage.exportToArchiveWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();
         historyBrowserPage.verifyCancelExportFlow();
@@ -60,15 +55,10 @@ public class HistoryBrowserExportTest extends BaseTest {
         historyBrowserPage.verifyDefaultFileNameExport();
     }
 
-    /**
-     * Test 2: Downloads export with validations.
-     * Deliberately not cleaned: Creates 2 exports that persist with noReset=true.
-     * Export cleanup not implemented (requires Progress tab cancel button locator).
-     */
     @Test(description = "EEPD-TC-23629: POS-Exports/History Browser - requesting a video export"
                     + " to Downloads with default values in VMS mobile app",
           groups = {"regression", "history_browser", "export"})
-    public void test02_VideoExportToDownloadsWithValidation() {
+    public void test02_videoExportToDownloadsWithValidation() {
         historyBrowserPage.exportToDownloadsWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();
         historyBrowserPage.verifyCancelExportFlowForDownloads();
