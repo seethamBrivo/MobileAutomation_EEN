@@ -126,22 +126,13 @@ public final class HistoryBrowserLocators {
 
     // --- Export screen ---------------------------------------------------------
 
-    public static final By EXPORT_SCREEN =
-            AppiumBy.id("com.een.vms.android:id/export_screen");
-
     // SAVE TO section
     public static final By SAVE_TO_SECTION_TITLE =
             AppiumBy.xpath("//android.widget.TextView[@content-desc='save_destination_header_sub_header']");
 
-    public static final By DOWNLOADS_OPTION =
-            AppiumBy.id("com.een.vms.android:id/downloads_option");
-
     // Downloads selected indicator (default selection)
     public static final By DOWNLOADS_SELECTED_INDICATOR =
             AppiumBy.accessibilityId("downloads_destination_row_selected_icon");
-
-    public static final By ARCHIVE_OPTION =
-            AppiumBy.id("com.een.vms.android:id/archive_option");
 
     public static final By ARCHIVE_TEXT =
             AppiumBy.xpath("//android.widget.TextView[@text='Archive']");
@@ -154,30 +145,12 @@ public final class HistoryBrowserLocators {
     public static final By SELECT_BUTTON =
             AppiumBy.xpath("//android.widget.TextView[@text=\"Select\"]");
 
-    // Back button in Archive folder picker to navigate back to Export screen
-    public static final By ARCHIVE_BACK_BUTTON =
-            AppiumBy.accessibilityId("archive_back_button");
-
-    // Archive folder picker screen identifier
-    public static final By ARCHIVE_FOLDER_PICKER_SCREEN =
-            AppiumBy.accessibilityId("archive_folder_picker");
-
-    // Archive folder screen
-    public static final By ARCHIVE_FOLDER_LIST =
-            AppiumBy.id("com.een.vms.android:id/folder_list");
-
     // First folder in the Archive folder picker
+    // TODO: Positional XPath is fragile - will break if Compose view hierarchy changes.
+    //       Request testTag from developers for stable identification.
     public static final By FIRST_FOLDER =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View"
                     + "/android.view.View[2]/android.view.View[1]");
-
-    // Message when folder has no subfolders
-    public static final By NO_SUBFOLDERS_MESSAGE =
-            AppiumBy.xpath("//android.widget.TextView[@text='Folder does not contain any subfolders']");
-
-    public static By folderByName(String folderName) {
-        return AppiumBy.xpath("//android.widget.TextView[@text=" + utils.XPathUtils.xpathLiteral(folderName) + "]");
-    }
 
     // Selected folder name displayed on Export screen after picking folder
     public static final By SELECTED_FOLDER_NAME =
@@ -190,15 +163,8 @@ public final class HistoryBrowserLocators {
     public static final By START_TIME_FIELD =
             AppiumBy.accessibilityId("start_time_row_header");
 
-    public static final By START_TIME_VALUE =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc='start_time_row_value']");
-
     public static final By END_TIME_FIELD =
             AppiumBy.accessibilityId("end_time_row_header");
-
-    // Warning message when no video in range
-    public static final By NO_VIDEO_WARNING =
-            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'No video in this time range')]");
 
     // Download type section
     public static final By DOWNLOAD_TYPE_HEADING =
@@ -211,14 +177,9 @@ public final class HistoryBrowserLocators {
     public static final By DURATION_FIELD =
             AppiumBy.xpath("//android.widget.TextView[@content-desc=\"duration_row_header\"]");
 
-    // Duration options (Bundle, Preview video sections - not interacted with in this test)
-    public static final By BUNDLE_SECTION =
-            AppiumBy.xpath("//android.widget.TextView[@text='Bundle']");
-
-    public static final By PREVIEW_VIDEO_SECTION =
-            AppiumBy.xpath("//android.widget.TextView[@text='Preview video']");
-
     // Time Stamp toggle (ON by default)
+    // TODO: Positional XPath is too generic (matches any View/View/View) - very fragile.
+    //       Request specific testTag or content-desc from developers for reliable identification.
     public static final By TIME_STAMP_TOGGLE =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View"
                     + "/android.view.View");
@@ -230,10 +191,6 @@ public final class HistoryBrowserLocators {
     // File name field for validation tests
     public static final By FILE_NAME_FIELD =
             AppiumBy.accessibilityId("file_name_row_text_field");
-
-    // Validation error message
-    public static final By VALIDATION_ERROR_MESSAGE =
-            AppiumBy.id("com.een.vms.android:id/error_message");
 
     public static final By VALIDATION_ERROR_TEXT =
             AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Should not contain')]");
@@ -250,9 +207,6 @@ public final class HistoryBrowserLocators {
     public static final By SNACKBAR_MESSAGE =
             AppiumBy.accessibilityId("snackbar_een_text");
 
-    public static final By EXPORTING_MESSAGE =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc=\"snackbar_een_text\"]");
-
     // See progress button on snackbar
     public static final By SEE_PROGRESS_BUTTON =
             AppiumBy.xpath("//android.widget.TextView[@content-desc='snackbar_een_button']");
@@ -260,25 +214,4 @@ public final class HistoryBrowserLocators {
     // Progress tab/button
     public static final By PROGRESS_TAB =
             AppiumBy.xpath("//android.widget.TextView[@text='Progress']");
-
-    public static final By PROGRESS_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/button");
-
-    // Success snackbar after export completes
-    public static final By SUCCESS_SNACKBAR =
-            AppiumBy.xpath("//android.widget.TextView[@text='Success']");
-
-    // Progress tab download item
-    public static final By PROGRESS_DOWNLOAD_ITEM =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
-
-    // Time picker dialog
-    public static final By TIME_PICKER_TAB =
-            AppiumBy.xpath("//android.widget.TextView[@text='Time']");
-
-    public static final By TIME_PICKER_SECONDS_INPUT =
-            AppiumBy.xpath("//android.widget.EditText[@content-desc='date_time_time_holder_numpicker_seconds_numberpicker_input']");
-
-    public static final By TIME_PICKER_OK_BUTTON =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc='date_time_button_container_btn_ok']");
 }

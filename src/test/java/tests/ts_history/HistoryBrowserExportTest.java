@@ -37,9 +37,18 @@ public class HistoryBrowserExportTest extends BaseTest {
         }
         try {
             if (historyBrowserPage != null) {
+                // Navigate back multiple times to recover from any screen (Export, Progress, Folder picker)
+                for (int i = 0; i < 3; i++) {
+                    try {
+                        driver.navigate().back();
+                        Thread.sleep(500);
+                    } catch (Exception ignored) {
+                        break;
+                    }
+                }
                 historyBrowserPage.returnToLiveVideoIfInHistoryBrowser();
             }
-        } catch (RuntimeException e) {
+        } catch (Throwable e) {
             logger.warn("@AfterMethod: cleanup failed: {}", e.toString());
         }
     }

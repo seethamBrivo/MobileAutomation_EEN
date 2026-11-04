@@ -45,9 +45,6 @@ public class HistoryBrowserPage {
             HistoryBrowserLocators.PLAY_PAUSE_BUTTON, HistoryBrowserLocators.NEXT_EVENT_BUTTON,
             HistoryBrowserLocators.NEXT_FRAME_BUTTON);
 
-    // Export screen constants
-    private static final int SWIPE_EDGE_OFFSET = 5;
-
     /** The level is the smallest gap among the first rows, so a row without a label cannot double it. */
     private static final int LEVEL_SAMPLE_ROWS = 4;
 
@@ -899,53 +896,8 @@ public class HistoryBrowserPage {
                 TimeoutConstants.SHORT_TIMEOUT,
                 "Time Zone field should be visible");
 
-        logger.info("Verified all default values are displayed on Export screen: SAVE TO (Archive), "
+        logger.info("Verified all default values are displayed on Export screen: SAVE TO, "
                 + "RANGE (Start/End time), Download type (Video), Duration, File name, Time Stamp, and Time Zone");
-    }
-
-    public void adjustStartTimeForShortDuration() {
-        // Scroll back up to see the start time field
-        GestureUtils.swipeDown(driver);
-        clickStartTimeValue();
-        clickTimeTab();
-        scrollSecondsPickerDown();
-        clickTimePickerOkButton();
-        logger.info("Adjusted start time to create short duration for faster export");
-    }
-
-    private void clickStartTimeValue() {
-        WaitUtils.click(driver, HistoryBrowserLocators.START_TIME_VALUE);
-        logger.info("Clicked Start time value to open time picker");
-    }
-
-    private void clickTimeTab() {
-        WaitUtils.click(driver, HistoryBrowserLocators.TIME_PICKER_TAB);
-        logger.info("Clicked Time tab in date/time picker");
-    }
-
-    private void scrollSecondsPickerDown() {
-        // Scroll down on the seconds picker to reduce the seconds value
-        // This creates a shorter duration for faster export
-        WebElement secondsInput = WaitUtils.waitForVisibility(driver,
-                HistoryBrowserLocators.TIME_PICKER_SECONDS_INPUT);
-
-        // Get element bounds directly
-        org.openqa.selenium.Rectangle rect = secondsInput.getRect();
-        int centerX = rect.getX() + (rect.getWidth() / 2);
-
-        // Use the FULL element height for swipe
-        // Swipe DOWN (top to bottom) to scroll numbers UP
-        int startY = rect.getY() + SWIPE_EDGE_OFFSET;  // Start at very top of element
-        int endY = rect.getY() + rect.getHeight() - SWIPE_EDGE_OFFSET;  // End at very bottom of element
-
-        // Single full-height swipe to scroll the seconds
-        GestureUtils.swipe(driver, centerX, startY, centerX, endY);
-        logger.info("Scrolled seconds picker (full height swipe)");
-    }
-
-    private void clickTimePickerOkButton() {
-        WaitUtils.click(driver, HistoryBrowserLocators.TIME_PICKER_OK_BUTTON);
-        logger.info("Clicked OK to confirm time selection");
     }
 
     public void clickExportButtonAtBottom() {
@@ -954,11 +906,12 @@ public class HistoryBrowserPage {
     }
 
     public void verifyExportingSnackbar() {
-        // Wait up to 60 seconds for snackbar to appear after clicking Export
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
                 TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
                 "Snackbar message should be displayed after clicking Export");
-        logger.info("Verified Exporting snackbar appeared");
+        String message = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE).getText();
+        Assert.assertTrue(message.contains("Exporting"),
+                "Snackbar should contain 'Exporting' but was: " + message);
     }
 
     public void verifyExportingSnackbarAndClickSeeProgress() {
@@ -978,15 +931,6 @@ public class HistoryBrowserPage {
         logger.info("Verified navigation to Progress tab");
     }
 
-    public void verifySuccessSnackbar() {
-        // Wait up to 2 minutes for export to complete and success snackbar to appear
-        // Longer timeout needed for variable export durations
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SUCCESS_SNACKBAR,
-                Duration.ofSeconds(120),
-                "Success snackbar should be displayed after export completes");
-        logger.info("Verified Success snackbar displayed after export completion");
-    }
-
     public void clickCancelButton() {
         WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
         logger.info("Clicked Cancel button");
@@ -1000,10 +944,7 @@ public class HistoryBrowserPage {
     }
 
     public void enterFileName(String fileName) {
-        WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
-        fileNameField.clear();
-        fileNameField.sendKeys(fileName);
-        logger.info("Entered file name: {}", fileName);
+        WaitUtils.clearAndType(driver, HistoryBrowserLocators.FILE_NAME_FIELD, fileName);
     }
 
     public void verifyValidationError() {
@@ -1012,13 +953,8 @@ public class HistoryBrowserPage {
                 "Validation error message should be displayed for special characters");
         String errorMessage = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT)
                 .getText();
-        logger.info("Verified validation error message: {}", errorMessage);
-    }
-
-    public void clearFileName() {
-        WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
-        fileNameField.clear();
-        logger.info("Cleared file name field");
+        Assert.assertTrue(errorMessage.contains("[^/]*"),
+                "Error message should contain '[^/]*' but was: " + errorMessage);
     }
 
     // High-level test flows
@@ -1034,7 +970,6 @@ public class HistoryBrowserPage {
         verifyFolderSelected();
         verifyArchiveRowHighlighted();
         verifyDefaultValuesDisplayed();
-        adjustStartTimeForShortDuration();
     }
 
     public void completeExportWithProgress() {
@@ -1044,18 +979,11 @@ public class HistoryBrowserPage {
         driver.navigate().back();
     }
 
-    public void verifyDownloadItemInProgress() {
-        // Wait up to 60 seconds for download item to populate in Progress list
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.PROGRESS_DOWNLOAD_ITEM,
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
-                "Download item should be visible in Progress tab");
-        logger.info("Verified download item appears in Progress tab");
-    }
-
     public void verifyCancelExportFlow() {
         clickExportButton();
         verifyExportScreenOpened();
         selectArchiveDestination();
+        pickFirstFolder();
         clickSelectButton();
         clickCancelButton();
         verifyReturnedToHistoryBrowser();
@@ -1066,50 +994,35 @@ public class HistoryBrowserPage {
         verifyExportScreenOpened();
         enterFileName("test^file/name*");
         verifyValidationError();
+        clickCancelButton();
+        verifyReturnedToHistoryBrowser();
     }
 
     public void verifyDefaultFileNameExport() {
-        clickCancelButton();
-        verifyReturnedToHistoryBrowser();
         clickExportButton();
         verifyExportScreenOpened();
         verifyDefaultFileNamePattern();
         selectArchiveDestination();
+        pickFirstFolder();
         clickSelectButton();
         clickExportButtonAtBottom();
         verifyExportingSnackbar();
     }
 
     public void verifyDefaultFileNamePattern() {
-        // Get the actual file name value
-        // Using getAttribute("text") consistently as it retrieves the EditText's text content in Android
         WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
         String fileName = fileNameField.getAttribute("text");
 
-        // Verify file name follows pattern: video <camera_name> YYYY-MM-DD HH-MM-SS (with spaces)
-        // If camera name has special chars [^/]*, they should be replaced with "-"
+        // Verify file name follows pattern: video <camera_name> YYYY-MM-DD HH-MM-SS
         Assert.assertNotNull(fileName, "File name attribute should not be null");
         Assert.assertFalse(fileName.isEmpty(), "File name should not be empty");
-        Assert.assertFalse(fileName.equals("Maximum 64 characters"),
-                "File name should be the default pattern, not placeholder text");
-        Assert.assertTrue(fileName.startsWith("video "),
-                "File name should start with 'video ' but was '" + fileName + "'");
-        Assert.assertFalse(fileName.matches(".*[\\^/\\*].*"),
-                "File name should not contain special characters [^/]* but was '" + fileName + "'");
+
+        // Pattern: "video " + camera_name + " " + YYYY-MM-DD + " " + HH-MM-SS
+        // Example: "video Dm08 2026-11-04 02-26-15"
+        Assert.assertTrue(fileName.matches("^video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}$"),
+                "File name should match pattern 'video <camera_name> YYYY-MM-DD HH-MM-SS' but was: " + fileName);
 
         logger.info("Verified default file name pattern: {}", fileName);
-    }
-
-    public void verifyFileNameWithSpecialCharacters(String cameraName) {
-        String fileName = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD).getText();
-        if (cameraName.matches(".*[^/]*.*")) {
-            Assert.assertTrue(fileName.contains("-"),
-                    "File name should include '-' when camera name has special characters [^/]* but was '"
-                            + fileName + "'");
-            logger.info("Verified file name includes '-' for camera with special characters: {}", fileName);
-        } else {
-            logger.info("Camera name has no special characters, file name: {}", fileName);
-        }
     }
 
     // Downloads export flows (EEPD-TC-23629)
@@ -1119,7 +1032,6 @@ public class HistoryBrowserPage {
         verifyExportScreenOpened();
         verifyDownloadsSelectedAsDefault();
         verifyDefaultValuesDisplayed();
-        adjustStartTimeForShortDuration();
     }
 
     public void verifyCancelExportFlowForDownloads() {
