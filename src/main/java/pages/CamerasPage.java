@@ -340,4 +340,17 @@ public class CamerasPage {
                 "Cameras list should show the renamed camera '" + name + "'");
     }
 
+    public boolean hasSecondOnlineCamera() {
+        GestureUtils.scrollToTop(driver);
+        return scrollUntilElementIsVisible(CamerasLocators.SECOND_ONLINE_CAMERA);
+    }
+
+    public void longPressSecondOnlineCameraAndVerifyContextMenu() {
+        GestureUtils.longPressUntilVisible(driver, CamerasLocators.SECOND_ONLINE_CAMERA,
+                CamerasLocators.CONTEXT_MENU_CONTAINER);
+        verifyContextMenuDisplayed();
+        verifyAllContextMenuOptions(true);
+        verifyCameraPreviewDisplayed();
+    }
+
 }

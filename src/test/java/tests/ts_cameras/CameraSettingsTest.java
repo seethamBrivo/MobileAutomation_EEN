@@ -39,10 +39,8 @@ public class CameraSettingsTest extends BaseTest {
     public void verifyChangeCameraNameAndCheckStatus() {
         // Step 2: Cameras in Dashboard, long press the first online camera, open Camera settings
         openSettingsOfFirstOnlineCamera();
-        // Step 3: the status is shown in section "Status"
-        String status = settingsPage.readStatus();
-        logger.info("Camera '{}' status: {}", originalCameraName, status);
-        settingsPage.verifyStatusIs(CamerasPage.STATUS_ONLINE, status);
+        // Step 3: the status in section "Status" is "Online", as on the card the camera was picked from
+        settingsPage.verifyStatusIs(CamerasPage.STATUS_ONLINE);
         // Step 4: tap the Name option and fill the field
         String newName = TestDataConstants.CAMERA_PREFIX_RENAMED
                 + String.format("%05d", System.currentTimeMillis() % 100000);
@@ -57,12 +55,15 @@ public class CameraSettingsTest extends BaseTest {
         camerasPage.verifyCameraListedWithName(newName);
     }
 
-    /** Android only. The switch shows no state, so the camera's Status is checked; the test takes about 4 minutes. */
+    /**
+     * Android only. The switch shows no state, so the camera's Status is checked. It takes about 4 minutes, and up to
+     * about 8 when the status is slow (each check waits twice: on the open screen, then on the reopened one).
+     */
     @Test(description = "EEPD-TC-11323: POS-Camera Settings - turning on/off camera in Dashboard (inside Camera "
             + "Settings screen) mobile VMS app", groups = {"regression", "cameras"})
     public void verifyTurnCameraOffAndOn() {
-        // Step 2: Cameras in Dashboard, long press the first online camera, open Camera settings
-        openSettingsOfFirstOnlineCamera();
+        // Step 2: Cameras in Dashboard, long press the second online camera, open Camera settings
+        openSettingsOfSecondOnlineCamera();
         // Step 3: tap the switch next to Enable to turn the camera off, then on again
         toggleEnableSwitch();
         verifyCameraStatus(CamerasPage.STATUS_TURNED_OFF);
@@ -70,17 +71,32 @@ public class CameraSettingsTest extends BaseTest {
         verifyCameraStatus(CamerasPage.STATUS_ONLINE);
     }
 
-    /** Step 2 of both test cases. */
+    /** Step 2 of EEPD-TC-8861. */
     private void openSettingsOfFirstOnlineCamera() {
         camerasPage.openCamerasList();
         if (!camerasPage.hasOnlineCamera()) {
             throw new SkipException("An online camera is needed on the End User account; none found in the list");
         }
         camerasPage.longPressFirstOnlineCameraAndVerifyContextMenu();
+        openSettingsFromContextMenu();
+    }
+
+    /** Step 2 of EEPD-TC-11323: the second online camera, so the camera the name test renames is left alone. */
+    private void openSettingsOfSecondOnlineCamera() {
+        camerasPage.openCamerasList();
+        if (!camerasPage.hasSecondOnlineCamera()) {
+            throw new SkipException("Two online cameras are needed on the End User account; fewer found in the list");
+        }
+        camerasPage.longPressSecondOnlineCameraAndVerifyContextMenu();
+        openSettingsFromContextMenu();
+    }
+
+    private void openSettingsFromContextMenu() {
         camerasPage.clickCameraSettingsOption();
         settingsPage.verifyCameraSettingsScreenDisplayed();
-        settingsPage.verifyCameraPreviewIconDisplayed();
         originalCameraName = settingsPage.readName();
+        logger.info("Camera settings opened for camera '{}'", originalCameraName);
+        settingsPage.verifyCameraPreviewIconDisplayed();
     }
 
     /** The open screen does not refresh its status (the test case says a refresh might be needed), so reopen it. */
@@ -102,6 +118,28 @@ public class CameraSettingsTest extends BaseTest {
         settingsPage.tapEnableSwitch();
     }
 
+    /**
+     * The camera has the new name only if the rename got as far as saving, so the names are tried in order; null
+     * names are skipped. Returns the name that opened Camera settings, or null when none did.
+     */
+    private String openCameraSettingsByAnyName(String... names) {
+        for (String name : names) {
+            if (name == null) {
+                continue;
+            }
+            try {
+                devicesPage.recoverToDashboard();
+                camerasPage.openCamerasList();
+                camerasPage.openContextMenuOfCameraNamed(name);
+                camerasPage.clickCameraSettingsOption();
+                return name;
+            } catch (Throwable t) {
+                logger.warn("@AfterMethod: could not open camera '{}' from the cameras list", name, t);
+            }
+        }
+        return null;
+    }
+
     @AfterMethod(alwaysRun = true)
     public void cleanup(ITestResult testResult) {
         try {
@@ -110,18 +148,13 @@ public class CameraSettingsTest extends BaseTest {
             if (driver == null || devicesPage == null || !(restoreName || restoreSwitch)) {
                 return;
             }
-            String currentName = restoreName ? renamedCameraName : originalCameraName;
-            try {
-                devicesPage.recoverToDashboard();
-                camerasPage.openCamerasList();
-                camerasPage.openContextMenuOfCameraNamed(currentName);
-                camerasPage.clickCameraSettingsOption();
-            } catch (Throwable t) {
-                logger.error("@AfterMethod: COULD NOT OPEN camera '{}' to restore it (name '{}', switch taps {})",
-                        currentName, originalCameraName, enableSwitchTaps, t);
+            String currentName = openCameraSettingsByAnyName(renamedCameraName, originalCameraName);
+            if (currentName == null) {
+                logger.error("@AfterMethod: COULD NOT OPEN camera '{}' / '{}' to restore it (switch taps {})",
+                        renamedCameraName, originalCameraName, enableSwitchTaps);
                 return;
             }
-            if (restoreName) {
+            if (restoreName && currentName.equals(renamedCameraName)) {
                 try {
                     settingsPage.clickNameField();
                     settingsPage.enterName(originalCameraName);

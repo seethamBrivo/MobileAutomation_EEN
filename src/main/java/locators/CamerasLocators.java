@@ -53,6 +53,10 @@ public final class CamerasLocators {
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
 
+    // Android only.
+    public static final By SECOND_ONLINE_CAMERA = AppiumBy.xpath(
+            "(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]");
+
     public static By cameraCardWithName(String name) {
         return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
                 + "/ancestor::android.view.View[@clickable='true'][1]");

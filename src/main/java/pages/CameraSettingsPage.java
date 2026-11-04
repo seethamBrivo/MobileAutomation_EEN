@@ -30,13 +30,10 @@ public class CameraSettingsPage {
                 "Camera preview icon should be visible in the top right corner of the Camera settings screen");
     }
 
-    public String readStatus() {
-        return WaitUtils.waitForVisibility(driver, CameraSettingsLocators.STATUS_VALUE).getText().trim();
-    }
-
-    public void verifyStatusIs(String expectedStatus, String actualStatus) {
+    public void verifyStatusIs(String expectedStatus) {
+        String actualStatus = WaitUtils.waitForVisibility(driver, CameraSettingsLocators.STATUS_VALUE).getText().trim();
         Assert.assertEquals(actualStatus, expectedStatus,
-                "Camera status in settings should match the status on the camera's card");
+                "Camera status in settings should be '" + expectedStatus + "' but was '" + actualStatus + "'");
     }
 
     public String readName() {
@@ -76,16 +73,19 @@ public class CameraSettingsPage {
 
     /** Non-asserting check, so cleanup can ask where the camera ended up. */
     public boolean isStatusShownWithin(String expectedStatus) {
-        String seen = WaitUtils.pollText(driver, CameraSettingsLocators.STATUS_VALUE, expectedStatus,
-                TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT);
-        return expectedStatus.equals(seen);
+        return expectedStatus.equals(pollForStatus(expectedStatus));
     }
 
     public void verifyStatusBecomes(String expectedStatus) {
-        String seen = WaitUtils.pollText(driver, CameraSettingsLocators.STATUS_VALUE, expectedStatus,
-                TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT);
+        String seen = pollForStatus(expectedStatus);
         Assert.assertEquals(seen, expectedStatus,
                 "Camera status should become '" + expectedStatus + "' after the Enable switch but was '" + seen + "'");
+    }
+
+    /** The last status seen: the expected one, or whatever was shown when the budget ran out. Never null. */
+    private String pollForStatus(String expectedStatus) {
+        return WaitUtils.pollText(driver, CameraSettingsLocators.STATUS_VALUE, expectedStatus,
+                TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT);
     }
 
     private void tapAtCentre(By locator) {
