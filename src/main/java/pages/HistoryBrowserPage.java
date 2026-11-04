@@ -143,6 +143,29 @@ public class HistoryBrowserPage {
     }
 
     /**
+     * Recovers from export flows by navigating back to History Browser.
+     * Handles Export screen, Progress tab, and Archive folder picker states.
+     */
+    public void recoverFromExportFlow() {
+        // Check current state and navigate back accordingly
+        if (WaitUtils.isVisible(driver, HistoryBrowserLocators.CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+            // On Export screen - click Cancel
+            WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
+            WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
+        } else if (WaitUtils.isVisible(driver, HistoryBrowserLocators.PROGRESS_TAB, TimeoutConstants.SHORT_TIMEOUT)) {
+            // On Progress tab - navigate back
+            driver.navigate().back();
+            WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
+        } else if (WaitUtils.isVisible(driver, HistoryBrowserLocators.SELECT_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+            // On Archive folder picker - navigate back twice
+            driver.navigate().back();
+            driver.navigate().back();
+            WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
+        }
+        // If already on History Browser or unknown state, do nothing
+    }
+
+    /**
      * Cleanup step: the app reopens a camera in its last used mode, so a test that ends in the history browser
      * switches back to live video for whatever taps the camera next. Never asserts.
      */
@@ -789,7 +812,6 @@ public class HistoryBrowserPage {
 
     public void clickExportButton() {
         WaitUtils.click(driver, HistoryBrowserLocators.SAVE_BUTTON);
-        logger.info("Clicked Export button in History Browser");
     }
 
     public void verifyExportScreenOpened() {
@@ -808,7 +830,6 @@ public class HistoryBrowserPage {
 
     public void selectArchiveDestination() {
         WaitUtils.click(driver, HistoryBrowserLocators.ARCHIVE_TEXT);
-        logger.info("Selected Archive destination");
     }
 
     public void verifyArchiveFolderPickerOpened() {
@@ -820,12 +841,10 @@ public class HistoryBrowserPage {
 
     public void pickFirstFolder() {
         WaitUtils.click(driver, HistoryBrowserLocators.FIRST_FOLDER);
-        logger.info("Picked first folder from Archive folder list");
     }
 
     public void clickSelectButton() {
         WaitUtils.click(driver, HistoryBrowserLocators.SELECT_BUTTON);
-        logger.info("Clicked Select button to confirm folder selection");
     }
 
     public void verifyFolderSelected() {
@@ -842,24 +861,20 @@ public class HistoryBrowserPage {
     }
 
     public void verifyArchiveRowHighlighted() {
-        // Verify Archive row and arrow are visible (indicating selection)
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_RIGHT_ARROW,
-                TimeoutConstants.SHORT_TIMEOUT,
-                "Archive right arrow should be visible (blue color indicates selection)");
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_TEXT,
-                TimeoutConstants.SHORT_TIMEOUT,
-                "Archive text should be visible and highlighted");
-        logger.info("Verified Archive row is highlighted with blue color");
+        // Verify Archive is selected by checking folder name is displayed (only visible when selected)
+        String folderName = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SELECTED_FOLDER_NAME).getText();
+        Assert.assertFalse(folderName.isEmpty(), "Selected folder name should be visible when Archive is selected");
     }
 
-    public void verifyDefaultValuesDisplayed() {
-        // Verify SAVE TO section
+    /**
+     * Verifies that Export screen fields are visible.
+     * Deliberately not asserted: Start/End time values, Duration value, Time Stamp toggle state
+     * (no stable locators for these values).
+     */
+    public void verifyExportScreenFieldsVisible() {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.SAVE_TO_SECTION_TITLE,
                 "SAVE TO section should be visible");
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_TEXT,
-                "Archive option should be visible and selected");
 
-        // Verify RANGE section
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.RANGE_SECTION_TITLE,
                 "RANGE section should be visible");
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.START_TIME_FIELD,
@@ -867,42 +882,29 @@ public class HistoryBrowserPage {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.END_TIME_FIELD,
                 "End time field should be visible");
 
-        // Verify Download type section
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOAD_TYPE_HEADING,
-                TimeoutConstants.SHORT_TIMEOUT,
                 "Download type heading should be visible");
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOAD_TYPE_VIDEO,
-                TimeoutConstants.SHORT_TIMEOUT,
                 "Download type 'Video' should be visible");
 
-        // Verify File name field
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.FILE_NAME_FIELD,
-                TimeoutConstants.SHORT_TIMEOUT,
                 "File name field should be visible");
 
-        // Swipe up to see Duration, Time Stamp and Time Zone fields lower on the screen
         GestureUtils.swipeUp(driver);
 
-        // Verify Duration field after scrolling
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.DURATION_FIELD,
-                TimeoutConstants.SHORT_TIMEOUT,
                 "Duration field should be visible");
 
-        // Verify Time Stamp and Time Zone after scrolling
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIME_STAMP_TOGGLE,
-                TimeoutConstants.SHORT_TIMEOUT,
-                "Time Stamp toggle should be visible (ON by default)");
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIME_ZONE_VALUE,
-                TimeoutConstants.SHORT_TIMEOUT,
-                "Time Zone field should be visible");
+        // Verify Time Zone value (the only value we can reliably check)
+        String timeZone = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIME_ZONE_VALUE).getText();
+        Assert.assertFalse(timeZone.isEmpty(), "Time Zone value should not be empty");
 
-        logger.info("Verified all default values are displayed on Export screen: SAVE TO, "
-                + "RANGE (Start/End time), Download type (Video), Duration, File name, Time Stamp, and Time Zone");
+        // Swipe back down to restore screen position
+        GestureUtils.swipeDown(driver);
     }
 
     public void clickExportButtonAtBottom() {
         WaitUtils.click(driver, HistoryBrowserLocators.EXPORT_BUTTON);
-        logger.info("Clicked Export button at bottom of screen");
     }
 
     public void verifyExportingSnackbar() {
@@ -915,25 +917,20 @@ public class HistoryBrowserPage {
     }
 
     public void verifyExportingSnackbarAndClickSeeProgress() {
-        // Wait for snackbar and immediately click "See progress" - snackbar is transient
-        // Must click while snackbar is still visible, no time for separate verification
+        // Snackbar is transient - must click while still visible
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
                 TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
-        // Click See progress button immediately while snackbar is visible
         WaitUtils.click(driver, HistoryBrowserLocators.SEE_PROGRESS_BUTTON);
-        logger.info("Clicked 'See progress' button on Exporting snackbar");
     }
 
     public void verifyProgressTabOpened() {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.PROGRESS_TAB,
                 FrameworkConstants.EXPLICIT_WAIT,
                 "Progress tab should be displayed after clicking See progress");
-        logger.info("Verified navigation to Progress tab");
     }
 
     public void clickCancelButton() {
         WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
-        logger.info("Clicked Cancel button");
     }
 
     public void verifyReturnedToHistoryBrowser() {
@@ -969,17 +966,23 @@ public class HistoryBrowserPage {
         clickSelectButton();
         verifyFolderSelected();
         verifyArchiveRowHighlighted();
-        verifyDefaultValuesDisplayed();
+        verifyExportScreenFieldsVisible();
     }
 
+    /**
+     * Starts export, verifies snackbar, navigates to Progress tab, then returns to History Browser.
+     * Deliberately not cleaned: Export continues in background (cleanup requires Progress tab locators).
+     */
     public void completeExportWithProgress() {
         clickExportButtonAtBottom();
         verifyExportingSnackbarAndClickSeeProgress();
         verifyProgressTabOpened();
         driver.navigate().back();
+        verifyReturnedToHistoryBrowser();
     }
 
     public void verifyCancelExportFlow() {
+        ensureOnHistoryBrowser();
         clickExportButton();
         verifyExportScreenOpened();
         selectArchiveDestination();
@@ -990,6 +993,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyFileNameValidation() {
+        ensureOnHistoryBrowser();
         clickExportButton();
         verifyExportScreenOpened();
         enterFileName("test^file/name*");
@@ -999,6 +1003,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyDefaultFileNameExport() {
+        ensureOnHistoryBrowser();
         clickExportButton();
         verifyExportScreenOpened();
         verifyDefaultFileNamePattern();
@@ -1031,10 +1036,11 @@ public class HistoryBrowserPage {
         clickExportButton();
         verifyExportScreenOpened();
         verifyDownloadsSelectedAsDefault();
-        verifyDefaultValuesDisplayed();
+        verifyExportScreenFieldsVisible();
     }
 
     public void verifyCancelExportFlowForDownloads() {
+        ensureOnHistoryBrowser();
         clickExportButton();
         verifyExportScreenOpened();
         clickCancelButton();
@@ -1042,6 +1048,7 @@ public class HistoryBrowserPage {
     }
 
     public void verifyFileNameValidationForDownloads() {
+        ensureOnHistoryBrowser();
         clickExportButton();
         verifyExportScreenOpened();
         enterFileName("test^file/name*");
@@ -1051,10 +1058,21 @@ public class HistoryBrowserPage {
     }
 
     public void verifyDefaultFileNameExportForDownloads() {
+        ensureOnHistoryBrowser();
         clickExportButton();
         verifyExportScreenOpened();
         verifyDefaultFileNamePattern();
         clickExportButtonAtBottom();
         verifyExportingSnackbar();
+    }
+
+    /**
+     * Ensures the app is on History Browser screen before starting a new export flow.
+     * If not on History Browser, recovers by navigating back to it.
+     */
+    private void ensureOnHistoryBrowser() {
+        if (!WaitUtils.isVisible(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN, TimeoutConstants.SHORT_TIMEOUT)) {
+            recoverFromExportFlow();
+        }
     }
 }

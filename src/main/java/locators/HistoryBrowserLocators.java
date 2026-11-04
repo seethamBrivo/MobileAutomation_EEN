@@ -134,14 +134,14 @@ public final class HistoryBrowserLocators {
     public static final By DOWNLOADS_SELECTED_INDICATOR =
             AppiumBy.accessibilityId("downloads_destination_row_selected_icon");
 
+    // TODO: Unscoped bare @text match - could false-positive on any "Archive" text.
+    //       Scope to Export screen parent or request testTag from developers.
     public static final By ARCHIVE_TEXT =
             AppiumBy.xpath("//android.widget.TextView[@text='Archive']");
 
-    // Right arrow/chevron indicating Archive is clickable (changes to blue when selected)
-    public static final By ARCHIVE_RIGHT_ARROW =
-            AppiumBy.accessibilityId("archive_destination_row_end_icon");
-
     // Select button in top right corner of Archive folder picker
+    // TODO: Unscoped bare @text match - could false-positive on any "Select" text.
+    //       Scope to folder picker parent or request testTag from developers.
     public static final By SELECT_BUTTON =
             AppiumBy.xpath("//android.widget.TextView[@text=\"Select\"]");
 
@@ -212,6 +212,8 @@ public final class HistoryBrowserLocators {
             AppiumBy.xpath("//android.widget.TextView[@content-desc='snackbar_een_button']");
 
     // Progress tab/button
+    // TODO: Unscoped bare @text match - could false-positive on any "Progress" text.
+    //       Request testTag or content-desc from developers for reliable identification.
     public static final By PROGRESS_TAB =
             AppiumBy.xpath("//android.widget.TextView[@text='Progress']");
 }

@@ -18,12 +18,11 @@ import pages.LayoutsPage;
 public class HistoryBrowserExportTest extends BaseTest {
 
     private static final Logger logger = LogManager.getLogger(HistoryBrowserExportTest.class);
-    private LayoutsPage layoutsPage;
     private HistoryBrowserPage historyBrowserPage;
 
     @BeforeMethod(alwaysRun = true)
     public void setupExportTest() {
-        layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
+        LayoutsPage layoutsPage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, LayoutsPage::new);
         layoutsPage.verifyLayoutsScreenDisplayed();
         layoutsPage.verifyCameraPreviewsLoaded();
         historyBrowserPage = new HistoryBrowserPage(driver);
@@ -37,15 +36,7 @@ public class HistoryBrowserExportTest extends BaseTest {
         }
         try {
             if (historyBrowserPage != null) {
-                // Navigate back multiple times to recover from any screen (Export, Progress, Folder picker)
-                for (int i = 0; i < 3; i++) {
-                    try {
-                        driver.navigate().back();
-                        Thread.sleep(500);
-                    } catch (Exception ignored) {
-                        break;
-                    }
-                }
+                historyBrowserPage.recoverFromExportFlow();
                 historyBrowserPage.returnToLiveVideoIfInHistoryBrowser();
             }
         } catch (Throwable e) {
@@ -53,10 +44,15 @@ public class HistoryBrowserExportTest extends BaseTest {
         }
     }
 
+    /**
+     * Test 1: Archive export with validations.
+     * Deliberately not cleaned: Creates 2 exports that persist with noReset=true.
+     * Export cleanup not implemented (requires Progress tab cancel button locator).
+     */
     @Test(description = "EEPD-TC-23628: POS-Exports/History Browser - requesting a video export"
                     + " to Archive with default values in VMS mobile app",
           groups = {"regression", "history_browser", "export"})
-    public void verifyVideoExportToArchiveWithValidation() {
+    public void test01_VideoExportToArchiveWithValidation() {
         historyBrowserPage.exportToArchiveWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();
         historyBrowserPage.verifyCancelExportFlow();
@@ -64,10 +60,15 @@ public class HistoryBrowserExportTest extends BaseTest {
         historyBrowserPage.verifyDefaultFileNameExport();
     }
 
+    /**
+     * Test 2: Downloads export with validations.
+     * Deliberately not cleaned: Creates 2 exports that persist with noReset=true.
+     * Export cleanup not implemented (requires Progress tab cancel button locator).
+     */
     @Test(description = "EEPD-TC-23629: POS-Exports/History Browser - requesting a video export"
                     + " to Downloads with default values in VMS mobile app",
           groups = {"regression", "history_browser", "export"})
-    public void verifyVideoExportToDownloadsWithValidation() {
+    public void test02_VideoExportToDownloadsWithValidation() {
         historyBrowserPage.exportToDownloadsWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();
         historyBrowserPage.verifyCancelExportFlowForDownloads();
