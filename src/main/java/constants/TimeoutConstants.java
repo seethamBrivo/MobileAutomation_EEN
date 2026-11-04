@@ -64,4 +64,7 @@ public final class TimeoutConstants {
 
     /** Max wait for device to stabilize after rotation (detects window size change, not a sleep). */
     public static final Duration ROTATION_STABILIZE = Duration.ofMillis(2000);
+
+    /** The camera status follows the Enable switch 30 to 60 seconds later. */
+    public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT = Duration.ofSeconds(90);
 }
