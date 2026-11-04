@@ -108,15 +108,19 @@ public final class BridgesLocators {
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View"), // android
             AppiumBy.accessibilityId("BackButton")); // ios
 
+    /** iOS: the name text of the first bridge; it is both what a tap opens and what holds the name. */
+    private static final By FIRST_BRIDGE_NAME_TEXT_IOS =
+            AppiumBy.xpath("(//XCUIElementTypeImage[@name='ic_bridgeDevice'])[1]/following-sibling::XCUIElementTypeStaticText[1]");
+
     public static final By FIRST_BRIDGE_IN_LIST =
             PlatformLocator.get(
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeImage[@name='ic_bridgeDevice'])[1]/following-sibling::XCUIElementTypeStaticText[1]")); // ios: the name text; tapping the row container does not open it
+            FIRST_BRIDGE_NAME_TEXT_IOS); // ios: the name text; tapping the row container does not open it
 
     public static final By FIRST_BRIDGE_NAME_TEXT =
             PlatformLocator.get(
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.widget.TextView[1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeImage[@name='ic_bridgeDevice'])[1]/following-sibling::XCUIElementTypeStaticText[1]")); // ios
+            FIRST_BRIDGE_NAME_TEXT_IOS); // ios
 
     public static final By BRIDGE_THREE_DOTS_BUTTON =
             PlatformLocator.get(
@@ -216,6 +220,10 @@ public final class BridgesLocators {
 
     /** iOS: while the filter field has focus, the back button is replaced by this button. */
     public static final By CLOSE_FILTER_BUTTON = AppiumBy.accessibilityId("Close"); // ios
+
+    /** iOS: the keyboard key of the filter field; tapping it closes the keyboard that hides "No matching bridges". */
+    public static final By KEYBOARD_SEARCH_KEY =
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Search'"); // ios
 
     /** iOS: the keyboard key that confirms the name typed into the bridge settings. */
     public static final By KEYBOARD_DONE_KEY =
