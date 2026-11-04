@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import locators.CamerasLocators;
+import locators.CommonLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -112,9 +113,9 @@ public final class CameraSearchFilter {
     }
 
     private void enterSearchTerm(String searchTerm) {
-        if (PlatformLocator.isIos() && WaitUtils.isPresent(driver, CamerasLocators.CLEAR_TEXT_BUTTON)) {
+        if (PlatformLocator.isIos() && WaitUtils.isPresent(driver, CommonLocators.CLEAR_TEXT_BUTTON)) {
             // iOS: the "Clear text" button exists only while the field holds text, so leftover text is cleared first.
-            WaitUtils.click(driver, CamerasLocators.CLEAR_TEXT_BUTTON);
+            WaitUtils.click(driver, CommonLocators.CLEAR_TEXT_BUTTON);
         }
         String previousCount = currentCounterTextOrNull();
         boolean wasEmptyStateVisible = isEmptyStateVisibleNow();
@@ -138,11 +139,11 @@ public final class CameraSearchFilter {
             // iOS: the field has a "Clear text" button, which is used instead of clearing the text by typing.
             // It only exists while the field holds text, so an already empty field has nothing to clear.
             if (!WaitUtils.isVisible(
-                    driver, CamerasLocators.CLEAR_TEXT_BUTTON, TimeoutConstants.FILTER_RESULT_TIMEOUT)) {
+                    driver, CommonLocators.CLEAR_TEXT_BUTTON, TimeoutConstants.FILTER_RESULT_TIMEOUT)) {
                 logger.info("Search field is already empty; nothing to clear");
                 return;
             }
-            WaitUtils.click(driver, CamerasLocators.CLEAR_TEXT_BUTTON);
+            WaitUtils.click(driver, CommonLocators.CLEAR_TEXT_BUTTON);
         } else {
             WaitUtils.clearAndType(driver, searchBar, "");
             try {
