@@ -28,6 +28,7 @@
             <class name="tests.ts_dashboard.ResellerDashboardTest"/>
             <class name="tests.ts_layouts.LayoutsTest"/>
             <class name="tests.ts_history.HistoryBrowserTest"/>
+            <class name="tests.ts_history.HistoryBrowserExportTest"/>
             <class name="tests.ts_my_profile.MyProfileTest"/>
             <class name="tests.ts_bridges.BridgeCameraSearchFilterTest"/>
             <class name="tests.ts_cameras.CameraContextMenuTest"/>

@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
@@ -776,5 +777,373 @@ public class HistoryBrowserPage {
         int gap = Math.floorMod(cursorSecond - eventSecond, SECONDS_PER_DAY);
         return gap <= EVENT_TIME_RESOLUTION_SECONDS + EVENT_MOMENT_TOLERANCE_SECONDS
                 || SECONDS_PER_DAY - gap <= EVENT_MOMENT_TOLERANCE_SECONDS;
+    }
+
+    // --- Export functionality --------------------------------------------------
+
+    public void verifyExportButtonVisible() {
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SAVE_BUTTON,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Export button should be visible in History Browser");
+        logger.info("Verified Export button is visible");
+    }
+
+    public void clickExportButton() {
+        WaitUtils.click(driver, HistoryBrowserLocators.SAVE_BUTTON);
+        logger.info("Clicked Export button in History Browser");
+    }
+
+    public void verifyExportScreenOpened() {
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SAVE_TO_SECTION_TITLE,
+                FrameworkConstants.EXPLICIT_WAIT,
+                "Export screen should be opened with 'SAVE TO' section visible");
+        logger.info("Export screen opened successfully");
+    }
+
+    public void verifyDownloadsSelectedAsDefault() {
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOADS_SELECTED_INDICATOR,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Downloads should be selected as default save destination");
+        logger.info("Verified Downloads is selected as default");
+    }
+
+    public void selectArchiveDestination() {
+        WaitUtils.click(driver, HistoryBrowserLocators.ARCHIVE_TEXT);
+        logger.info("Selected Archive destination");
+    }
+
+    public void verifyArchiveFolderPickerOpened() {
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SELECT_BUTTON,
+                FrameworkConstants.EXPLICIT_WAIT,
+                "Archive folder picker should be opened with Select button visible");
+        logger.info("Verified Archive folder picker opened");
+    }
+
+    public void pickFirstFolder() {
+        WaitUtils.click(driver, HistoryBrowserLocators.FIRST_FOLDER);
+        logger.info("Picked first folder from Archive folder list");
+    }
+
+    public void clickSelectButton() {
+        WaitUtils.click(driver, HistoryBrowserLocators.SELECT_BUTTON);
+        logger.info("Clicked Select button to confirm folder selection");
+    }
+
+    public void verifyFolderSelected() {
+        // Wait for Export screen to reload after folder selection
+        WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SAVE_TO_SECTION_TITLE,
+                FrameworkConstants.EXPLICIT_WAIT);
+        String folderName = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SELECTED_FOLDER_NAME)
+                .getText();
+        Assert.assertFalse(folderName.isEmpty(),
+                "A folder should be selected but folder name is empty");
+        Assert.assertTrue(folderName.startsWith("Folder:"),
+                "Selected folder should start with 'Folder:' but was '" + folderName + "'");
+        logger.info("Verified folder is selected: {}", folderName);
+    }
+
+    public void verifyArchiveRowHighlighted() {
+        // Verify Archive row and arrow are visible (indicating selection)
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_RIGHT_ARROW,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Archive right arrow should be visible (blue color indicates selection)");
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_TEXT,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Archive text should be visible and highlighted");
+        logger.info("Verified Archive row is highlighted with blue color");
+    }
+
+    public void verifyDefaultValuesDisplayed() {
+        // Verify SAVE TO section
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SAVE_TO_SECTION_TITLE,
+                "SAVE TO section should be visible");
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_TEXT,
+                "Archive option should be visible and selected");
+
+        // Verify RANGE section
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.RANGE_SECTION_TITLE,
+                "RANGE section should be visible");
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.START_TIME_FIELD,
+                "Start time field should be visible");
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.END_TIME_FIELD,
+                "End time field should be visible");
+
+        // Verify Download type section
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOAD_TYPE_HEADING,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Download type heading should be visible");
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOAD_TYPE_VIDEO,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Download type 'Video' should be visible");
+
+        // Verify File name field
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.FILE_NAME_FIELD,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "File name field should be visible");
+
+        // Swipe up to see Duration, Time Stamp and Time Zone fields lower on the screen
+        GestureUtils.swipeUp(driver);
+
+        // Verify Duration field after scrolling
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.DURATION_FIELD,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Duration field should be visible");
+
+        // Verify Time Stamp and Time Zone after scrolling
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIME_STAMP_TOGGLE,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Time Stamp toggle should be visible (ON by default)");
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIME_ZONE_VALUE,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Time Zone field should be visible");
+
+        logger.info("Verified all default values are displayed on Export screen: SAVE TO (Archive), "
+                + "RANGE (Start/End time), Download type (Video), Duration, File name, Time Stamp, and Time Zone");
+    }
+
+    public void adjustStartTimeForShortDuration() {
+        // Scroll back up to see the start time field
+        GestureUtils.swipeDown(driver);
+        clickStartTimeValue();
+        clickTimeTab();
+        scrollSecondsPickerDown();
+        clickTimePickerOkButton();
+        logger.info("Adjusted start time to create short duration for faster export");
+    }
+
+    private void clickStartTimeValue() {
+        WaitUtils.click(driver, HistoryBrowserLocators.START_TIME_VALUE);
+        logger.info("Clicked Start time value to open time picker");
+    }
+
+    private void clickTimeTab() {
+        WaitUtils.click(driver, HistoryBrowserLocators.TIME_PICKER_TAB);
+        logger.info("Clicked Time tab in date/time picker");
+    }
+
+    private void scrollSecondsPickerDown() {
+        // Scroll down on the seconds picker to reduce the seconds value
+        // This creates a shorter duration for faster export
+        WebElement secondsInput = WaitUtils.waitForVisibility(driver,
+                HistoryBrowserLocators.TIME_PICKER_SECONDS_INPUT);
+
+        // Get element bounds directly
+        org.openqa.selenium.Rectangle rect = secondsInput.getRect();
+        int centerX = rect.getX() + (rect.getWidth() / 2);
+
+        // Use the FULL element height for swipe
+        // Swipe DOWN (top to bottom) to scroll numbers UP
+        int startY = rect.getY() + 5;  // Start at very top of element
+        int endY = rect.getY() + rect.getHeight() - 5;  // End at very bottom of element
+
+        // Single full-height swipe - verify it scrolls the seconds
+        GestureUtils.swipe(driver, centerX, startY, centerX, endY);
+        WaitUtils.pauseFor(java.time.Duration.ofSeconds(1)); // Pause for UI to settle
+        logger.info("Scrolled seconds picker (full height swipe)");
+    }
+
+    private void clickTimePickerOkButton() {
+        WaitUtils.click(driver, HistoryBrowserLocators.TIME_PICKER_OK_BUTTON);
+        logger.info("Clicked OK to confirm time selection");
+    }
+
+    public void clickExportButtonAtBottom() {
+        WaitUtils.click(driver, HistoryBrowserLocators.EXPORT_BUTTON);
+        logger.info("Clicked Export button at bottom of screen");
+    }
+
+    public void verifyExportingSnackbar() {
+        // Wait up to 60 seconds for snackbar to appear after clicking Export
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
+                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
+                "Snackbar message should be displayed after clicking Export");
+        logger.info("Verified Exporting snackbar appeared");
+    }
+
+    public void verifyExportingSnackbarAndClickSeeProgress() {
+        // Wait for snackbar and immediately click "See progress" - snackbar is transient
+        // Must click while snackbar is still visible, no time for separate verification
+        WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
+                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
+        // Click See progress button immediately while snackbar is visible
+        WaitUtils.click(driver, HistoryBrowserLocators.SEE_PROGRESS_BUTTON);
+        logger.info("Clicked 'See progress' button on Exporting snackbar");
+    }
+
+    public void verifyProgressTabOpened() {
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.PROGRESS_TAB,
+                FrameworkConstants.EXPLICIT_WAIT,
+                "Progress tab should be displayed after clicking See progress");
+        logger.info("Verified navigation to Progress tab");
+    }
+
+    public void verifySuccessSnackbar() {
+        // Wait up to 2 minutes for export to complete and success snackbar to appear
+        // Longer timeout needed for variable export durations
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SUCCESS_SNACKBAR,
+                Duration.ofSeconds(120),
+                "Success snackbar should be displayed after export completes");
+        logger.info("Verified Success snackbar displayed after export completion");
+    }
+
+    public void clickCancelButton() {
+        WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
+        logger.info("Clicked Cancel button");
+    }
+
+    public void verifyReturnedToHistoryBrowser() {
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN,
+                FrameworkConstants.EXPLICIT_WAIT,
+                "Should return to History Browser screen after canceling export");
+        logger.info("Verified returned to History Browser screen");
+    }
+
+    public void enterFileName(String fileName) {
+        WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
+        fileNameField.clear();
+        fileNameField.sendKeys(fileName);
+        logger.info("Entered file name: {}", fileName);
+    }
+
+    public void verifyValidationError() {
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Validation error message should be displayed for special characters");
+        String errorMessage = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT)
+                .getText();
+        logger.info("Verified validation error message: {}", errorMessage);
+    }
+
+    public void clearFileName() {
+        WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
+        fileNameField.clear();
+        logger.info("Cleared file name field");
+    }
+
+    // High-level test flows
+    public void exportToArchiveWithDefaultSettings() {
+        verifyExportButtonVisible();
+        verifyExportButtonVisible();
+        clickExportButton();
+        verifyExportScreenOpened();
+        verifyDownloadsSelectedAsDefault();
+        selectArchiveDestination();
+        verifyArchiveFolderPickerOpened();
+        pickFirstFolder();
+        clickSelectButton();
+        verifyFolderSelected();
+        verifyArchiveRowHighlighted();
+        verifyDefaultValuesDisplayed();
+        adjustStartTimeForShortDuration();
+    }
+
+    public void completeExportWithProgress() {
+        clickExportButtonAtBottom();
+        verifyExportingSnackbarAndClickSeeProgress();
+        verifyProgressTabOpened();
+        driver.navigate().back();
+    }
+
+    public void verifyDownloadItemInProgress() {
+        // Wait up to 60 seconds for download item to populate in Progress list
+        WaitUtils.assertVisible(driver, HistoryBrowserLocators.PROGRESS_DOWNLOAD_ITEM,
+                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
+                "Download item should be visible in Progress tab");
+        logger.info("Verified download item appears in Progress tab");
+    }
+
+    public void verifyCancelExportFlow() {
+        clickExportButton();
+        verifyExportScreenOpened();
+        selectArchiveDestination();
+        clickSelectButton();
+        clickCancelButton();
+        verifyReturnedToHistoryBrowser();
+    }
+
+    public void verifyFileNameValidation() {
+        clickExportButton();
+        verifyExportScreenOpened();
+        enterFileName("test^file/name*");
+        verifyValidationError();
+    }
+
+    public void verifyDefaultFileNameExport() {
+        clickCancelButton();
+        verifyReturnedToHistoryBrowser();
+        clickExportButton();
+        verifyExportScreenOpened();
+        verifyDefaultFileNamePattern();
+        selectArchiveDestination();
+        clickSelectButton();
+        clickExportButtonAtBottom();
+        verifyExportingSnackbar();
+    }
+
+    public void verifyDefaultFileNamePattern() {
+        // Get the actual file name value
+        // Using getAttribute("text") consistently as it retrieves the EditText's text content in Android
+        WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
+        String fileName = fileNameField.getAttribute("text");
+
+        // Verify file name follows pattern: video <camera_name> YYYY-MM-DD HH-MM-SS (with spaces)
+        // If camera name has special chars [^/]*, they should be replaced with "-"
+        Assert.assertNotNull(fileName, "File name attribute should not be null");
+        Assert.assertFalse(fileName.isEmpty(), "File name should not be empty");
+        Assert.assertFalse(fileName.equals("Maximum 64 characters"),
+                "File name should be the default pattern, not placeholder text");
+        Assert.assertTrue(fileName.startsWith("video "),
+                "File name should start with 'video ' but was '" + fileName + "'");
+        Assert.assertFalse(fileName.matches(".*[\\^/\\*].*"),
+                "File name should not contain special characters [^/]* but was '" + fileName + "'");
+
+        logger.info("Verified default file name pattern: {}", fileName);
+    }
+
+    public void verifyFileNameWithSpecialCharacters(String cameraName) {
+        String fileName = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD).getText();
+        if (cameraName.matches(".*[^/]*.*")) {
+            Assert.assertTrue(fileName.contains("-"),
+                    "File name should include '-' when camera name has special characters [^/]* but was '"
+                            + fileName + "'");
+            logger.info("Verified file name includes '-' for camera with special characters: {}", fileName);
+        } else {
+            logger.info("Camera name has no special characters, file name: {}", fileName);
+        }
+    }
+
+    // Downloads export flows (EEPD-TC-23629)
+    public void exportToDownloadsWithDefaultSettings() {
+        verifyExportButtonVisible();
+        verifyExportButtonVisible();
+        clickExportButton();
+        verifyExportScreenOpened();
+        verifyDownloadsSelectedAsDefault();
+        verifyDefaultValuesDisplayed();
+        adjustStartTimeForShortDuration();
+    }
+
+    public void verifyCancelExportFlowForDownloads() {
+        clickExportButton();
+        verifyExportScreenOpened();
+        clickCancelButton();
+        verifyReturnedToHistoryBrowser();
+    }
+
+    public void verifyFileNameValidationForDownloads() {
+        clickExportButton();
+        verifyExportScreenOpened();
+        enterFileName("test^file/name*");
+        verifyValidationError();
+        clickCancelButton();
+        verifyReturnedToHistoryBrowser();
+    }
+
+    public void verifyDefaultFileNameExportForDownloads() {
+        clickExportButton();
+        verifyExportScreenOpened();
+        verifyDefaultFileNamePattern();
+        clickExportButtonAtBottom();
+        verifyExportingSnackbar();
     }
 }

@@ -60,6 +60,7 @@
     <test name="History Browser Tests">
         <classes>
             <class name="tests.ts_history.HistoryBrowserTest"/>
+            <class name="tests.ts_history.HistoryBrowserExportTest"/>
         </classes>
     </test>
 
