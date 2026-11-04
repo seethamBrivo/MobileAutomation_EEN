@@ -30,6 +30,10 @@ public class CameraSettingsPage {
                 "Camera preview icon should be visible in the top right corner of the Camera settings screen");
     }
 
+    public boolean isCameraPreviewIconDisplayed() {
+        return WaitUtils.isVisible(driver, CameraSettingsLocators.PREVIEW_ICON, TimeoutConstants.SHORT_TIMEOUT);
+    }
+
     public void verifyStatusIs(String expectedStatus) {
         String actualStatus = WaitUtils.waitForVisibility(driver, CameraSettingsLocators.STATUS_VALUE).getText().trim();
         Assert.assertEquals(actualStatus, expectedStatus,
