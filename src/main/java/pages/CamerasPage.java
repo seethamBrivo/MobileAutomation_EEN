@@ -426,8 +426,9 @@ public class CamerasPage {
                 WaitUtils.waitForVisibility(driver, CamerasLocators.FILTER_CHIP_NAME)).y;
         int swipes = 0;
         while (true) {
+            List<String> shown = WaitUtils.textsOf(driver, CamerasLocators.FILTER_CHIP_NAME);
             boolean newChip = false;
-            for (String chip : WaitUtils.textsOf(driver, CamerasLocators.FILTER_CHIP_NAME)) {
+            for (String chip : shown) {
                 if (!chips.contains(chip)) {
                     chips.add(chip);
                     newChip = true;
@@ -438,6 +439,11 @@ public class CamerasPage {
             }
             GestureUtils.swipe(driver, 1000, rowY, 100, rowY);
             swipes++;
+            // The row has moved once its first chip changes; at the end of the row it does not move, and the
+            // next read adds nothing, which ends the loop.
+            String firstChipBefore = shown.get(0);
+            WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
+                    () -> !WaitUtils.textsOf(driver, CamerasLocators.FILTER_CHIP_NAME).get(0).equals(firstChipBefore));
         }
         for (int i = 0; i < swipes; i++) {
             GestureUtils.swipe(driver, 100, rowY, 1000, rowY);
@@ -463,6 +469,10 @@ public class CamerasPage {
 
     /** After a tag was tapped: the counter shrank to some cameras and every card on screen carries the tag. */
     public void verifyCamerasFilteredByTag(String tagName, int camerasBeforeFilter) {
+        // "Clear filter" appears with the filter; waiting for it keeps the old list from being read. The counter
+        // cannot be the signal: it does not change when every camera carries the tag.
+        WaitUtils.assertVisible(driver, CamerasLocators.CLEAR_FILTER_BUTTON, TimeoutConstants.FILTER_RESULT_TIMEOUT,
+                "Clear filter should appear once the tag '" + tagName + "' is applied");
         int filtered = cameraSearchFilter.readCameraCountAndVerifyWording();
         Assert.assertTrue(filtered >= 1 && filtered <= camerasBeforeFilter,
                 "Counter after filtering by tag '" + tagName + "' should be between 1 and " + camerasBeforeFilter
