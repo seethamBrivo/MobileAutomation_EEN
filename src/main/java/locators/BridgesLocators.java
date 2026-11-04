@@ -15,6 +15,11 @@ public final class BridgesLocators {
 
     private BridgesLocators() {}
 
+    /** iOS: the name text of the first bridge; it is both what a tap opens and what holds the name. */
+    // TODO: ask the mobile team for an id on the bridge rows
+    private static final By FIRST_BRIDGE_NAME_TEXT_IOS = AppiumBy.xpath(
+            "(//XCUIElementTypeImage[@name='ic_bridgeDevice'])[1]/following-sibling::XCUIElementTypeStaticText[1]");
+
     // --- Bottom navigation and tabs --------------------------------------------
 
     public static final By DASHBOARD_OPTION = PlatformLocator.get(
@@ -108,10 +113,6 @@ public final class BridgesLocators {
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View[1]/android.view.View"), // android
             AppiumBy.accessibilityId("BackButton")); // ios
 
-    /** iOS: the name text of the first bridge; it is both what a tap opens and what holds the name. */
-    private static final By FIRST_BRIDGE_NAME_TEXT_IOS =
-            AppiumBy.xpath("(//XCUIElementTypeImage[@name='ic_bridgeDevice'])[1]/following-sibling::XCUIElementTypeStaticText[1]");
-
     public static final By FIRST_BRIDGE_IN_LIST =
             PlatformLocator.get(
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]"), // android
@@ -122,6 +123,7 @@ public final class BridgesLocators {
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View[1]//android.widget.TextView[1]"), // android
             FIRST_BRIDGE_NAME_TEXT_IOS); // ios
 
+    // TODO: ask the mobile team for an id on the bridge 3-dots button (iOS finds it by position)
     public static final By BRIDGE_THREE_DOTS_BUTTON =
             PlatformLocator.get(
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='DevicesMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[4]/android.view.View/android.view.View[7]"), // android
@@ -215,6 +217,7 @@ public final class BridgesLocators {
     // --- iOS only --------------------------------------------------------------
 
     /** iOS: the name text of the first online bridge: the text just before its "Online" label. */
+    // TODO: ask the mobile team for an id on the bridge rows (found by the "Online" label next to it)
     public static final By FIRST_ONLINE_BRIDGE_NAME_TEXT = AppiumBy.xpath(
             "(//XCUIElementTypeStaticText[@name='Online'])[1]/preceding-sibling::XCUIElementTypeStaticText[1]"); // ios
 

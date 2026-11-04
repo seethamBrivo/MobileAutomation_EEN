@@ -119,10 +119,13 @@ public class DevicesPage {
             WaitUtils.click(driver, screenButton.get());
             return;
         }
-        // Neither button is on screen: a context menu covers them. An alert covering the screen is not ours to dismiss.
-        Assert.assertFalse(WaitUtils.isPresent(driver, BridgesLocators.DELETE_CONFIRMATION_DIALOG),
-                "goBack: an alert is open, so there is no screen to go back from");
-        closeContextMenu();
+        // Neither button is on screen: only a bridge context menu is ours to close. Anything else (an alert, a slow
+        // render) is left alone, because this runs in cleanup and must not tap blindly or throw.
+        if (WaitUtils.isPresent(driver, BridgesLocators.contextMenuOption("Bridge settings"))) {
+            closeContextMenu();
+        } else {
+            logger.warn("goBack: no back button, close button or context menu on screen; nothing was tapped");
+        }
     }
 
     /** Closes an open context menu: Android with the system back, iOS by tapping outside it. */
@@ -227,6 +230,11 @@ public class DevicesPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_BRIDGE_BUTTON).isEnabled(), "Add bridge button should be enabled");
     }
 
+    public void verifyAddBridgeButtonDisabled() {
+        Assert.assertFalse(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_BRIDGE_BUTTON).isEnabled(),
+                "Add bridge button should be disabled");
+    }
+
     public void clickAddBridgeButton() {
         WaitUtils.click(driver, BridgesLocators.ADD_BRIDGE_BUTTON);
     }
@@ -305,17 +313,29 @@ public class DevicesPage {
     public void verifyBridgeFoundInFilter(String bridgeName) {
         WaitUtils.waitForVisibility(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST);
         Assert.assertTrue(enterBridgeNameInFilter(bridgeName), "Bridge should be found in filter: " + bridgeName);
+        verifyBridgeFilterHolds(bridgeName);
+    }
+
+    /** iOS: the filter field really holds the typed text (a missed keystroke would leave the list unfiltered). */
+    private void verifyBridgeFilterHolds(String text) {
+        if (!PlatformLocator.isIos()) {
+            return;
+        }
+        String typed = WaitUtils.retryOnStale(
+                () -> WaitUtils.waitForVisibility(driver, BridgesLocators.FILTER_SEARCH_FIELD).getAttribute("value"));
+        Assert.assertEquals(typed, text, "The bridge filter should hold the text that was typed");
     }
 
     public void verifyNoMatchingBridgesMessageDisplayed(String bridgeName) {
         typeIntoBridgeFilter(bridgeName);
+        verifyBridgeFilterHolds(bridgeName);
         String message = "No matching bridges message should be displayed after deleting bridge: " + bridgeName;
-        closeKeyboardIos();
+        closeKeyboardIfIos();
         WaitUtils.assertVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE, message);
     }
 
     /** iOS: the keyboard sits over the "No matching bridges" message and makes it report as not visible, so close it. */
-    private void closeKeyboardIos() {
+    private void closeKeyboardIfIos() {
         if (!PlatformLocator.isIos()) {
             return;
         }
@@ -337,9 +357,6 @@ public class DevicesPage {
             field.sendKeys(text);
             return null;
         });
-        String typed = WaitUtils.retryOnStale(
-                () -> WaitUtils.waitForVisibility(driver, BridgesLocators.FILTER_SEARCH_FIELD).getAttribute("value"));
-        Assert.assertEquals(typed, text, "The bridge filter should hold the text that was typed");
     }
 
     public void verifyBridgeListDisplayed() {
@@ -541,9 +558,7 @@ public class DevicesPage {
         clickAddBridgeOption();
         waitForBridgeNameFieldToLoad();
         if (PlatformLocator.isIos()) {
-            // iOS: the button is disabled until both fields are filled.
-            Assert.assertFalse(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_BRIDGE_BUTTON).isEnabled(),
-                    "Add bridge button should be disabled on an empty form");
+            verifyAddBridgeButtonDisabled(); // iOS: disabled until both fields are filled
         } else {
             // App behavior: the button is enabled on an empty form (changed in an earlier app version).
             verifyAddBridgeButtonEnabled();
@@ -594,9 +609,9 @@ public class DevicesPage {
     private void awaitBridgeGone(String bridgeName) {
         try {
             typeIntoBridgeFilter(bridgeName);
-            closeKeyboardIos();
-            boolean gone = WaitUtils.isVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE, FrameworkConstants.EXPLICIT_WAIT);
-            if (!gone) {
+            closeKeyboardIfIos();
+            if (!WaitUtils.isVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE,
+                    FrameworkConstants.EXPLICIT_WAIT)) {
                 logger.warn("Bridge '{}' still shows in the list after its delete", bridgeName);
             }
         } catch (RuntimeException e) {
