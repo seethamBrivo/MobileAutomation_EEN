@@ -143,7 +143,7 @@ public final class HistoryBrowserLocators {
     // TODO: Unscoped bare @text match - could false-positive on any "Select" text.
     //       Scope to folder picker parent or request testTag from developers.
     public static final By SELECT_BUTTON =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Select\"]");
+            AppiumBy.xpath("//android.widget.TextView[@text='Select']");
 
     // First folder in the Archive folder picker
     // TODO: Positional XPath is fragile - will break if Compose view hierarchy changes.
