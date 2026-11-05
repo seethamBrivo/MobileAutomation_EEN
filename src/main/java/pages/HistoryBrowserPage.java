@@ -950,6 +950,7 @@ public class HistoryBrowserPage {
 
     // High-level test flows
     public void exportToArchiveWithDefaultSettings() {
+        clickPreviousEvent();
         verifyExportButtonVisible();
         clickExportButton();
         verifyExportScreenOpened();
@@ -960,6 +961,10 @@ public class HistoryBrowserPage {
         clickSelectButton();
         verifyFolderSelected();
         verifyExportScreenFieldsVisible();
+    }
+
+    private void clickPreviousEvent() {
+        WaitUtils.click(driver, HistoryBrowserLocators.PREVIOUS_EVENT_BUTTON);
     }
 
     public void completeExportWithProgress() {
@@ -1021,6 +1026,7 @@ public class HistoryBrowserPage {
 
     // Downloads export flows (EEPD-TC-23629)
     public void exportToDownloadsWithDefaultSettings() {
+        clickPreviousEvent();
         verifyExportButtonVisible();
         clickExportButton();
         verifyExportScreenOpened();
