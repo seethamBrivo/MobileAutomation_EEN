@@ -16,10 +16,7 @@ public class CameraContextMenuTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToDashboard() {
-        loginAs(TestDataConstants.TS02_CREDS);
-        devicesPage = new DevicesPage(driver);
-        devicesPage.navigateToDashboard();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
+        devicesPage = loginAndOpenDevicesDashboard(TestDataConstants.TS02_CREDS);
         camerasPage = new CamerasPage(driver);
     }
 

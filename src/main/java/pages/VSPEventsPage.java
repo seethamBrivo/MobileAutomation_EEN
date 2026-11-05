@@ -27,7 +27,7 @@ public class VSPEventsPage {
     }
 
     public void navigateToVSPEvents() {
-        WaitUtils.click(driver, VSPEventsLocators.MORE_MENU_OPTION);
+        BottomNavigationBar.clickMoreTab(driver);
         verifyVSPSectionVisible();
         clickEvents();
         verifyVSPEventsScreenDisplayed();
@@ -49,8 +49,7 @@ public class VSPEventsPage {
     }
 
     public void verifyVSPSectionVisible() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VSPEventsLocators.VSP_SECTION).isDisplayed(),
-                "VSP section should be visible");
+        WaitUtils.assertVisible(driver, VSPEventsLocators.VSP_SECTION, "VSP section should be visible");
     }
 
     public void clickEvents() {
@@ -58,8 +57,7 @@ public class VSPEventsPage {
     }
 
     public void verifyVSPEventsScreenDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, VSPEventsLocators.VSP_EVENTS_HEADING).isDisplayed(),
-                "VSP Events screen should be displayed");
+        WaitUtils.assertVisible(driver, VSPEventsLocators.VSP_EVENTS_HEADING, "VSP Events screen should be displayed");
         WaitUtils.waitForVisibility(driver, VSPEventsLocators.VSP_MAIN_CONTAINER, TimeoutConstants.LIST_LOAD_TIMEOUT);
     }
 
@@ -67,14 +65,14 @@ public class VSPEventsPage {
         if (!hasEventsPresent()) {
             throw new SkipException("SKIP: No VSP events available");
         }
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.FIRST_EVENT_IN_LIST, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.FIRST_EVENT_IN_LIST, TimeoutConstants.SHORT_TIMEOUT,
                 "Event cards should be displayed");
         logger.info("Verified {} event cards are displayed",
                     WaitUtils.findElements(driver, VSPEventsLocators.ALL_EVENT_CARDS, TimeoutConstants.SHORT_TIMEOUT).size());
     }
 
     public void verifyEventCardInformation() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.ANY_EVENT_THUMBNAIL, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.ANY_EVENT_THUMBNAIL, TimeoutConstants.SHORT_TIMEOUT,
                 "Event card should contain thumbnail");
         String plateText = verifyElementAndGetText(VSPEventsLocators.ANY_LICENSE_PLATE, "license plate");
 
@@ -185,7 +183,7 @@ public class VSPEventsPage {
 
     public void verifyToolbarHidesOnScroll() {
         // VACUOUS FIX: Assert toolbar is present - silent return was vacuous
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.TOOLBAR, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.TOOLBAR, TimeoutConstants.SHORT_TIMEOUT,
                 "Toolbar should be present before scroll verification");
 
         WebElement toolbarElement = WaitUtils.waitForVisibility(driver, VSPEventsLocators.TOOLBAR, TimeoutConstants.SHORT_TIMEOUT);
@@ -273,9 +271,9 @@ public class VSPEventsPage {
 
     public void verifyDetailPageDisplayed() {
         // SAFETY FIX: Use EXPLICIT_WAIT for required elements, removed hardcoded org name from message
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_CAMERA_NAME, FrameworkConstants.EXPLICIT_WAIT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.DETAIL_CAMERA_NAME, FrameworkConstants.EXPLICIT_WAIT,
                 "Detail page should display camera name");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.CLOSE_ICON, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.CLOSE_ICON, TimeoutConstants.SHORT_TIMEOUT,
                 "Close icon should be displayed");
         logger.info("Detail page displayed");
     }
@@ -294,9 +292,9 @@ public class VSPEventsPage {
     }
 
     public void verifyDetailPageInformation() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_THUMBNAIL, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.DETAIL_THUMBNAIL, TimeoutConstants.SHORT_TIMEOUT,
                 "Thumbnail should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_PLATE_CROP, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.DETAIL_PLATE_CROP, TimeoutConstants.SHORT_TIMEOUT,
                 "Plate crop should be displayed");
 
         String cameraName = getDetailFieldText(VSPEventsLocators.DETAIL_CAMERA_NAME, "Camera name");
@@ -331,13 +329,44 @@ public class VSPEventsPage {
         verifyOptionalField(VSPEventsLocators.DETAIL_ACCESS_TYPE, "Access type");
         verifyOptionalField(VSPEventsLocators.DETAIL_VEHICLE_TAGS, "Vehicle tags");
 
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_VIEW_HISTORY_LINK, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.DETAIL_VIEW_HISTORY_LINK, TimeoutConstants.SHORT_TIMEOUT,
                 "View history link should be displayed");
-        Assert.assertTrue(WaitUtils.isVisible(driver, VSPEventsLocators.DETAIL_SEARCH_PLATE_LINK, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, VSPEventsLocators.DETAIL_SEARCH_PLATE_LINK, TimeoutConstants.SHORT_TIMEOUT,
                 "Search plate link should be displayed");
 
         logger.info("All 17 fields verified - Camera: '{}', Plate: '{}', Region: '{}'",
                 cameraName, plateReading, plateRegion);
+    }
+
+    public void openMoreMenu() {
+        BottomNavigationBar.clickMoreTab(driver);
+    }
+
+    public void verifyEventsOptionDisplayed() {
+        WaitUtils.assertVisible(driver, VSPEventsLocators.EVENTS_OPTION,
+                "Events item should be visible in the More menu");
+    }
+
+    public void verifyViewInHistoryBrowserButtonDisplayed() {
+        WaitUtils.assertVisible(driver, VSPEventsLocators.DETAIL_VIEW_HISTORY_LINK,
+                "History Browser button ('View in history browser') should be visible on the event details screen");
+    }
+
+    /** The camera the event came from, read before leaving the details screen. */
+    public String readEventCameraName() {
+        return getDetailFieldText(VSPEventsLocators.DETAIL_CAMERA_NAME, "Camera name");
+    }
+
+    /**
+     * The time the event was recorded at, in the camera's time zone, read before leaving the details screen so the
+     * History Browser can be checked against it.
+     */
+    public String readEventTime() {
+        return getDetailFieldText(VSPEventsLocators.DETAIL_TIMESTAMP, "Event time");
+    }
+
+    public void tapViewInHistoryBrowser() {
+        WaitUtils.click(driver, VSPEventsLocators.DETAIL_VIEW_HISTORY_LINK);
     }
 
     private String getDetailFieldText(By locator, String fieldName) {

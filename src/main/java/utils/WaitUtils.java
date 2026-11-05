@@ -15,6 +15,7 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
 
 /**
  * All element lookups go through here. The driver runs with implicit wait = 0, so the
@@ -178,6 +179,35 @@ public final class WaitUtils {
             throw new InvalidElementStateException("The field holds " + held.length() + " characters after typing "
                     + text.length() + " key by key");
         }
+    }
+
+    /**
+     * Sleeps for a fixed time. Only for the few places where the app offers nothing to wait on (a retry back-off, the
+     * moment between two gesture presses); wherever a condition exists, wait on that instead.
+     */
+    public static void pauseFor(Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    // ---- visibility assertions --------------------------------------------------------------
+
+    /** Fails with {@code failureMessage} unless the element is visible within the default explicit wait. */
+    public static void assertVisible(AppiumDriver driver, By locator, String failureMessage) {
+        assertVisible(driver, locator, FrameworkConstants.EXPLICIT_WAIT, failureMessage);
+    }
+
+    /** Fails with {@code failureMessage} unless the element becomes visible within {@code timeout}. */
+    public static void assertVisible(AppiumDriver driver, By locator, Duration timeout, String failureMessage) {
+        Assert.assertTrue(isVisible(driver, locator, timeout), failureMessage);
+    }
+
+    /** Fails with {@code failureMessage} if the element is still visible after {@code timeout}. */
+    public static void assertNotVisible(AppiumDriver driver, By locator, Duration timeout, String failureMessage) {
+        Assert.assertFalse(isVisible(driver, locator, timeout), failureMessage);
     }
 
     // ---- elements that may legitimately be absent ---------------------------------------

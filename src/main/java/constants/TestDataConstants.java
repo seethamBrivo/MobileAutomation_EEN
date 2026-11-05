@@ -10,10 +10,10 @@ public final class TestDataConstants {
     // create its bridges through these constants and nothing else.
     public static final String BRIDGE_PREFIX_TEST = "TestBridge_";
     public static final String BRIDGE_PREFIX_DUPLICATE = "DuplicateBridge_";
-    public static final String BRIDGE_PREFIX_FILTER = "FilterTestBridge_";
-    public static final String BRIDGE_PREFIX_CONTEXT_MENU = "ContextMenuBridge_";
     /** Short prefix of the temporary name the rename test gives an existing bridge (the name is `Rn_` + 5 digits). */
     public static final String BRIDGE_PREFIX_RENAMED = "Rn_";
+    /** Temporary name given to an existing camera by the rename test. */
+    public static final String CAMERA_PREFIX_RENAMED = "RnCam_";
 
     // Random suffix range for generated e-mail addresses.
     public static final int MIN_RANDOM_SUFFIX = 1000;
@@ -54,4 +54,7 @@ public final class TestDataConstants {
     public static final String ARCHIVE_SEARCH_DATA = "archive_search_data";
     public static final String ARCHIVE_VALID_SEARCH_TERM = "valid_search_term";
     public static final String ARCHIVE_NO_RESULTS_SEARCH_TERM = "no_results_search_term";
+    // A large, old Archive folder and the video in it (1.5 MB): found by search, and used only to cancel a download.
+    public static final String ARCHIVE_CANCEL_FOLDER_SEARCH_TERM = "cancel_folder_search_term";
+    public static final String ARCHIVE_CANCEL_FILE_SEARCH_TERM = "cancel_file_search_term";
 }

@@ -2,14 +2,12 @@ package pages;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.nativekey.AndroidKey;
-import io.appium.java_client.android.nativekey.KeyEvent;
 import locators.TimeZoneLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.KeyboardUtils;
 import utils.WaitUtils;
 
 public class TimeZonePage {
@@ -47,12 +45,11 @@ public class TimeZonePage {
     }
 
     public void verifyTimezonePopupDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, TimeZoneLocators.TIMEZONE_POPUP).isDisplayed(),
-                "Time zone popup should be displayed");
+        WaitUtils.assertVisible(driver, TimeZoneLocators.TIMEZONE_POPUP, "Time zone popup should be displayed");
     }
 
     public void verifySearchPlaceholderDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, TimeZoneLocators.SEARCH_PLACEHOLDER).isDisplayed(),
+        WaitUtils.assertVisible(driver, TimeZoneLocators.SEARCH_PLACEHOLDER,
                 "Search placeholder 'Filter for time zones' should be displayed");
     }
 
@@ -62,28 +59,9 @@ public class TimeZonePage {
 
     public void enterSearchTerm(String searchTerm) {
         WaitUtils.clearAndType(driver, TimeZoneLocators.SEARCH_BAR, searchTerm);
-        hideKeyboard();
+        KeyboardUtils.hideKeyboard(driver);
     }
 
-    /**
-     * Dismisses the soft keyboard. {@code mobile: hideKeyboard} is a silent no-op on this Compose
-     * search field (the keyboard stayed up and covered the empty-state message in BrowserStack
-     * build #9), so fall back to BACK - which only closes the IME while it is showing.
-     */
-    private void hideKeyboard() {
-        try {
-            driver.executeScript("mobile: hideKeyboard");
-        } catch (org.openqa.selenium.WebDriverException e) {
-            logger.debug("mobile: hideKeyboard failed: {}", e.getMessage());
-        }
-        try {
-            if (driver instanceof AndroidDriver androidDriver && androidDriver.isKeyboardShown()) {
-                androidDriver.pressKey(new KeyEvent(AndroidKey.BACK));
-            }
-        } catch (org.openqa.selenium.WebDriverException e) {
-            logger.debug("Could not dismiss keyboard with BACK: {}", e.getMessage());
-        }
-    }
 
     public void verifyTimezoneListAdjustedToInput(String searchTerm) {
         WebElement firstTimezone = WaitUtils.waitForVisibility(driver, TimeZoneLocators.FIRST_TIMEZONE_IN_LIST, TimeoutConstants.FILTER_RESULT_TIMEOUT);
@@ -94,7 +72,7 @@ public class TimeZonePage {
 
     public void verifyEmptyStateDisplayed() {
         // The keyboard can reappear after the list re-filters and cover the empty-state message.
-        hideKeyboard();
+        KeyboardUtils.hideKeyboard(driver);
         // Fall back to presence: with the IME resizing the window the message can sit below the
         // visible area even though it is rendered.
         boolean shown = WaitUtils.isVisible(driver, TimeZoneLocators.EMPTY_STATE_MESSAGE, TimeoutConstants.FILTER_RESULT_TIMEOUT)
@@ -104,8 +82,8 @@ public class TimeZonePage {
 
     public void clearSearchField() {
         WaitUtils.clearAndType(driver, TimeZoneLocators.SEARCH_BAR, "");
-        hideKeyboard();
-        Assert.assertTrue(WaitUtils.isVisible(driver, TimeZoneLocators.FIRST_TIMEZONE_IN_LIST, TimeoutConstants.SHORT_TIMEOUT),
+        KeyboardUtils.hideKeyboard(driver);
+        WaitUtils.assertVisible(driver, TimeZoneLocators.FIRST_TIMEZONE_IN_LIST, TimeoutConstants.SHORT_TIMEOUT,
                 "Timezone list should be restored after clearing search field");
     }
 

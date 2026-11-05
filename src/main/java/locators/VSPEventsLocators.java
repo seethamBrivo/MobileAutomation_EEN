@@ -21,9 +21,6 @@ public final class VSPEventsLocators {
 
     // --- Navigation elements ---------------------------------------------------------
 
-    public static final By MORE_MENU_OPTION =
-            AppiumBy.xpath("//android.widget.TextView[@text='More']");
-
     public static final By VSP_SECTION =
             AppiumBy.xpath(XPathUtils.textViewIgnoreCase("VSP"));
 

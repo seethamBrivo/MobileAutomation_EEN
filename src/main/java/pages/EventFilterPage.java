@@ -25,6 +25,7 @@ import utils.WaitUtils;
 public class EventFilterPage {
 
     private static final Logger logger = LogManager.getLogger(EventFilterPage.class);
+    private final AppiumDriver driver;
 
     /** A tap that does not flip the checkbox means the list moved under it, so it is repeated once. */
     private static final int TOGGLE_ATTEMPTS = 2;
@@ -35,7 +36,6 @@ public class EventFilterPage {
     private static final double FILTER_SWIPE_SMALL_PERCENT = 0.25;
     private static final double FILTER_SWIPE_LARGE_PERCENT = 0.5;
 
-    private final AppiumDriver driver;
 
     public EventFilterPage(AppiumDriver driver) {
         this.driver = driver;
@@ -73,7 +73,7 @@ public class EventFilterPage {
 
     public void openEventFilter() {
         WaitUtils.click(driver, HistoryBrowserLocators.FILTER_BUTTON);
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, EventFilterLocators.EVENT_FILTERS_TITLE).isDisplayed(),
+        WaitUtils.assertVisible(driver, EventFilterLocators.EVENT_FILTERS_TITLE,
                 "List with event types should be displayed");
     }
 
@@ -83,10 +83,9 @@ public class EventFilterPage {
      * selection first. Returns the titles of the whole list, read by scrolling through it.
      */
     public List<String> verifyEventFilterListDefaultsAndReadTypes() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, EventFilterLocators.EVENT_TYPES_SELECT_ALL)
-                .isDisplayed(), "Select/Deselect button should be visible");
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, EventFilterLocators.FILTER_DONE_BUTTON).isDisplayed(),
-                "Done button should be visible");
+        WaitUtils.assertVisible(driver, EventFilterLocators.EVENT_TYPES_SELECT_ALL,
+                "Select/Deselect button should be visible");
+        WaitUtils.assertVisible(driver, EventFilterLocators.FILTER_DONE_BUTTON, "Done button should be visible");
         Map<String, Boolean> rows = readEventTypeSelection();
         Assert.assertFalse(rows.isEmpty(), "Event filter should list at least one event type");
         List<String> titles = new ArrayList<>(rows.keySet());
@@ -264,7 +263,7 @@ public class EventFilterPage {
         for (int swipes = 0; swipes < MAX_FILTER_SCROLLS && !WaitUtils.isPresent(driver, checkbox); swipes++) {
             scrollFilterList(true);
         }
-        Assert.assertTrue(WaitUtils.isVisible(driver, checkbox, TimeoutConstants.SHORT_TIMEOUT),
+        WaitUtils.assertVisible(driver, checkbox, TimeoutConstants.SHORT_TIMEOUT,
                 "Event type '" + eventType + "' should be listed in the event filter");
         return checkbox;
     }

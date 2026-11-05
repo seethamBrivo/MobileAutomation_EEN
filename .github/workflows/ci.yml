@@ -24,7 +24,7 @@ on:
         options: [class, method]
         default: class
       diagnostics:
-        description: 'Turn BrowserStack debug logs, network logs and video back on (slower sessions). Ignored for network logs on iOS: they stop the camera video from loading'
+        description: 'BrowserStack debug logs, network logs and video (slower sessions). Always on for a merge to main; untick to speed up a manual run. Network logs are never used on iOS: they stop the camera video from loading'
         type: boolean
         default: true
 
@@ -128,7 +128,9 @@ jobs:
             },
             "archive_search_data": {
               "valid_search_term": "test",
-              "no_results_search_term": "xyznonexistent12345"
+              "no_results_search_term": "xyznonexistent12345",
+              "cancel_folder_search_term": "2026-07-16 07-23-09.177 AM preview",
+              "cancel_file_search_term": "2026-07-16 07-23-08.mp4"
             }
           }
           EOF
@@ -146,9 +148,11 @@ jobs:
           browserstackProjectName=EEN Mobile Automation
           browserstackBuildName=CI Build ${{ github.run_number }}${{ matrix.platform == 'ios' && ' (iOS)' || '' }}
           browserstackIdleTimeout=120
-          browserstackDebug=${{ inputs.diagnostics == true && 'true' || 'false' }}
-          browserstackNetworkLogs=${{ inputs.diagnostics == true && 'true' || 'false' }}
-          browserstackVideo=${{ inputs.diagnostics == true && 'true' || 'false' }}
+          # Debug logs, network logs and video are always on for a merge to main (the form input only exists on a manual
+          # run). A manual run keeps them on by default and can turn them off. iOS network logs stay off, see below.
+          browserstackDebug=${{ (github.event_name != 'workflow_dispatch' || inputs.diagnostics) && 'true' || 'false' }}
+          browserstackNetworkLogs=${{ (github.event_name != 'workflow_dispatch' || inputs.diagnostics) && 'true' || 'false' }}
+          browserstackVideo=${{ (github.event_name != 'workflow_dispatch' || inputs.diagnostics) && 'true' || 'false' }}
           EOF
 
       - name: Create android.properties for BrowserStack

@@ -99,24 +99,6 @@ public final class ResellerDashboardLocators {
                     + "/android.view.View[5]/android.view.View/android.view.View"), // android
             NavigationLocators.iosTopBarButton("Add")); // ios
 
-    // --- Bottom navigation bar -------------------------------------------------------
-
-    public static final By NAV_DASHBOARD = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Dashboard\"]"), // android
-            AppiumBy.accessibilityId("dashboard_button")); // ios
-
-    public static final By NAV_USERS = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Users\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Users'")); // ios
-
-    public static final By NAV_BUSINESS_PORTAL = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Business Portal\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Business Portal'")); // ios
-
-    public static final By NAV_MORE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"More\"]"), // android
-            NavigationLocators.IOS_TAB_BAR_MORE_BUTTON); // ios
-
     // --- Add account form ------------------------------------------------------------
 
     // TODO: Replace with testTag - positional paths; no resource-id or testTag on EditTexts

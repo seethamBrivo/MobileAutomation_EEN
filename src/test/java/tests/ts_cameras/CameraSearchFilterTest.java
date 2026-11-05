@@ -15,10 +15,7 @@ public class CameraSearchFilterTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void loginAndNavigateToDashboard() {
-        loginAs(TestDataConstants.ENDUSER_CREDS);
-        devicesPage = new DevicesPage(driver);
-        devicesPage.navigateToDashboard();
-        devicesPage.verifyAllDevicesSectionIsDisplayed();
+        devicesPage = loginAndOpenDevicesDashboard(TestDataConstants.ENDUSER_CREDS);
         camerasPage = new CamerasPage(driver);
     }
 
@@ -29,16 +26,16 @@ public class CameraSearchFilterTest extends BaseTest {
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
         // Step 2: Go to All devices via the More menu and tap Cameras
         camerasPage.openCamerasList();
-        String initialCount = camerasPage.captureCounterAndVerifyFormat();
+        String initialCount = camerasPage.cameraSearchFilter().captureCounterAndVerifyFormat();
         // Step 3: Tap on the search bar
-        camerasPage.tapSearchBarAndVerify();
+        camerasPage.cameraSearchFilter().tapSearchBarAndVerify();
         // Step 4: Provide a search term
-        camerasPage.searchAndVerifyResults(validSearchTerm, initialCount);
+        camerasPage.cameraSearchFilter().searchAndVerifyResults(validSearchTerm, initialCount);
         // Step 5: Interact with a camera from the filtered list
         camerasPage.verifyCanInteractWithFilteredCamera();
         // Step 6: Cancel the filtering
-        camerasPage.clearSearchAndVerifyRestored(initialCount);
+        camerasPage.cameraSearchFilter().clearSearchAndVerifyRestored(initialCount);
         // Step 4 (no results): a term that matches nothing shows the empty state
-        camerasPage.searchWithNoResultsAndVerifyEmptyState(invalidSearchTerm);
+        camerasPage.cameraSearchFilter().searchWithNoResultsAndVerifyEmptyState(invalidSearchTerm);
     }
 }

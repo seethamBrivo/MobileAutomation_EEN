@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -17,6 +18,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import pages.AccountVerificationRequiredException;
+import pages.DevicesPage;
 import pages.LoginPage;
 import pages.ResellerDashboardPage;
 import utils.BrowserStackStatus;
@@ -221,6 +223,23 @@ public abstract class BaseTest {
     private void replaceSession() {
         DriverManager.quitDriver();
         openSession(getClass().getSimpleName(), null, new Object[0]);
+    }
+
+    /**
+     * Logs in as {@code accountType} and creates the page object for the screen the test works on, for example
+     * {@code archivePage = loginAndCreatePage(TestDataConstants.ENDUSER_CREDS, ArchivePage::new)}.
+     */
+    protected <P> P loginAndCreatePage(String accountType, Function<AppiumDriver, P> pageConstructor) {
+        loginAs(accountType);
+        return pageConstructor.apply(driver);
+    }
+
+    /** Logs in as {@code accountType}, opens the dashboard and checks that the All devices section is showing. */
+    protected DevicesPage loginAndOpenDevicesDashboard(String accountType) {
+        DevicesPage devicesPage = loginAndCreatePage(accountType, DevicesPage::new);
+        devicesPage.navigateToDashboard();
+        devicesPage.verifyAllDevicesSectionIsDisplayed();
+        return devicesPage;
     }
 
     /** Shared by every test class whose @BeforeMethod logs in as reseller and lands on the dashboard. */

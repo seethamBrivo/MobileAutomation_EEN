@@ -13,7 +13,7 @@
      SearchFilter + ContextMenu, so never two classes of the same account. This follows the timings, it is not
      enforced: a slow session start can still make two end-user classes overlap. When adding an iOS class, put it
      where it will not start next to a class that uses the same account (end user: Login, Layouts, SearchFilter;
-     TS02: ContextMenu; reseller: Reseller). -->
+     TS02: ContextMenu; reseller: Reseller). A class that cannot be placed that way goes in a <test> of its own at the end. -->
 <suite name="iOS Regression (2 workers)" parallel="classes" thread-count="2">
     <listeners>
         <listener class-name="listeners.TestListener"/>
@@ -33,6 +33,31 @@
             <class name="tests.ts_layouts.LayoutsTest"/>
             <class name="tests.ts_cameras.CameraContextMenuTest"/>
             <class name="tests.ts_cameras.CameraSearchFilterTest"/>
+        </classes>
+    </test>
+    <!-- Archive signs in as the end user too, and with 2 workers it would start next to SearchFilter. A second
+         <test> only starts when the first has finished, so it runs after all the classes above and never overlaps. -->
+    <test name="iOS Archive">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_archive.ArchiveTest"/>
+        </classes>
+    </test>
+    <!-- BridgesTest signs in as the end user too, and its two add tests share the account's single attach ID, so it
+         must never run next to another end-user class or next to the Android Bridges run: its own <test> again,
+         after Archive. -->
+    <test name="iOS Bridges">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_bridges.BridgesTest"/>
         </classes>
     </test>
 </suite>

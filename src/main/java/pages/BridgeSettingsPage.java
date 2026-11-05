@@ -1,29 +1,28 @@
 package pages;
 
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import locators.BridgesLocators;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import org.openqa.selenium.By;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /** The screen a bridge row opens: status, name editing, restart and delete. */
 public class BridgeSettingsPage {
 
+    private final AppiumDriver driver;
     public static final String STATUS_ONLINE = "Online";
     public static final String STATUS_OFFLINE = "Offline";
     public static final String STATUS_UNKNOWN = "Unknown";
 
-    private final AppiumDriver driver;
 
     public BridgeSettingsPage(AppiumDriver driver) {
         this.driver = driver;
@@ -32,7 +31,8 @@ public class BridgeSettingsPage {
     // ---- status ---------------------------------------------------------------------------
 
     public void verifyBridgeSettingsPageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_SETTINGS_PAGE).isDisplayed(), "Bridge settings page should be displayed");
+        WaitUtils.assertVisible(driver, BridgesLocators.BRIDGE_SETTINGS_PAGE,
+                "Bridge settings page should be displayed");
     }
 
     public void verifyStatusSectionDisplayed() {
@@ -40,12 +40,6 @@ public class BridgeSettingsPage {
         // and asking whether it is displayed; the lookup is repeated instead of failing on that.
         Assert.assertTrue(WaitUtils.retryOnStale(() -> WaitUtils.waitForVisibility(driver, BridgesLocators.STATUS_SECTION).isDisplayed()),
                 "Status section should be displayed");
-    }
-
-    /** True when this settings screen shows a name field holding exactly {@code name}; does not wait long. */
-    public boolean hasNameField(String name) {
-        return WaitUtils.isVisible(driver,
-                AppiumBy.xpath("//android.widget.EditText[@text=" + xpathLiteral(name) + "]"), TimeoutConstants.SHORT_TIMEOUT);
     }
 
     /** {@link #STATUS_ONLINE}, {@link #STATUS_OFFLINE} or {@link #STATUS_UNKNOWN}. */
@@ -71,8 +65,11 @@ public class BridgeSettingsPage {
      * settings screen to reach the name field of the bridge called {@code name}, in place of tapping the "Name" row.
      */
     public void clickNameField(String name) {
-        By field = AppiumBy.xpath("//android.widget.EditText[@text=" + xpathLiteral(name) + "]/android.view.View");
-        WebElement element = WaitUtils.waitForClickability(driver, field);
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, BridgesLocators.nameFieldTapTarget(name)); // the value is an inline text field
+            return;
+        }
+        WebElement element = WaitUtils.waitForClickability(driver, BridgesLocators.nameFieldTapTarget(name));
         // A real touch at the centre of the field, like a finger tap. Done with a standard W3C pointer action: the
         // "mobile: clickGesture" command is not available on BrowserStack's Appium.
         Point centre = GestureUtils.getElementCenter(element);
@@ -102,18 +99,12 @@ public class BridgeSettingsPage {
         Assert.assertEquals(seen, newName, "The new bridge name should be in the field before it is confirmed");
     }
 
-    /** XPath 1.0 string literal for {@code value}, which may contain quotes. */
-    private static String xpathLiteral(String value) {
-        if (!value.contains("'")) {
-            return "'" + value + "'";
-        }
-        if (!value.contains("\"")) {
-            return "\"" + value + "\"";
-        }
-        return "concat('" + String.join("',\"'\",'", value.split("'", -1)) + "')";
-    }
 
     public void clickDoneOnKeyboard() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, BridgesLocators.KEYBOARD_DONE_KEY);
+            return;
+        }
         driver.executeScript("mobile: performEditorAction", Map.of("action", "done"));
     }
 
@@ -127,7 +118,7 @@ public class BridgeSettingsPage {
     }
 
     public void verifyRestartBridgeConfirmationDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.RESTART_CONFIRMATION_DIALOG).isDisplayed(),
+        WaitUtils.assertVisible(driver, BridgesLocators.RESTART_CONFIRMATION_DIALOG,
                 "Restart bridge confirmation should be displayed");
     }
 
@@ -136,7 +127,7 @@ public class BridgeSettingsPage {
     }
 
     public void verifyBridgeRestartedMessageDisplayed() {
-        Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE).isDisplayed(),
+        WaitUtils.assertVisible(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE,
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
 
