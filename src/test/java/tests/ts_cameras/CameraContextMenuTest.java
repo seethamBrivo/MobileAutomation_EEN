@@ -1,6 +1,7 @@
 package tests.ts_cameras;
 
 import base.BaseTest;
+import constants.DashboardTab;
 import constants.TestDataConstants;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -48,10 +49,8 @@ public class CameraContextMenuTest extends BaseTest {
             + "mobile VMS app", groups = {"regression", "cameras"})
     public void verifyCamerasListContent() {
         // Step 2: Dashboard via the More menu: All devices lists Bridges, Cameras, Speakers and Switches
-        devicesPage.verifyBridgesOptionDisplayed();
-        devicesPage.verifyCamerasOptionDisplayed();
-        devicesPage.verifySpeakersOptionDisplayed();
-        devicesPage.verifySwitchesOptionDisplayed();
+        devicesPage.verifyDashboardTabsDisplayed(DashboardTab.BRIDGES, DashboardTab.CAMERAS,
+                DashboardTab.SPEAKERS, DashboardTab.SWITCHES);
         int camerasOnDashboard = camerasPage.readCamerasTileTotal();
         // Step 3: Tap the Camera option
         camerasPage.openCamerasList();
