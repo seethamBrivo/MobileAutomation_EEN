@@ -42,11 +42,6 @@ public class BridgeSettingsPage {
                 "Status section should be displayed");
     }
 
-    /** True when this settings screen shows a name field holding exactly {@code name}; does not wait long. */
-    public boolean hasNameField(String name) {
-        return WaitUtils.isVisible(driver, BridgesLocators.nameFieldHolding(name), TimeoutConstants.SHORT_TIMEOUT);
-    }
-
     /** {@link #STATUS_ONLINE}, {@link #STATUS_OFFLINE} or {@link #STATUS_UNKNOWN}. */
     public String getBridgeStatus() {
         if (WaitUtils.isVisible(driver, BridgesLocators.ONLINE_STATUS, TimeoutConstants.SHORT_TIMEOUT)) {

@@ -310,6 +310,15 @@ public class DevicesPage {
         return WaitUtils.isVisible(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST, TimeoutConstants.FILTER_RESULT_TIMEOUT);
     }
 
+    /**
+     * Non-asserting, for cleanup: types the name into the filter and waits until the first row is a bridge with exactly
+     * that name. A visible first row alone is not enough, because the list keeps showing the previous rows for a
+     * moment after the filter changes.
+     */
+    public boolean filterShowsBridgeNamed(String bridgeName) {
+        return enterBridgeNameInFilter(bridgeName) && bridgeName.equals(awaitFirstBridgeName(bridgeName));
+    }
+
     public void verifyBridgeFoundInFilter(String bridgeName) {
         WaitUtils.waitForVisibility(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST);
         Assert.assertTrue(enterBridgeNameInFilter(bridgeName), "Bridge should be found in filter: " + bridgeName);

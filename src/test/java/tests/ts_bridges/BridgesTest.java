@@ -183,40 +183,27 @@ public class BridgesTest extends BaseTest {
                 try {
                     devicesPage.recoverToDashboard();
                     devicesPage.clickBridgesTab();
-                    // Exactly the bridge this test renamed: its new name is unique. If it is not in the list, the
-                    // test body may already have put the original name back.
-                    if (!devicesPage.enterBridgeNameInFilter(renamedBridgeNewName)) {
-                        if (devicesPage.enterBridgeNameInFilter(renamedBridgeOriginalName)) {
-                            logger.info("@AfterMethod: the bridge already has its original name '{}'",
-                                    renamedBridgeOriginalName);
-                            renamedBridgeOriginalName = null;
-                            renamedBridgeNewName = null;
-                        } else {
-                            logger.error("@AfterMethod: neither '{}' nor '{}' is in the bridges list; check the account's bridge names",
-                                    renamedBridgeNewName, renamedBridgeOriginalName);
-                        }
-                    } else {
+                    // The test body may already have put the original name back (the failure came after that).
+                    if (devicesPage.filterShowsBridgeNamed(renamedBridgeOriginalName)) {
+                        logger.info("@AfterMethod: the bridge already has its original name '{}'",
+                                renamedBridgeOriginalName);
+                        renamedBridgeOriginalName = null;
+                        renamedBridgeNewName = null;
+                    } else if (devicesPage.filterShowsBridgeNamed(renamedBridgeNewName)) {
+                        // The first row is exactly the bridge this test renamed: its new name is unique.
                         devicesPage.clickFirstBridge();
                         BridgeSettingsPage restoreSettings = new BridgeSettingsPage(driver);
                         // Wait for the settings screen first: a slow render must not look like "the name is not there".
                         restoreSettings.verifyStatusSectionDisplayed();
-                        if (restoreSettings.hasNameField(renamedBridgeNewName)) {
-                            restoreSettings.clickNameField(renamedBridgeNewName);
-                            restoreSettings.enterNewBridgeName(renamedBridgeOriginalName);
-                            restoreSettings.clickDoneOnKeyboard();
-                            logger.info("@AfterMethod: restored bridge name '{}'", renamedBridgeOriginalName);
-                            renamedBridgeOriginalName = null;
-                            renamedBridgeNewName = null;
-                        } else if (restoreSettings.hasNameField(renamedBridgeOriginalName)) {
-                            // The test body already put the name back (the failure came after that): nothing to restore.
-                            logger.info("@AfterMethod: the bridge already has its original name '{}'", renamedBridgeOriginalName);
-                            renamedBridgeOriginalName = null;
-                            renamedBridgeNewName = null;
-                        } else {
-                            // Neither name is on the open screen: do not report it as fine.
-                            logger.error("@AfterMethod: this bridge shows neither '{}' nor '{}'; check the account's bridge names",
-                                    renamedBridgeNewName, renamedBridgeOriginalName);
-                        }
+                        restoreSettings.clickNameField(renamedBridgeNewName);
+                        restoreSettings.enterNewBridgeName(renamedBridgeOriginalName);
+                        restoreSettings.clickDoneOnKeyboard();
+                        logger.info("@AfterMethod: restored bridge name '{}'", renamedBridgeOriginalName);
+                        renamedBridgeOriginalName = null;
+                        renamedBridgeNewName = null;
+                    } else {
+                        logger.error("@AfterMethod: neither '{}' nor '{}' is in the bridges list; check the account's "
+                                + "bridge names", renamedBridgeNewName, renamedBridgeOriginalName);
                     }
                 } catch (Throwable t) {
                     // Loud on purpose: the account is left with a renamed bridge until someone sets it back.
