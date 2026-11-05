@@ -2,6 +2,7 @@ package tests.ts_downloads;
 
 import base.BaseTest;
 import constants.TestDataConstants;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.DownloadsPage;
@@ -14,6 +15,19 @@ public class DownloadsTest extends BaseTest {
     public void setupDownloadsTest() {
         loginAs(TestDataConstants.TS02_CREDS);
         downloadsPage = new DownloadsPage(driver);
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void cleanup() {
+        if (driver == null) {
+            return;
+        }
+        try {
+            // Navigate back from Downloads screen to main screen with More tab visible
+            driver.navigate().back();
+        } catch (Exception e) {
+            // Cleanup failure is non-fatal
+        }
     }
 
     @Test(description = "EEPD-TC-13330: POS-Downloads - downloading a folder in mobile app",

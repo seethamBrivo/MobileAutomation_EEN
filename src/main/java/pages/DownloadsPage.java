@@ -5,7 +5,7 @@ import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
-import locators.BridgesLocators;
+import locators.BottomNavigationLocators;
 import locators.DownloadsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +36,7 @@ public class DownloadsPage {
 
     // Shared pattern with ArchivePage - kept duplicated for page object encapsulation
     public void clickMoreTab() {
-        WaitUtils.click(driver, BridgesLocators.MORE_MENU_OPTION);
+        WaitUtils.click(driver, BottomNavigationLocators.MORE_TAB);
     }
 
     public void clickFilesMenu() {
@@ -112,18 +112,16 @@ public class DownloadsPage {
     }
 
     public void verifyDownloadDialogDisplayed() {
-        boolean downloadButtonPresent = WaitUtils.isVisible(
+        WaitUtils.assertVisible(
                 driver,
                 DownloadsLocators.DOWNLOAD_BUTTON_DIALOG,
-                TimeoutConstants.SHORT_TIMEOUT
+                "DOWNLOAD button should be visible in dialog"
         );
-        boolean cancelButtonPresent = WaitUtils.isVisible(
+        WaitUtils.assertVisible(
                 driver,
                 DownloadsLocators.CANCEL_BUTTON_DIALOG,
-                TimeoutConstants.SHORT_TIMEOUT
+                "CANCEL button should be visible in dialog"
         );
-        Assert.assertTrue(downloadButtonPresent && cancelButtonPresent,
-            "Download confirmation dialog should display DOWNLOAD and CANCEL buttons");
     }
 
     public void clickDownloadButtonInDialog() {
@@ -153,7 +151,6 @@ public class DownloadsPage {
                 TimeoutConstants.SHORT_TIMEOUT
         );
         Assert.assertTrue(progressBarVisible, "Progress bar should be visible during download");
-        logger.info("Download progress bar is displayed with progress value");
     }
 
     public void verifyInProgressStatus() {
@@ -162,9 +159,7 @@ public class DownloadsPage {
                 DownloadsLocators.IN_PROGRESS_STATUS,
                 TimeoutConstants.SHORT_TIMEOUT
         );
-        if (inProgress) {
-            logger.info("Download is in progress");
-        } else {
+        if (!inProgress) {
             logger.info("'In progress' status not visible - download may have completed very quickly");
         }
     }
@@ -197,17 +192,6 @@ public class DownloadsPage {
         int startY = 0;
         int endY = size.height / 2;
         GestureUtils.swipe(driver, startX, startY, startX, endY);
-    }
-
-    public void expandNotification() {
-        boolean expandButtonVisible = WaitUtils.isVisible(
-                driver,
-                DownloadsLocators.NOTIFICATION_EXPAND_BUTTON,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        if (expandButtonVisible) {
-            WaitUtils.click(driver, DownloadsLocators.NOTIFICATION_EXPAND_BUTTON);
-        }
     }
 
     // Soft assertion - notification may disappear quickly if download completes fast
@@ -249,7 +233,6 @@ public class DownloadsPage {
         String snackbarText = snackbar.getText();
         Assert.assertTrue(snackbarText.toLowerCase().contains("cancel"),
             "Snackbar should show cancellation message but was: " + snackbarText);
-        logger.info("Download cancelled successfully: " + snackbarText);
     }
 
     public void verifyDownloadCancelled() {
@@ -261,7 +244,6 @@ public class DownloadsPage {
         Assert.assertTrue(inProgressGone, "Download should be cancelled - 'In progress' status should not be present");
     }
 
-    // EEPD-TC-13330: Complete folder download flow
     public void verifyCompleteFolderDownloadFlow() {
         navigateToDownloads();
         verifyFilesTabIsSelected();
@@ -274,19 +256,24 @@ public class DownloadsPage {
         verifyInProgressStatus();
         // Skip "Saved to Files" verification - ZIP downloads take too long. Instead verify in notification panel.
         openNotificationPanel();
-        expandNotification();
         verifyDownloadInNotification();
         closeNotificationPanel();
     }
 
     public void verifyFolderDownloadCancellation() {
-            clickCancelDownloadIcon();
-            clickYesCancelButton();
-            verifyDownloadCancelledMessage();
-            verifyDownloadCancelled();
+        verifyFilesTabIsSelected();
+        // Wait for download icon to be ready after previous download completes
+        WaitUtils.waitForVisibility(driver, DownloadsLocators.DOWNLOAD_ICON, TimeoutConstants.SHORT_TIMEOUT);
+        clickDownloadIcon();
+        verifyDownloadDialogDisplayed();
+        clickDownloadButtonInDialog();
+        verifyDownloadingSnackbar();
+        clickCancelDownloadIcon();
+        clickYesCancelButton();
+        verifyDownloadCancelledMessage();
+        verifyDownloadCancelled();
     }
 
-    // EEPD-TC-13207: Complete video download flow with extended timeout (180s)
     public void verifyCompleteVideoDownloadFlow() {
         navigateToDownloads();
         clickFirstFolder();
@@ -301,13 +288,17 @@ public class DownloadsPage {
     }
 
     public void verifyVideoDownloadCancellation() {
+        verifyFilesTabIsSelected();
         clickFirstFolder();
+        // Wait for video download icon to be ready after previous download completes
+        WaitUtils.waitForVisibility(driver, DownloadsLocators.VIDEO_DOWNLOAD_ICON, TimeoutConstants.SHORT_TIMEOUT);
         clickVideoDownloadIcon();
+        verifyDownloadDialogDisplayed();
         clickDownloadButtonInDialog();
+        verifyDownloadingSnackbar();
         clickVideoCancelDownloadIcon();
         clickYesCancelButton();
         verifyDownloadCancelledMessage();
         verifyDownloadCancelled();
-        logger.info("Video download cancellation verified successfully");
     }
 }

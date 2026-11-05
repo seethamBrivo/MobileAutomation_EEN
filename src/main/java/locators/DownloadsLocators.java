@@ -58,9 +58,6 @@ public final class DownloadsLocators {
     public static final By YES_CANCEL_BUTTON =
             AppiumBy.xpath("//android.widget.TextView[@text=\"YES, CANCEL\"]");
 
-    public static final By NOTIFICATION_EXPAND_BUTTON =
-            AppiumBy.xpath("//android.widget.ImageView[@resource-id=\"android:id/expand_button_icon\"]");
-
     // Scoped to notification area (status_bar_latest_event_content) to avoid matching app UI
     public static final By NOTIFICATION_DOWNLOAD_TITLE =
             AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='android:id/status_bar_latest_event_content']//android.widget.TextView[contains(@text, 'Download') or contains(@text, 'download') or contains(@text, '.zip')]");
