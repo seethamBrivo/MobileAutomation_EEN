@@ -53,6 +53,16 @@ public class DevicesPage {
     public void navigateToDashboard() {
         BottomNavigationBar.clickMoreTab(driver);
         clickDashboardOptionAtTheBottom();
+        closeWidgetTipIfShown();
+    }
+
+    /** iOS: the app offers a home-screen widget in a tip at the bottom of All devices, which can cover rows. */
+    private void closeWidgetTipIfShown() {
+        if (PlatformLocator.isIos()
+                && WaitUtils.tryClickOptionalElement(driver, List.of(BridgesLocators.WIDGET_TIP_CLOSE_BUTTON),
+                        TimeoutConstants.SHORT_TIMEOUT)) {
+            logger.info("Closed the widget tip on the All devices screen");
+        }
     }
 
     /** Navigate to My Profile via bottom navigation (More > My Profile). */

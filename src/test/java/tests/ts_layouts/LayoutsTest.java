@@ -62,7 +62,7 @@ public class LayoutsTest extends BaseTest {
 
     @Test(description = "EEPD-TC-9012: POS-Layouts - displaying Context Menu (long press) in Layouts/Tags in mobile "
             + "VMS app",
-          groups = {"regression", "layouts"})
+          groups = {"regression", "layouts", "ios"})
     public void verifyContextMenuAfterLongPressInLayouts() {
         // Step 2: Stay in the Layouts section and wait for the camera previews
         layoutsPage.clickAllCamerasTab();
@@ -76,6 +76,7 @@ public class LayoutsTest extends BaseTest {
     @AfterMethod(alwaysRun = true)
     public void tearDown(ITestResult testResult) {
         try {
+            layoutsPage.closeContextMenuIfOpenOnIos();
             if (layoutCreated && uniqueLayoutName != null && driver != null) {
                 layoutsPage.deleteLayout(uniqueLayoutName);
                 logger.info("Successfully deleted layout '{}' in teardown", uniqueLayoutName);

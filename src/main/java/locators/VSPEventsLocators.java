@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.PlatformLocator;
 import utils.XPathUtils;
 
 /**
@@ -21,17 +22,23 @@ public final class VSPEventsLocators {
 
     // --- Navigation elements ---------------------------------------------------------
 
-    public static final By VSP_SECTION =
-            AppiumBy.xpath(XPathUtils.textViewIgnoreCase("VSP"));
+    public static final By VSP_SECTION = PlatformLocator.get(
+            AppiumBy.xpath(XPathUtils.textViewIgnoreCase("VSP")), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'VSP'")); // ios
 
-    public static final By EVENTS_OPTION =
-            AppiumBy.xpath("//android.widget.TextView[@text='Events']");
+    public static final By EVENTS_OPTION = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Events']"), // android
+            AppiumBy.accessibilityId("events_button")); // ios
 
-    public static final By VSP_EVENTS_HEADING =
-            AppiumBy.xpath("//android.widget.TextView[@text='VSP Events']");
+    public static final By VSP_EVENTS_HEADING = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='VSP Events']"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'VSP Events'")); // ios
 
-    public static final By VSP_MAIN_CONTAINER =
-            AppiumBy.xpath(VSP_MAIN_SCREEN);
+    // iOS: the events counter above the list, which shows once the list has loaded
+    public static final By VSP_MAIN_CONTAINER = PlatformLocator.get(
+            AppiumBy.xpath(VSP_MAIN_SCREEN), // android
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeStaticText' AND name ENDSWITH 'license plate events'")); // ios
 
     // --- Card list elements ----------------------------------------------------------
 
@@ -43,11 +50,16 @@ public final class VSPEventsLocators {
     public static final By ALL_EVENT_CARDS =
             AppiumBy.xpath(VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.view.View[@clickable='true']");
 
-    public static final By FIRST_EVENT_IN_LIST =
-            AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.view.View[@clickable='true'])[1]");
+    // iOS: an event card is not one element, so its time text stands for it
+    public static final By FIRST_EVENT_IN_LIST = PlatformLocator.get(
+            AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.view.View[@clickable='true'])[1]"), // android
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeStaticText' AND visible == 1 AND name MATCHES '.*, [0-9]{1,2}:[0-9]{2}.*'")); // ios
 
-    public static final By ANY_EVENT_THUMBNAIL =
-            AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.view.View[@clickable='true'][1]");
+    // iOS: the thumbnail of an event card (110 x 62)
+    public static final By ANY_EVENT_THUMBNAIL = PlatformLocator.get(
+            AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.view.View[@clickable='true'][1]"), // android
+            AppiumBy.xpath("(//XCUIElementTypeImage[@visible='true' and @width='110' and @height='62'])[1]")); // ios
 
     // TODO: Replace with testTag - scope within VspMain list area with position constraints
     // Plate is typically first text (exclude filter labels, timestamps, headings)
@@ -62,16 +74,22 @@ public final class VSPEventsLocators {
     public static final By ANY_CAMERA_NAME =
             AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'Today,')) and not(contains(@text, 'Filter by')) and not(contains(@text, 'VSP Events'))])[last()]");
 
-    public static final By TIMESTAMP_WITH_TIME =
-            AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[contains(@text, 'Today,') and contains(@text, ':')]");
+    // iOS: the time of an event card, written as "<day>, <hh:mm>" (for example "Today, 15:50"); the day may change with
+    // the time zone, so only the shape is matched.
+    public static final By TIMESTAMP_WITH_TIME = PlatformLocator.get(
+            AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[contains(@text, 'Today,') and contains(@text, ':')]"), // android
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeStaticText' AND name MATCHES '.*, [0-9]{1,2}:[0-9]{2}.*'")); // ios
 
     // --- Empty state messages --------------------------------------------------------
 
-    public static final By NO_EVENTS_MESSAGE =
-            AppiumBy.xpath("//android.widget.TextView[@text='No license plate events yet']");
+    public static final By NO_EVENTS_MESSAGE = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='No license plate events yet']"), // android
+            AppiumBy.accessibilityId("No license plate events yet")); // ios
 
-    public static final By ZERO_EVENTS_MESSAGE =
-            AppiumBy.xpath("//android.widget.TextView[@text='0 license plate events']");
+    public static final By ZERO_EVENTS_MESSAGE = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='0 license plate events']"), // android
+            AppiumBy.accessibilityId("0 license plate events")); // ios
 
     // --- Detail page elements --------------------------------------------------------
 
