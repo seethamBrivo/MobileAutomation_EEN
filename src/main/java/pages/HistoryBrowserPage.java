@@ -807,7 +807,6 @@ public class HistoryBrowserPage {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.SAVE_BUTTON,
                 TimeoutConstants.SHORT_TIMEOUT,
                 "Export button should be visible in History Browser");
-        logger.info("Verified Export button is visible");
     }
 
     public void clickExportButton() {
@@ -825,7 +824,6 @@ public class HistoryBrowserPage {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOADS_SELECTED_INDICATOR,
                 TimeoutConstants.SHORT_TIMEOUT,
                 "Downloads should be selected as default save destination");
-        logger.info("Verified Downloads is selected as default");
     }
 
     public void selectArchiveDestination() {
@@ -836,7 +834,6 @@ public class HistoryBrowserPage {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.SELECT_BUTTON,
                 FrameworkConstants.EXPLICIT_WAIT,
                 "Archive folder picker should be opened with Select button visible");
-        logger.info("Verified Archive folder picker opened");
     }
 
     public void pickFirstFolder() {
@@ -857,7 +854,6 @@ public class HistoryBrowserPage {
                 "A folder should be selected but folder name is empty");
         Assert.assertTrue(folderName.startsWith("Folder:"),
                 "Selected folder should start with 'Folder:' but was '" + folderName + "'");
-        logger.info("Verified folder is selected: {}", folderName);
     }
 
     /**
@@ -931,7 +927,6 @@ public class HistoryBrowserPage {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN,
                 FrameworkConstants.EXPLICIT_WAIT,
                 "Should return to History Browser screen after canceling export");
-        logger.info("Verified returned to History Browser screen");
     }
 
     public void enterFileName(String fileName) {
@@ -950,7 +945,8 @@ public class HistoryBrowserPage {
 
     // High-level test flows
     public void exportToArchiveWithDefaultSettings() {
-        clickPreviousEvent();
+        // Click previous event to ensure timeline is positioned at a point with historical video available
+        clickPreviousEventAndVerifyCursorMoved();
         verifyExportButtonVisible();
         clickExportButton();
         verifyExportScreenOpened();
@@ -961,10 +957,6 @@ public class HistoryBrowserPage {
         clickSelectButton();
         verifyFolderSelected();
         verifyExportScreenFieldsVisible();
-    }
-
-    private void clickPreviousEvent() {
-        WaitUtils.click(driver, HistoryBrowserLocators.PREVIOUS_EVENT_BUTTON);
     }
 
     public void completeExportWithProgress() {
@@ -1020,13 +1012,12 @@ public class HistoryBrowserPage {
         // Example: "video Dm08 2026-11-04 02-26-15"
         Assert.assertTrue(fileName.matches("^video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}$"),
                 "File name should match pattern 'video <camera_name> YYYY-MM-DD HH-MM-SS' but was: " + fileName);
-
-        logger.info("Verified default file name pattern: {}", fileName);
     }
 
     // Downloads export flows (EEPD-TC-23629)
     public void exportToDownloadsWithDefaultSettings() {
-        clickPreviousEvent();
+        // Click previous event to ensure timeline is positioned at a point with historical video available
+        clickPreviousEventAndVerifyCursorMoved();
         verifyExportButtonVisible();
         clickExportButton();
         verifyExportScreenOpened();
