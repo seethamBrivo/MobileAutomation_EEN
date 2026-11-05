@@ -945,7 +945,8 @@ public class HistoryBrowserPage {
 
     // High-level test flows
     public void exportToArchiveWithDefaultSettings() {
-        // Click previous event to ensure timeline is positioned at a point with historical video available
+        // Ensure timeline has events before the cursor, then click previous event to position at historical video
+        requireEventsOnTimeline();
         clickPreviousEventAndVerifyCursorMoved();
         verifyExportButtonVisible();
         clickExportButton();
@@ -1016,7 +1017,8 @@ public class HistoryBrowserPage {
 
     // Downloads export flows (EEPD-TC-23629)
     public void exportToDownloadsWithDefaultSettings() {
-        // Click previous event to ensure timeline is positioned at a point with historical video available
+        // Ensure timeline has events before the cursor, then click previous event to position at historical video
+        requireEventsOnTimeline();
         clickPreviousEventAndVerifyCursorMoved();
         verifyExportButtonVisible();
         clickExportButton();
