@@ -4,8 +4,11 @@ import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import locators.BridgesLocators;
+import locators.CommonLocators;
 import locators.MyProfileLocators;
 import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -14,6 +17,7 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**
@@ -84,7 +88,14 @@ public class DevicesPage {
      */
     public void refreshBridgesList() {
         // Only navigate back if back button is visible (not already on main devices screen)
-        if (WaitUtils.isVisible(driver, BridgesLocators.BRIDGES_BACK_BUTTON, TimeoutConstants.BACK_BUTTON_CHECK_TIMEOUT)) {
+        if (PlatformLocator.isIos()) {
+            // iOS: go back until All devices shows; one back can land on the list, or only close the filter or keyboard.
+            for (int step = 0; step < 3 && !WaitUtils.isVisible(driver, BridgesLocators.ALL_DEVICES_PAGE,
+                    TimeoutConstants.BACK_BUTTON_CHECK_TIMEOUT); step++) {
+                goBack();
+            }
+        } else if (WaitUtils.isVisible(driver, BridgesLocators.BRIDGES_BACK_BUTTON,
+                TimeoutConstants.BACK_BUTTON_CHECK_TIMEOUT)) {
             WaitUtils.click(driver, BridgesLocators.BRIDGES_BACK_BUTTON);
         }
         WaitUtils.waitForVisibility(driver, BridgesLocators.ALL_DEVICES_PAGE);
@@ -93,12 +104,46 @@ public class DevicesPage {
     }
 
     /**
+     * One step back. Android uses the system back; iOS has no system back, so it taps the screen's back button, or
+     * Close while the filter field has focus (the back button is gone then).
+     */
+    public void goBack() {
+        if (!PlatformLocator.isIos()) {
+            driver.navigate().back();
+            return;
+        }
+        Optional<By> screenButton = WaitUtils.waitForFirstVisible(driver,
+                List.of(BridgesLocators.BRIDGES_BACK_BUTTON, BridgesLocators.CLOSE_FILTER_BUTTON),
+                TimeoutConstants.BACK_BUTTON_CHECK_TIMEOUT);
+        if (screenButton.isPresent()) {
+            WaitUtils.click(driver, screenButton.get());
+            return;
+        }
+        // Neither button is on screen: only a bridge context menu is ours to close. Anything else (an alert, a slow
+        // render) is left alone, because this runs in cleanup and must not tap blindly or throw.
+        if (WaitUtils.isPresent(driver, BridgesLocators.contextMenuOption("Bridge settings"))) {
+            closeContextMenu();
+        } else {
+            logger.warn("goBack: no back button, close button or context menu on screen; nothing was tapped");
+        }
+    }
+
+    /** Closes an open context menu: Android with the system back, iOS by tapping outside it. */
+    public void closeContextMenu() {
+        if (PlatformLocator.isIos()) {
+            GestureUtils.tapOutsideContextMenuIos(driver);
+        } else {
+            driver.navigate().back();
+        }
+    }
+
+    /**
      * For cleanup code that does not know which screen the test died on: back out of nested
      * screens/dialogs until the bottom navigation is visible, then More > Dashboard.
      */
     public void recoverToDashboard() {
         for (int i = 0; i < 3 && !BottomNavigationBar.isShowing(driver); i++) {
-            driver.navigate().back();
+            goBack();
         }
         navigateToDashboard();
     }
@@ -185,6 +230,11 @@ public class DevicesPage {
         Assert.assertTrue(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_BRIDGE_BUTTON).isEnabled(), "Add bridge button should be enabled");
     }
 
+    public void verifyAddBridgeButtonDisabled() {
+        Assert.assertFalse(WaitUtils.waitForVisibility(driver, BridgesLocators.ADD_BRIDGE_BUTTON).isEnabled(),
+                "Add bridge button should be disabled");
+    }
+
     public void clickAddBridgeButton() {
         WaitUtils.click(driver, BridgesLocators.ADD_BRIDGE_BUTTON);
     }
@@ -256,19 +306,66 @@ public class DevicesPage {
      * uses it to ask "is there anything to delete?".
      */
     public boolean enterBridgeNameInFilter(String bridgeName) {
-        WaitUtils.clearAndType(driver, BridgesLocators.FILTER_SEARCH_FIELD, bridgeName);
+        typeIntoBridgeFilter(bridgeName);
         return WaitUtils.isVisible(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST, TimeoutConstants.FILTER_RESULT_TIMEOUT);
+    }
+
+    /**
+     * Non-asserting, for cleanup: types the name into the filter and waits until the first row is a bridge with exactly
+     * that name. A visible first row alone is not enough, because the list keeps showing the previous rows for a
+     * moment after the filter changes.
+     */
+    public boolean filterShowsBridgeNamed(String bridgeName) {
+        return enterBridgeNameInFilter(bridgeName) && bridgeName.equals(awaitFirstBridgeName(bridgeName));
     }
 
     public void verifyBridgeFoundInFilter(String bridgeName) {
         WaitUtils.waitForVisibility(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST);
         Assert.assertTrue(enterBridgeNameInFilter(bridgeName), "Bridge should be found in filter: " + bridgeName);
+        verifyBridgeFilterHolds(bridgeName);
+    }
+
+    /** iOS: the filter field really holds the typed text (a missed keystroke would leave the list unfiltered). */
+    private void verifyBridgeFilterHolds(String text) {
+        if (!PlatformLocator.isIos()) {
+            return;
+        }
+        String typed = WaitUtils.retryOnStale(
+                () -> WaitUtils.waitForVisibility(driver, BridgesLocators.FILTER_SEARCH_FIELD).getAttribute("value"));
+        Assert.assertEquals(typed, text, "The bridge filter should hold the text that was typed");
     }
 
     public void verifyNoMatchingBridgesMessageDisplayed(String bridgeName) {
-        WaitUtils.clearAndType(driver, BridgesLocators.FILTER_SEARCH_FIELD, bridgeName);
-        WaitUtils.assertVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE,
-                "No matching bridges message should be displayed after deleting bridge: " + bridgeName);
+        typeIntoBridgeFilter(bridgeName);
+        verifyBridgeFilterHolds(bridgeName);
+        String message = "No matching bridges message should be displayed after deleting bridge: " + bridgeName;
+        closeKeyboardIfIos();
+        WaitUtils.assertVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE, message);
+    }
+
+    /** iOS: the keyboard sits over the "No matching bridges" message and makes it report as not visible, so close it. */
+    private void closeKeyboardIfIos() {
+        if (!PlatformLocator.isIos()) {
+            return;
+        }
+        WaitUtils.click(driver, BridgesLocators.KEYBOARD_SEARCH_KEY);
+    }
+
+    /** Replaces the text of the bridge filter. iOS clears it with its "Clear text" button before typing. */
+    private void typeIntoBridgeFilter(String text) {
+        if (!PlatformLocator.isIos()) {
+            WaitUtils.clearAndType(driver, BridgesLocators.FILTER_SEARCH_FIELD, text);
+            return;
+        }
+        if (WaitUtils.isPresent(driver, CommonLocators.CLEAR_TEXT_BUTTON)) {
+            WaitUtils.click(driver, CommonLocators.CLEAR_TEXT_BUTTON);
+        }
+        WaitUtils.retryOnStale(() -> {
+            WebElement field = WaitUtils.waitForVisibility(driver, BridgesLocators.FILTER_SEARCH_FIELD);
+            field.click();
+            field.sendKeys(text);
+            return null;
+        });
     }
 
     public void verifyBridgeListDisplayed() {
@@ -305,6 +402,15 @@ public class DevicesPage {
      * bridge and puts the name it found back afterwards.
      */
     public String clickFirstOnlineBridgeAndGetName() {
+        if (PlatformLocator.isIos()) {
+            // iOS: the name text of the first online bridge; tapping the row container does not open the bridge.
+            return WaitUtils.retryOnStale(() -> {
+                WebElement nameText = WaitUtils.waitForVisibility(driver, BridgesLocators.FIRST_ONLINE_BRIDGE_NAME_TEXT);
+                String name = nameText.getText().trim();
+                nameText.click();
+                return name;
+            });
+        }
         for (WebElement row : WaitUtils.findElements(driver, BridgesLocators.ONLINE_BRIDGE_ROWS)) {
             try {
                 String name = row.findElement(By.xpath(".//android.widget.TextView[1]")).getText().trim();
@@ -324,6 +430,10 @@ public class DevicesPage {
 
     /** Long-press the first bridge row; fall back to its overflow button if the long-press fails. */
     public void openFirstBridgeContextMenu() {
+        if (PlatformLocator.isIos()) {
+            clickBridgeThreeDotsButton(); // iOS opens the menu from the 3 dots
+            return;
+        }
         try {
             WebElement row = WaitUtils.waitForVisibility(driver, BridgesLocators.FIRST_BRIDGE_IN_LIST);
             GestureUtils.longPress(driver, row);
@@ -456,8 +566,12 @@ public class DevicesPage {
         verifyAddDeviceOptionsDisplayed();
         clickAddBridgeOption();
         waitForBridgeNameFieldToLoad();
-        // App behavior: the button is enabled on an empty form (changed in an earlier app version).
-        verifyAddBridgeButtonEnabled();
+        if (PlatformLocator.isIos()) {
+            verifyAddBridgeButtonDisabled(); // iOS: disabled until both fields are filled
+        } else {
+            // App behavior: the button is enabled on an empty form (changed in an earlier app version).
+            verifyAddBridgeButtonEnabled();
+        }
         enterBridgeName(duplicateBridgeName);
         enterAttachId(attachId);
         clickAddBridgeButton();
@@ -503,8 +617,10 @@ public class DevicesPage {
      */
     private void awaitBridgeGone(String bridgeName) {
         try {
-            WaitUtils.clearAndType(driver, BridgesLocators.FILTER_SEARCH_FIELD, bridgeName);
-            if (!WaitUtils.isVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE, FrameworkConstants.EXPLICIT_WAIT)) {
+            typeIntoBridgeFilter(bridgeName);
+            closeKeyboardIfIos();
+            if (!WaitUtils.isVisible(driver, BridgesLocators.NO_MATCHING_BRIDGES_MESSAGE,
+                    FrameworkConstants.EXPLICIT_WAIT)) {
                 logger.warn("Bridge '{}' still shows in the list after its delete", bridgeName);
             }
         } catch (RuntimeException e) {

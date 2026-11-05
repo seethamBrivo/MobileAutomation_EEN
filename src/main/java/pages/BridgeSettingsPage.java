@@ -1,21 +1,19 @@
 package pages;
 
 import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import locators.BridgesLocators;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import org.openqa.selenium.By;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
-import utils.XPathUtils;
 
 /** The screen a bridge row opens: status, name editing, restart and delete. */
 public class BridgeSettingsPage {
@@ -44,12 +42,6 @@ public class BridgeSettingsPage {
                 "Status section should be displayed");
     }
 
-    /** True when this settings screen shows a name field holding exactly {@code name}; does not wait long. */
-    public boolean hasNameField(String name) {
-        return WaitUtils.isVisible(driver,
-                AppiumBy.xpath("//android.widget.EditText[@text=" + XPathUtils.xpathLiteral(name) + "]"), TimeoutConstants.SHORT_TIMEOUT);
-    }
-
     /** {@link #STATUS_ONLINE}, {@link #STATUS_OFFLINE} or {@link #STATUS_UNKNOWN}. */
     public String getBridgeStatus() {
         if (WaitUtils.isVisible(driver, BridgesLocators.ONLINE_STATUS, TimeoutConstants.SHORT_TIMEOUT)) {
@@ -73,8 +65,11 @@ public class BridgeSettingsPage {
      * settings screen to reach the name field of the bridge called {@code name}, in place of tapping the "Name" row.
      */
     public void clickNameField(String name) {
-        By field = AppiumBy.xpath("//android.widget.EditText[@text=" + XPathUtils.xpathLiteral(name) + "]/android.view.View");
-        WebElement element = WaitUtils.waitForClickability(driver, field);
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, BridgesLocators.nameFieldTapTarget(name)); // the value is an inline text field
+            return;
+        }
+        WebElement element = WaitUtils.waitForClickability(driver, BridgesLocators.nameFieldTapTarget(name));
         // A real touch at the centre of the field, like a finger tap. Done with a standard W3C pointer action: the
         // "mobile: clickGesture" command is not available on BrowserStack's Appium.
         Point centre = GestureUtils.getElementCenter(element);
@@ -106,6 +101,10 @@ public class BridgeSettingsPage {
 
 
     public void clickDoneOnKeyboard() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, BridgesLocators.KEYBOARD_DONE_KEY);
+            return;
+        }
         driver.executeScript("mobile: performEditorAction", Map.of("action", "done"));
     }
 

@@ -47,4 +47,17 @@
             <class name="tests.ts_archive.ArchiveTest"/>
         </classes>
     </test>
+    <!-- BridgesTest signs in as the end user too, and its two add tests share the account's single attach ID, so it
+         must never run next to another end-user class or next to the Android Bridges run: its own <test> again,
+         after Archive. -->
+    <test name="iOS Bridges">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_bridges.BridgesTest"/>
+        </classes>
+    </test>
 </suite>

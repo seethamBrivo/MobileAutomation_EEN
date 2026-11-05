@@ -46,7 +46,7 @@ public class BridgesTest extends BaseTest {
      */
     @Test(priority = 1, description = "EEPD-TC-11276 / EEPD-TC-8890: POS-Bridges - add a bridge to the account, "
             + "then delete it in mobile VMS app",
-          groups = {"regression", "bridges"})
+          groups = {"regression", "bridges", "ios"})
     public void verifyBridgeCanBeAddedAndDeleted() {
         // EEPD-TC-11276: add the bridge; the same attach ID a second time must be rejected.
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
@@ -70,7 +70,7 @@ public class BridgesTest extends BaseTest {
      */
     @Test(priority = 2, description = "EEPD-TC-16502 / EEPD-TC-15483 / EEPD-TC-12354: POS-Bridges - list, filter "
             + "and context menu of an added bridge in the Bridges tab of mobile VMS app",
-          groups = {"regression", "bridges"})
+          groups = {"regression", "bridges", "ios"})
     public void verifyBridgeListFilterAndContextMenu() {
         String bridgeName = createTestBridge(TestDataConstants.BRIDGE_PREFIX_TEST);
 
@@ -78,7 +78,7 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyDevicesOverviewOptions();
         devicesPage.verifyBridgeShownInBridgesTab(bridgeName);
         devicesPage.openFirstBridgeAndVerifySettings();
-        driver.navigate().back();
+        devicesPage.goBack();
 
         // EEPD-TC-15483: filter by the full name, then by part of it.
         devicesPage.clickBridgesTab();
@@ -95,7 +95,7 @@ public class BridgesTest extends BaseTest {
         devicesPage.verifyBridgeShownInBridgesTab(bridgeName);
         devicesPage.openFirstBridgeContextMenu();
         devicesPage.verifyBridgeContextMenuOptions();
-        driver.navigate().back();
+        devicesPage.closeContextMenu();
 
         // Remove the bridge again so the account's single attach ID is free for the next test.
         devicesPage.clickBridgesTab();
@@ -108,7 +108,7 @@ public class BridgesTest extends BaseTest {
      * happens, @AfterMethod restores the original name, looking the bridge up by its exact unique new name.
      */
     @Test(priority = 3, description = "EEPD-TC-8881: POS-Bridge Settings - changing the name and checking status of the Bridge in mobile VMS app",
-          groups = {"regression", "bridges"})
+          groups = {"regression", "bridges", "ios"})
     public void verifyBridgeNameCanBeChangedAndRestored() {
         devicesPage.clickBridgesTab();
         // Opens the first online bridge in the list and remembers its current name, to put it back at the end.
@@ -129,7 +129,7 @@ public class BridgesTest extends BaseTest {
         renamedBridgeNewName = newName;
         settings.enterNewBridgeName(newName);
         settings.clickDoneOnKeyboard();
-        driver.navigate().back();
+        devicesPage.goBack();
 
         // UI shows stale data after rename; force reload by switching tabs
         devicesPage.refreshBridgesList();
@@ -146,7 +146,7 @@ public class BridgesTest extends BaseTest {
         // Put the original name back and confirm it, on the same open settings screen.
         settings.enterNewBridgeName(originalName);
         settings.clickDoneOnKeyboard();
-        driver.navigate().back();
+        devicesPage.goBack();
         devicesPage.refreshBridgesList();
         devicesPage.verifyBridgeFoundInFilter(originalName);
         devicesPage.clickFirstBridge();
@@ -183,28 +183,27 @@ public class BridgesTest extends BaseTest {
                 try {
                     devicesPage.recoverToDashboard();
                     devicesPage.clickBridgesTab();
-                    // Exactly the bridge this test renamed: its new name is unique.
-                    devicesPage.verifyBridgeFoundInFilter(renamedBridgeNewName);
-                    devicesPage.clickFirstBridge();
-                    BridgeSettingsPage restoreSettings = new BridgeSettingsPage(driver);
-                    // Wait for the settings screen first: a slow render must not look like "the name is not there".
-                    restoreSettings.verifyStatusSectionDisplayed();
-                    if (restoreSettings.hasNameField(renamedBridgeNewName)) {
+                    // The test body may already have put the original name back (the failure came after that).
+                    if (devicesPage.filterShowsBridgeNamed(renamedBridgeOriginalName)) {
+                        logger.info("@AfterMethod: the bridge already has its original name '{}'",
+                                renamedBridgeOriginalName);
+                        renamedBridgeOriginalName = null;
+                        renamedBridgeNewName = null;
+                    } else if (devicesPage.filterShowsBridgeNamed(renamedBridgeNewName)) {
+                        // The first row is exactly the bridge this test renamed: its new name is unique.
+                        devicesPage.clickFirstBridge();
+                        BridgeSettingsPage restoreSettings = new BridgeSettingsPage(driver);
+                        // Wait for the settings screen first: a slow render must not look like "the name is not there".
+                        restoreSettings.verifyStatusSectionDisplayed();
                         restoreSettings.clickNameField(renamedBridgeNewName);
                         restoreSettings.enterNewBridgeName(renamedBridgeOriginalName);
                         restoreSettings.clickDoneOnKeyboard();
                         logger.info("@AfterMethod: restored bridge name '{}'", renamedBridgeOriginalName);
                         renamedBridgeOriginalName = null;
                         renamedBridgeNewName = null;
-                    } else if (restoreSettings.hasNameField(renamedBridgeOriginalName)) {
-                        // The test body already put the name back (the failure came after that): nothing to restore.
-                        logger.info("@AfterMethod: the bridge already has its original name '{}'", renamedBridgeOriginalName);
-                        renamedBridgeOriginalName = null;
-                        renamedBridgeNewName = null;
                     } else {
-                        // Neither name is on the open screen: do not report it as fine.
-                        logger.error("@AfterMethod: this bridge shows neither '{}' nor '{}'; check the account's bridge names",
-                                renamedBridgeNewName, renamedBridgeOriginalName);
+                        logger.error("@AfterMethod: neither '{}' nor '{}' is in the bridges list; check the account's "
+                                + "bridge names", renamedBridgeNewName, renamedBridgeOriginalName);
                     }
                 } catch (Throwable t) {
                     // Loud on purpose: the account is left with a renamed bridge until someone sets it back.
