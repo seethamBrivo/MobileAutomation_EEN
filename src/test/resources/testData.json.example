@@ -41,6 +41,8 @@
   },
   "archive_search_data": {
     "valid_search_term": "test",
-    "no_results_search_term": "xyznonexistent12345"
+    "no_results_search_term": "xyznonexistent12345",
+    "cancel_folder_search_term": "<text that finds one large, old Archive folder>",
+    "cancel_file_search_term": "<text that finds one video of 1 MB or more>"
   }
 }

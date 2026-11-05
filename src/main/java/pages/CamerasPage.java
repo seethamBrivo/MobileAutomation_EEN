@@ -319,4 +319,38 @@ public class CamerasPage {
         dismissContextMenu();
     }
 
+    public void clickCameraSettingsOption() {
+        WaitUtils.click(driver, CamerasLocators.CAMERA_SETTINGS_OPTION);
+    }
+
+    public void openContextMenuOfCameraNamed(String name) {
+        By card = CamerasLocators.cameraCardWithName(name);
+        Assert.assertTrue(scrollUntilElementIsVisible(card), "Camera '" + name + "' should be in the cameras list");
+        GestureUtils.longPressUntilVisible(driver, card, CamerasLocators.CONTEXT_MENU_CONTAINER);
+        verifyContextMenuDisplayed();
+    }
+
+    public boolean hasOnlineCamera() {
+        GestureUtils.scrollToTop(driver);
+        return scrollToFirstOnlineCamera();
+    }
+
+    public void verifyCameraListedWithName(String name) {
+        Assert.assertTrue(scrollUntilElementIsVisible(CamerasLocators.cameraCardWithName(name)),
+                "Cameras list should show the renamed camera '" + name + "'");
+    }
+
+    public boolean hasSecondOnlineCamera() {
+        GestureUtils.scrollToTop(driver);
+        return scrollUntilElementIsVisible(CamerasLocators.SECOND_ONLINE_CAMERA);
+    }
+
+    public void longPressSecondOnlineCameraAndVerifyContextMenu() {
+        GestureUtils.longPressUntilVisible(driver, CamerasLocators.SECOND_ONLINE_CAMERA,
+                CamerasLocators.CONTEXT_MENU_CONTAINER);
+        verifyContextMenuDisplayed();
+        verifyAllContextMenuOptions(true);
+        verifyCameraPreviewDisplayed();
+    }
+
 }

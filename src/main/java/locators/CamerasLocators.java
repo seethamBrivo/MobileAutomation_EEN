@@ -4,6 +4,7 @@ import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 import utils.PlatformLocator;
+import utils.XPathUtils;
 
 /**
  * Locators for the Cameras screen (reached from the More menu) and the camera search helper shared with the
@@ -51,6 +52,15 @@ public final class CamerasLocators {
 
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
+
+    // Android only.
+    public static final By SECOND_ONLINE_CAMERA = AppiumBy.xpath(
+            "(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]");
+
+    public static By cameraCardWithName(String name) {
+        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
+                + "/ancestor::android.view.View[@clickable='true'][1]");
+    }
 
     // --- Context menu ----------------------------------------------------------
 
@@ -165,9 +175,6 @@ public final class CamerasLocators {
     public static final By EMPTY_STATE_MESSAGE = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]"), // android
             AppiumBy.accessibilityId("camera_empty")); // ios
-
-    /** iOS only: clears the search field. */
-    public static final By CLEAR_TEXT_BUTTON = AppiumBy.accessibilityId("Clear text");
 
     /** iOS only: the keyboard's "search" key (disabled while the field is empty), used to close the keyboard. */
     public static final By KEYBOARD_SEARCH_KEY = AppiumBy.iOSNsPredicateString(

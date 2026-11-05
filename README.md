@@ -181,6 +181,10 @@ mvn test -Dplatform=ios -DexecutionProvider=browserstack -Dsuite.file=testng-ios
 
 - `testng-ios.xml` runs the shared test classes, limited to the methods in the **`ios`** group. To run another
   test on iOS, add `"ios"` to its `groups` (after its screens have iOS locators); the Android suites are unchanged.
+- Where iOS behaves differently, the shared page checks it and says why. `ArchiveTest` is the example: iOS saves
+  downloads to Photos (the first one asks for photo-library access, which the test allows, and the message is
+  "Saved to Photos"), cancelling a download works as on Android (the X on the row, a "Cancel download" alert, then
+  "Download cancelled"), and the search field is always shown, so the "blank before searching" check is skipped.
 - Upload the IPA with `-F "ios_app_groups_support=true"`, put its `bs://` id in `ios.properties`
   (`browserstackApp`), and keep `browserstackNetworkLogs=false` for iOS (see `ios.properties.example`).
 

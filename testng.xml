@@ -48,6 +48,7 @@
         <classes>
             <class name="tests.ts_cameras.CameraContextMenuTest"/>
             <class name="tests.ts_cameras.CameraSearchFilterTest"/>
+            <class name="tests.ts_cameras.CameraSettingsTest"/>
         </classes>
     </test>
 
@@ -85,6 +86,12 @@
     <test name="Archive Tests">
         <classes>
             <class name="tests.ts_archive.ArchiveTest"/>
+        </classes>
+    </test>
+
+    <test name="Video Search Tests">
+        <classes>
+            <class name="tests.ts_video_search.VideoSearchTest"/>
         </classes>
     </test>
 </suite>

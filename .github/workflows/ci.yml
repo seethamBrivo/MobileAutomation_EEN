@@ -128,7 +128,9 @@ jobs:
             },
             "archive_search_data": {
               "valid_search_term": "test",
-              "no_results_search_term": "xyznonexistent12345"
+              "no_results_search_term": "xyznonexistent12345",
+              "cancel_folder_search_term": "2026-07-16 07-23-09.177 AM preview",
+              "cancel_file_search_term": "2026-07-16 07-23-08.mp4"
             }
           }
           EOF
