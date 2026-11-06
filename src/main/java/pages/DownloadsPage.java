@@ -1,6 +1,5 @@
 package pages;
 
-import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import locators.ArchiveLocators;
@@ -101,7 +100,6 @@ public class DownloadsPage {
     }
 
     public void verifyDownloadOptionsPresent() {
-
         boolean downloadPresent = WaitUtils.isVisible(
                 driver,
                 DownloadsLocators.FOLDER_ACTION_ICON,
@@ -129,6 +127,11 @@ public class DownloadsPage {
         WaitUtils.click(driver, DownloadsLocators.VIDEO_ACTION_ICON);
     }
 
+    /**
+     * Clicks the cancel icon for folder download.
+     * Note: FOLDER_ACTION_ICON is the same locator as download icon - the icon changes state during download.
+     */
+
     public void verifyDownloadDialogDisplayed() {
         WaitUtils.assertVisible(
                 driver,
@@ -153,13 +156,8 @@ public class DownloadsPage {
                 TimeoutConstants.SHORT_TIMEOUT
         );
         String snackbarText = snackbar.getText().toLowerCase();
-        boolean isValidSnackbar = snackbarText.contains("downloading") || snackbarText.contains("saved to files");
-        Assert.assertTrue(isValidSnackbar,
-            "Snackbar should show 'Downloading' or 'Saved to Files' message but was: " + snackbarText);
-
-        if (snackbarText.contains("saved to files")) {
-            logger.info("Download completed very quickly - skipping intermediate status checks");
-        }
+        Assert.assertTrue(snackbarText.contains("downloading"),
+                "Snackbar should show 'Downloading' message but was: " + snackbarText);
     }
 
     public void verifyDownloadProgressBar() {
@@ -172,24 +170,20 @@ public class DownloadsPage {
     }
 
     /**
-     * Verifies the download is in progress by checking both the status text and cancel icon visibility.
-     * This must be called before attempting to cancel, to ensure we're not clicking the wrong icon.
+     * Verifies the download is in progress by checking the "In progress" status text.
+     * This must be called before attempting to cancel.
      */
     public void verifyDownloadInProgress() {
         WaitUtils.assertVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
                 "The row should say 'In progress' while the item downloads");
-        WaitUtils.assertVisible(driver, DownloadsLocators.FOLDER_ACTION_ICON, TimeoutConstants.SHORT_TIMEOUT,
-                "The row should offer the cancel icon while the item downloads");
     }
 
     /**
-     * Verifies the video download is in progress.
+     * Verifies the video download is in progress by checking the "In progress" status text.
      */
     public void verifyVideoDownloadInProgress() {
         WaitUtils.assertVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
                 "The row should say 'In progress' while the video downloads");
-        WaitUtils.assertVisible(driver, DownloadsLocators.VIDEO_ACTION_ICON, TimeoutConstants.SHORT_TIMEOUT,
-                "The row should offer the cancel icon while the video downloads");
     }
 
     public void waitForDownloadComplete() {
@@ -214,11 +208,18 @@ public class DownloadsPage {
             "Success snackbar should show 'Saved to Files' but was: " + snackbarText);
     }
 
-
+    /**
+     * Clicks the cancel icon for folder download.
+     * Note: FOLDER_ACTION_ICON is the same locator as download icon - the icon changes state during download.
+     */
     public void clickCancelDownloadIcon() {
         WaitUtils.click(driver, DownloadsLocators.FOLDER_ACTION_ICON);
     }
 
+    /**
+     * Clicks the cancel icon for video download.
+     * Note: VIDEO_ACTION_ICON is the same locator as download icon - the icon changes state during download.
+     */
     public void clickVideoCancelDownloadIcon() {
         WaitUtils.click(driver, DownloadsLocators.VIDEO_ACTION_ICON);
     }
@@ -239,11 +240,51 @@ public class DownloadsPage {
     }
 
     public void verifyDownloadCancelled() {
-        WaitUtils.waitForInvisibility(
+        boolean disappeared = WaitUtils.waitForInvisibility(
                 driver,
                 ArchiveLocators.IN_PROGRESS_STATUS,
                 TimeoutConstants.SHORT_TIMEOUT
         );
+        Assert.assertTrue(disappeared,
+                "'In progress' status should disappear after cancelling the download");
     }
 
+    /**
+     * Cleanup method to cancel any active downloads.
+     * Checks if a download is in progress before attempting to cancel.
+     * Handles both folder and video downloads.
+     */
+    public void cancelActiveDownloads() {
+        // Check if download is in progress
+        boolean inProgress = WaitUtils.isVisible(
+                driver,
+                ArchiveLocators.IN_PROGRESS_STATUS,
+                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT
+        );
+
+        if (!inProgress) {
+            return; // No active download
+        }
+
+        // Try to cancel folder download
+        if (WaitUtils.isVisible(driver, DownloadsLocators.FOLDER_ACTION_ICON,
+                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+            clickCancelDownloadIcon();
+            if (WaitUtils.isVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                clickYesCancelButton();
+            }
+            return;
+        }
+
+        // Try to cancel video download
+        if (WaitUtils.isVisible(driver, DownloadsLocators.VIDEO_ACTION_ICON,
+                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+            clickVideoCancelDownloadIcon();
+            if (WaitUtils.isVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                clickYesCancelButton();
+            }
+        }
+    }
 }

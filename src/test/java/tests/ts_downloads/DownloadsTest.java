@@ -30,20 +30,24 @@ public class DownloadsTest extends BaseTest {
         }
         try {
             // Cancel any active download first
-            if (downloadsPage != null && WaitUtils.isVisible(driver, locators.DownloadsLocators.FOLDER_ACTION_ICON, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                downloadsPage.clickCancelDownloadIcon();
-                if (WaitUtils.isVisible(driver, locators.ArchiveLocators.YES_CANCEL_BUTTON, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                    downloadsPage.clickYesCancelButton();
-                }
+            if (downloadsPage != null) {
+                downloadsPage.cancelActiveDownloads();
             }
 
             // Navigate back to main screen with More tab visible
             // May need multiple backs if inside folder
             for (int i = 0; i < 3; i++) {
-                if (WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                if (WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB,
+                        TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
                     break; // Already at main screen
                 }
                 driver.navigate().back();
+            }
+
+            // Log if we couldn't reach the main screen
+            if (!WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                logger.warn("Cleanup: Could not navigate back to main screen with More tab");
             }
         } catch (Throwable t) {
             logger.warn("Cleanup failed: {}", t.getMessage());
