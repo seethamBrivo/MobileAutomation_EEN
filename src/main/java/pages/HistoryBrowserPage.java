@@ -28,6 +28,7 @@ import org.testng.Assert;
 import org.testng.SkipException;
 import utils.DeviceUtils;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class HistoryBrowserPage {
@@ -230,8 +231,10 @@ public class HistoryBrowserPage {
      * {@link #resetMultiWindowSetting()}, so a failure in between cannot leave it on for the rest of the session.
      */
     public void openContextMenuOfFirstCameraPreview() {
-        multiWindowEnabled = true;
-        driver.setSetting(MULTI_WINDOWS_SETTING, true);
+        if (!PlatformLocator.isIos()) { // iOS reports the menu without this setting
+            multiWindowEnabled = true;
+            driver.setSetting(MULTI_WINDOWS_SETTING, true);
+        }
         GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FIRST_PREVIEW_CARD));
         for (By option : CONTEXT_MENU_OPTIONS) {
             WaitUtils.assertVisible(driver, option, "Context menu option " + option + " should be displayed");

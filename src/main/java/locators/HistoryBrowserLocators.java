@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.PlatformLocator;
 
 /**
  * Locators for opening the History browser from a camera preview or the live video, and for its timeline,
@@ -18,8 +19,9 @@ public final class HistoryBrowserLocators {
             AppiumBy.xpath("//*[@content-desc='cell_at_0_preview_view_preview_card']"
                     + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/btn_more']");
 
-    public static final By FIRST_PREVIEW_CARD =
-            AppiumBy.accessibilityId("cell_at_0_preview_view_preview_card");
+    public static final By FIRST_PREVIEW_CARD = PlatformLocator.get(
+            AppiumBy.accessibilityId("cell_at_0_preview_view_preview_card"), // android
+            AppiumBy.accessibilityId("cell_at_0_preview_view")); // ios
 
     // --- Live video ------------------------------------------------------------
 

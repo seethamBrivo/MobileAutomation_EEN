@@ -60,4 +60,32 @@
             <class name="tests.ts_bridges.BridgesTest"/>
         </classes>
     </test>
+    <!-- CameraSettingsTest signs in as the end user and renames and turns off the account's online cameras, which the
+         other end-user classes read, so it runs on its own after them. This is a precaution (and avoids a second
+         end-user sign-in at the same moment, see the header): the Android pool runs it next to other classes, so it
+         can move into the first <test> once that has been tried. BridgesTest cannot: it needs the single attach ID. -->
+    <test name="iOS Camera Settings">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_cameras.CameraSettingsTest"/>
+        </classes>
+    </test>
+    <!-- MyProfileTest signs in as TS02 (like CameraContextMenuTest) and changes the account's time zone, which the
+         event times of other TS02 tests depend on, so it runs on its own after them. This is a precaution as well:
+         the Android pool runs it next to other classes, so it can move into the first <test>, placed so it never
+         starts next to CameraContextMenuTest. -->
+    <test name="iOS My Profile">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_my_profile.MyProfileTest"/>
+        </classes>
+    </test>
 </suite>

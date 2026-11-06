@@ -4,6 +4,7 @@ import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.util.List;
+import locators.CamerasLocators;
 import locators.CommonLocators;
 import locators.LayoutsLocators;
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +13,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.GestureUtils;
 import utils.PlatformLocator;
 import utils.WaitUtils;
 
@@ -360,13 +362,40 @@ public class LayoutsPage {
         return name;
     }
 
-    /** The preview in the context menu is the camera that was pressed, not another one of the screen behind. */
+    /**
+     * The preview in the context menu is the camera that was pressed, not another one of the screen behind.
+     * Android reads the name on the menu's preview card. iOS shows the camera name twice: as the first entry of the
+     * menu (the disabled "Camera name" entry) and in the preview above it, so both are checked.
+     */
     public void verifyContextMenuPreviewShowsCamera(String pressedCameraName) {
         String shown = WaitUtils.retryOnStale(
                 () -> WaitUtils.waitForVisibility(driver, LayoutsLocators.CONTEXT_MENU_PREVIEW_NAME).getText()).trim();
         Assert.assertEquals(shown, pressedCameraName,
-                "Context menu preview should show the camera that was pressed ('" + pressedCameraName
+                "Context menu should show the camera that was pressed ('" + pressedCameraName
                         + "') but showed '" + shown + "'");
+        if (!PlatformLocator.isIos()) {
+            return;
+        }
+        Assert.assertTrue(WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
+                () -> WaitUtils.isPresent(driver, LayoutsLocators.CONTEXT_MENU_PREVIEW_CAMERA_NAME)),
+                "The preview of the pressed camera should be shown above the context menu");
+        String previewName = WaitUtils.attributeOfPresent(driver, LayoutsLocators.CONTEXT_MENU_PREVIEW_CAMERA_NAME,
+                "value", TimeoutConstants.SHORT_TIMEOUT).trim();
+        Assert.assertEquals(previewName, pressedCameraName,
+                "The preview above the context menu should show the camera that was pressed ('" + pressedCameraName
+                        + "') but showed '" + previewName + "'");
+    }
+
+    /**
+     * For cleanup: iOS keeps the context menu open after the test, which would cover the next test's screen. It is
+     * closed by tapping beside it; nothing is asserted. Android's menu is handled by the History browser page.
+     */
+    public void closeContextMenuIfOpenOnIos() {
+        if (PlatformLocator.isIos()
+                && WaitUtils.isVisible(driver, CamerasLocators.CAMERA_SETTINGS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
+            GestureUtils.tapOutsideContextMenuIos(driver);
+            logger.info("Closed the context menu that was left open");
+        }
     }
 
 }

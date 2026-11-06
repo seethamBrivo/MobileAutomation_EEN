@@ -152,18 +152,30 @@ public final class LayoutsLocators {
             AppiumBy.iOSNsPredicateString(
                     "type == 'XCUIElementTypeStaticText' AND name ENDSWITH '_timeLabel'")); // ios
 
-    // Android only. The first card is addressed by its content-desc, the same one a long press targets, so the name
-    // read here is the camera the menu is expected to belong to.
-    public static final By FIRST_CAMERA_PREVIEW_NAME =
+    // Android: the first card is addressed by its content-desc, the same one a long press targets, so the name read
+    // here is the camera the menu is expected to belong to.
+    public static final By FIRST_CAMERA_PREVIEW_NAME = PlatformLocator.get(
             AppiumBy.xpath("//*[@content-desc='cell_at_0_preview_view_preview_card']"
-                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']");
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']"), // android
+            AppiumBy.accessibilityId("cell_at_0_preview_view_name")); // ios
 
-    // Android only. The menu's own preview card has no content-desc, while every card of the Layouts screen behind it
+    // Android: the menu's own preview card has no content-desc, while every card of the Layouts screen behind it
     // carries "cell_at_<n>_preview_view_preview_card", so a card behind the menu can never match.
-    public static final By CONTEXT_MENU_PREVIEW_NAME =
+    // iOS: the first text of the menu's list, by structure (the menu's name entry has no id).
+    // TODO: Replace with an accessibility id when the mobile team adds one to the context menu's name entry
+    public static final By CONTEXT_MENU_PREVIEW_NAME = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card'"
                     + " and not(@content-desc)]"
-                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']");
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name']"), // android
+            AppiumBy.xpath("//XCUIElementTypeButton[@name='contextMenuCameraSettings']"
+                    + "/ancestor::XCUIElementTypeCollectionView[1]//XCUIElementTypeStaticText[1]")); // ios: the menu's name entry
+
+    /**
+     * iOS only: the camera name inside the preview that the menu shows above its options. The preview floats in its
+     * own layer and is reported as not visible, so it is checked for presence, and its name is read from the value.
+     */
+    public static final By CONTEXT_MENU_PREVIEW_CAMERA_NAME =
+            AppiumBy.accessibilityId("context_menu_preview_view_name"); // ios
 
     // --- Dynamic locators ------------------------------------------------------
 

@@ -2,6 +2,7 @@ package locators;
 
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
+import utils.PlatformLocator;
 import utils.XPathUtils;
 
 /**
@@ -14,11 +15,17 @@ public final class VideoSearchLocators {
     // --- Navigation ------------------------------------------------------------------
 
     // Stable: Back button at fixed position [6] in VspMain screen
-    public static final By BACK_BUTTON_FROM_VSP_EVENTS = AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View/android.view.View");
+    public static final By BACK_BUTTON_FROM_VSP_EVENTS = PlatformLocator.get(
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"VspMain\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[6]/android.view.View/android.view.View"), // android
+            AppiumBy.accessibilityId("BackButton")); // ios
 
     // --- Search ----------------------------------------------------------------------
 
-    public static final By DATE_FIELD = AppiumBy.id("com.een.vms.android:id/date");
+    // iOS: the date button of Video Search, whose name is the date ("Nov 05, 2026")
+    public static final By DATE_FIELD = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/date"), // android
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeButton' AND name MATCHES '^[A-Z][a-z]{2} [0-9]{1,2}, [0-9]{4}$'")); // ios
 
     // --- Video Search home -----------------------------------------------------------
 

@@ -32,7 +32,7 @@ public class MyProfileTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-3920: POS-My Profile - setting 'Time zone' in VMS mobile app",
-          groups = {"regression", "profile"})
+          groups = {"regression", "profile", "ios"})
     public void verifyTimezoneSettingFunctionality() {
         final String searchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_SEARCH_TERM);
         final String invalidSearchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_INVALID_SEARCH_TERM);
@@ -82,7 +82,7 @@ public class MyProfileTest extends BaseTest {
                 final String resetTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.VALID_TIMEZONE);
                 devicesPage = new DevicesPage(driver);
                 devicesPage.recoverToDashboard();
-                driver.navigate().back(); // Exit Dashboard view to return to main screen with bottom nav
+                devicesPage.goBack(); // Exit Dashboard view to return to main screen with bottom nav
                 myProfilePage = devicesPage.navigateToMyProfile();
                 myProfilePage.clickProfileSection();
                 myProfilePage.scrollToTimezoneOption();
@@ -93,7 +93,7 @@ public class MyProfileTest extends BaseTest {
                 myProfilePage.verifyTimezoneChanged(resetTimezone);
                 logger.info("Timezone reset to {} successfully", resetTimezone);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) { // the page checks throw AssertionError, which is not an Exception
             logger.error("Failed to reset timezone for shared ts02 account. " +
                         "This may affect subsequent test runs. Error: {}", e.getMessage());
         } finally {

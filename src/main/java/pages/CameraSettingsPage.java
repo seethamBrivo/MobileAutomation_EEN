@@ -2,6 +2,7 @@ package pages;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.time.Instant;
 import java.util.Map;
 import locators.CameraSettingsLocators;
 import org.apache.logging.log4j.LogManager;
@@ -11,9 +12,10 @@ import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
-/** The Camera settings screen (Android): header, status and name editing. */
+/** The Camera settings screen: header, status, name editing and the Enable switch. */
 public class CameraSettingsPage {
 
     private static final Logger logger = LogManager.getLogger(CameraSettingsPage.class);
@@ -54,6 +56,10 @@ public class CameraSettingsPage {
     }
 
     public void clickNameField() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, CameraSettingsLocators.NAME_FIELD);
+            return;
+        }
         tapAtCentre(CameraSettingsLocators.NAME_FIELD);
     }
 
@@ -66,10 +72,18 @@ public class CameraSettingsPage {
 
     /** The screen has no Save button; the keyboard's Done saves the name. */
     public void saveName() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, CameraSettingsLocators.KEYBOARD_DONE_KEY);
+            return;
+        }
         driver.executeScript("mobile: performEditorAction", Map.of("action", "done"));
     }
 
     public void goBack() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, CameraSettingsLocators.BACK_BUTTON);
+            return;
+        }
         driver.navigate().back();
     }
 
@@ -81,7 +95,29 @@ public class CameraSettingsPage {
     }
 
     public void tapEnableSwitch() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, CameraSettingsLocators.ENABLE_ROW);
+            return;
+        }
         tapAtCentre(CameraSettingsLocators.ENABLE_ROW);
+    }
+
+    /**
+     * iOS only: the Enable switch shows its state (value "1" on, "0" off), which Android's does not, so the state is
+     * checked next to the status. Android relies on the status alone.
+     */
+    private void verifyEnableSwitchMatches(String expectedStatus) {
+        if (!PlatformLocator.isIos()) {
+            return;
+        }
+        boolean off = CamerasPage.STATUS_TURNED_OFF.equals(expectedStatus);
+        // The switch can still show the old state for a moment after the status text has changed (seen once: status
+        // "Turned off" with the switch on), so it gets a short time to settle; if it never does, that is the failure.
+        WaitUtils.assertVisible(driver,
+                off ? CameraSettingsLocators.ENABLE_SWITCH_OFF : CameraSettingsLocators.ENABLE_SWITCH_ON,
+                TimeoutConstants.DETAILS_LOAD_TIMEOUT,
+                "The Enable switch should be " + (off ? "off" : "on") + " while the camera status is '"
+                        + expectedStatus + "'");
     }
 
     /** Non-asserting check, so cleanup can ask where the camera ended up. */
@@ -93,6 +129,7 @@ public class CameraSettingsPage {
         String seen = pollForStatus(expectedStatus);
         Assert.assertEquals(seen, expectedStatus,
                 "Camera status should become '" + expectedStatus + "' after the Enable switch but was '" + seen + "'");
+        verifyEnableSwitchMatches(expectedStatus);
     }
 
     /** The last status seen: the expected one, or whatever was shown when the budget ran out. Never null. */
@@ -132,19 +169,50 @@ public class CameraSettingsPage {
     }
 
     /**
-     * The open screen does not refresh its status (the test case says a refresh might be needed), so when the
-     * status is not shown in time the camera's Camera settings are reopened from the cameras list.
+     * The open screen does not refresh its status (the test case says a refresh might be needed). Android waits for
+     * it, and reopens the camera's Camera settings from the cameras list when it is not shown in time; iOS reopens
+     * them until the status matches.
      */
     public void verifyCameraStatus(String expectedStatus, String cameraName) {
+        if (PlatformLocator.isIos()) {
+            verifyStatusBecomesOnReopenedScreen(expectedStatus, cameraName);
+            return;
+        }
         if (isStatusShownWithin(expectedStatus)) {
             return;
         }
         logger.warn("Status did not become '{}' on the open screen; reopening Camera settings to refresh it",
                 expectedStatus);
+        reopenFromCamerasList(cameraName);
+        verifyStatusBecomes(expectedStatus);
+    }
+
+    /**
+     * iOS: the open screen never refreshes (measured: still the old status and switch 20 seconds after the tap), and a
+     * camera takes a while to come back online, so the camera is reopened until the status is the expected one, for
+     * as long as a status change may take. The Enable switch is checked once the status matches.
+     */
+    private void verifyStatusBecomesOnReopenedScreen(String expectedStatus, String cameraName) {
+        Instant deadline = Instant.now().plus(TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT);
+        String seen;
+        do {
+            reopenFromCamerasList(cameraName);
+            seen = WaitUtils.pollText(driver, CameraSettingsLocators.STATUS_VALUE, expectedStatus,
+                    TimeoutConstants.SHORT_TIMEOUT);
+            if (expectedStatus.equals(seen)) {
+                verifyEnableSwitchMatches(expectedStatus);
+                return;
+            }
+            logger.info("Status of '{}' is '{}', waiting for '{}'", cameraName, seen, expectedStatus);
+        } while (Instant.now().isBefore(deadline));
+        Assert.fail("Camera status should become '" + expectedStatus + "' after the Enable switch but was '" + seen
+                + "' when " + TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT.toSeconds() + " seconds had passed");
+    }
+
+    private void reopenFromCamerasList(String cameraName) {
         goBack();
         camerasPage.openContextMenuOfCameraNamed(cameraName);
         camerasPage.clickCameraSettingsOption();
-        verifyStatusBecomes(expectedStatus);
     }
 
     /**
