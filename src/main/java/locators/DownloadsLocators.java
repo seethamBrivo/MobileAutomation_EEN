@@ -3,62 +3,60 @@ package locators;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 
+/**
+ * Locators specific to Downloads feature.
+ * Shared locators (IN_PROGRESS_STATUS, YES_CANCEL_BUTTON, SNACKBAR_TEXT) are in ArchiveLocators and CommonLocators.
+ * FILES_TAB and PROGRESS_TAB are kept here because Downloads screen has different scoping than Archive.
+ */
 public final class DownloadsLocators {
 
     private DownloadsLocators() {}
 
+    // region Navigation
     public static final By FILES_MENU_ITEM =
             AppiumBy.xpath("//android.widget.ScrollView//android.widget.TextView[@text='Files']");
 
     public static final By DOWNLOADS_MENU_ITEM =
             AppiumBy.xpath("//android.widget.TextView[@text=\"Downloads\"]");
+    // endregion
 
+    // region Tabs
+    // Downloads screen-specific tabs (different scope from ArchiveLocators)
     public static final By FILES_TAB =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Files\"]");
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]//android.widget.TextView[@text=\"Files\"]");
 
     public static final By PROGRESS_TAB =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Progress\"]");
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]//android.widget.TextView[@text=\"Progress\"]");
+    // endregion
 
-    // Brittle: positional XPath
+    // region Content
+    // TODO: Ask app team for stable IDs - positional XPath, brittle
     public static final By FIRST_FOLDER =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]");
 
-    // Brittle: folder downloads at View[2]/View[1]/View[2]
-    public static final By DOWNLOAD_ICON =
+    // TODO: Ask app team for stable IDs - brittle: folder action icon at View[2]/View[1]/View[2]
+    // This icon changes state: download icon initially, becomes cancel icon during active download
+    public static final By FOLDER_ACTION_ICON =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[2]");
 
-    // Brittle: video downloads at View[1]/View[1]/View[2]
-    public static final By VIDEO_DOWNLOAD_ICON =
+    // TODO: Ask app team for stable IDs - brittle: video action icon at View[1]/View[1]/View[2]
+    // This icon changes state: download icon initially, becomes cancel icon during active download
+    public static final By VIDEO_ACTION_ICON =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[1]/android.view.View[2]");
+    // endregion
 
+    // region Dialog
     public static final By DOWNLOAD_BUTTON_DIALOG =
             AppiumBy.xpath("//android.widget.TextView[@text=\"DOWNLOAD\"]");
 
     public static final By CANCEL_BUTTON_DIALOG =
             AppiumBy.xpath("//android.widget.TextView[@text=\"CANCEL\"]");
+    // endregion
 
-    public static final By SNACKBAR_TEXT =
-            AppiumBy.accessibilityId("snackbar_een_text");
-
-    public static final By IN_PROGRESS_STATUS =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"In progress\"]");
-
+    // region Progress
     // Progress bar displayed during download - text value changes dynamically (0.17, 0.47, etc.)
     // so we find it by widget type only, scoped to Downloads screen
     public static final By DOWNLOAD_PROGRESS_BAR =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]//android.widget.ProgressBar");
-
-    // Cancel icons replace download icons at same position during active downloads
-    public static final By CANCEL_DOWNLOAD_ICON =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[2]");
-
-    public static final By VIDEO_CANCEL_DOWNLOAD_ICON =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View[1]/android.view.View[2]");
-
-    public static final By YES_CANCEL_BUTTON =
-            AppiumBy.xpath("//android.widget.TextView[@text=\"YES, CANCEL\"]");
-
-    // Scoped to notification area (status_bar_latest_event_content) to avoid matching app UI
-    public static final By NOTIFICATION_DOWNLOAD_TITLE =
-            AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='android:id/status_bar_latest_event_content']//android.widget.TextView[contains(@text, 'Download') or contains(@text, 'download') or contains(@text, '.zip')]");
+    // endregion
 }

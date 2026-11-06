@@ -58,7 +58,6 @@ public final class TimeoutConstants {
     /** Max wait for video download to complete - videos take longer than folders. */
     public static final Duration VIDEO_DOWNLOAD_COMPLETE_TIMEOUT = Duration.ofSeconds(180);
 
-
     public static final Duration SWIPE_PAUSE = Duration.ofMillis(300);
     public static final Duration SWIPE_MOVE = Duration.ofMillis(700);
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);

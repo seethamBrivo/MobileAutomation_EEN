@@ -3,22 +3,20 @@ package pages;
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.nativekey.AndroidKey;
-import io.appium.java_client.android.nativekey.KeyEvent;
+import locators.ArchiveLocators;
 import locators.BottomNavigationLocators;
+import locators.CommonLocators;
 import locators.DownloadsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
-import utils.GestureUtils;
+import org.testng.SkipException;
 import utils.WaitUtils;
 
 /**
  * Page object for Downloads feature.
- * Android-only implementation - uses hardware back button (AndroidDriver.pressKey) for navigation.
+ * Uses shared locators from ArchiveLocators and CommonLocators where applicable.
  */
 public class DownloadsPage {
 
@@ -61,7 +59,7 @@ public class DownloadsPage {
         Assert.assertTrue(isDisplayed, "Downloads screen should be displayed (Files tab visible)");
     }
 
-    public void verifyFilesTabIsSelected() {
+    public void verifyFilesTabIsVisible() {
         boolean isVisible = WaitUtils.isVisible(
                 driver,
                 DownloadsLocators.FILES_TAB,
@@ -70,12 +68,27 @@ public class DownloadsPage {
         Assert.assertTrue(isVisible, "Files tab should be visible (default tab)");
     }
 
+    /**
+     * Checks if test data exists (folders and videos in Downloads).
+     * @throws SkipException if no folders found
+     */
+    public void verifyTestDataExists() {
+        boolean folderExists = WaitUtils.isVisible(
+                driver,
+                DownloadsLocators.FIRST_FOLDER,
+                TimeoutConstants.SHORT_TIMEOUT
+        );
+        if (!folderExists) {
+            throw new SkipException("Test data missing: No folders found in Downloads for this account");
+        }
+    }
+
     public void clickFirstFolder() {
         WaitUtils.click(driver, DownloadsLocators.FIRST_FOLDER);
     }
 
     public void navigateBack() {
-        ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.BACK));
+        driver.navigate().back();
     }
 
     public void verifyProgressTabIsVisible() {
@@ -91,7 +104,7 @@ public class DownloadsPage {
 
         boolean downloadPresent = WaitUtils.isVisible(
                 driver,
-                DownloadsLocators.DOWNLOAD_ICON,
+                DownloadsLocators.FOLDER_ACTION_ICON,
                 TimeoutConstants.SHORT_TIMEOUT
         );
         Assert.assertTrue(downloadPresent,
@@ -101,7 +114,7 @@ public class DownloadsPage {
     public void verifyVideoDownloadOptionsPresent() {
         boolean downloadPresent = WaitUtils.isVisible(
                 driver,
-                DownloadsLocators.VIDEO_DOWNLOAD_ICON,
+                DownloadsLocators.VIDEO_ACTION_ICON,
                 TimeoutConstants.SHORT_TIMEOUT
         );
         Assert.assertTrue(downloadPresent,
@@ -109,11 +122,11 @@ public class DownloadsPage {
     }
 
     public void clickDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.DOWNLOAD_ICON);
+        WaitUtils.click(driver, DownloadsLocators.FOLDER_ACTION_ICON);
     }
 
     public void clickVideoDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.VIDEO_DOWNLOAD_ICON);
+        WaitUtils.click(driver, DownloadsLocators.VIDEO_ACTION_ICON);
     }
 
     public void verifyDownloadDialogDisplayed() {
@@ -136,7 +149,7 @@ public class DownloadsPage {
     public void verifyDownloadingSnackbar() {
         WebElement snackbar = WaitUtils.waitForVisibility(
                 driver,
-                DownloadsLocators.SNACKBAR_TEXT,
+                CommonLocators.SNACKBAR_TEXT,
                 TimeoutConstants.SHORT_TIMEOUT
         );
         String snackbarText = snackbar.getText().toLowerCase();
@@ -158,22 +171,31 @@ public class DownloadsPage {
         Assert.assertTrue(progressBarVisible, "Progress bar should be visible during download");
     }
 
-    // Soft check - does not fail if status not visible (fast downloads may skip this state)
-    public void verifyInProgressStatus() {
-        boolean inProgress = WaitUtils.isVisible(
-                driver,
-                DownloadsLocators.IN_PROGRESS_STATUS,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        if (!inProgress) {
-            logger.info("'In progress' status not visible - download may have completed very quickly");
-        }
+    /**
+     * Verifies the download is in progress by checking both the status text and cancel icon visibility.
+     * This must be called before attempting to cancel, to ensure we're not clicking the wrong icon.
+     */
+    public void verifyDownloadInProgress() {
+        WaitUtils.assertVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
+                "The row should say 'In progress' while the item downloads");
+        WaitUtils.assertVisible(driver, DownloadsLocators.FOLDER_ACTION_ICON, TimeoutConstants.SHORT_TIMEOUT,
+                "The row should offer the cancel icon while the item downloads");
+    }
+
+    /**
+     * Verifies the video download is in progress.
+     */
+    public void verifyVideoDownloadInProgress() {
+        WaitUtils.assertVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS, TimeoutConstants.SHORT_TIMEOUT,
+                "The row should say 'In progress' while the video downloads");
+        WaitUtils.assertVisible(driver, DownloadsLocators.VIDEO_ACTION_ICON, TimeoutConstants.SHORT_TIMEOUT,
+                "The row should offer the cancel icon while the video downloads");
     }
 
     public void waitForDownloadComplete() {
         String snackbarText = WaitUtils.pollText(
                 driver,
-                DownloadsLocators.SNACKBAR_TEXT,
+                CommonLocators.SNACKBAR_TEXT,
                 "Saved to Files",
                 TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT
         );
@@ -184,7 +206,7 @@ public class DownloadsPage {
     public void waitForVideoDownloadComplete() {
         String snackbarText = WaitUtils.pollText(
                 driver,
-                DownloadsLocators.SNACKBAR_TEXT,
+                CommonLocators.SNACKBAR_TEXT,
                 "Saved to Files",
                 TimeoutConstants.VIDEO_DOWNLOAD_COMPLETE_TIMEOUT
         );
@@ -192,46 +214,23 @@ public class DownloadsPage {
             "Success snackbar should show 'Saved to Files' but was: " + snackbarText);
     }
 
-    public void openNotificationPanel() {
-        Dimension size = driver.manage().window().getSize();
-        int startX = size.width / 2;
-        int startY = 0;
-        int endY = size.height / 2;
-        GestureUtils.swipe(driver, startX, startY, startX, endY);
-    }
-
-    // Soft check - notification may disappear quickly if download completes fast
-    public void verifyDownloadInNotification() {
-        boolean downloadNotificationPresent = WaitUtils.isVisible(
-                driver,
-                DownloadsLocators.NOTIFICATION_DOWNLOAD_TITLE,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        if (!downloadNotificationPresent) {
-            logger.warn("Download notification not found - may have disappeared quickly");
-        }
-    }
-
-    public void closeNotificationPanel() {
-        ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.BACK));
-    }
 
     public void clickCancelDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.CANCEL_DOWNLOAD_ICON);
+        WaitUtils.click(driver, DownloadsLocators.FOLDER_ACTION_ICON);
     }
 
     public void clickVideoCancelDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.VIDEO_CANCEL_DOWNLOAD_ICON);
+        WaitUtils.click(driver, DownloadsLocators.VIDEO_ACTION_ICON);
     }
 
     public void clickYesCancelButton() {
-        WaitUtils.click(driver, DownloadsLocators.YES_CANCEL_BUTTON);
+        WaitUtils.click(driver, ArchiveLocators.YES_CANCEL_BUTTON);
     }
 
     public void verifyDownloadCancelledMessage() {
         WebElement snackbar = WaitUtils.waitForVisibility(
                 driver,
-                DownloadsLocators.SNACKBAR_TEXT,
+                CommonLocators.SNACKBAR_TEXT,
                 TimeoutConstants.SHORT_TIMEOUT
         );
         String snackbarText = snackbar.getText();
@@ -240,69 +239,11 @@ public class DownloadsPage {
     }
 
     public void verifyDownloadCancelled() {
-        boolean inProgressGone = !WaitUtils.isVisible(
+        WaitUtils.waitForInvisibility(
                 driver,
-                DownloadsLocators.IN_PROGRESS_STATUS,
+                ArchiveLocators.IN_PROGRESS_STATUS,
                 TimeoutConstants.SHORT_TIMEOUT
         );
-        Assert.assertTrue(inProgressGone, "Download should be cancelled - 'In progress' status should not be present");
     }
 
-    public void verifyCompleteFolderDownloadFlow() {
-        navigateToDownloads();
-        verifyFilesTabIsSelected();
-        verifyProgressTabIsVisible();
-        verifyDownloadOptionsPresent();
-        clickDownloadIcon();
-        verifyDownloadDialogDisplayed();
-        clickDownloadButtonInDialog();
-        verifyDownloadingSnackbar();
-        verifyInProgressStatus();
-        // Skip "Saved to Files" verification - ZIP downloads take too long. Instead verify in notification panel.
-        openNotificationPanel();
-        verifyDownloadInNotification();
-        closeNotificationPanel();
-    }
-
-    public void verifyFolderDownloadCancellation() {
-        verifyFilesTabIsSelected();
-        // Wait for download icon to be ready and clickable after previous download completes
-        WaitUtils.waitForClickability(driver, DownloadsLocators.DOWNLOAD_ICON, FrameworkConstants.EXPLICIT_WAIT);
-        clickDownloadIcon();
-        verifyDownloadDialogDisplayed();
-        clickDownloadButtonInDialog();
-        verifyDownloadingSnackbar();
-        clickCancelDownloadIcon();
-        clickYesCancelButton();
-        verifyDownloadCancelledMessage();
-        verifyDownloadCancelled();
-    }
-
-    public void verifyCompleteVideoDownloadFlow() {
-        navigateToDownloads();
-        clickFirstFolder();
-        verifyVideoDownloadOptionsPresent();
-        clickVideoDownloadIcon();
-        verifyDownloadDialogDisplayed();
-        clickDownloadButtonInDialog();
-        verifyDownloadingSnackbar();
-        verifyDownloadProgressBar();
-        waitForVideoDownloadComplete();
-        navigateBack();
-    }
-
-    public void verifyVideoDownloadCancellation() {
-        verifyFilesTabIsSelected();
-        clickFirstFolder();
-        // Wait for video download icon to be ready and clickable after previous download completes
-        WaitUtils.waitForClickability(driver, DownloadsLocators.VIDEO_DOWNLOAD_ICON, FrameworkConstants.EXPLICIT_WAIT);
-        clickVideoDownloadIcon();
-        verifyDownloadDialogDisplayed();
-        clickDownloadButtonInDialog();
-        verifyDownloadingSnackbar();
-        clickVideoCancelDownloadIcon();
-        clickYesCancelButton();
-        verifyDownloadCancelledMessage();
-        verifyDownloadCancelled();
-    }
 }
