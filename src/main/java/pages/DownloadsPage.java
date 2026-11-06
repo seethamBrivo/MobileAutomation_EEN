@@ -1,5 +1,6 @@
 package pages;
 
+import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
@@ -15,6 +16,10 @@ import org.testng.Assert;
 import utils.GestureUtils;
 import utils.WaitUtils;
 
+/**
+ * Page object for Downloads feature.
+ * Android-only implementation - uses hardware back button (AndroidDriver.pressKey) for navigation.
+ */
 public class DownloadsPage {
 
     private static final Logger logger = LogManager.getLogger(DownloadsPage.class);
@@ -153,6 +158,7 @@ public class DownloadsPage {
         Assert.assertTrue(progressBarVisible, "Progress bar should be visible during download");
     }
 
+    // Soft check - does not fail if status not visible (fast downloads may skip this state)
     public void verifyInProgressStatus() {
         boolean inProgress = WaitUtils.isVisible(
                 driver,
@@ -194,16 +200,14 @@ public class DownloadsPage {
         GestureUtils.swipe(driver, startX, startY, startX, endY);
     }
 
-    // Soft assertion - notification may disappear quickly if download completes fast
+    // Soft check - notification may disappear quickly if download completes fast
     public void verifyDownloadInNotification() {
         boolean downloadNotificationPresent = WaitUtils.isVisible(
                 driver,
                 DownloadsLocators.NOTIFICATION_DOWNLOAD_TITLE,
                 TimeoutConstants.SHORT_TIMEOUT
         );
-        if (downloadNotificationPresent) {
-            Assert.assertTrue(true, "Download notification is present in notification panel");
-        } else {
+        if (!downloadNotificationPresent) {
             logger.warn("Download notification not found - may have disappeared quickly");
         }
     }
@@ -262,8 +266,8 @@ public class DownloadsPage {
 
     public void verifyFolderDownloadCancellation() {
         verifyFilesTabIsSelected();
-        // Wait for download icon to be ready after previous download completes
-        WaitUtils.waitForVisibility(driver, DownloadsLocators.DOWNLOAD_ICON, TimeoutConstants.SHORT_TIMEOUT);
+        // Wait for download icon to be ready and clickable after previous download completes
+        WaitUtils.waitForClickability(driver, DownloadsLocators.DOWNLOAD_ICON, FrameworkConstants.EXPLICIT_WAIT);
         clickDownloadIcon();
         verifyDownloadDialogDisplayed();
         clickDownloadButtonInDialog();
@@ -290,8 +294,8 @@ public class DownloadsPage {
     public void verifyVideoDownloadCancellation() {
         verifyFilesTabIsSelected();
         clickFirstFolder();
-        // Wait for video download icon to be ready after previous download completes
-        WaitUtils.waitForVisibility(driver, DownloadsLocators.VIDEO_DOWNLOAD_ICON, TimeoutConstants.SHORT_TIMEOUT);
+        // Wait for video download icon to be ready and clickable after previous download completes
+        WaitUtils.waitForClickability(driver, DownloadsLocators.VIDEO_DOWNLOAD_ICON, FrameworkConstants.EXPLICIT_WAIT);
         clickVideoDownloadIcon();
         verifyDownloadDialogDisplayed();
         clickDownloadButtonInDialog();
