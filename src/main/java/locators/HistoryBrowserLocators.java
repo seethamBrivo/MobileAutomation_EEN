@@ -100,7 +100,7 @@ public final class HistoryBrowserLocators {
             IOS_TIMELINE_SCROLL); // ios
 
     // Landscape only: the timeline is a side panel with its own close button, and a button on the screen's right
-    // edge reopens it.
+    // edge reopens it. Android only: the iOS app has no such buttons, so these two have no iOS value on purpose.
     public static final By TIMELINE_CLOSE_BUTTON =
             AppiumBy.xpath(ANDROID_TIMELINE + "//*[@resource-id='com.een.vms.android:id/close']");
 

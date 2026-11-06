@@ -120,13 +120,20 @@ public final class DeviceUtils {
     /**
      * iOS: turns the device with the driver's orientation call. BrowserStack answers it with "Unable To Rotate
      * Device" on some runs even though the device did turn, so the call's failure is only logged and the window
-     * shape decides whether the device is in the wanted orientation. A rotate that did not take is tried once more.
+     * shape decides whether the device is in the wanted orientation. A rotate that did not take is tried once more,
+     * unless the device has reached the wanted orientation by then.
      *
      * @throws IllegalStateException if the device is not in the wanted orientation after the wait
      */
     private static void rotateIos(AppiumDriver driver, ScreenOrientation target) {
         boolean landscape = target == ScreenOrientation.LANDSCAPE;
         for (int attempt = 1; attempt <= IOS_ROTATE_ATTEMPTS; attempt++) {
+            // The previous rotate may have taken effect although it threw, or the device may still be turning, so
+            // rotating again would turn it back to where it started.
+            if (isLandscape(driver) == landscape) {
+                logger.info("Device already in {} on iOS (attempt {})", target, attempt);
+                return;
+            }
             try {
                 ((IOSDriver) driver).rotate(target);
             } catch (WebDriverException e) {
