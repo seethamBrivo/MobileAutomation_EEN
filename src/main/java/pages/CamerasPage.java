@@ -5,8 +5,12 @@ import io.appium.java_client.AppiumDriver;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import locators.CamerasLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +32,8 @@ public class CamerasPage {
     public static final String STATUS_CONNECTIVITY_ISSUE = "Connectivity issue";
     public static final String STATUS_TURNED_OFF = "Turned off";
     public static final String STATUS_CAMERA_ERROR = "Camera error";
+    public static final String STATUS_UNKNOWN = "Unknown";
+    public static final String STATUS_NO_PERMISSION = "No permission";
     // Status of the camera pressed by longPressFirstOfflineOrErrorCamera: true = "Offline", false = "Camera error".
     private boolean pressedCameraIsOffline;
 
@@ -35,6 +41,28 @@ public class CamerasPage {
         STATUS_ONLINE, STATUS_OFFLINE, STATUS_INVALID_CREDENTIALS,
         STATUS_DEVICE_ERROR, STATUS_CONNECTIVITY_ISSUE, STATUS_TURNED_OFF, STATUS_CAMERA_ERROR
     };
+
+    /**
+     * The statuses a camera card may show: the ones above and "Unknown", which the test case lists too, and
+     * "No permission", which the app shows for a camera the user may not see and the test case does not list.
+     */
+    private static final List<String> CARD_STATUSES = Stream.concat(Arrays.stream(CAMERA_STATUSES),
+            Stream.of(STATUS_UNKNOWN, STATUS_NO_PERMISSION)).toList();
+
+    /** The filter chips the test case and the app both have (the app's order and two names differ, see below). */
+    private static final List<String> EXPECTED_FILTER_CHIPS =
+            List.of("Bridges", "Layouts", "Tags", "Sites", "Multi-cameras");
+
+    /** What the test case lists, in its order, to log next to what the app shows. */
+    private static final List<String> TEST_CASE_FILTER_CHIPS = List.of(
+            "Device status", "Camera type", "Bridges", "Layouts", "Tags", "Sites", "Multi-cameras");
+
+    /** The filter row holds 7 chips and about 5 fit on screen; one swipe reaches the end, more is headroom. */
+    private static final int FILTER_ROW_MAX_SWIPES = 4;
+
+    /** The filter row is swiped from 80% to 20% of the width: far from the edges, where Android's back gesture is. */
+    private static final double FILTER_ROW_SWIPE_START = 0.8;
+    private static final double FILTER_ROW_SWIPE_END = 0.2;
 
     /** The menu shows the frame time in the account's time format: 12 hour with AM/PM, or 24 hour. */
     private static final List<DateTimeFormatter> FRAME_TIME_FORMATS = List.of(
@@ -372,6 +400,162 @@ public class CamerasPage {
         verifyContextMenuDisplayed();
         verifyAllContextMenuOptions(true);
         verifyCameraPreviewDisplayed();
+    }
+
+    /**
+     * The Dashboard's Cameras tile shows the cameras per status, which load from "0" and may not all arrive at
+     * once; returns their sum once two reads in a row agree.
+     */
+    public int readCamerasTileTotal() {
+        AtomicInteger total = new AtomicInteger();
+        boolean shown = WaitUtils.pollUntil(driver, TimeoutConstants.LIST_LOAD_TIMEOUT, () -> {
+            int sum = WaitUtils.textsOfOrEmpty(driver, CamerasLocators.CAMERAS_TILE_COUNTS,
+                    TimeoutConstants.SHORT_TIMEOUT).stream().mapToInt(Integer::parseInt).sum();
+            return sum > 0 && sum == total.getAndSet(sum);
+        });
+        Assert.assertTrue(shown, "Cameras tile on the Dashboard should show the number of cameras");
+        return total.get();
+    }
+
+    public void verifyCounterShowsCameraCount(int expectedCount) {
+        int shownCount = cameraSearchFilter.readCameraCountAndVerifyWording();
+        Assert.assertEquals(shownCount, expectedCount,
+                "Camera counter should match the " + expectedCount + " cameras on the Dashboard tile");
+    }
+
+    /**
+     * Checks every card on screen (Android): a name, then one of the listed statuses. A card scrolled in only
+     * halfway may not have its status yet, so cards with fewer than two texts are skipped, and at least one must
+     * be checked. The preview image has no label to find, so it is not checked.
+     */
+    public void verifyVisibleCameraCardsShowNameAndStatus() {
+        List<List<String>> cards = visibleCardTexts();
+        Assert.assertFalse(cards.isEmpty(), "At least one camera card should show a name and a status");
+        for (List<String> texts : cards) {
+            String name = texts.get(0);
+            String status = texts.get(1);
+            Assert.assertFalse(name.isEmpty(), "Camera card should show the camera's name");
+            Assert.assertTrue(CARD_STATUSES.contains(status),
+                    "Camera '" + name + "' should show one of " + CARD_STATUSES + " but showed '" + status + "'");
+        }
+        logger.info("Checked the name and status of {} camera cards", cards.size());
+    }
+
+    /**
+     * Reads the filter chips from left to right, scrolling the row until no new chip shows up, and puts it back.
+     * The chips the test case and the app share must be there. The app's order differs from the test case, and its
+     * first two chips are "Connection" and "Status" where the test case says "Device status" and "Camera type";
+     * that is logged, not asserted, until the test case's author says which is right.
+     */
+    public void verifyFilterChipsAndLogOrder() {
+        List<String> chips = new ArrayList<>();
+        int rowY = GestureUtils.getElementCenter(
+                WaitUtils.waitForVisibility(driver, CamerasLocators.FILTER_CHIP_NAME)).y;
+        int swipes = 0;
+        while (true) {
+            List<String> shown = WaitUtils.textsOf(driver, CamerasLocators.FILTER_CHIP_NAME);
+            boolean newChip = false;
+            for (String chip : shown) {
+                if (!chips.contains(chip)) {
+                    chips.add(chip);
+                    newChip = true;
+                }
+            }
+            if (!newChip || swipes == FILTER_ROW_MAX_SWIPES) {
+                break;
+            }
+            GestureUtils.swipeHorizontal(driver, rowY, FILTER_ROW_SWIPE_START, FILTER_ROW_SWIPE_END);
+            swipes++;
+            // The row has moved once its first chip changes; at the end of the row it does not move, and the
+            // next read adds nothing, which ends the loop.
+            String firstChipBefore = shown.get(0);
+            WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
+                List<String> now = WaitUtils.textsOfOrEmpty(driver, CamerasLocators.FILTER_CHIP_NAME,
+                        TimeoutConstants.SHORT_TIMEOUT);
+                return !now.isEmpty() && !now.get(0).equals(firstChipBefore);
+            });
+        }
+        for (int i = 0; i < swipes; i++) {
+            GestureUtils.swipeHorizontal(driver, rowY, FILTER_ROW_SWIPE_END, FILTER_ROW_SWIPE_START);
+        }
+        Assert.assertTrue(chips.containsAll(EXPECTED_FILTER_CHIPS),
+                "Filter row should have the chips " + EXPECTED_FILTER_CHIPS + " but had " + chips);
+        logger.info("Filter chips shown by the app: {}; listed by the test case: {}", chips, TEST_CASE_FILTER_CHIPS);
+    }
+
+    /** Whether some camera shows a tag (Android), scrolling down the list to look for one. */
+    public boolean hasCameraWithTag() {
+        GestureUtils.scrollToTop(driver);
+        return scrollUntilElementIsVisible(CamerasLocators.FIRST_TAG);
+    }
+
+    /** Taps the first tag on screen (Android) and returns its name. */
+    public String tapFirstTag() {
+        String tagName = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_TAG_NAME).getText().trim();
+        WaitUtils.click(driver, CamerasLocators.FIRST_TAG);
+        logger.info("Tapped the tag '{}'", tagName);
+        return tagName;
+    }
+
+    /** After a tag was tapped: the counter shrank to some cameras and every card on screen carries the tag. */
+    public void verifyCamerasFilteredByTag(String tagName, int camerasBeforeFilter) {
+        // "Clear filter" appears with the filter; waiting for it keeps the old list from being read. The counter
+        // cannot be the signal: it does not change when every camera carries the tag.
+        WaitUtils.assertVisible(driver, CamerasLocators.CLEAR_FILTER_BUTTON, TimeoutConstants.FILTER_RESULT_TIMEOUT,
+                "Clear filter should appear once the tag '" + tagName + "' is applied");
+        int filtered = cameraSearchFilter.readCameraCountAndVerifyWording();
+        Assert.assertTrue(filtered >= 1 && filtered <= camerasBeforeFilter,
+                "Counter after filtering by tag '" + tagName + "' should be between 1 and " + camerasBeforeFilter
+                        + " but was " + filtered);
+        List<List<String>> cards = visibleCardTexts();
+        Assert.assertFalse(cards.isEmpty(), "At least one camera card should be on screen after filtering by a tag");
+        for (List<String> texts : cards) {
+            List<String> tags = texts.subList(2, texts.size());
+            Assert.assertTrue(tags.contains(tagName), "Camera '" + texts.get(0) + "' should carry the tag '"
+                    + tagName + "' after filtering by it but has " + tags);
+        }
+    }
+
+    /** The "Tags" chip moves to the front of the row and shows how many tags are selected. */
+    public void verifyTagsFilterIsActive() {
+        List<String> chips = WaitUtils.textsOf(driver, CamerasLocators.FILTER_CHIP_NAME);
+        Assert.assertEquals(chips.get(0), "Tags",
+                "The active Tags filter should be the first chip but the row was " + chips);
+        String selected = WaitUtils.waitForVisibility(driver, CamerasLocators.ACTIVE_TAGS_FILTER_COUNT)
+                .getText().trim();
+        Assert.assertEquals(selected, "1", "The Tags filter should show 1 selected tag");
+        logger.info("Filter chips with the tag filter applied: {}", chips);
+    }
+
+    /**
+     * The texts of each card on screen (Android): the name, the status, then the tags. A card scrolled in only
+     * halfway may not have its status yet; it has fewer than two texts and is left out.
+     */
+    private List<List<String>> visibleCardTexts() {
+        List<List<String>> cards = new ArrayList<>();
+        for (WebElement card : WaitUtils.findElements(driver, CamerasLocators.CAMERA_CARD)) {
+            List<String> texts = card.findElements(CamerasLocators.TEXTS_IN_CAMERA_CARD).stream()
+                    .map(text -> text.getText().trim()).toList();
+            if (texts.size() >= 2) {
+                cards.add(texts);
+            }
+        }
+        return cards;
+    }
+
+    /** Cleanup: removes a tag filter if one is applied; asserts nothing. */
+    public void clearFilterIfApplied() {
+        if (WaitUtils.isVisible(driver, CamerasLocators.CLEAR_FILTER_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+            WaitUtils.click(driver, CamerasLocators.CLEAR_FILTER_BUTTON);
+        }
+    }
+
+    /** Taps the 3-dots button of the first online camera (Android) and checks its menu. */
+    public void openMenuWithThreeDotsOfFirstOnlineCameraAndVerifyOptions() {
+        verifyFirstOnlineCameraFound();
+        WaitUtils.click(driver, CamerasLocators.THREE_DOTS_OF_FIRST_ONLINE_CAMERA);
+        verifyContextMenuDisplayed();
+        verifyAllContextMenuOptions(true);
     }
 
 }
