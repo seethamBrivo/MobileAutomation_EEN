@@ -532,7 +532,9 @@ public class HistoryBrowserPage {
 
     /**
      * The matches of a timeline locator. iOS reports every row and card of the landscape timeline as not visible
-     * although they are on screen, so there they only have to be in the hierarchy.
+     * although they are on screen, so there they only have to be in the hierarchy. That also counts rows that are in
+     * the hierarchy but scrolled off screen, so a level or range read from them in iOS landscape can include rows
+     * outside the viewport; the level is read from the first rows only, which keeps that effect small.
      */
     private List<WebElement> timelineElements(By locator) {
         if (isIosLandscape()) {
@@ -589,6 +591,11 @@ public class HistoryBrowserPage {
         return kept.length() >= MIN_CUT_NAME_PREFIX_LENGTH && fullName.startsWith(kept);
     }
 
+    /**
+     * The back button, action bar and filter button. Known gap: in iOS landscape the Live button's text and the
+     * camera preview are not asserted, because the app does not put them in the accessibility tree; Android asserts
+     * both, as the test case lists them. They need accessibility identifiers from the iOS app before they can be.
+     */
     private void verifyHistoryBrowserHeaderAndActions() {
         if (isIosLandscape()) {
             logger.info("iOS landscape: the Live button and the video are not in the accessibility tree, "
