@@ -42,6 +42,8 @@ public final class VideoSearchLocators {
             AppiumBy.id("com.een.vms.android:id/people_loading"), // android
             AppiumBy.accessibilityId("loading_indicator")); // ios
 
+    // iOS: the card has no identifier, so it is the first cell of the first scroll view in the collection (the Person
+    // row). TODO: replace with an accessibility identifier once the iOS app has one.
     public static final By FIRST_PERSON_CARD = PlatformLocator.get(
             AppiumBy.xpath("(//*[@resource-id='com.een.vms.android:id/people']"
                     + "//*[@resource-id='com.een.vms.android:id/preview'])[1]"), // android
@@ -88,6 +90,8 @@ public final class VideoSearchLocators {
             AppiumBy.xpath(EVENT_SHEET + "//*[@resource-id='com.een.vms.android:id/tags_title']"), // android
             AppiumBy.accessibilityId("Relevant tags")); // ios
 
+    // iOS: the tags have no identifier, so this is the text after the "Relevant tags" title, which is the first tag
+    // only (Android matches every tag button). TODO: replace with an accessibility identifier once the iOS app has one.
     public static final By EVENT_TAGS = PlatformLocator.get(
             AppiumBy.xpath(EVENT_SHEET + "//*[@resource-id='com.een.vms.android:id/tags_container']"
                     + "//android.widget.Button"), // android

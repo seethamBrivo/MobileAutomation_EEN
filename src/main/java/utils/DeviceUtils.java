@@ -27,6 +27,9 @@ public final class DeviceUtils {
 
     private static final Logger logger = LogManager.getLogger(DeviceUtils.class);
 
+    /** One more rotate when the first did not leave the device in the wanted orientation (a missed gesture). */
+    private static final int IOS_ROTATE_ATTEMPTS = 2;
+
     private DeviceUtils() {
     }
 
@@ -117,24 +120,28 @@ public final class DeviceUtils {
     /**
      * iOS: turns the device with the driver's orientation call. BrowserStack answers it with "Unable To Rotate
      * Device" on some runs even though the device did turn, so the call's failure is only logged and the window
-     * shape decides whether the device is in the wanted orientation.
+     * shape decides whether the device is in the wanted orientation. A rotate that did not take is tried once more.
      *
      * @throws IllegalStateException if the device is not in the wanted orientation after the wait
      */
     private static void rotateIos(AppiumDriver driver, ScreenOrientation target) {
-        try {
-            ((IOSDriver) driver).rotate(target);
-        } catch (WebDriverException e) {
-            logger.warn("iOS rotate to {} reported an error: {}", target,
-                    String.valueOf(e.getMessage()).lines().findFirst().orElse(""));
-        }
         boolean landscape = target == ScreenOrientation.LANDSCAPE;
-        boolean reached = WaitUtils.pollUntil(driver, TimeoutConstants.ROTATION_STABILIZE,
-                () -> isLandscape(driver) == landscape);
-        if (!reached) {
-            throw new IllegalStateException("Device should be in " + target + " after rotating but is not");
+        for (int attempt = 1; attempt <= IOS_ROTATE_ATTEMPTS; attempt++) {
+            try {
+                ((IOSDriver) driver).rotate(target);
+            } catch (WebDriverException e) {
+                logger.warn("iOS rotate to {} reported an error: {}", target,
+                        String.valueOf(e.getMessage()).lines().findFirst().orElse(""));
+            }
+            if (WaitUtils.pollUntil(driver, TimeoutConstants.ROTATION_STABILIZE,
+                    () -> isLandscape(driver) == landscape)) {
+                logger.info("Rotated to {} on iOS", target);
+                return;
+            }
+            logger.warn("Device is not in {} after rotating (attempt {} of {})",
+                    target, attempt, IOS_ROTATE_ATTEMPTS);
         }
-        logger.info("Rotated to {} on iOS", target);
+        throw new IllegalStateException("Device should be in " + target + " after rotating but is not");
     }
 
     /** Whether the window is wider than it is tall, which is how both platforms tell the orientations apart. */

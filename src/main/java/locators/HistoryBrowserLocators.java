@@ -31,7 +31,8 @@ public final class HistoryBrowserLocators {
     // The "Timeline" title is visible while the rows under it are reported as not visible.
     private static final By IOS_TIMELINE_TITLE = AppiumBy.accessibilityId("Timeline");
 
-    // The timeline is the scroll view that holds text; it has no identifier of its own.
+    // The timeline is the scroll view that holds text; it has no identifier of its own, so this matches the first
+    // such scroll view. TODO: replace with an accessibility identifier once the iOS app has one.
     private static final By IOS_TIMELINE_SCROLL =
             AppiumBy.xpath("//XCUIElementTypeScrollView[.//XCUIElementTypeStaticText]");
 
