@@ -74,6 +74,16 @@ public final class WaitUtils {
     }
 
     /**
+     * The attribute of the first element that is present in the page, visible or not. For elements the platform
+     * reports as not visible although they are on the screen (an iOS preview that floats in its own layer), where
+     * {@link #waitForVisibility} cannot be used. Retries when the element goes stale; throws when none shows up.
+     */
+    public static String attributeOfPresent(AppiumDriver driver, By locator, String attribute, Duration timeout) {
+        return retryOnStale(() -> wait(driver, timeout)
+                .until(ExpectedConditions.presenceOfElementLocated(locator)).getAttribute(attribute));
+    }
+
+    /**
      * Polls the text of the first element matching {@code locator} (trimmed) until it equals {@code expected}, for up to
      * {@code timeout}, and returns the text last seen ("" if none was readable). A missing or re-rendering element is
      * not an error here; the caller compares the result with what it expects.

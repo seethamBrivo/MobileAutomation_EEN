@@ -161,7 +161,8 @@ public final class LayoutsLocators {
 
     // Android: the menu's own preview card has no content-desc, while every card of the Layouts screen behind it
     // carries "cell_at_<n>_preview_view_preview_card", so a card behind the menu can never match.
-    // iOS: the menu exposes only its title button, named after the camera.
+    // iOS: the first text of the menu's list, by structure (the menu's name entry has no id).
+    // TODO: Replace with an accessibility id when the mobile team adds one to the context menu's name entry
     public static final By CONTEXT_MENU_PREVIEW_NAME = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.FrameLayout[@resource-id='com.een.vms.android:id/preview_card'"
                     + " and not(@content-desc)]"

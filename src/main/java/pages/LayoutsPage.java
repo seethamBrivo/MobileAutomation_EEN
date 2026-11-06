@@ -379,8 +379,8 @@ public class LayoutsPage {
         Assert.assertTrue(WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
                 () -> WaitUtils.isPresent(driver, LayoutsLocators.CONTEXT_MENU_PREVIEW_CAMERA_NAME)),
                 "The preview of the pressed camera should be shown above the context menu");
-        String previewName = WaitUtils.retryOnStale(() -> driver
-                .findElement(LayoutsLocators.CONTEXT_MENU_PREVIEW_CAMERA_NAME).getAttribute("value")).trim();
+        String previewName = WaitUtils.attributeOfPresent(driver, LayoutsLocators.CONTEXT_MENU_PREVIEW_CAMERA_NAME,
+                "value", TimeoutConstants.SHORT_TIMEOUT).trim();
         Assert.assertEquals(previewName, pressedCameraName,
                 "The preview above the context menu should show the camera that was pressed ('" + pressedCameraName
                         + "') but showed '" + previewName + "'");

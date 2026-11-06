@@ -75,8 +75,15 @@ public class LayoutsTest extends BaseTest {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(ITestResult testResult) {
+        // Its own step: a failure here (or no page after a failed sign-in) must not skip the layout deletion below.
         try {
-            layoutsPage.closeContextMenuIfOpenOnIos();
+            if (layoutsPage != null && driver != null) {
+                layoutsPage.closeContextMenuIfOpenOnIos();
+            }
+        } catch (Throwable t) {
+            logger.warn("Teardown: could not close the context menu: {}", t.toString());
+        }
+        try {
             if (layoutCreated && uniqueLayoutName != null && driver != null) {
                 layoutsPage.deleteLayout(uniqueLayoutName);
                 logger.info("Successfully deleted layout '{}' in teardown", uniqueLayoutName);

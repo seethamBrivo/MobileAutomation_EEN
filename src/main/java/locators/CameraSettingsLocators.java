@@ -36,7 +36,8 @@ public final class CameraSettingsLocators {
 
     // --- Name ------------------------------------------------------------------
 
-    // iOS: the first text field of the screen; the second one is "Camera username".
+    // iOS: the first text field of the screen, by position; the second one is "Camera username".
+    // TODO: Replace with an accessibility id when the mobile team adds one to the Name field
     public static final By NAME_FIELD = PlatformLocator.get(
             AppiumBy.xpath("(//android.widget.EditText)[1]"), // android
             AppiumBy.xpath("(//XCUIElementTypeTextField)[1]")); // ios

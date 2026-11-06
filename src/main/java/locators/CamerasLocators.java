@@ -53,6 +53,8 @@ public final class CamerasLocators {
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
 
+    // iOS: the second "Online" label of the list, by position (the rows carry no ids).
+    // TODO: Replace with an accessibility id when the mobile team adds identifiers to the camera rows
     public static final By SECOND_ONLINE_CAMERA = PlatformLocator.get(
             AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]"), // android
             AppiumBy.xpath("(//XCUIElementTypeStaticText[@name='Online'])[2]")); // ios
@@ -89,7 +91,10 @@ public final class CamerasLocators {
                         + "][following-sibling::*[1][@name='ic_contextMenu']]")); // ios
     }
 
-    /** iOS only: the back button of the Cameras list, which returns to All devices (Android goes back with the system back). */
+    /**
+     * iOS only: the back button of the Cameras list, which returns to All devices (Android goes back with the system
+     * back).
+     */
     public static final By LIST_BACK_BUTTON = AppiumBy.accessibilityId("BackButton"); // ios
 
     // --- Context menu ----------------------------------------------------------
@@ -179,7 +184,6 @@ public final class CamerasLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Camera error']"), // android
             iosStatusLabelWithText("Camera error")); // ios
 
-    // iOS: no visible filter here, because the rows behind an open context menu are not reported as visible.
     /**
      * iOS: a context menu entry by its label. The id of an entry differs between menus (the cameras list names it
      * "Camera settings", the Layouts screen "contextMenuCameraSettings"), the label does not.
@@ -188,6 +192,7 @@ public final class CamerasLocators {
         return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND label == '" + label + "'");
     }
 
+    // iOS: no visible filter here, because the rows behind an open context menu are not reported as visible.
     private static By iosStatusLabelWithText(String text) {
         return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + text + "'");
     }

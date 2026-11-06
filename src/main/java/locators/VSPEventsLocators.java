@@ -56,10 +56,12 @@ public final class VSPEventsLocators {
             AppiumBy.iOSNsPredicateString(
                     "type == 'XCUIElementTypeStaticText' AND visible == 1 AND name MATCHES '.*, [0-9]{1,2}:[0-9]{2}.*'")); // ios
 
-    // iOS: the thumbnail of an event card (110 x 62)
+    // iOS: an event card is not one element and its thumbnail has no id, so the time text of a card stands for it
+    // (the same as FIRST_EVENT_IN_LIST) instead of an image found by its size, which differs between devices.
     public static final By ANY_EVENT_THUMBNAIL = PlatformLocator.get(
             AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.view.View[@clickable='true'][1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeImage[@visible='true' and @width='110' and @height='62'])[1]")); // ios
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeStaticText' AND visible == 1 AND name MATCHES '.*, [0-9]{1,2}:[0-9]{2}.*'")); // ios
 
     // TODO: Replace with testTag - scope within VspMain list area with position constraints
     // Plate is typically first text (exclude filter labels, timestamps, headings)
@@ -75,7 +77,9 @@ public final class VSPEventsLocators {
             AppiumBy.xpath("(" + VSP_MAIN_SCREEN + VIEW_HIERARCHY + "[4]//android.widget.TextView[string-length(@text) > 0 and not(contains(@text, 'Today,')) and not(contains(@text, 'Filter by')) and not(contains(@text, 'VSP Events'))])[last()]");
 
     // iOS: the time of an event card, written as "<day>, <hh:mm>" (for example "Today, 15:50"); the day may change with
-    // the time zone, so only the shape is matched.
+    // the time zone, so only the shape is matched. Not scoped to the cards: on the VSP Events screen the cards are the
+    // only texts of that shape.
+    // TODO: Replace with an accessibility id when the mobile team adds one to the event cards
     public static final By TIMESTAMP_WITH_TIME = PlatformLocator.get(
             AppiumBy.xpath(VSP_MAIN_SCREEN + "//android.widget.TextView[contains(@text, 'Today,') and contains(@text, ':')]"), // android
             AppiumBy.iOSNsPredicateString(

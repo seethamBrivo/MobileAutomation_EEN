@@ -28,6 +28,10 @@ import utils.WaitUtils;
 public class DevicesPage {
 
     private static final Logger logger = LogManager.getLogger(DevicesPage.class);
+
+    /** The sessions in which the widget tip has been looked for already (see {@link #closeWidgetTipIfShown}). */
+    private static final java.util.Set<String> SESSIONS_CHECKED_FOR_WIDGET_TIP =
+            java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final AppiumDriver driver;
     private final BridgeSettingsPage settings;
 
@@ -57,9 +61,13 @@ public class DevicesPage {
         closeWidgetTipIfShown();
     }
 
-    /** iOS: the app offers a home-screen widget in a tip at the bottom of All devices, which can cover rows. */
+    /**
+     * iOS: the app offers a home-screen widget in a tip at the bottom of All devices, which can cover rows. It is shown
+     * when All devices first opens in a session, so it is looked for once per session; a later visit would otherwise
+     * wait for it every time.
+     */
     private void closeWidgetTipIfShown() {
-        if (PlatformLocator.isIos()
+        if (PlatformLocator.isIos() && SESSIONS_CHECKED_FOR_WIDGET_TIP.add(driver.getSessionId().toString())
                 && WaitUtils.tryClickOptionalElement(driver, List.of(BridgesLocators.WIDGET_TIP_CLOSE_BUTTON),
                         TimeoutConstants.SHORT_TIMEOUT)) {
             logger.info("Closed the widget tip on the All devices screen");
