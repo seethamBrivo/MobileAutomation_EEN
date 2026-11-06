@@ -316,6 +316,22 @@ public final class WaitUtils {
         throw new AssertionError("Unreachable");
     }
 
+    /** Every match once at least one is in the hierarchy, visible or not. */
+    public static List<WebElement> findPresent(AppiumDriver driver, By locator, Duration timeout) {
+        return wait(driver, timeout).until(ExpectedConditions.presenceOfAllElementsLocatedBy(locator));
+    }
+
+    /**
+     * The text of the first match once one is in the hierarchy, visible or not. For labels that iOS keeps in the tree
+     * but reports as not visible.
+     */
+    public static String textOfPresent(AppiumDriver driver, By locator, Duration timeout) {
+        return wait(driver, timeout).ignoring(WebDriverException.class).until(d -> {
+            List<WebElement> matches = d.findElements(locator);
+            return matches.isEmpty() ? null : matches.get(0).getText();
+        });
+    }
+
     /**
      * Polls {@code condition} until it returns true or {@code timeout} passes, and returns whether it did. WebDriver
      * errors raised by the condition (an element gone or re-rendering) count as "not yet", not as failures.

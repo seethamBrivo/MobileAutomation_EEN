@@ -37,7 +37,8 @@ public class VideoSearchPage {
     /** The test case says the event time never carries milliseconds. */
     private static final Pattern EVENT_TIME_FORMAT = Pattern.compile("\\d{2}:\\d{2}:\\d{2}");
 
-    private static final Pattern EVENT_COUNTER_FORMAT = Pattern.compile("\\d+/\\d+");
+    /** Android reads "145/146"; iOS puts spaces around the slash. */
+    private static final Pattern EVENT_COUNTER_FORMAT = Pattern.compile("\\d+\\s*/\\s*\\d+");
 
     private static final Logger logger = LogManager.getLogger(VideoSearchPage.class);
 
@@ -94,12 +95,7 @@ public class VideoSearchPage {
         String cameraName = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_CAMERA_NAME).getText();
         Assert.assertFalse(cameraName.isBlank(), "Event page should show the camera name");
         String date = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_DATE).getText();
-        LocalDate eventDate;
-        try {
-            eventDate = LocalDate.parse(date.trim(), EVENT_DATE_FORMAT);
-        } catch (DateTimeParseException e) {
-            throw new AssertionError("Event page date '" + date + "' is not in the 'MMMM d, yyyy' format", e);
-        }
+        LocalDate eventDate = parseEventDate(date);
         // Only the shown key image has a time, and a neighbouring key image kept in the hierarchy off-screen must not
         // count. Reading one of several would compare the wrong moment.
         List<WebElement> times = WaitUtils.findElements(driver, VideoSearchLocators.EVENT_TIME).stream()
@@ -371,5 +367,18 @@ public class VideoSearchPage {
                 TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
             clickSearchBackButton();
         }
+    }
+
+    /** Android spells the month out ("November 5, 2026"), iOS shortens it ("Nov 05, 2026"); either is accepted. */
+    private static LocalDate parseEventDate(String shown) {
+        for (DateTimeFormatter format : List.of(EVENT_DATE_FORMAT, DATE_FORMAT)) {
+            try {
+                return LocalDate.parse(shown.trim(), format);
+            } catch (DateTimeParseException e) {
+                logger.debug("Event page date '{}' is not in {}", shown, format);
+            }
+        }
+        throw new AssertionError("Event page date '" + shown + "' is neither in the 'MMMM d, yyyy' nor the "
+                + "'MMM d, yyyy' format");
     }
 }

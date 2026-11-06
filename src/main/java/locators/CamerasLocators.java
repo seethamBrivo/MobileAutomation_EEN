@@ -94,23 +94,23 @@ public final class CamerasLocators {
 
     public static final By CAMERA_SETTINGS_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text=\"Camera settings\"]"), // android
-            AppiumBy.accessibilityId("Camera settings")); // ios
+            iosMenuOption("Camera settings")); // ios
 
     public static final By HISTORY_BROWSER_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='History browser']"), // android
-            AppiumBy.accessibilityId("History browser")); // ios
+            iosMenuOption("History browser")); // ios
 
     public static final By LIVE_VIDEO_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Live video']"), // android
-            AppiumBy.accessibilityId("Live video")); // ios
+            iosMenuOption("Live video")); // ios
 
     public static final By TURN_ON_CAMERA_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Turn on camera']"), // android
-            AppiumBy.accessibilityId("Turn on camera")); // ios
+            iosMenuOption("Turn on camera")); // ios
 
     public static final By TURN_OFF_CAMERA_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Turn off camera']"), // android
-            AppiumBy.accessibilityId("Turn off camera")); // ios
+            iosMenuOption("Turn off camera")); // ios
 
     // --- Camera preview --------------------------------------------------------
 
@@ -176,6 +176,14 @@ public final class CamerasLocators {
     // iOS: no visible filter here, because the rows behind an open context menu are not reported as visible.
     private static By iosStatusLabelWithText(String text) {
         return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + text + "'");
+    }
+
+    /**
+     * iOS: an option of the camera context menu, found by its label. The buttons carry an identifier of their own
+     * (for example {@code contextMenuHistoryBrowser}), which an accessibility id lookup of the label does not match.
+     */
+    private static By iosMenuOption(String label) {
+        return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND label == '" + label + "'");
     }
 
     // --- Search and filter -----------------------------------------------------

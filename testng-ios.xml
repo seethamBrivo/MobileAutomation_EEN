@@ -60,4 +60,16 @@
             <class name="tests.ts_bridges.BridgesTest"/>
         </classes>
     </test>
+    <!-- History Browser signs in as the end user too, so it gets a <test> of its own after Bridges and never overlaps
+         the end-user classes above. -->
+    <test name="iOS History Browser">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_history.HistoryBrowserTest"/>
+        </classes>
+    </test>
 </suite>
