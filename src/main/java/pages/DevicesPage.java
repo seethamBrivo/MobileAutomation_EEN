@@ -1,5 +1,6 @@
 package pages;
 
+import constants.DashboardTab;
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
@@ -152,20 +153,20 @@ public class DevicesPage {
         WaitUtils.assertVisible(driver, BridgesLocators.ALL_DEVICES_SECTION, "All devices section should be displayed");
     }
 
-    public void verifyBridgesOptionDisplayed() {
-        WaitUtils.assertVisible(driver, BridgesLocators.BRIDGES_TAB, "Bridges option should be displayed");
+    /** Asserts every given tile is shown on the All devices screen, naming the missing one in the failure. */
+    public void verifyDashboardTabsDisplayed(DashboardTab... tabs) {
+        for (DashboardTab tab : tabs) {
+            WaitUtils.assertVisible(driver, tabLocator(tab), tab.getDisplayName() + " option should be displayed");
+        }
     }
 
-    public void verifyCamerasOptionDisplayed() {
-        WaitUtils.assertVisible(driver, BridgesLocators.CAMERAS_OPTION, "Cameras option should be displayed");
-    }
-
-    public void verifySpeakersOptionDisplayed() {
-        WaitUtils.assertVisible(driver, BridgesLocators.SPEAKERS_OPTION, "Speakers option should be displayed");
-    }
-
-    public void verifySwitchesOptionDisplayed() {
-        WaitUtils.assertVisible(driver, BridgesLocators.SWITCHES_OPTION, "Switches option should be displayed");
+    private static By tabLocator(DashboardTab tab) {
+        return switch (tab) {
+            case BRIDGES -> BridgesLocators.BRIDGES_TAB;
+            case CAMERAS -> BridgesLocators.CAMERAS_OPTION;
+            case SPEAKERS -> BridgesLocators.SPEAKERS_OPTION;
+            case SWITCHES -> BridgesLocators.SWITCHES_OPTION;
+        };
     }
 
     public void verifyUserNavigatedToOriginScreen() {
@@ -580,11 +581,9 @@ public class DevicesPage {
 
     public void verifyDevicesOverviewOptions() {
         verifyAllDevicesSectionIsDisplayed();
-        verifyBridgesOptionDisplayed();
-        verifyCamerasOptionDisplayed();
-        // Speakers check disabled: the enduser account used for automation has no speakers, so the app does not show that row.
-        // verifySpeakersOptionDisplayed();
-        verifySwitchesOptionDisplayed();
+        // Speakers is not checked: the enduser account used for automation has no speakers, so the app does not
+        // show that row.
+        verifyDashboardTabsDisplayed(DashboardTab.BRIDGES, DashboardTab.CAMERAS, DashboardTab.SWITCHES);
     }
 
     /** Bridges tab > filter by name > the first row is that bridge. */

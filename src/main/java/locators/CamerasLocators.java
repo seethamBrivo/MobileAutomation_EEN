@@ -57,6 +57,30 @@ public final class CamerasLocators {
     public static final By SECOND_ONLINE_CAMERA = AppiumBy.xpath(
             "(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]");
 
+    // Android only: a camera card is a full-width clickable row; its name and status are its first two TextViews.
+    // TODO: Replace with testTag when mobile team adds an identifier to the camera card.
+    public static final By CAMERA_CARD = AppiumBy.xpath(
+            "//android.view.View[@clickable='true'][starts-with(@bounds, '[0,')][android.widget.TextView]");
+
+    /** Android only: looked up inside a camera card; in order the name, the status, then the tags. */
+    public static final By TEXTS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView");
+
+    // Android only: the 3-dots button is the last clickable child of the card (the first is the preview). The tag
+    // chips sit in a non-clickable row inside the card, so they are not direct children and cannot be matched.
+    // TODO: Replace with testTag when mobile team adds an identifier to the 3-dots button.
+    public static final By THREE_DOTS_OF_FIRST_ONLINE_CAMERA = AppiumBy.xpath(
+            "(//android.widget.TextView[@text='Online'])[1]/ancestor::android.view.View[@clickable='true'][1]"
+                    + "/android.view.View[@clickable='true'][last()]");
+
+    /**
+     * Android only: the Cameras tile on the Dashboard lists the cameras per status; their sum is the total.
+     * TODO: Replace with testTag when mobile team adds identifiers to the tile's numbers.
+     */
+    public static final By CAMERAS_TILE_COUNTS = AppiumBy.xpath(
+            "//android.widget.TextView[@text='Cameras']/ancestor::android.view.View[@clickable='true'][1]"
+                    + "//android.widget.TextView[string-length(@text) > 0"
+                    + " and string-length(translate(@text, '0123456789', '')) = 0]");
+
     public static By cameraCardWithName(String name) {
         return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
                 + "/ancestor::android.view.View[@clickable='true'][1]");
@@ -179,4 +203,23 @@ public final class CamerasLocators {
     /** iOS only: the keyboard's "search" key (disabled while the field is empty), used to close the keyboard. */
     public static final By KEYBOARD_SEARCH_KEY = AppiumBy.iOSNsPredicateString(
             "type == 'XCUIElementTypeButton' AND label == 'search'");
+
+    /** Android only: the name of each filter chip, as the row shows them from left to right. */
+    public static final By FILTER_CHIP_NAME = AppiumBy.xpath(
+            "//android.view.View[@content-desc='trailingIcon']/preceding-sibling::android.widget.TextView[1]");
+
+    // Android only: a tag under a camera is a clickable chip with a checkbox; the filter chips have none.
+    // TODO: Replace with testTag when mobile team adds an identifier to the tag chip.
+    public static final By FIRST_TAG = AppiumBy.xpath(
+            "(//android.view.View[@clickable='true'][android.widget.CheckBox])[1]");
+
+    public static final By FIRST_TAG_NAME = AppiumBy.xpath(
+            "(//android.view.View[@clickable='true'][android.widget.CheckBox])[1]/android.widget.TextView");
+
+    /** Android only: the number next to the "Tags" filter chip while a tag filter is applied. */
+    public static final By ACTIVE_TAGS_FILTER_COUNT = AppiumBy.xpath(
+            "//android.widget.TextView[@text='Tags']/following-sibling::android.widget.TextView[1]");
+
+    /** Android only: appears next to the counter while a filter is applied. */
+    public static final By CLEAR_FILTER_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Clear filter']");
 }

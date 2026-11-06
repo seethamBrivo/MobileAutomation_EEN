@@ -165,6 +165,15 @@ public final class GestureUtils {
         driver.perform(List.of(swipeSequence));
     }
 
+    /**
+     * Swipes along the row at {@code y} from one fraction of the window's width to another (0.0 is the left edge,
+     * 1.0 the right), so the gesture does not depend on the screen size or start in an edge-back zone.
+     */
+    public static void swipeHorizontal(AppiumDriver driver, int y, double startFraction, double endFraction) {
+        int width = driver.manage().window().getSize().width;
+        swipe(driver, (int) (width * startFraction), y, (int) (width * endFraction), y);
+    }
+
     /** Like {@link #swipe}, but holds still before lifting the finger so the list stops instead of flinging. */
     public static void dragAndHold(AppiumDriver driver, int startX, int startY, int endX, int endY) {
         PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
