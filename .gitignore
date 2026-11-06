@@ -83,3 +83,6 @@ screenshots/
 *.zip
 *.tar.gz
 *.rar
+
+# Generated per pull request by scripts/select-tests.sh
+testng-pr.xml
