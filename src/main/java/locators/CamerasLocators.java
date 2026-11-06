@@ -53,9 +53,11 @@ public final class CamerasLocators {
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
 
-    // Android only.
-    public static final By SECOND_ONLINE_CAMERA = AppiumBy.xpath(
-            "(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]");
+    // iOS: the second "Online" label of the list, by position (the rows carry no ids).
+    // TODO: Replace with an accessibility id when the mobile team adds identifiers to the camera rows
+    public static final By SECOND_ONLINE_CAMERA = PlatformLocator.get(
+            AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]"), // android
+            AppiumBy.xpath("(//XCUIElementTypeStaticText[@name='Online'])[2]")); // ios
 
     // Android only: a camera card is a full-width clickable row; its name and status are its first two TextViews.
     // TODO: Replace with testTag when mobile team adds an identifier to the camera card.
@@ -82,35 +84,44 @@ public final class CamerasLocators {
                     + " and string-length(translate(@text, '0123456789', '')) = 0]");
 
     public static By cameraCardWithName(String name) {
-        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
-                + "/ancestor::android.view.View[@clickable='true'][1]");
+        return PlatformLocator.get(
+                AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
+                        + "/ancestor::android.view.View[@clickable='true'][1]"), // android
+                AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
+                        + "][following-sibling::*[1][@name='ic_contextMenu']]")); // ios
     }
+
+    /**
+     * iOS only: the back button of the Cameras list, which returns to All devices (Android goes back with the system
+     * back).
+     */
+    public static final By LIST_BACK_BUTTON = AppiumBy.accessibilityId("BackButton"); // ios
 
     // --- Context menu ----------------------------------------------------------
 
     public static final By CONTEXT_MENU_CONTAINER = PlatformLocator.get(
             AppiumBy.xpath("//android.view.ViewGroup[.//android.widget.TextView[@text='Camera settings']]"), // android
-            AppiumBy.accessibilityId("Camera settings")); // ios
+            iosMenuButton("Camera settings")); // ios
 
     public static final By CAMERA_SETTINGS_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text=\"Camera settings\"]"), // android
-            iosMenuOption("Camera settings")); // ios
+            iosMenuButton("Camera settings")); // ios
 
     public static final By HISTORY_BROWSER_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='History browser']"), // android
-            iosMenuOption("History browser")); // ios
+            iosMenuButton("History browser")); // ios
 
     public static final By LIVE_VIDEO_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Live video']"), // android
-            iosMenuOption("Live video")); // ios
+            iosMenuButton("Live video")); // ios
 
     public static final By TURN_ON_CAMERA_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Turn on camera']"), // android
-            iosMenuOption("Turn on camera")); // ios
+            iosMenuButton("Turn on camera")); // ios
 
     public static final By TURN_OFF_CAMERA_OPTION = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Turn off camera']"), // android
-            iosMenuOption("Turn off camera")); // ios
+            iosMenuButton("Turn off camera")); // ios
 
     // --- Camera preview --------------------------------------------------------
 
@@ -123,14 +134,14 @@ public final class CamerasLocators {
     public static final By CAMERA_PREVIEW = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
                     + "/preceding-sibling::android.view.View[1]"), // android
-            AppiumBy.xpath("//XCUIElementTypeButton[@name='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
+            AppiumBy.xpath("//XCUIElementTypeButton[@label='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
 
     // Android: the name is the first text that is a direct child of the card. An offline or error card also holds a
     // status text ("Offline"), but it sits inside a nested View, so only a direct child is the name on every card.
     public static final By CAMERA_NAME_IN_PREVIEW = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
                     + "/preceding-sibling::android.view.View[1]/android.widget.TextView[1]"), // android
-            AppiumBy.xpath("//XCUIElementTypeButton[@name='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
+            AppiumBy.xpath("//XCUIElementTypeButton[@label='Camera settings']/preceding::XCUIElementTypeButton[1]")); // ios
 
     /** Android only: the time of the frame, the card's second direct-child text on an online camera. */
     public static final By CAMERA_FRAME_TIME_IN_PREVIEW =
@@ -173,17 +184,17 @@ public final class CamerasLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Camera error']"), // android
             iosStatusLabelWithText("Camera error")); // ios
 
+    /**
+     * iOS: a context menu entry by its label. The id of an entry differs between menus (the cameras list names it
+     * "Camera settings", the Layouts screen "contextMenuCameraSettings"), the label does not.
+     */
+    private static By iosMenuButton(String label) {
+        return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND label == '" + label + "'");
+    }
+
     // iOS: no visible filter here, because the rows behind an open context menu are not reported as visible.
     private static By iosStatusLabelWithText(String text) {
         return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + text + "'");
-    }
-
-    /**
-     * iOS: an option of the camera context menu, found by its label. The buttons carry an identifier of their own
-     * (for example {@code contextMenuHistoryBrowser}), which an accessibility id lookup of the label does not match.
-     */
-    private static By iosMenuOption(String label) {
-        return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND label == '" + label + "'");
     }
 
     // --- Search and filter -----------------------------------------------------

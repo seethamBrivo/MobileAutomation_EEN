@@ -1,8 +1,16 @@
 name: CI
 
 on:
-  push:
-    branches: [main, master]  # Runs only when code is merged to main/master
+  # A pull request runs only the tests it affects (scripts/select-tests.sh), on Android and iOS. This check is
+  # advisory: do NOT add it to the branch protection "required checks", so a red run never blocks the merge.
+  # Nothing runs on a merge to main; use the manual trigger below for a full run.
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  # Full regression (Android, then iOS) before the day starts: 05:00 IST = 23:30 UTC the evening before, so Sunday to
+  # Thursday UTC covers Monday to Friday in India. GitHub cron is UTC, runs only on the default branch, and a busy
+  # runner can start it a few minutes late.
+  schedule:
+    - cron: '30 23 * * 0-4'
   workflow_dispatch:  # Allows manual trigger from GitHub UI
     inputs:
       platform:
@@ -43,8 +51,10 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        platform: ${{ fromJSON(github.event_name == 'push' && '["android","ios"]' || format('["{0}"]', inputs.platform)) }}
+        platform: ${{ fromJSON(github.event_name != 'workflow_dispatch' && '["android","ios"]' || format('["{0}"]', inputs.platform)) }}
     name: ${{ matrix.platform }} tests
+    # No secrets reach a fork's PR, and a draft is not ready for device time.
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft)
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -71,6 +81,19 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the PR's diff against the base branch is needed to pick the tests
+
+      - name: Select the tests this pull request affects
+        id: select
+        if: github.event_name == 'pull_request'
+        run: |
+          selected="$(bash scripts/select-tests.sh '${{ github.base_ref }}' '${{ matrix.platform }}' testng-pr.xml)"
+          {
+            echo "### Tests selected for ${{ matrix.platform }}"
+            if [ -n "$selected" ]; then echo '```'; echo "$selected"; echo '```'; else echo "None: this change touches no page, locator or test."; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "has_tests=$([ -n "$selected" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -146,7 +169,7 @@ jobs:
           browserstackUserName=${{ secrets.BROWSERSTACK_USERNAME }}
           browserstackAccessKey=${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           browserstackProjectName=EEN Mobile Automation
-          browserstackBuildName=CI Build ${{ github.run_number }}${{ matrix.platform == 'ios' && ' (iOS)' || '' }}
+          browserstackBuildName=${{ github.event_name == 'schedule' && 'Daily Regression' || 'CI Build' }} ${{ github.run_number }}${{ matrix.platform == 'ios' && ' (iOS)' || '' }}
           browserstackIdleTimeout=120
           # Debug logs, network logs and video are always on for a merge to main (the form input only exists on a manual
           # run). A manual run keeps them on by default and can turn them off. iOS network logs stay off, see below.
@@ -200,15 +223,16 @@ jobs:
         run: mvn -B -DskipTests package
 
       - name: Run tests
-        # Note: continue-on-error removed intentionally to ensure CI fails on test failures
-        # This prevents merging broken code and ensures all tests pass before merge
+        # A failure turns the run red so the author sees it; the check is not required, so it does not block the merge.
+        # A pull request with no affected tests skips this step.
+        if: github.event_name != 'pull_request' || steps.select.outputs.has_tests == 'true'
         env:
           # Read by the BrowserStack SDK when use_sdk is set; ignored otherwise.
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           BROWSERSTACK_APP_URL: ${{ matrix.platform == 'ios' && secrets.IOS_BROWSERSTACK_APP_URL || secrets.BROWSERSTACK_APP_URL }}
           BROWSERSTACK_BUILD_NUMBER: ${{ github.run_number }}
-        run: mvn test -Dplatform=${{ matrix.platform }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (matrix.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml') }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
+        run: mvn test -Dplatform=${{ matrix.platform }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (github.event_name == 'pull_request' && 'testng-pr.xml' || (matrix.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml')) }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
 
       - name: Upload test results
         if: always()

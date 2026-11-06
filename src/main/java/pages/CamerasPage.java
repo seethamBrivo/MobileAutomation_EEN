@@ -330,7 +330,8 @@ public class CamerasPage {
     public LocalTime readFrameTimeInContextMenu() {
         // iOS: the time is in the hierarchy but reported as not visible, so it is read without a visibility wait.
         String shown = (PlatformLocator.isIos()
-                ? WaitUtils.textOfPresent(driver, CamerasLocators.TIMESTAMP, TimeoutConstants.SHORT_TIMEOUT)
+                ? WaitUtils.attributeOfPresent(
+                        driver, CamerasLocators.TIMESTAMP, "value", TimeoutConstants.SHORT_TIMEOUT)
                 : WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_FRAME_TIME_IN_PREVIEW).getText())
                 .trim();
         for (DateTimeFormatter format : FRAME_TIME_FORMATS) {
@@ -356,9 +357,22 @@ public class CamerasPage {
 
     public void openContextMenuOfCameraNamed(String name) {
         By card = CamerasLocators.cameraCardWithName(name);
-        Assert.assertTrue(scrollUntilElementIsVisible(card), "Camera '" + name + "' should be in the cameras list");
+        Assert.assertTrue(scrollToCameraRow(card), "Camera '" + name + "' should be in the cameras list");
         GestureUtils.longPressUntilVisible(driver, card, CamerasLocators.CONTEXT_MENU_CONTAINER);
         verifyContextMenuDisplayed();
+    }
+
+    /**
+     * iOS keeps the list's scroll position when the screen is left and reopened, and the search only scrolls down, so
+     * it starts from the top. A row that is already on screen is left where it is: the scroll that centres a found
+     * row (see scrollUntilElementIsVisible) would push a row near the top out of view.
+     */
+    private boolean scrollToCameraRow(By card) {
+        if (!PlatformLocator.isIos()) {
+            return scrollUntilElementIsVisible(card);
+        }
+        GestureUtils.scrollToTop(driver);
+        return WaitUtils.isVisible(driver, card, TimeoutConstants.SHORT_TIMEOUT) || scrollUntilElementIsVisible(card);
     }
 
     public boolean hasOnlineCamera() {
@@ -366,7 +380,15 @@ public class CamerasPage {
         return scrollToFirstOnlineCamera();
     }
 
+    /**
+     * iOS keeps showing a camera's old name in the list after a rename, until the list is opened again, and the
+     * renamed camera then sits at its new place in the sorted list, so the list is scrolled to find it.
+     */
     public void verifyCameraListedWithName(String name) {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, CamerasLocators.LIST_BACK_BUTTON);
+            openCamerasList();
+        }
         Assert.assertTrue(scrollUntilElementIsVisible(CamerasLocators.cameraCardWithName(name)),
                 "Cameras list should show the renamed camera '" + name + "'");
     }
