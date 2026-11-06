@@ -7,9 +7,14 @@ import locators.BottomNavigationLocators;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import pages.BottomNavigationBar;
 import pages.DownloadsPage;
 import utils.WaitUtils;
 
+/**
+ * Test suite for Downloads functionality.
+ * NOTE: These tests use Android-only locators and are only verified on Android platform.
+ */
 public class DownloadsTest extends BaseTest {
 
     private DownloadsPage downloadsPage;
@@ -34,20 +39,14 @@ public class DownloadsTest extends BaseTest {
                 downloadsPage.cancelActiveDownloads();
             }
 
-            // Navigate back to main screen with More tab visible
-            // May need multiple backs if inside folder
-            for (int i = 0; i < 3; i++) {
-                if (WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB,
-                        TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                    break; // Already at main screen
-                }
+            // Navigate back until bottom navigation bar is showing (up to 3 backs)
+            for (int i = 0; i < 3 && !BottomNavigationBar.isShowing(driver); i++) {
                 driver.navigate().back();
             }
 
             // Log if we couldn't reach the main screen
-            if (!WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB,
-                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                logger.warn("Cleanup: Could not navigate back to main screen with More tab");
+            if (!BottomNavigationBar.isShowing(driver)) {
+                logger.warn("Cleanup: Could not navigate back to main screen with bottom navigation");
             }
         } catch (Throwable t) {
             logger.warn("Cleanup failed: {}", t.getMessage());
@@ -84,6 +83,7 @@ public class DownloadsTest extends BaseTest {
 
     @Test(description = "EEPD-TC-13207: POS-Downloads - downloading a video - Full video type in mobile app",
           groups = {"regression", "downloads"})
+    // Note: "Full video type" refers to the video format, not a user-selectable option in the app
     public void test02_videoDownloadWithCancellation() {
         // Complete video download flow
         downloadsPage.navigateToDownloads();
@@ -104,6 +104,7 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.clickVideoDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
+        downloadsPage.verifyDownloadingSnackbar();
         downloadsPage.clickVideoCancelDownloadIcon();
         downloadsPage.clickYesCancelButton();
         downloadsPage.verifyDownloadCancelledMessage();
