@@ -328,8 +328,12 @@ public class CamerasPage {
      * ("07:15:10 AM" or "19:15:10").
      */
     public LocalTime readFrameTimeInContextMenu() {
-        String shown = WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_FRAME_TIME_IN_PREVIEW)
-                .getText().trim();
+        // iOS: the time is in the hierarchy but reported as not visible, so it is read without a visibility wait.
+        String shown = (PlatformLocator.isIos()
+                ? WaitUtils.attributeOfPresent(
+                        driver, CamerasLocators.TIMESTAMP, "value", TimeoutConstants.SHORT_TIMEOUT)
+                : WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_FRAME_TIME_IN_PREVIEW).getText())
+                .trim();
         for (DateTimeFormatter format : FRAME_TIME_FORMATS) {
             try {
                 return LocalTime.parse(shown, format);

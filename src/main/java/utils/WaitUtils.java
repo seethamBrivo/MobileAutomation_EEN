@@ -326,6 +326,11 @@ public final class WaitUtils {
         throw new AssertionError("Unreachable");
     }
 
+    /** Every match once at least one is in the hierarchy, visible or not. */
+    public static List<WebElement> findPresent(AppiumDriver driver, By locator, Duration timeout) {
+        return wait(driver, timeout).until(ExpectedConditions.presenceOfAllElementsLocatedBy(locator));
+    }
+
     /**
      * Polls {@code condition} until it returns true or {@code timeout} passes, and returns whether it did. WebDriver
      * errors raised by the condition (an element gone or re-rendering) count as "not yet", not as failures.

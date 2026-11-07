@@ -12,12 +12,37 @@ public final class HistoryBrowserLocators {
 
     private HistoryBrowserLocators() {}
 
+    // --- Shared fragments ------------------------------------------------------
+
+    private static final String ANDROID_TIMELINE = "//*[@resource-id='com.een.vms.android:id/timeline_container']";
+
+    private static final String ANDROID_EVENT_CARD =
+            ANDROID_TIMELINE + "//*[@resource-id='com.een.vms.android:id/event_card']";
+
+    private static final String IOS_TIMELINE_TEXTS = "//XCUIElementTypeScrollView//XCUIElementTypeStaticText";
+
+    // The timeline labels are read as 24-hour times (see HistoryBrowserPage.parseTimeLabel), so a row label is
+    // "HH:mm:ss" and an event card time "yyyy-MM-dd HH:mm:ss". iOS gives the rows no identifier, so they are told apart
+    // by the shape of the text. TODO: replace with accessibility identifiers once the iOS app has them.
+    private static final String IOS_ROW_TIME_NAME = "string-length(@name)=8 and substring(@name,3,1)=':'";
+
+    private static final String IOS_DATE_TIME_NAME = "string-length(@name)=19 and substring(@name,5,1)='-'";
+
+    // The "Timeline" title is visible while the rows under it are reported as not visible.
+    private static final By IOS_TIMELINE_TITLE = AppiumBy.accessibilityId("Timeline");
+
+    // The timeline is the scroll view that holds text; it has no identifier of its own, so this matches the first
+    // such scroll view. TODO: replace with an accessibility identifier once the iOS app has one.
+    private static final By IOS_TIMELINE_SCROLL =
+            AppiumBy.xpath("//XCUIElementTypeScrollView[.//XCUIElementTypeStaticText]");
+
     // --- Camera preview --------------------------------------------------------
 
     // btn_more carries no content-desc, so it is addressed by resource-id inside the first card's content-desc.
-    public static final By FIRST_PREVIEW_THREE_DOTS =
+    public static final By FIRST_PREVIEW_THREE_DOTS = PlatformLocator.get(
             AppiumBy.xpath("//*[@content-desc='cell_at_0_preview_view_preview_card']"
-                    + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/btn_more']");
+                    + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/btn_more']"), // android
+            AppiumBy.accessibilityId("cell_at_0_preview_view_moreButton")); // ios
 
     public static final By FIRST_PREVIEW_CARD = PlatformLocator.get(
             AppiumBy.accessibilityId("cell_at_0_preview_view_preview_card"), // android
@@ -25,106 +50,136 @@ public final class HistoryBrowserLocators {
 
     // --- Live video ------------------------------------------------------------
 
-    public static final By LIVE_STREAM_SCREEN =
-            AppiumBy.accessibilityId("LiveStream");
+    public static final By LIVE_STREAM_SCREEN = PlatformLocator.get(
+            AppiumBy.accessibilityId("LiveStream"), // android
+            AppiumBy.accessibilityId("LiveVideoView")); // ios
 
     // One toggle button: it opens the history browser from the live video and the live video from the history
     // browser. Its text changes with the screen, so it is found by id and the screen is checked by content-desc.
-    public static final By NAVIGATION_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/navigation_button");
+    public static final By NAVIGATION_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/navigation_button"), // android
+            AppiumBy.accessibilityId("streamerNavigationBar_playerButton")); // ios
 
     // --- History browser -------------------------------------------------------
 
-    public static final By HISTORY_BROWSER_SCREEN =
-            AppiumBy.accessibilityId("HistoryBrowser");
+    public static final By HISTORY_BROWSER_SCREEN = PlatformLocator.get(
+            AppiumBy.accessibilityId("HistoryBrowser"), // android
+            IOS_TIMELINE_TITLE); // ios
 
     // The back button's label: the camera's name.
-    public static final By CAMERA_NAME =
-            AppiumBy.id("com.een.vms.android:id/camera_name");
+    public static final By CAMERA_NAME = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/camera_name"), // android
+            AppiumBy.iOSClassChain("**/XCUIElementTypeNavigationBar/XCUIElementTypeStaticText")); // ios
 
-    // The player holds the camera preview (a still frame while paused) and the event overlay.
-    public static final By PLAYER_PREVIEW =
-            AppiumBy.id("com.een.vms.android:id/player_container");
+    // The player holds the camera preview (a still frame while paused) and the event overlay. iOS gives the video no
+    // identifier, so it is the unnamed image that is wider than an icon. TODO: replace with an accessibility id.
+    public static final By PLAYER_PREVIEW = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/player_container"), // android
+            AppiumBy.xpath("//XCUIElementTypeImage[not(@name) and @width >= 200]")); // ios
 
     // The save (export) button of the action bar, left of the calendar picker.
-    public static final By SAVE_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/export");
+    public static final By SAVE_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/export"), // android
+            AppiumBy.accessibilityId("ic_download")); // ios
 
     // The red line stays fixed while the rows scroll under it, so the cursor position is the time shown here.
-    public static final By CURRENT_POSITION =
+    public static final By CURRENT_POSITION = PlatformLocator.get(
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/calendar']"
-                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/text']");
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/text']"), // android
+            AppiumBy.xpath("//XCUIElementTypeImage[@name='calendar']"
+                    + "/preceding-sibling::XCUIElementTypeStaticText[1]")); // ios
 
     // The time above the video, which follows the frame that is shown.
-    public static final By PREVIEW_TIME =
-            AppiumBy.id("com.een.vms.android:id/frame_timestamp");
+    public static final By PREVIEW_TIME = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/frame_timestamp"), // android
+            AppiumBy.xpath("(//XCUIElementTypeStaticText[" + IOS_DATE_TIME_NAME
+                    + " and not(ancestor::XCUIElementTypeScrollView)])[1]")); // ios
 
-    public static final By TIMELINE_CONTAINER =
-            AppiumBy.id("com.een.vms.android:id/timeline_container");
+    public static final By TIMELINE_CONTAINER = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/timeline_container"), // android
+            IOS_TIMELINE_SCROLL); // ios
 
     // Landscape only: the timeline is a side panel with its own close button, and a button on the screen's right
-    // edge reopens it.
+    // edge reopens it. Android only: the iOS app has no such buttons, so these two have no iOS value on purpose.
     public static final By TIMELINE_CLOSE_BUTTON =
-            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
-                    + "//*[@resource-id='com.een.vms.android:id/close']");
+            AppiumBy.xpath(ANDROID_TIMELINE + "//*[@resource-id='com.een.vms.android:id/close']");
 
     public static final By TIMELINE_BUTTON =
             AppiumBy.id("com.een.vms.android:id/timeline_sidebar");
 
     // --- Event filter ----------------------------------------------------------
 
-    public static final By FILTER_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/filter");
+    public static final By FILTER_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/filter"), // android
+            AppiumBy.accessibilityId("line.3.horizontal.decrease")); // ios
 
     // The filter button holds only an icon; a text node inside it would be an indication number.
-    public static final By FILTER_BUTTON_INDICATION =
-            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/filter']//android.widget.TextView");
+    public static final By FILTER_BUTTON_INDICATION = PlatformLocator.get(
+            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/filter']//android.widget.TextView"), // android
+            AppiumBy.xpath("//XCUIElementTypeButton[@name='line.3.horizontal.decrease']"
+                    + "//XCUIElementTypeStaticText")); // ios
 
     // --- Timeline controls -----------------------------------------------------
 
-    public static final By PREVIOUS_FRAME_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/prev_key_frame");
+    public static final By PREVIOUS_FRAME_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/prev_key_frame"), // android
+            AppiumBy.accessibilityId("prev_frame_v3")); // ios
 
-    public static final By PREVIOUS_EVENT_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/prev_event");
+    public static final By PREVIOUS_EVENT_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/prev_event"), // android
+            AppiumBy.accessibilityId("prev_event_v3")); // ios
 
-    public static final By PLAY_PAUSE_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/video_action");
+    public static final By PLAY_PAUSE_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/video_action"), // android
+            AppiumBy.iOSNsPredicateString("name == 'play_v3' OR name == 'pause_v3'")); // ios
 
-    public static final By NEXT_EVENT_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/next_event");
+    public static final By NEXT_EVENT_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/next_event"), // android
+            AppiumBy.accessibilityId("next_event_v3")); // ios
 
-    public static final By NEXT_FRAME_BUTTON =
-            AppiumBy.id("com.een.vms.android:id/next_key_frame");
+    public static final By NEXT_FRAME_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/next_key_frame"), // android
+            AppiumBy.accessibilityId("next_frame_v3")); // ios
 
     // --- Timeline --------------------------------------------------------------
 
-    public static final By TIMELINE_EVENT_NAMES =
-            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
-                    + "//*[@resource-id='com.een.vms.android:id/event_card']"
-                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/name']");
+    public static final By TIMELINE_EVENT_NAMES = PlatformLocator.get(
+            AppiumBy.xpath(ANDROID_EVENT_CARD
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/name']"), // android
+            AppiumBy.xpath(IOS_TIMELINE_TEXTS + "[not(" + IOS_ROW_TIME_NAME + ") and not(" + IOS_DATE_TIME_NAME
+                    + ")]")); // ios
 
     // The title above the rows shares the "timeline" id with the panel around it, so the text tells them apart.
-    public static final By TIMELINE_LABEL =
+    public static final By TIMELINE_LABEL = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/timeline'"
-                    + " and @text='Timeline']");
+                    + " and @text='Timeline']"), // android
+            IOS_TIMELINE_TITLE); // ios
 
     // The "content" id is shared with other screens, so the list is scoped to the timeline container.
-    public static final By TIMELINE_LIST =
-            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
-                    + "//androidx.recyclerview.widget.RecyclerView");
+    public static final By TIMELINE_LIST = PlatformLocator.get(
+            AppiumBy.xpath(ANDROID_TIMELINE + "//androidx.recyclerview.widget.RecyclerView"), // android
+            IOS_TIMELINE_SCROLL); // ios
 
     // The full "yyyy-MM-dd HH:mm:ss" time of each event card, so events can be counted against the cursor.
-    public static final By TIMELINE_EVENT_TIMES =
-            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
-                    + "//*[@resource-id='com.een.vms.android:id/event_card']"
-                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/timestamp']");
+    public static final By TIMELINE_EVENT_TIMES = PlatformLocator.get(
+            AppiumBy.xpath(ANDROID_EVENT_CARD
+                    + "//android.widget.TextView[@resource-id='com.een.vms.android:id/timestamp']"), // android
+            AppiumBy.xpath(IOS_TIMELINE_TEXTS + "[" + IOS_DATE_TIME_NAME + "]")); // ios
 
     // Event cards reuse the "timestamp" id; only a row label sits next to the row's recordings_line bar.
-    public static final By TIMELINE_ROW_TIMESTAMPS =
-            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/timeline_container']"
+    public static final By TIMELINE_ROW_TIMESTAMPS = PlatformLocator.get(
+            AppiumBy.xpath(ANDROID_TIMELINE
                     + "//android.widget.TextView[@resource-id='com.een.vms.android:id/timestamp'"
-                    + " and ../*[@resource-id='com.een.vms.android:id/recordings_line']]");
+                    + " and ../*[@resource-id='com.een.vms.android:id/recordings_line']]"), // android
+            AppiumBy.xpath(IOS_TIMELINE_TEXTS + "[" + IOS_ROW_TIME_NAME + "]")); // ios
+
+    /**
+     * The timeline has drawn its rows. iOS reports the rows of the landscape timeline, and the first row above the
+     * fold in portrait, as not visible although they are on screen, so the visible "Timeline" title stands for them.
+     */
+    public static final By TIMELINE_ROWS_LOADED = PlatformLocator.get(
+            TIMELINE_ROW_TIMESTAMPS, // android
+            IOS_TIMELINE_TITLE); // ios
 
     // --- Export screen ---------------------------------------------------------
 

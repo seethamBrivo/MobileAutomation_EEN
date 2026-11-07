@@ -2,8 +2,12 @@ package utils;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.ios.IOSDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.ScreenOrientation;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.SkipException;
 
@@ -23,6 +27,9 @@ public final class DeviceUtils {
 
     private static final Logger logger = LogManager.getLogger(DeviceUtils.class);
 
+    /** One more rotate when the first did not leave the device in the wanted orientation (a missed gesture). */
+    private static final int IOS_ROTATE_ATTEMPTS = 2;
+
     private DeviceUtils() {
     }
 
@@ -36,6 +43,10 @@ public final class DeviceUtils {
      * @throws SkipException if rotation is disabled on local (allowAdbShell=false)
      */
     public static void rotateToLandscape(AppiumDriver driver) {
+        if (PlatformLocator.isIos()) {
+            rotateIos(driver, ScreenOrientation.LANDSCAPE);
+            return;
+        }
         // BLOCKER FIX #9: Smart rotation strategy - use driver.rotate() on BrowserStack to make test PASS in CI
 
         // BrowserStack: Use driver orientation API (less reliable for Compose but works, makes test PASS in CI)
@@ -80,6 +91,10 @@ public final class DeviceUtils {
      */
     public static void rotateToPortrait(AppiumDriver driver) {
         try {
+            if (PlatformLocator.isIos()) {
+                rotateIos(driver, ScreenOrientation.PORTRAIT);
+                return;
+            }
             // BrowserStack: Use driver orientation API for cleanup
             if (isBrowserStackExecution()) {
                 ((io.appium.java_client.android.AndroidDriver) driver).rotate(org.openqa.selenium.ScreenOrientation.PORTRAIT);
@@ -100,6 +115,46 @@ public final class DeviceUtils {
         } catch (Exception e) {
             logger.warn("Failed to restore portrait orientation: {}", e.getMessage());
         }
+    }
+
+    /**
+     * iOS: turns the device with the driver's orientation call. BrowserStack answers it with "Unable To Rotate
+     * Device" on some runs even though the device did turn, so the call's failure is only logged and the window
+     * shape decides whether the device is in the wanted orientation. A rotate that did not take is tried once more,
+     * unless the device has reached the wanted orientation by then.
+     *
+     * @throws IllegalStateException if the device is not in the wanted orientation after the wait
+     */
+    private static void rotateIos(AppiumDriver driver, ScreenOrientation target) {
+        boolean landscape = target == ScreenOrientation.LANDSCAPE;
+        for (int attempt = 1; attempt <= IOS_ROTATE_ATTEMPTS; attempt++) {
+            // The previous rotate may have taken effect although it threw, or the device may still be turning, so
+            // rotating again would turn it back to where it started.
+            if (isLandscape(driver) == landscape) {
+                logger.info("Device already in {} on iOS (attempt {})", target, attempt);
+                return;
+            }
+            try {
+                ((IOSDriver) driver).rotate(target);
+            } catch (WebDriverException e) {
+                logger.warn("iOS rotate to {} reported an error: {}", target,
+                        String.valueOf(e.getMessage()).lines().findFirst().orElse(""));
+            }
+            if (WaitUtils.pollUntil(driver, TimeoutConstants.ROTATION_STABILIZE,
+                    () -> isLandscape(driver) == landscape)) {
+                logger.info("Rotated to {} on iOS", target);
+                return;
+            }
+            logger.warn("Device is not in {} after rotating (attempt {} of {})",
+                    target, attempt, IOS_ROTATE_ATTEMPTS);
+        }
+        throw new IllegalStateException("Device should be in " + target + " after rotating but is not");
+    }
+
+    /** Whether the window is wider than it is tall, which is how both platforms tell the orientations apart. */
+    public static boolean isLandscape(AppiumDriver driver) {
+        Dimension size = driver.manage().window().getSize();
+        return size.getWidth() > size.getHeight();
     }
 
     /**

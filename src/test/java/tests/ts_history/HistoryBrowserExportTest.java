@@ -62,7 +62,7 @@ public class HistoryBrowserExportTest extends BaseTest {
         historyBrowserPage.exportToDownloadsWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();
         historyBrowserPage.verifyCancelExportFlowForDownloads();
-        historyBrowserPage.verifyFileNameValidationForDownloads();
+        historyBrowserPage.verifyFileNameValidation();
         historyBrowserPage.verifyDefaultFileNameExportForDownloads();
     }
 }
