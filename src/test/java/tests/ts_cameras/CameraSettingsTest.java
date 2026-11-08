@@ -31,9 +31,9 @@ public class CameraSettingsTest extends BaseTest {
         settingsPage = new CameraSettingsPage(driver);
     }
 
-    /** Android only. "Status obtained from SSE" is not automated; only the shown status is checked. */
+    /** "Status obtained from SSE" is not automated; only the shown status is checked. */
     @Test(description = "EEPD-TC-8861: POS-Camera Settings - changing the name and checking the status of Camera in "
-            + "camera settings in mobile VMS app", groups = {"regression", "cameras"})
+            + "camera settings in mobile VMS app", groups = {"regression", "cameras", "ios"})
     public void verifyChangeCameraNameAndCheckStatus() {
         // Step 2: Cameras in Dashboard, long press the first online camera, open Camera settings
         openSettingsOfFirstOnlineCamera();
@@ -54,11 +54,12 @@ public class CameraSettingsTest extends BaseTest {
     }
 
     /**
-     * Android only. The switch shows no state, so the camera's Status is checked. It takes about 4 minutes, and up to
-     * about 8 when the status is slow (each check waits twice: on the open screen, then on the reopened one).
+     * The camera's Status is checked (Android's switch shows no state; on iOS the switch state is checked too). It
+     * takes about 4 minutes, and up to about 8 when the status is slow (each check waits twice: on the open screen,
+     * then on the reopened one).
      */
     @Test(description = "EEPD-TC-11323: POS-Camera Settings - turning on/off camera in Dashboard (inside Camera "
-            + "Settings screen) mobile VMS app", groups = {"regression", "cameras"})
+            + "Settings screen) mobile VMS app", groups = {"regression", "cameras", "ios"})
     public void verifyTurnCameraOffAndOn() {
         // Step 2: Cameras in Dashboard, long press the second online camera, open Camera settings
         openSettingsOfSecondOnlineCamera();
@@ -98,7 +99,7 @@ public class CameraSettingsTest extends BaseTest {
     public void tearDown(ITestResult testResult) {
         try {
             boolean restoreName = renamedCameraName != null;
-            boolean restoreSwitch = settingsPage.isEnableSwitchLeftToggled();
+            boolean restoreSwitch = settingsPage != null && settingsPage.isEnableSwitchLeftToggled();
             if (driver == null || devicesPage == null || !(restoreName || restoreSwitch)) {
                 return;
             }

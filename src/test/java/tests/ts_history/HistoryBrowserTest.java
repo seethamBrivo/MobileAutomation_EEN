@@ -49,7 +49,7 @@ public class HistoryBrowserTest extends BaseTest {
 
     @Test(description = "EEPD-TC-2606: POS-History Browser - Pinch on timeline to change timeline level "
             + "in History Browser in mobile VMS app",
-          groups = {"regression", "history"})
+          groups = {"regression", "history", "ios"})
     public void verifyPinchChangesTimelineLevel() {
         historyBrowserPage.openHistoryBrowserFromFirstCameraPreview();
         historyBrowserPage.verifyDefaultTimelineLevel();
@@ -133,7 +133,7 @@ public class HistoryBrowserTest extends BaseTest {
 
     @Test(description = "EEPD-TC-28549: POS-History Browser - Navigate to the current moment in History Browser "
             + "using Long Press Menu in Dashboard in mobile VMS app",
-          groups = {"regression", "history"})
+          groups = {"regression", "history", "ios"})
     public void verifyHistoryBrowserOpensFromLongPressMenuInCameras() {
         devicesPage.navigateToDashboard();
         devicesPage.verifyAllDevicesSectionIsDisplayed();
@@ -148,7 +148,7 @@ public class HistoryBrowserTest extends BaseTest {
 
     @Test(description = "EEPD-TC-5497: POS-History Browser - Navigate to the specific moment in the History Browser "
             + "based on the event selected in Video Search in mobile VMS app",
-          groups = {"regression", "history"})
+          groups = {"regression", "history", "ios"})
     public void verifyHistoryBrowserOpensAtEventSelectedInVideoSearch() {
         videoSearchPage.openVideoSearch();
         VideoSearchPage.OpenedEvent event = videoSearchPage.openFirstPersonEvent();

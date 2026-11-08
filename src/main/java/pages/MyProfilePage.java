@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class MyProfilePage {
@@ -34,7 +35,10 @@ public class MyProfilePage {
     public void scrollToTimezoneOption() {
         // Wait for profile screen to render before swiping to avoid exhausting scroll budget
         if (!WaitUtils.isVisible(driver, MyProfileLocators.TIMEZONE_OPTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
-            boolean found = GestureUtils.scrollUntilPresent(driver, MyProfileLocators.TIMEZONE_OPTION);
+            // iOS keeps the rows below the screen in the page, so it scrolls until the row is really visible.
+            boolean found = PlatformLocator.isIos()
+                    ? GestureUtils.scrollUntilVisible(driver, MyProfileLocators.TIMEZONE_OPTION)
+                    : GestureUtils.scrollUntilPresent(driver, MyProfileLocators.TIMEZONE_OPTION);
             Assert.assertTrue(found, "Could not find timezone option even after scrolling");
         }
     }

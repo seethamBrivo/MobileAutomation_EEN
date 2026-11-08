@@ -3,6 +3,7 @@ package pages;
 import constants.FrameworkConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import locators.MyProfileLocators;
 import locators.VSPEventsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +13,7 @@ import org.testng.Assert;
 import org.testng.SkipException;
 import utils.DeviceUtils;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 import java.util.List;
@@ -35,6 +37,11 @@ public class VSPEventsPage {
     }
 
     public void navigateBackFromProfile() {
+        if (PlatformLocator.isIos()) {
+            // iOS: the Profile screen has its own back button; the keyboard is not open after choosing a time zone.
+            WaitUtils.click(driver, MyProfileLocators.BACK_BUTTON);
+            return;
+        }
         // BLOCKER FIX B2: Hide keyboard first - TC-3920 ends with keyboard up, BACK would dismiss keyboard instead of leaving screen
         try {
             driver.executeScript("mobile: hideKeyboard");

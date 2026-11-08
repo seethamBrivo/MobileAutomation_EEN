@@ -192,9 +192,23 @@ BrowserStack debug logs, network logs and video are off by default because they 
 set `browserstackDebug`, `browserstackNetworkLogs` and `browserstackVideo` to `true` (or tick
 `diagnostics` when running the CI workflow) to diagnose a failure.
 
-### CI after a merge
+### CI on a pull request
 
-A merge to `main` runs the CI workflow's two platform jobs one after the other (`max-parallel: 1`): first the
+A pull request (not a draft, not from a fork) runs only the tests it affects, Android then iOS, and nothing runs on
+a merge to `main`. `scripts/select-tests.sh` reads the diff and writes `testng-pr.xml`: a changed or new test class
+runs; a changed page or locator runs every test class that uses it; a change to shared code (`base`, `utils`,
+`listeners`, `constants`, resources, `pom.xml`, suites, workflows) runs the smoke classes (LoginTest,
+ResellerDashboardTest); docs-only changes run nothing. On iOS only classes with `ios`-group methods run. The
+selected classes are listed in the run's summary. The check is advisory: keep it out of the branch protection
+"required checks" so a red run never blocks the merge. For a full run use Actions > CI > Run workflow.
+
+The full regression also runs by itself at 05:00 IST, Monday to Friday (cron `30 23 * * 0-4`, UTC), so its result
+is ready before the day starts; the BrowserStack build is named "Daily Regression <run number>". The text below
+describes that full run, which can also be started by hand.
+
+### CI full run
+
+The CI workflow's two platform jobs run one after the other (`max-parallel: 1`): first the
 Android suite (`testng-parallel.xml`), then the iOS suite (`testng-ios.xml`). Each suite uses both of the BrowserStack
 plan's 2 parallel sessions (2 workers, each taking the next waiting test class). Both platforms always run, so an
 Android failure does not skip iOS. The iOS job needs the repository secret `IOS_BROWSERSTACK_APP_URL` (the

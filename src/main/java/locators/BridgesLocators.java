@@ -224,6 +224,14 @@ public final class BridgesLocators {
     /** iOS: while the filter field has focus, the back button is replaced by this button. */
     public static final By CLOSE_FILTER_BUTTON = AppiumBy.accessibilityId("Close"); // ios
 
+    /**
+     * iOS: the close button of the "See device statuses instantly / See how to add the widget" tip at the bottom of
+     * the All devices screen. Found next to the tip's text, because the filter's "Close" button has the same name.
+     */
+    public static final By WIDGET_TIP_CLOSE_BUTTON = AppiumBy.xpath(
+            "//XCUIElementTypeStaticText[@name='See device statuses instantly']"
+                    + "/following-sibling::XCUIElementTypeButton[@name='Close']"); // ios
+
     /** iOS: the keyboard key of the filter field; tapping it closes the keyboard that hides "No matching bridges". */
     public static final By KEYBOARD_SEARCH_KEY =
             AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Search'"); // ios

@@ -24,6 +24,7 @@ import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class VideoSearchPage {
@@ -34,10 +35,16 @@ public class VideoSearchPage {
     private static final DateTimeFormatter EVENT_DATE_FORMAT =
             DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH);
 
+    /** Android spells the month out ("November 5, 2026"), iOS shortens it ("Nov 05, 2026"). */
+    private static final DateTimeFormatter PLATFORM_EVENT_DATE_FORMAT =
+            PlatformLocator.isIos() ? DATE_FORMAT : EVENT_DATE_FORMAT;
+
     /** The test case says the event time never carries milliseconds. */
     private static final Pattern EVENT_TIME_FORMAT = Pattern.compile("\\d{2}:\\d{2}:\\d{2}");
 
-    private static final Pattern EVENT_COUNTER_FORMAT = Pattern.compile("\\d+/\\d+");
+    /** Android reads "145/146"; iOS puts one space on each side of the slash. */
+    private static final Pattern EVENT_COUNTER_FORMAT =
+            Pattern.compile(PlatformLocator.isIos() ? "\\d+ / \\d+" : "\\d+/\\d+");
 
     private static final Logger logger = LogManager.getLogger(VideoSearchPage.class);
 
@@ -96,9 +103,10 @@ public class VideoSearchPage {
         String date = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_DATE).getText();
         LocalDate eventDate;
         try {
-            eventDate = LocalDate.parse(date.trim(), EVENT_DATE_FORMAT);
+            eventDate = LocalDate.parse(date.trim(), PLATFORM_EVENT_DATE_FORMAT);
         } catch (DateTimeParseException e) {
-            throw new AssertionError("Event page date '" + date + "' is not in the 'MMMM d, yyyy' format", e);
+            throw new AssertionError("Event page date '" + date + "' is not in the expected '"
+                    + (PlatformLocator.isIos() ? "MMM d, yyyy" : "MMMM d, yyyy") + "' format", e);
         }
         // Only the shown key image has a time, and a neighbouring key image kept in the hierarchy off-screen must not
         // count. Reading one of several would compare the wrong moment.
