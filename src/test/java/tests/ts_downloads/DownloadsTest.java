@@ -4,11 +4,13 @@ import base.BaseTest;
 import constants.TestDataConstants;
 import constants.TimeoutConstants;
 import locators.BottomNavigationLocators;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.BottomNavigationBar;
 import pages.DownloadsPage;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**
@@ -21,6 +23,9 @@ public class DownloadsTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setupDownloadsTest() {
+        if (PlatformLocator.isIos()) {
+            throw new SkipException("Downloads tests are Android-only (no iOS locators implemented)");
+        }
         loginAs(TestDataConstants.TS02_CREDS);
         downloadsPage = new DownloadsPage(driver);
         // Verify we landed on the expected screen with More tab visible
@@ -74,7 +79,7 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
         downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadInProgress();
+        downloadsPage.verifyDownloadInProgress();  // Folders show "In progress", videos show progress bar while downloading
         downloadsPage.clickCancelDownloadIcon();
         downloadsPage.clickYesCancelButton();
         downloadsPage.verifyDownloadCancelledMessage();
@@ -94,7 +99,7 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
         downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadProgressBar();
+        downloadsPage.verifyDownloadProgressBar();  // Folders show "In progress", videos show progress bar while downloading
         downloadsPage.waitForVideoDownloadComplete();
         downloadsPage.navigateBack();
 
@@ -105,6 +110,7 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
         downloadsPage.verifyDownloadingSnackbar();
+        downloadsPage.verifyDownloadProgressBar(); // Folders show "In progress", videos show progress bar while downloading
         downloadsPage.clickVideoCancelDownloadIcon();
         downloadsPage.clickYesCancelButton();
         downloadsPage.verifyDownloadCancelledMessage();
