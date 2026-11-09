@@ -107,6 +107,12 @@ public final class HistoryBrowserLocators {
     public static final By TIMELINE_BUTTON =
             AppiumBy.id("com.een.vms.android:id/timeline_sidebar");
 
+    // iOS only, so it has no Android value on purpose: the overlay on the video prints the shown frame's time with
+    // milliseconds ("header: yyyy-MM-dd HH:mm:ss.SSS"). The cursor label and the preview time stop at whole seconds,
+    // which cannot tell apart two frames less than a second apart. TODO: replace with an accessibility id.
+    public static final By FRAME_TIME_OVERLAY =
+            AppiumBy.xpath("//XCUIElementTypeStaticText[starts-with(@name, 'header: ')]");
+
     // --- Event filter ----------------------------------------------------------
 
     public static final By FILTER_BUTTON = PlatformLocator.get(

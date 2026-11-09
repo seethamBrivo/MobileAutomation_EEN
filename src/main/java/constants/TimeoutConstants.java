@@ -59,6 +59,12 @@ public final class TimeoutConstants {
     public static final Duration SWIPE_MOVE = Duration.ofMillis(700);
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);
 
+    /**
+     * Holding a frame button steps the video about once a second after a short delay, so the 2 s
+     * {@link #LONG_PRESS} sometimes gives one step, the same as a tap (seen on iOS and Android); 4 s gives about three.
+     */
+    public static final Duration FRAME_BUTTON_HOLD = Duration.ofSeconds(4);
+
     /** Pause before lifting the finger at the end of a drag, so a list stops where the finger does. */
     public static final Duration DRAG_HOLD = Duration.ofMillis(200);
 
