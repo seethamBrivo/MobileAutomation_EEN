@@ -2,16 +2,12 @@ package tests.ts_account_switching;
 
 import base.BaseTest;
 import constants.TestDataConstants;
-import constants.TimeoutConstants;
-import locators.AccountSwitchingLocators;
-import locators.BottomNavigationLocators;
 import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.AccountSwitchingPage;
 import utils.PlatformLocator;
-import utils.WaitUtils;
 
 /**
  * Test suite for Account Switching functionality.
@@ -20,16 +16,20 @@ import utils.WaitUtils;
 public class AccountSwitchingTest extends BaseTest {
 
     private AccountSwitchingPage accountSwitchingPage;
+    private String originalAccountName;
 
     @BeforeMethod(alwaysRun = true)
     public void setupAccountSwitchingTest() {
+        accountSwitchingPage = null;
+        originalAccountName = null;
+
         if (PlatformLocator.isIos()) {
             throw new SkipException("Account switching tests are Android-only (no iOS locators implemented)");
         }
+
         loginAs(TestDataConstants.RESELLER3_CREDS);
         accountSwitchingPage = new AccountSwitchingPage(driver);
-        WaitUtils.assertVisible(driver, BottomNavigationLocators.MORE_TAB,
-                TimeoutConstants.SHORT_TIMEOUT, "Should land on screen with More tab visible after login");
+        accountSwitchingPage.verifyLandedOnMoreScreen();
     }
 
     @AfterMethod(alwaysRun = true)
@@ -38,21 +38,9 @@ public class AccountSwitchingTest extends BaseTest {
             return;
         }
         try {
-            if (!WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB,
-                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                return;
-            }
-
-            WaitUtils.click(driver, BottomNavigationLocators.MORE_TAB);
-
-            if (!WaitUtils.isVisible(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM,
-                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-                return;
-            }
-
-            accountSwitchingPage.clickOtherAccountsItem();
-            accountSwitchingPage.clickFirstAccount();
-            accountSwitchingPage.waitForSwitchingToComplete();
+            // Navigate back to More menu and switch to first account (original)
+            accountSwitchingPage.clickMoreTab();
+            accountSwitchingPage.switchBackToFirstAccount();
         } catch (Throwable t) {
             logger.warn("Cleanup failed: {}", t.getMessage());
         }
@@ -62,16 +50,22 @@ public class AccountSwitchingTest extends BaseTest {
           groups = {"regression", "account_switching"})
     public void test01_switchToAnotherAccount() {
         accountSwitchingPage.clickMoreTab();
+
+        // Capture original account name before navigating away
+        originalAccountName = accountSwitchingPage.getCurrentProfileAccountName();
+        logger.info("Original account: {}", originalAccountName);
+
         accountSwitchingPage.verifyOtherAccountsItemIsVisible();
         accountSwitchingPage.clickOtherAccountsItem();
-        accountSwitchingPage.verifyOtherAccountsScreenIsVisible();
-        accountSwitchingPage.verifyAccountListSections();
+        accountSwitchingPage.requireBothAccountSections();
 
-        String targetAccountName = accountSwitchingPage.getFirstAccountName();
+        String targetAccountName = accountSwitchingPage.getFirstAccountNameFromRow();
+        logger.info("Switching to account: {}", targetAccountName);
+
         accountSwitchingPage.clickFirstAccount();
-        accountSwitchingPage.verifySwitchingLoaderIsDisplayed();
-        accountSwitchingPage.verifyBackNavigationIsDisabled();
         accountSwitchingPage.waitForSwitchingToComplete();
-        accountSwitchingPage.verifyAccountSwitchedSuccessfully(targetAccountName);
+        accountSwitchingPage.verifyAccountSwitched(originalAccountName, targetAccountName);
+
+        logger.info("Account switch verified successfully");
     }
 }

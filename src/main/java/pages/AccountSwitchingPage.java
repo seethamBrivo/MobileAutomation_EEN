@@ -1,12 +1,9 @@
 package pages;
 
 import constants.FrameworkConstants;
-import constants.TimeoutConstants;
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import locators.AccountSwitchingLocators;
 import locators.BottomNavigationLocators;
-import locators.DownloadsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -32,25 +29,20 @@ public class AccountSwitchingPage {
         this.driver = driver;
     }
 
+    public void verifyLandedOnMoreScreen() {
+        WaitUtils.assertVisible(driver, BottomNavigationLocators.MORE_TAB,
+                FrameworkConstants.EXPLICIT_WAIT, "Should land on screen with More tab visible after login");
+    }
+
     public void clickMoreTab() {
         WaitUtils.click(driver, BottomNavigationLocators.MORE_TAB);
-        // Wait for More menu to load (Files is always at top of menu)
-        WaitUtils.waitForVisibility(driver, DownloadsLocators.FILES_MENU_ITEM,
-                TimeoutConstants.SHORT_TIMEOUT);
-    }
-
-    public void verifyMoreTabIsVisible() {
-        WaitUtils.assertVisible(driver, BottomNavigationLocators.MORE_TAB,
-                TimeoutConstants.SHORT_TIMEOUT, "More tab should be visible");
-    }
-
-    public void clickOtherAccountsItem() {
-        WaitUtils.click(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM);
+        WaitUtils.waitForVisibility(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM,
+                FrameworkConstants.EXPLICIT_WAIT);
     }
 
     public void verifyOtherAccountsItemIsVisible() {
         if (!WaitUtils.isVisible(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM,
-                TimeoutConstants.SHORT_TIMEOUT)) {
+                FrameworkConstants.EXPLICIT_WAIT)) {
             boolean found = GestureUtils.scrollUntilVisible(driver,
                     AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM);
             Assert.assertTrue(found,
@@ -58,32 +50,24 @@ public class AccountSwitchingPage {
         }
     }
 
-    public void verifyOtherAccountsScreenIsVisible() {
-        boolean resellersSectionVisible = WaitUtils.isVisible(
-                driver,
-                AccountSwitchingLocators.RESELLERS_SECTION,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-        boolean endUsersSectionVisible = WaitUtils.isVisible(
-                driver,
-                AccountSwitchingLocators.END_USERS_SECTION,
-                TimeoutConstants.SHORT_TIMEOUT
-        );
-
-        Assert.assertTrue(resellersSectionVisible || endUsersSectionVisible,
-                "Other Accounts screen should show at least one section (Resellers or End-Users)");
+    public void clickOtherAccountsItem() {
+        WaitUtils.click(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM);
     }
 
-    public void verifyAccountListSections() {
+    /**
+     * Requires both Resellers and End-Users sections to be present.
+     * Throws SkipException if test data is incomplete.
+     */
+    public void requireBothAccountSections() {
         boolean resellersSectionVisible = WaitUtils.isVisible(
                 driver,
                 AccountSwitchingLocators.RESELLERS_SECTION,
-                TimeoutConstants.SHORT_TIMEOUT
+                FrameworkConstants.EXPLICIT_WAIT
         );
         boolean endUsersSectionVisible = WaitUtils.isVisible(
                 driver,
                 AccountSwitchingLocators.END_USERS_SECTION,
-                TimeoutConstants.SHORT_TIMEOUT
+                FrameworkConstants.EXPLICIT_WAIT
         );
 
         if (!resellersSectionVisible || !endUsersSectionVisible) {
@@ -92,11 +76,31 @@ public class AccountSwitchingPage {
         }
     }
 
-    public String getFirstAccountName() {
+    /**
+     * Gets the current account name from the More menu profile section.
+     * Must be called when More menu is open.
+     */
+    public String getCurrentProfileAccountName() {
+        WebElement profileSection = WaitUtils.waitForVisibility(
+                driver,
+                AccountSwitchingLocators.PROFILE_SECTION_IN_MORE,
+                FrameworkConstants.EXPLICIT_WAIT
+        );
+        // Get first TextView in profile section which contains account name
+        WebElement accountNameElement = profileSection.findElement(
+                By.xpath(".//android.widget.TextView[1]"));
+        return accountNameElement.getText().trim();
+    }
+
+    /**
+     * Gets account name from the first account row.
+     * Reads from the same row element that will be clicked to ensure consistency.
+     */
+    public String getFirstAccountNameFromRow() {
         WebElement accountElement = WaitUtils.waitForVisibility(
                 driver,
-                AccountSwitchingLocators.FIRST_ACCOUNT_NAME,
-                TimeoutConstants.SHORT_TIMEOUT
+                AccountSwitchingLocators.FIRST_ACCOUNT_NAME_IN_ROW,
+                FrameworkConstants.EXPLICIT_WAIT
         );
         return accountElement.getText().trim();
     }
@@ -105,59 +109,68 @@ public class AccountSwitchingPage {
         WaitUtils.click(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW);
     }
 
-    public void verifySwitchingLoaderIsDisplayed() {
-        boolean loaderVisible = WaitUtils.isVisible(
-                driver,
-                AccountSwitchingLocators.SWITCHING_LOADER,
-                TimeoutConstants.TRANSIENT_UI_TIMEOUT
-        );
-        if (loaderVisible) {
-            logger.info("Loading screen was visible during account switching");
-        } else {
-            logger.info("Loading screen not caught (switched too fast)");
-        }
+    /**
+     * Switches to a specific account by name.
+     * Finds the account in the list and clicks it.
+     */
+    public void switchToAccountByName(String accountName) {
+        By accountRow = AccountSwitchingLocators.accountRowByName(accountName);
+        WaitUtils.click(driver, accountRow);
     }
 
+    /**
+     * Waits for account switching to complete.
+     * Waits for loader to disappear and for a stable post-switch state.
+     */
     public void waitForSwitchingToComplete() {
+        // Wait for loader to disappear (it may already be gone on fast networks)
         WaitUtils.waitForInvisibility(
                 driver,
                 AccountSwitchingLocators.SWITCHING_LOADER,
                 FrameworkConstants.EXPLICIT_WAIT
         );
+
+        // Wait for More tab to be visible and stable (indicates app reloaded after switch)
         WaitUtils.waitForVisibility(
                 driver,
                 BottomNavigationLocators.MORE_TAB,
-                TimeoutConstants.SHORT_TIMEOUT
+                FrameworkConstants.EXPLICIT_WAIT
         );
     }
 
-    public void verifyAccountSwitchedSuccessfully(String expectedAccountName) {
-        verifyMoreTabIsVisible();
-
+    /**
+     * Verifies that the account switched from originalAccountName to expectedAccountName.
+     * Ensures the switch actually happened by comparing before and after.
+     */
+    public void verifyAccountSwitched(String originalAccountName, String expectedAccountName) {
+        // Navigate to More menu if not already there
         if (!WaitUtils.isVisible(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM,
-                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
-            WaitUtils.click(driver, BottomNavigationLocators.MORE_TAB);
-            WaitUtils.waitForVisibility(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM,
-                    TimeoutConstants.SHORT_TIMEOUT);
+                FrameworkConstants.EXPLICIT_WAIT)) {
+            clickMoreTab();
         }
 
-        By accountNameInProfile = AppiumBy.xpath(
-                "//android.widget.TextView[@text='" + expectedAccountName + "']");
+        // Get current profile name
+        String currentProfileName = getCurrentProfileAccountName();
 
-        WaitUtils.assertVisible(driver, accountNameInProfile, TimeoutConstants.SHORT_TIMEOUT,
-                String.format("Account name '%s' should be displayed in profile after switching",
-                        expectedAccountName));
+        // Verify it changed from original
+        Assert.assertNotEquals(currentProfileName, originalAccountName,
+                "Account should have changed from original account");
+
+        // Verify it matches expected
+        By expectedNameLocator = AccountSwitchingLocators.profileAccountName(expectedAccountName);
+        WaitUtils.assertVisible(driver, expectedNameLocator, FrameworkConstants.EXPLICIT_WAIT,
+                String.format("Profile should show account '%s' after switching", expectedAccountName));
     }
 
-    public void verifyBackNavigationIsDisabled() {
-        boolean loaderVisible = WaitUtils.isVisible(
-                driver,
-                AccountSwitchingLocators.SWITCHING_LOADER,
-                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT
-        );
-
-        if (loaderVisible) {
-            logger.info("Back navigation is disabled during account switching");
-        }
+    /**
+     * Cleanup helper: switches back to first account in the list.
+     * Used in @AfterMethod to restore test state.
+     * Clicks first account which should be the original account.
+     */
+    public void switchBackToFirstAccount() {
+        clickOtherAccountsItem();
+        clickFirstAccount();
+        waitForSwitchingToComplete();
+        logger.info("Switched back to first account in list");
     }
 }

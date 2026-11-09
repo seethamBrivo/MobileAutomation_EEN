@@ -28,9 +28,6 @@ public final class TimeoutConstants {
     /** Faster timeout for optional fields known to be frequently absent (detail page optional fields). */
     public static final Duration OPTIONAL_FIELD_TIMEOUT = Duration.ofSeconds(1);
 
-    /** Ultra-short timeout for transient UI elements that appear/disappear in milliseconds (loading screens on fast networks). */
-    public static final Duration TRANSIENT_UI_TIMEOUT = Duration.ofMillis(500);
-
     /** How long a list screen may show loading skeletons before its first rows arrive. */
     public static final Duration LIST_LOAD_TIMEOUT = Duration.ofSeconds(30);
 
