@@ -13,6 +13,8 @@ import org.testng.Assert;
 import org.testng.SkipException;
 import utils.WaitUtils;
 
+import java.util.List;
+
 /**
  * Page object for Downloads feature.
  * Uses shared locators from ArchiveLocators and CommonLocators where applicable.
@@ -146,22 +148,18 @@ public class DownloadsPage {
     }
 
     public void verifyDownloadingSnackbar() {
-        // Poll for snackbar text using WaitUtils (not direct driver.findElement)
-        String lastText = WaitUtils.pollText(driver, CommonLocators.SNACKBAR_TEXT,
-                "Downloading", TimeoutConstants.OPTIONAL_FIELD_TIMEOUT);
-        boolean isDownloadRelated = lastText.toLowerCase().contains("downloading")
-                || lastText.toLowerCase().contains("saved");
-        Assert.assertTrue(isDownloadRelated,
-                "Snackbar should show download-related message (Downloading or Saved to Files) but was: " + lastText);
+        // Poll until snackbar text contains "downloading" (not exact match, handles case variations)
+        boolean found = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
+            List<String> texts = WaitUtils.textsOf(driver, CommonLocators.SNACKBAR_TEXT);
+            return !texts.isEmpty() && texts.get(0).toLowerCase().contains("downloading");
+        });
+        Assert.assertTrue(found, "Snackbar should show 'Downloading' message");
     }
 
     public void verifyDownloadProgressBar() {
-        boolean progressBarVisible = WaitUtils.isVisible(
-                driver,
-                DownloadsLocators.DOWNLOAD_PROGRESS_BAR,
-                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT
-        );
-        Assert.assertTrue(progressBarVisible, "Progress bar should be visible during download");
+        WaitUtils.assertVisible(driver, DownloadsLocators.DOWNLOAD_PROGRESS_BAR,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "Progress bar should be visible during download");
     }
 
     /**
@@ -169,8 +167,9 @@ public class DownloadsPage {
      * This must be called before attempting to cancel.
      */
     public void verifyDownloadInProgress() {
-        boolean isPresent = WaitUtils.isPresent(driver, ArchiveLocators.IN_PROGRESS_STATUS);
-        Assert.assertTrue(isPresent, "The row should say 'In progress' while the item downloads");
+        WaitUtils.assertVisible(driver, ArchiveLocators.IN_PROGRESS_STATUS,
+                TimeoutConstants.SHORT_TIMEOUT,
+                "The row should say 'In progress' while the item downloads");
     }
 
     public void waitForDownloadComplete() {

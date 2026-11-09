@@ -80,16 +80,16 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
         downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadInProgress();  // Folders show "In progress", videos show progress bar while downloading
+        downloadsPage.verifyDownloadInProgress();  // Folders show "In progress", videos show progress bar
         downloadsPage.clickCancelDownloadIcon();
         downloadsPage.clickYesCancelButton();
         downloadsPage.verifyDownloadCancelledMessage();
         downloadsPage.verifyDownloadCancelled();
     }
 
+    // Note: "Full video type" refers to the video format, not a user-selectable option in the app
     @Test(description = "EEPD-TC-13207: POS-Downloads - downloading a video - Full video type in mobile app",
           groups = {"regression", "downloads"})
-    // Note: "Full video type" refers to the video format, not a user-selectable option in the app
     public void test02_videoDownloadWithCancellation() {
         // Complete video download flow
         downloadsPage.navigateToDownloads();
@@ -100,7 +100,7 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
         downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadProgressBar();  // Folders show "In progress", videos show progress bar while downloading
+        downloadsPage.verifyDownloadProgressBar();
         downloadsPage.waitForVideoDownloadComplete();
         downloadsPage.navigateBack();
 
@@ -111,7 +111,7 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
         downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadProgressBar(); // Folders show "In progress", videos show progress bar
+        downloadsPage.verifyDownloadProgressBar();
         downloadsPage.clickVideoCancelDownloadIcon();
         downloadsPage.clickYesCancelButton();
         downloadsPage.verifyDownloadCancelledMessage();
