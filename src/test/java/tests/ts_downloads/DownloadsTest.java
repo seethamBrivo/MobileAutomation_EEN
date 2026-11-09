@@ -80,6 +80,7 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
         downloadsPage.verifyDownloadingSnackbar();
+        downloadsPage.verifyDownloadInProgress();  // Folders show "In progress", videos show progress bar while downloading
         downloadsPage.clickCancelDownloadIcon();
         downloadsPage.clickYesCancelButton();
         downloadsPage.verifyDownloadCancelledMessage();
@@ -109,6 +110,8 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.clickVideoDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
+        downloadsPage.verifyDownloadingSnackbar();
+        downloadsPage.verifyDownloadProgressBar(); // Folders show "In progress", videos show progress bar
         downloadsPage.clickVideoCancelDownloadIcon();
         downloadsPage.clickYesCancelButton();
         downloadsPage.verifyDownloadCancelledMessage();
