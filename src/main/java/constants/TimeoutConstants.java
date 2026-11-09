@@ -60,10 +60,11 @@ public final class TimeoutConstants {
     public static final Duration LONG_PRESS = Duration.ofMillis(2000);
 
     /**
-     * Holding a frame button steps the video about once a second after a short delay, so the 2 s
-     * {@link #LONG_PRESS} sometimes gives one step, the same as a tap (seen on iOS and Android); 4 s gives about three.
+     * Holding a frame button steps the video about once a second after a short delay on iOS (measured with holds of
+     * 2, 4 and 6 s), so the 2 s {@link #LONG_PRESS} gives one step, the same as a tap; 4 s gives about three. Android
+     * keeps {@link #LONG_PRESS}: a longer hold there has not been shown to help.
      */
-    public static final Duration FRAME_BUTTON_HOLD = Duration.ofSeconds(4);
+    public static final Duration FRAME_BUTTON_HOLD_IOS = Duration.ofSeconds(4);
 
     /** Pause before lifting the finger at the end of a drag, so a list stops where the finger does. */
     public static final Duration DRAG_HOLD = Duration.ofMillis(200);

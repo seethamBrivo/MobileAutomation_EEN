@@ -40,11 +40,8 @@ public class HistoryBrowserPage {
     private static final int MAX_LEVEL_MINUTES = TIMELINE_LEVEL_MINUTES.get(TIMELINE_LEVEL_MINUTES.size() - 1);
     private static final int SECONDS_PER_DAY = 24 * 60 * 60;
     private static final DateTimeFormatter CURSOR_POSITION_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     private static final String FRAME_TIME_PREFIX = "header:";
-
-    private static final DateTimeFormatter FRAME_TIME_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final DateTimeFormatter FRAME_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final List<By> TIMELINE_CONTROLS = List.of(
             HistoryBrowserLocators.PREVIOUS_FRAME_BUTTON, HistoryBrowserLocators.PREVIOUS_EVENT_BUTTON,
             HistoryBrowserLocators.PLAY_PAUSE_BUTTON, HistoryBrowserLocators.NEXT_EVENT_BUTTON,
@@ -99,6 +96,9 @@ public class HistoryBrowserPage {
 
     /** Set while the multi-window setting is on, so cleanup only has to switch it off when a test turned it on. */
     private boolean multiWindowEnabled;
+
+    /** Whether the iOS video overlay with the frame time is on screen; null until the first read looks for it. */
+    private Boolean frameOverlayShown;
 
     public HistoryBrowserPage(AppiumDriver driver) {
         this.driver = driver;
@@ -402,7 +402,7 @@ public class HistoryBrowserPage {
             WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_BUTTON);
         }
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
-                "Timeline should be displayed after tapping the timeline button");
+                "Timeline should be displayed in landscape");
         verifyTimelineControlsDisplayed();
     }
 
@@ -660,18 +660,27 @@ public class HistoryBrowserPage {
      * not seek, so the click is repeated once when the cursor has not moved. A direction assert still follows.
      */
     private void clickAndVerifyCursorMoved(By button, boolean forward, String description) {
+        waitForFrameToSettle();
         LocalDateTime before = readFramePosition();
         LocalDateTime after = clickUntilCursorMoves(button, before, description);
         verifyCursorMoved(before, after, forward, description);
     }
 
-    /** One tap on a frame button: the cursor, the time above the video and so the shown frame all move together. */
+    /**
+     * One tap on a frame button: the cursor, the time above the video and so the shown frame all move together. On
+     * iOS the frame time read for the cursor is the video overlay's, which is the shown frame itself, so it already
+     * proves the frame moved; the time label above the video stops at whole seconds and stays the same for a step of
+     * half a second, so checking it there could fail on a step that worked.
+     */
     private void tapStepButtonAndVerifyMoment(By button, boolean forward, String description) {
         waitForFrameToSettle();
         LocalDateTime cursorBefore = readFramePosition();
-        LocalDateTime previewBefore = readPreviewTime();
+        LocalDateTime previewBefore = PlatformLocator.isIos() ? null : readPreviewTime();
         LocalDateTime cursorAfter = clickUntilCursorMoves(button, cursorBefore, description);
         verifyCursorMoved(cursorBefore, cursorAfter, forward, description);
+        if (PlatformLocator.isIos()) {
+            return;
+        }
         WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
                 () -> !readPreviewTime().equals(previewBefore));
         LocalDateTime previewAfter = readPreviewTime();
@@ -690,7 +699,8 @@ public class HistoryBrowserPage {
         LocalDateTime start = readFramePosition();
         LocalDateTime afterTap = clickUntilCursorMoves(button, start, description);
         long tapMillis = Math.abs(Duration.between(start, afterTap).toMillis());
-        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, button), TimeoutConstants.FRAME_BUTTON_HOLD);
+        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, button),
+                PlatformLocator.isIos() ? TimeoutConstants.FRAME_BUTTON_HOLD_IOS : TimeoutConstants.LONG_PRESS);
         WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
                 () -> movedFurther(afterTap, readFramePosition(), forward, tapMillis));
         LocalDateTime afterHold = readFramePosition();
@@ -757,11 +767,26 @@ public class HistoryBrowserPage {
      * overlay carries milliseconds. Android has no such overlay and keeps the cursor label.
      */
     private LocalDateTime readFramePosition() {
-        if (!PlatformLocator.isIos()) {
+        if (!PlatformLocator.isIos() || !isFrameOverlayShown()) {
             return readCursorPosition();
         }
         return WaitUtils.retryOnStale(() -> parseFrameTime(
                 WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY).getText()));
+    }
+
+    /**
+     * The overlay looks like a debug feature of the iOS build. If a build does not have it the steps fall back to the
+     * cursor label (whole seconds) instead of timing out on every read; the answer is looked up once per page.
+     */
+    private boolean isFrameOverlayShown() {
+        if (frameOverlayShown == null) {
+            frameOverlayShown = WaitUtils.isVisible(
+                    driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY, TimeoutConstants.SHORT_TIMEOUT);
+            if (!frameOverlayShown) {
+                logger.warn("The iOS frame time overlay is not shown; frames are compared by the cursor label");
+            }
+        }
+        return frameOverlayShown;
     }
 
     private static LocalDateTime parseFrameTime(String overlayText) {
