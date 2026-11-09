@@ -89,6 +89,12 @@
         </classes>
     </test>
 
+    <test name="Downloads Tests">
+        <classes>
+            <class name="tests.ts_downloads.DownloadsTest"/>
+        </classes>
+    </test>
+
     <test name="Video Search Tests">
         <classes>
             <class name="tests.ts_video_search.VideoSearchTest"/>
