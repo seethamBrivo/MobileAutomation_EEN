@@ -127,6 +127,10 @@ jobs:
               "ts02_user_creds": {
                 "username": "${{ secrets.TS02_USERNAME }}",
                 "password": "${{ secrets.TS02_PASSWORD }}"
+              },
+              "reseller3_user_creds": {
+                "username": "${{ secrets.RESELLER3_USERNAME }}",
+                "password": "${{ secrets.RESELLER3_PASSWORD }}"
               }
             },
             "search_filter": {

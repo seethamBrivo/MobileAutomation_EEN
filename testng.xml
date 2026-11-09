@@ -100,4 +100,10 @@
             <class name="tests.ts_video_search.VideoSearchTest"/>
         </classes>
     </test>
+
+    <test name="Account Switching Tests">
+        <classes>
+            <class name="tests.ts_account_switching.AccountSwitchingTest"/>
+        </classes>
+    </test>
 </suite>

@@ -106,6 +106,7 @@ mvn test -Dplatform=android -Dgroups=vsp           # only VSP tests
 mvn test -Dplatform=android -Dgroups=events        # only event-related tests
 mvn test -Dplatform=android -Dgroups=live          # only live view tests
 mvn test -Dplatform=android -Dgroups=archive       # only archive tests
+mvn test -Dplatform=android -Dgroups=account_switching  # only account switching tests
 ```
 
 **BrowserStack execution:**
