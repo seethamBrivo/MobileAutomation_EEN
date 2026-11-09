@@ -97,8 +97,8 @@ public class HistoryBrowserPage {
     /** Set while the multi-window setting is on, so cleanup only has to switch it off when a test turned it on. */
     private boolean multiWindowEnabled;
 
-    /** Whether the iOS video overlay with the frame time is on screen; null until the first read looks for it. */
-    private Boolean frameOverlayShown;
+    /** Set once the iOS video overlay with the frame time has been seen on this page. */
+    private boolean frameOverlayChecked;
 
     public HistoryBrowserPage(AppiumDriver driver) {
         this.driver = driver;
@@ -767,26 +767,28 @@ public class HistoryBrowserPage {
      * overlay carries milliseconds. Android has no such overlay and keeps the cursor label.
      */
     private LocalDateTime readFramePosition() {
-        if (!PlatformLocator.isIos() || !isFrameOverlayShown()) {
+        if (!PlatformLocator.isIos()) {
             return readCursorPosition();
         }
+        verifyFrameOverlayShown();
         return WaitUtils.retryOnStale(() -> parseFrameTime(
                 WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY).getText()));
     }
 
     /**
-     * The overlay looks like a debug feature of the iOS build. If a build does not have it the steps fall back to the
-     * cursor label (whole seconds) instead of timing out on every read; the answer is looked up once per page.
+     * The overlay looks like a debug feature of the iOS build. Without it the steps could only compare whole seconds,
+     * which cannot tell half-second frames apart, so a build that drops it fails here with the reason instead of
+     * quietly running a weaker check. Looked up once per page.
      */
-    private boolean isFrameOverlayShown() {
-        if (frameOverlayShown == null) {
-            frameOverlayShown = WaitUtils.isVisible(
-                    driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY, TimeoutConstants.SHORT_TIMEOUT);
-            if (!frameOverlayShown) {
-                logger.warn("The iOS frame time overlay is not shown; frames are compared by the cursor label");
-            }
+    private void verifyFrameOverlayShown() {
+        if (frameOverlayChecked) {
+            return;
         }
-        return frameOverlayShown;
+        Assert.assertTrue(WaitUtils.isVisible(
+                        driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY, TimeoutConstants.SHORT_TIMEOUT),
+                "The iOS video overlay with the frame time ('header: yyyy-MM-dd HH:mm:ss.SSS') should be shown; "
+                        + "if the build no longer has it, switch FRAME_TIME_OVERLAY to an accessibility id");
+        frameOverlayChecked = true;
     }
 
     private static LocalDateTime parseFrameTime(String overlayText) {
