@@ -504,9 +504,17 @@ public class HistoryBrowserPage {
 
     private static LocalTime parseTimeLabel(String label) {
         try {
-            return LocalTime.parse(label.trim());
+            String trimmed = label.trim();
+            // iOS uses full datetime format "yyyy-MM-dd HH:mm:ss" (19 chars), Android uses "HH:mm:ss" (8 chars)
+            if (trimmed.length() == 19 && trimmed.charAt(4) == '-') {
+                // Parse as full datetime and extract time part
+                return LocalDateTime.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).toLocalTime();
+            } else {
+                // Parse as time only (Android format)
+                return LocalTime.parse(trimmed);
+            }
         } catch (DateTimeParseException e) {
-            throw new AssertionError("Timeline row label '" + label + "' is not a 24-hour HH:mm:ss time; "
+            throw new AssertionError("Timeline row label '" + label + "' is not a valid time format; "
                     + "check the account's time format", e);
         }
     }

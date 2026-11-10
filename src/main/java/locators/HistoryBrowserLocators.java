@@ -21,10 +21,11 @@ public final class HistoryBrowserLocators {
 
     private static final String IOS_TIMELINE_TEXTS = "//XCUIElementTypeScrollView//XCUIElementTypeStaticText";
 
-    // The timeline labels are read as 24-hour times (see HistoryBrowserPage.parseTimeLabel), so a row label is
-    // "HH:mm:ss" and an event card time "yyyy-MM-dd HH:mm:ss". iOS gives the rows no identifier, so they are told apart
-    // by the shape of the text. TODO: replace with accessibility identifiers once the iOS app has them.
-    private static final String IOS_ROW_TIME_NAME = "string-length(@name)=8 and substring(@name,3,1)=':'";
+    // The timeline labels are read as 24-hour times (see HistoryBrowserPage.parseTimeLabel).
+    // iOS actually uses full datetime format "yyyy-MM-dd HH:mm:ss" (19 chars) for BOTH row labels and event card times.
+    // They are told apart by context (row vs event card location).
+    // TODO: replace with accessibility identifiers once the iOS app has them.
+    private static final String IOS_ROW_TIME_NAME = "string-length(@name)=19 and substring(@name,5,1)='-'";
 
     private static final String IOS_DATE_TIME_NAME = "string-length(@name)=19 and substring(@name,5,1)='-'";
 
@@ -143,11 +144,11 @@ public final class HistoryBrowserLocators {
 
     // --- Timeline --------------------------------------------------------------
 
+    // Event type names on timeline cards (e.g., "Person Detection", "Motion Detection", "Eeva Event")
     public static final By TIMELINE_EVENT_NAMES = PlatformLocator.get(
             AppiumBy.xpath(ANDROID_EVENT_CARD
                     + "//android.widget.TextView[@resource-id='com.een.vms.android:id/name']"), // android
-            AppiumBy.xpath(IOS_TIMELINE_TEXTS + "[not(" + IOS_ROW_TIME_NAME + ") and not(" + IOS_DATE_TIME_NAME
-                    + ")]")); // ios
+            AppiumBy.xpath("//XCUIElementTypeStaticText[not(" + IOS_DATE_TIME_NAME + ") and string-length(@name) > 5]")); // ios
 
     // The title above the rows shares the "timeline" id with the panel around it, so the text tells them apart.
     public static final By TIMELINE_LABEL = PlatformLocator.get(
