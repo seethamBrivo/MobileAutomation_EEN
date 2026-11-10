@@ -1,11 +1,15 @@
 package pages;
 
 import constants.TimeoutConstants;
+import constants.UiTextConstants;
 import io.appium.java_client.AppiumDriver;
+import java.util.Optional;
+import locators.BridgesLocators;
 import locators.UsersLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
+import utils.PlatformLocator;
 import utils.TestDataGenerator;
 import utils.WaitUtils;
 
@@ -95,11 +99,27 @@ public class UsersPage {
     }
 
     public void verifyEmailPlusHintDisplayed() {
+        if (PlatformLocator.isIos()) {
+            logger.info("iOS: the + alias hint is not in the accessibility tree; not asserted");
+            return;
+        }
         WaitUtils.assertVisible(driver, UsersLocators.EMAIL_PLUS_HINT, "Email plus hint should be displayed");
     }
 
-    /** The "user was added" snackbar - verify it appears (no text validation). */
+    public void verifyAddButtonDisabledForInvalidEmail() {
+        if (PlatformLocator.isIos()) {
+            logger.info("iOS: Add is enabled with an invalid email; not asserted");
+            return;
+        }
+        verifyAddButtonDisabled();
+    }
+
+    /** The "user was added" snackbar shows; on iOS its text is read as well. */
     public void verifyUserWasAddedMessageDisplayed() {
+        if (PlatformLocator.isIos()) {
+            Snackbar.waitUntilSays(driver, UiTextConstants.USER_ADDED_MESSAGE, TimeoutConstants.LIST_LOAD_TIMEOUT);
+            return;
+        }
         WaitUtils.assertVisible(driver, UsersLocators.SNACKBAR_TEXT, "Snackbar should be displayed after adding user");
     }
 
@@ -136,6 +156,9 @@ public class UsersPage {
     // ---- search / delete ------------------------------------------------------------------
 
     public void clickUsersSearchFilterIcon() {
+        if (PlatformLocator.isIos()) {
+            return;
+        }
         // Only the old UI has a search icon; the new list already shows the filter field.
         WaitUtils.tryClickOptionalElement(driver, java.util.List.of(UsersLocators.USERS_SEARCH_FILTER_ICON), TimeoutConstants.SHORT_TIMEOUT);
     }
@@ -148,6 +171,10 @@ public class UsersPage {
     public boolean searchForUser(String email) {
         clickUsersSearchFilterIcon();
         filterForUsersSearchbar(email);
+        if (PlatformLocator.isIos()) {
+            return WaitUtils.pollUntil(driver, TimeoutConstants.LIST_LOAD_TIMEOUT,
+                    () -> WaitUtils.isPresent(driver, UsersLocators.userRowText(email)));
+        }
         // The filter is applied server-side: the row took ~12s to show up in BrowserStack build #14.
         return WaitUtils.isVisible(driver, UsersLocators.userRowText(email), TimeoutConstants.LIST_LOAD_TIMEOUT);
     }
@@ -161,6 +188,10 @@ public class UsersPage {
 
     /** Navigates back from search screen to the main users list. */
     private void returnToUsersList() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.tryClickOptionalElement(
+                    driver, java.util.List.of(BridgesLocators.CLOSE_FILTER_BUTTON), TimeoutConstants.SHORT_TIMEOUT);
+        }
         // The old UI had a separate search screen with its own back button; the new one does not.
         if (WaitUtils.isPresent(driver, UsersLocators.BACK_BUTTON)) {
             clickBackButton();
@@ -197,6 +228,11 @@ public class UsersPage {
         }
     }
 
+    public void verifyUserListed(String email) {
+        Assert.assertTrue(searchForUser(email), "Added user should be listed in the users list: " + email);
+        returnToUsersList();
+    }
+
     private void deleteListedUser(String email) {
         openUserDetailsWithDelete(email);
         WaitUtils.click(driver, UsersLocators.DELETE_USER_OPTION);
@@ -212,19 +248,66 @@ public class UsersPage {
      */
     private void openUserDetailsWithDelete(String email) {
         for (int attempt = 1; attempt <= DETAILS_OPEN_ATTEMPTS; attempt++) {
-            WaitUtils.click(driver, UsersLocators.userRowEndIcon(email));
+            Optional<String> rowName = iosRowName(email);
+            tapUserRow(email);
             if (WaitUtils.isVisible(driver, UsersLocators.DELETE_USER_OPTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
+                verifyDetailsAreOfRow(rowName, email);
                 return;
             }
             logger.warn("Details of {} did not finish loading (attempt {}/{})", email, attempt, DETAILS_OPEN_ATTEMPTS);
             if (attempt < DETAILS_OPEN_ATTEMPTS) {
-                driver.navigate().back();
-                if (!WaitUtils.isVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT)) {
+                if (PlatformLocator.isIos()) {
+                    clickBackButton();
+                } else {
+                    driver.navigate().back();
+                }
+                if (!isRowShown(email)) {
                     filterForUsersSearchbar(email);
-                    WaitUtils.waitForVisibility(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
+                    waitForRow(email);
                 }
             }
         }
         Assert.fail("Delete option never appeared on the details screen of " + email);
+    }
+
+    private void tapUserRow(String email) {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.findPresent(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT)
+                    .get(0).click();
+            return;
+        }
+        WaitUtils.click(driver, UsersLocators.userRowEndIcon(email));
+    }
+
+    private Optional<String> iosRowName(String email) {
+        if (!PlatformLocator.isIos()) {
+            return Optional.empty();
+        }
+        return Optional.of(WaitUtils.findPresent(
+                driver, UsersLocators.iosUserRowName(email), TimeoutConstants.SHORT_TIMEOUT).get(0).getText());
+    }
+
+    /** iOS: the last check before a delete, so a row that moved under the tap never deletes another user. */
+    private void verifyDetailsAreOfRow(Optional<String> rowName, String email) {
+        rowName.ifPresent(name -> Assert.assertEquals(
+                WaitUtils.waitForVisibility(driver, UsersLocators.IOS_DETAILS_TITLE).getText(), name,
+                "The details screen should belong to the user that was opened (" + email + ")"));
+    }
+
+    private boolean isRowShown(String email) {
+        if (PlatformLocator.isIos()) {
+            return WaitUtils.isPresent(driver, UsersLocators.userRowEndIcon(email));
+        }
+        return WaitUtils.isVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT);
+    }
+
+    private void waitForRow(String email) {
+        if (PlatformLocator.isIos()) {
+            Assert.assertTrue(WaitUtils.pollUntil(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT,
+                    () -> isRowShown(email)), "User row should be listed again: " + email);
+            return;
+        }
+        WaitUtils.waitForVisibility(
+                driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
     }
 }

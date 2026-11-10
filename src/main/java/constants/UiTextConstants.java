@@ -28,4 +28,6 @@ public final class UiTextConstants {
     /** Fragments of the Archive snackbar, compared in lower case. */
     public static final String ARCHIVE_DOWNLOADING_MESSAGE = "downloading";
     public static final String ARCHIVE_CANCELLED_MESSAGE = "download cancelled";
+
+    public static final String USER_ADDED_MESSAGE = "User was added";
 }
