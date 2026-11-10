@@ -382,7 +382,8 @@ public class HistoryBrowserPage {
 
     /**
      * The landscape history browser shows the timeline panel by default, with a close icon that hides it. The test
-     * case words this as hidden until the timeline button is tapped; the app's behaviour is what is asserted.
+     * case words this as hidden until the timeline button is tapped; the app's behaviour is what is asserted. The
+     * iOS timeline has no close icon, so there only the default visibility is asserted.
      */
     public void verifyTimelineShowsByDefaultAndClosesInLandscape() {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
@@ -402,7 +403,8 @@ public class HistoryBrowserPage {
             WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_BUTTON);
         }
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
-                "Timeline should be displayed in landscape");
+                PlatformLocator.isIos() ? "Timeline should be displayed in landscape"
+                        : "Timeline should be displayed after tapping the timeline button");
         verifyTimelineControlsDisplayed();
     }
 
@@ -719,7 +721,7 @@ public class HistoryBrowserPage {
     private void verifyCursorMoved(LocalDateTime before, LocalDateTime after, boolean forward, String description) {
         boolean moved = forward ? after.isAfter(before) : after.isBefore(before);
         Assert.assertTrue(moved,
-                "Red cursor should move to the " + description + " (" + (forward ? "later" : "earlier")
+                "Frame position should move to the " + description + " (" + (forward ? "later" : "earlier")
                         + " than " + before + ") but is at " + after);
     }
 
@@ -732,10 +734,13 @@ public class HistoryBrowserPage {
             return;
         }
         AtomicReference<LocalDateTime> previous = new AtomicReference<>();
-        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> {
+        boolean settled = WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> {
             LocalDateTime now = readFramePosition();
             return now.equals(previous.getAndSet(now));
         });
+        if (!settled) {
+            logger.warn("Frame time kept changing for {}; stepping anyway", TimeoutConstants.TIMELINE_SETTLE_TIMEOUT);
+        }
     }
 
     private LocalDateTime clickUntilCursorMoves(By button, LocalDateTime before, String description) {
@@ -745,7 +750,7 @@ public class HistoryBrowserPage {
                     () -> !readFramePosition().equals(before))) {
                 break;
             }
-            logger.warn("Cursor did not move after clicking {} (attempt {} of {})",
+            logger.warn("Frame position did not move after clicking {} (attempt {} of {})",
                     description, attempt, CONTROL_CLICK_ATTEMPTS);
         }
         return readFramePosition();
@@ -778,14 +783,15 @@ public class HistoryBrowserPage {
     /**
      * The overlay looks like a debug feature of the iOS build. Without it the steps could only compare whole seconds,
      * which cannot tell half-second frames apart, so a build that drops it fails here with the reason instead of
-     * quietly running a weaker check. Looked up once per page.
+     * quietly running a weaker check. Looked up once per page, with the same wait as the read that follows, because a
+     * video that loads slowly must not fail here before that read has had its time.
      */
     private void verifyFrameOverlayShown() {
         if (frameOverlayChecked) {
             return;
         }
         Assert.assertTrue(WaitUtils.isVisible(
-                        driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY, TimeoutConstants.SHORT_TIMEOUT),
+                        driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY, FrameworkConstants.EXPLICIT_WAIT),
                 "The iOS video overlay with the frame time ('header: yyyy-MM-dd HH:mm:ss.SSS') should be shown; "
                         + "if the build no longer has it, switch FRAME_TIME_OVERLAY to an accessibility id");
         frameOverlayChecked = true;
