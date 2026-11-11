@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
@@ -22,6 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
@@ -671,9 +673,9 @@ public class HistoryBrowserPage {
 
     /**
      * One tap on a frame button: the cursor, the time above the video and so the shown frame all move together. On
-     * iOS the frame time read for the cursor is the video overlay's, which is the shown frame itself, so it already
-     * proves the frame moved; the time label above the video stops at whole seconds and stays the same for a step of
-     * half a second, so checking it there could fail on a step that worked.
+     * iOS the frame time read for the cursor is the video overlay's, which is the shown frame itself. The time label
+     * above the video stops at whole seconds and stays the same for a step of half a second, so there it is compared
+     * with the overlay time cut to whole seconds instead of with its own earlier value.
      */
     private void tapStepButtonAndVerifyMoment(By button, boolean forward, String description) {
         waitForFrameToSettle();
@@ -682,6 +684,11 @@ public class HistoryBrowserPage {
         LocalDateTime cursorAfter = clickUntilCursorMoves(button, cursorBefore, description);
         verifyCursorMoved(cursorBefore, cursorAfter, forward, description);
         if (PlatformLocator.isIos()) {
+            LocalDateTime expectedPreview = cursorAfter.truncatedTo(ChronoUnit.SECONDS);
+            WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
+                    () -> readPreviewTime().equals(expectedPreview));
+            Assert.assertEquals(readPreviewTime(), expectedPreview,
+                    "Preview time above the video should show the second of the frame reached by " + description);
             return;
         }
         WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
@@ -728,7 +735,8 @@ public class HistoryBrowserPage {
 
     /**
      * On iOS a step tap sent while the player is still on its last jump was ignored in some runs, so a step starts
-     * once two reads of the frame time in a row agree. Android keeps its single read.
+     * once two reads of the frame time in a row agree, and fails when they never do, because a step taken while the
+     * frame is still moving cannot be judged. Android keeps its single read.
      */
     private void waitForFrameToSettle() {
         if (!PlatformLocator.isIos()) {
@@ -739,12 +747,12 @@ public class HistoryBrowserPage {
             LocalDateTime now = readFramePosition();
             return now.equals(previous.getAndSet(now));
         });
-        if (!settled) {
-            logger.warn("Frame time kept changing for {}; stepping anyway", TimeoutConstants.TIMELINE_SETTLE_TIMEOUT);
-        }
+        Assert.assertTrue(settled, "Frame time should stop changing before a step but kept changing for "
+                + TimeoutConstants.TIMELINE_SETTLE_TIMEOUT);
     }
 
     private LocalDateTime clickUntilCursorMoves(By button, LocalDateTime before, String description) {
+        verifyStepButtonEnabled(button, description);
         for (int attempt = 1; attempt <= CONTROL_CLICK_ATTEMPTS; attempt++) {
             WaitUtils.click(driver, button);
             if (WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
@@ -755,6 +763,21 @@ public class HistoryBrowserPage {
                     description, attempt, CONTROL_CLICK_ATTEMPTS);
         }
         return readFramePosition();
+    }
+
+    /**
+     * The frame buttons stay disabled until the app has loaded the camera's video and timeline (a spinner shows
+     * meanwhile, seen on iOS when the first camera's history did not load). Checking that first fails with the reason
+     * instead of a bare "element was not enabled" from the click.
+     */
+    private void verifyStepButtonEnabled(By button, String description) {
+        try {
+            WaitUtils.waitForClickability(driver, button);
+        } catch (TimeoutException e) {
+            throw new AssertionError("The " + description + " button should be enabled once the history has loaded, "
+                    + "but stayed disabled for " + FrameworkConstants.EXPLICIT_WAIT + "; the video or timeline of "
+                    + "the first camera probably did not load", e);
+        }
     }
 
     private LocalDateTime readPreviewTime() {

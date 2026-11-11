@@ -79,6 +79,8 @@ public class HistoryBrowserTest extends BaseTest {
         historyBrowserPage.openContextMenuOfFirstCameraPreview();
         historyBrowserPage.openHistoryBrowserFromContextMenu();
         historyBrowserPage.verifyTimelineAndControlsDisplayedInPortrait();
+        historyBrowserPage.requireEventsOnTimeline();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.tapPreviousFrameAndVerifyMoment();
         historyBrowserPage.tapNextFrameAndVerifyMoment();
         historyBrowserPage.verifyPlaybackPaused();
@@ -89,6 +91,7 @@ public class HistoryBrowserTest extends BaseTest {
         historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
         historyBrowserPage.verifyTimelineShowsByDefaultAndClosesInLandscape();
         historyBrowserPage.showTimelineAndVerifyControlsInLandscape();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.tapPreviousFrameAndVerifyMoment();
         historyBrowserPage.tapNextFrameAndVerifyMoment();
         historyBrowserPage.verifyPlaybackPaused();
