@@ -100,4 +100,16 @@
             <class name="tests.ts_history.HistoryBrowserTest"/>
         </classes>
     </test>
+    <!-- Video Search signs in as the end user too, so it gets a <test> of its own at the end and never overlaps the
+         end-user classes above. -->
+    <test name="iOS Video Search">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_video_search.VideoSearchTest"/>
+        </classes>
+    </test>
 </suite>

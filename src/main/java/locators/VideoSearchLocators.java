@@ -50,23 +50,47 @@ public final class VideoSearchLocators {
 
     // iOS: the card has no identifier, so it is the first cell of the first scroll view in the collection (the Person
     // row). TODO: replace with an accessibility identifier once the iOS app has one.
+    private static final String IOS_FIRST_PERSON_CARD =
+            "(//XCUIElementTypeCollectionView//XCUIElementTypeScrollView[1]/XCUIElementTypeCell)[1]";
+
     public static final By FIRST_PERSON_CARD = PlatformLocator.get(
             AppiumBy.xpath("(//*[@resource-id='com.een.vms.android:id/people']"
                     + "//*[@resource-id='com.een.vms.android:id/preview'])[1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeCollectionView//XCUIElementTypeScrollView[1]"
-                    + "/XCUIElementTypeCell)[1]")); // ios
+            AppiumBy.xpath(IOS_FIRST_PERSON_CARD)); // ios
 
     // --- Search functionality --------------------------------------------------------
 
-    public static final By SEARCH_ICON = AppiumBy.id("com.een.vms.android:id/img_search");
+    public static final By SEARCH_ICON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/img_search"), // android
+            AppiumBy.accessibilityId("navigationBar_searchButton")); // ios
 
-    public static final By SEARCH_HINT_FIELD =
-            AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/hint']");
+    // iOS: the hint and the input are one text field, whose value is the hint while it is empty.
+    public static final By SEARCH_HINT_FIELD = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@resource-id='com.een.vms.android:id/hint']"), // android
+            AppiumBy.accessibilityId("navigationBar_searchField")); // ios
 
-    public static final By SEARCH_INPUT_FIELD =
-            AppiumBy.xpath("//android.widget.EditText[@resource-id='com.een.vms.android:id/edit_text']");
+    public static final By SEARCH_INPUT_FIELD = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.EditText[@resource-id='com.een.vms.android:id/edit_text']"), // android
+            AppiumBy.accessibilityId("navigationBar_searchField")); // ios
 
-    public static final By SEARCH_BACK_BUTTON = AppiumBy.id("com.een.vms.android:id/img_back");
+    public static final By SEARCH_BACK_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/img_back"), // android
+            AppiumBy.accessibilityId("navigationBar_searchCloseButton")); // ios
+
+    // Only the results screen has day arrows, which makes this a marker of the results.
+    public static final By RESULTS_PREVIOUS_DAY_BUTTON = PlatformLocator.get(
+            AppiumBy.id("com.een.vms.android:id/left_arrow"), // android
+            AppiumBy.accessibilityId("ic left arrow")); // ios
+
+    // iOS: every result card shows its position in the group ("1 / 78").
+    public static final By FIRST_RESULT_CARD = PlatformLocator.get(
+            AppiumBy.xpath("(//*[@resource-id='com.een.vms.android:id/aggregates']"
+                    + "//*[@resource-id='com.een.vms.android:id/preview'])[1]"), // android
+            iosTextMatching("^[0-9]+ / [0-9]+$", true)); // ios
+
+    // iOS only: the Search key of the keyboard (Android presses its Enter key instead).
+    public static final By KEYBOARD_SEARCH_KEY = AppiumBy.iOSClassChain(
+            "**/XCUIElementTypeKeyboard/**/XCUIElementTypeButton[`name == \"Search\"`]");
 
     // --- Event page (bottom sheet opened from a card) ------------------------------------
 
@@ -85,7 +109,7 @@ public final class VideoSearchLocators {
     public static final By EVENT_TIME = PlatformLocator.get(
             AppiumBy.xpath(EVENT_SHEET + "//*[@resource-id='com.een.vms.android:id/key_images']"
                     + "//android.widget.TextView[@resource-id='com.een.vms.android:id/timestamp']"), // android
-            CamerasLocators.TIMESTAMP); // ios
+            iosTextMatching("^[0-9]{2}:[0-9]{2}:[0-9]{2}$", true)); // ios
 
     // "current event / events in the scope", for example 145/146.
     public static final By EVENT_COUNTER = PlatformLocator.get(
@@ -113,17 +137,52 @@ public final class VideoSearchLocators {
     private static final String KEY_IMAGE_OVERLAY_BASE =
             "//android.widget.ImageView[@resource-id='com.een.vms.android:id/overlay']";
 
-    public static final By CAMERA_PREVIEW_FIRST = AppiumBy.xpath("(" + KEY_IMAGE_OVERLAY_BASE + ")[1]");
+    public static final By CAMERA_PREVIEW_FIRST = PlatformLocator.get(
+            AppiumBy.xpath("(" + KEY_IMAGE_OVERLAY_BASE + ")[1]"), // android
+            AppiumBy.xpath(IOS_FIRST_PERSON_CARD)); // ios
 
-    public static final By KEY_IMAGE_OVERLAY = AppiumBy.xpath(KEY_IMAGE_OVERLAY_BASE);
+    // iOS: the scroll view after the sheet's close button. TODO: use an accessibility identifier once the app has one.
+    public static final By KEY_IMAGE_OVERLAY = PlatformLocator.get(
+            AppiumBy.xpath(KEY_IMAGE_OVERLAY_BASE), // android
+            AppiumBy.xpath("//XCUIElementTypeButton[@name='ic close']"
+                    + "/following::XCUIElementTypeScrollView[1]")); // ios
 
-    public static final By CLOSE_BUTTON =
-            AppiumBy.xpath(EVENT_SHEET + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/close']");
+    // iOS only: the texts inside the key image, found by presence (iOS reports the time as not visible once a tag is
+    // tapped).
+    public static final By KEY_IMAGE_TEXTS = AppiumBy.xpath("//XCUIElementTypeButton[@name='ic close']"
+            + "/following::XCUIElementTypeScrollView[1]//XCUIElementTypeStaticText");
+
+    public static final By CLOSE_BUTTON = PlatformLocator.get(
+            AppiumBy.xpath(EVENT_SHEET + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/close']"), // android
+            AppiumBy.accessibilityId("ic close")); // ios
+
+    // iOS only: shown next to a tag once it has been tapped.
+    public static final By SELECTED_TAG_SEARCH_BUTTON = AppiumBy.accessibilityId("ic videosearch");
 
     // --- Helper method for parameterized suggestion locators ------------------------
 
     public static By suggestionByText(String text) {
-        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(text) + "]");
+        return PlatformLocator.isIos()
+                ? AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND visible == 1 AND name == '"
+                        + text + "'")
+                : AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(text) + "]");
+    }
+
+    public static By appliedSearchTerm(String term) {
+        return PlatformLocator.isIos()
+                ? AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND visible == 1 AND name == '"
+                        + term + "'")
+                : AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/chip_group']//*[@text="
+                        + XPathUtils.xpathLiteral(term) + "]");
+    }
+
+    public static By recentSearch(String phrase) {
+        return PlatformLocator.isIos()
+                ? AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND visible == 1 AND name == '"
+                        + phrase + "'")
+                : AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/search_history']"
+                        + "//*[@resource-id='com.een.vms.android:id/title' and @text="
+                        + XPathUtils.xpathLiteral(phrase) + "]");
     }
 
     /** iOS: a static text whose name matches {@code regex}, optionally only while it is on screen. */

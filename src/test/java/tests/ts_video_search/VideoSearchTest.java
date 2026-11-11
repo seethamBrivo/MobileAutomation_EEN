@@ -10,6 +10,7 @@ import pages.VideoSearchPage;
 public class VideoSearchTest extends BaseTest {
 
     private static final String VIDEO_SEARCH_TERM = "Person";
+    private static final String VIDEO_SEARCH_PHRASE = "man in blue shirt";
 
     private VideoSearchPage videoSearchPage;
 
@@ -36,16 +37,17 @@ public class VideoSearchTest extends BaseTest {
 
     @Test(description = "EEPD-TC-9119: POS-Video Search - searching by the content/text" +
                          " in Video Search in VMS app",
-          groups = {"regression", "video_search"})
+          groups = {"regression", "video_search", "ios"})
     public void verifyVideoSearchByContent() {
         videoSearchPage.openSearchFieldAndVerifyAutosuggestions();
         videoSearchPage.searchForText(VIDEO_SEARCH_TERM);
         videoSearchPage.closeSearchField();
+        videoSearchPage.verifyPhraseListedAsRecentSearch(VIDEO_SEARCH_PHRASE);
     }
 
     @Test(description = "EEPD-TC-5227: POS-Video Search - showing the key image of camera" +
                          " with relevant tags in Home Page in Video Search",
-          groups = {"regression", "video_search"})
+          groups = {"regression", "video_search", "ios"})
     public void verifyKeyImageWithRelevantTags() {
         videoSearchPage.openCameraPreviewAndVerifyDetails();
         videoSearchPage.verifySwipeNavigation();
