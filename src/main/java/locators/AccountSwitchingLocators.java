@@ -17,9 +17,12 @@ public final class AccountSwitchingLocators {
     // endregion
 
     // region More Menu Profile
-    /** Profile section in More menu where current account name is displayed */
-    public static final By PROFILE_SECTION_IN_MORE =
-            AppiumBy.xpath("//android.widget.ScrollView");
+    /**
+     * Profile account name in More menu.
+     * Scoped to first clickable View in ScrollView to avoid matching names in Other Accounts list.
+     */
+    public static final By PROFILE_ACCOUNT_NAME =
+            AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.view.View[@clickable='true']//android.widget.TextView[1]");
     // endregion
 
     // region Account Lists
@@ -29,7 +32,7 @@ public final class AccountSwitchingLocators {
     public static final By END_USERS_SECTION =
             AppiumBy.xpath("//android.widget.TextView[@text='End-users']");
 
-    // TODO: Ask app team for stable IDs - positional XPath breaks if view hierarchy changes
+    // TODO: Ask app team for stable testTag IDs - positional XPath breaks if view hierarchy changes
     /**
      * First account row in the list. Positional because Compose doesn't provide stable IDs.
      * Must read account name from within this same container to ensure name and click target match.
@@ -39,10 +42,10 @@ public final class AccountSwitchingLocators {
 
     /**
      * Account name within the first account row.
-     * Uses contains(@text, '-') pattern - assumes account names have hyphen (e.g., "MK-Reseller").
+     * Gets the TextView at index=1 which is the direct child of the clickable row (index=0 is avatar View).
      */
     public static final By FIRST_ACCOUNT_NAME_IN_ROW =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]//android.widget.TextView[contains(@text, '-')]");
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[@clickable='true']/android.widget.TextView[@index='1']");
     // endregion
 
     // region Switching Indicators
@@ -51,21 +54,13 @@ public final class AccountSwitchingLocators {
     // endregion
 
     /**
-     * Returns a locator for an account row by its name.
-     * Scoped to the account switching screen to avoid false matches.
-     */
-    public static By accountRowByName(String accountName) {
-        return AppiumBy.xpath(
-                "//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']" +
-                "//android.widget.TextView[@text='" + accountName + "']/ancestor::android.view.View[contains(@class, 'View')][1]");
-    }
-
-    /**
      * Returns a locator for finding an account name in the More menu profile section.
-     * Scoped to profile area to avoid matching names in Other Accounts list.
+     * Scoped to first View of ScrollView to avoid matching names in Other Accounts list below.
      */
     public static By profileAccountName(String accountName) {
+        String escapedName = accountName.replace("'", "\\'");
         return AppiumBy.xpath(
-                "//android.widget.ScrollView//android.widget.TextView[@text='" + accountName + "']");
+                "//android.widget.ScrollView/android.view.View[1]" +
+                "//android.widget.TextView[@text='" + escapedName + "']");
     }
 }

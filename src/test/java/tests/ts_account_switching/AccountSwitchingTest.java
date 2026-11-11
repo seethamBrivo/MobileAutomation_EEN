@@ -38,11 +38,20 @@ public class AccountSwitchingTest extends BaseTest {
             return;
         }
         try {
-            // Navigate back to More menu and switch to first account (original)
+            // First, recover to dashboard in case test died on a different screen
+            accountSwitchingPage.recoverToDashboard();
+
+            // If no account switch occurred, nothing to restore
+            if (originalAccountName == null) {
+                logger.info("Cleanup: no account switch occurred, nothing to restore");
+                return;
+            }
+
+            // Navigate to More menu and switch back to first account
             accountSwitchingPage.clickMoreTab();
-            accountSwitchingPage.switchBackToFirstAccount();
+            accountSwitchingPage.switchBackToFirstAccount(originalAccountName);
         } catch (Throwable t) {
-            logger.warn("Cleanup failed: {}", t.getMessage());
+            logger.warn("Cleanup exception: {}", t.getMessage());
         }
     }
 
@@ -57,13 +66,15 @@ public class AccountSwitchingTest extends BaseTest {
 
         accountSwitchingPage.verifyOtherAccountsItemIsVisible();
         accountSwitchingPage.clickOtherAccountsItem();
+
+        // Check test data BEFORE any state changes (so cleanup doesn't run if data is incomplete)
         accountSwitchingPage.requireBothAccountSections();
 
         String targetAccountName = accountSwitchingPage.getFirstAccountNameFromRow();
         logger.info("Switching to account: {}", targetAccountName);
 
         accountSwitchingPage.clickFirstAccount();
-        accountSwitchingPage.waitForSwitchingToComplete();
+        accountSwitchingPage.waitForSwitchingToComplete(originalAccountName);
         accountSwitchingPage.verifyAccountSwitched(originalAccountName, targetAccountName);
 
         logger.info("Account switch verified successfully");
