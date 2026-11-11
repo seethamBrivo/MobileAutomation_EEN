@@ -35,17 +35,8 @@ public final class AccountSwitchingLocators {
     // TODO: Ask app team for stable testTag IDs - positional XPath breaks if view hierarchy changes
     /**
      * First account row in the list. Positional because Compose doesn't provide stable IDs.
-     * Must read account name from within this same container to ensure name and click target match.
      */
     public static final By FIRST_ACCOUNT_ROW =
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[@clickable='true']");
-
-    /**
-     * Account name within the first account row.
-     * Gets the TextView at index=1 which is the direct child of the clickable row (index=0 is avatar View).
-     */
-    public static final By FIRST_ACCOUNT_NAME_IN_ROW =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[@clickable='true']/android.widget.TextView[@index='1']");
     // endregion
-
 }

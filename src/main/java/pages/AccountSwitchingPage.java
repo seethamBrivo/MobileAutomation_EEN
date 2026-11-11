@@ -91,18 +91,6 @@ public class AccountSwitchingPage {
         );
     }
 
-    /**
-     * Gets account name from the first account row.
-     * Reads from the same row element that will be clicked to ensure consistency.
-     */
-    public String getFirstAccountNameFromRow() {
-        return WaitUtils.waitForVisibility(
-                driver,
-                AccountSwitchingLocators.FIRST_ACCOUNT_NAME_IN_ROW,
-                FrameworkConstants.EXPLICIT_WAIT
-        ).getText().trim();
-    }
-
     public void clickFirstAccount() {
         WaitUtils.click(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW);
     }
@@ -189,9 +177,14 @@ public class AccountSwitchingPage {
             WaitUtils.click(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW);
             waitForSwitchingToComplete(currentAccount);
 
-            // Log restoration (no assertion - cleanup is best-effort)
+            // Verify restoration (warning only - cleanup is best-effort)
             String restoredAccount = getCurrentProfileAccountName();
-            logger.info("Cleanup: switched back to '{}'", restoredAccount);
+            if (!restoredAccount.equals(originalAccountName)) {
+                logger.warn("Cleanup: restored to '{}' but expected '{}' - first account may not be the original",
+                        restoredAccount, originalAccountName);
+            } else {
+                logger.info("Cleanup: successfully restored to account '{}'", restoredAccount);
+            }
         } catch (Throwable t) {
             logger.warn("Cleanup: failed to switch back: {}", t.getMessage());
         }
