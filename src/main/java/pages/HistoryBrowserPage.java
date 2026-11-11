@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
@@ -797,13 +798,17 @@ public class HistoryBrowserPage {
         frameOverlayChecked = true;
     }
 
+    /**
+     * A WebDriverException, not an AssertionError, so the polls that read the frame time treat an overlay caught
+     * half-updated as "not yet"; a read outside a poll still fails with this message.
+     */
     private static LocalDateTime parseFrameTime(String overlayText) {
         String text = overlayText.trim();
         String time = text.startsWith(FRAME_TIME_PREFIX) ? text.substring(FRAME_TIME_PREFIX.length()).trim() : text;
         try {
             return LocalDateTime.parse(time, FRAME_TIME_FORMAT);
         } catch (DateTimeParseException e) {
-            throw new AssertionError("Frame time '" + overlayText + "' is not in the expected "
+            throw new WebDriverException("Frame time '" + overlayText + "' is not in the expected "
                     + "'header: yyyy-MM-dd HH:mm:ss.SSS' format", e);
         }
     }
