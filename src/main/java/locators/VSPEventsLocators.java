@@ -168,29 +168,30 @@ public final class VSPEventsLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Timestamp']/following-sibling::android.widget.TextView[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Timestamp']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Timestamp label
 
+    // Get VALUES after labels using following-sibling (like DETAIL_TIMESTAMP does)
     public static final By DETAIL_MAKE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Make\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'Make' AND visible == 1")); // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='Make']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Make']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Make label
 
     public static final By DETAIL_COLOR = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Color\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'Color' AND visible == 1")); // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='Color']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Color']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Color label
 
     public static final By DETAIL_DIRECTION = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Direction\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'Direction' AND visible == 1")); // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='Direction']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Direction']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Direction label
 
     public static final By DETAIL_TYPE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Vehicle type\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'Vehicle type' AND visible == 1")); // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='Vehicle type']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Vehicle type']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Vehicle type label
 
     public static final By DETAIL_ACCESS_TYPE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Access type\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'Access type' AND visible == 1")); // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='Access type']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Access type']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Access type label
 
     public static final By DETAIL_VEHICLE_TAGS = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text=\"Vehicle tags\"]"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'Vehicle tags' AND visible == 1")); // ios
+            AppiumBy.xpath("//android.widget.TextView[@text='Vehicle tags']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Vehicle tags']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Vehicle tags label
 
     public static final By DETAIL_VIEW_HISTORY_LINK = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='View in history browser']"), // android
