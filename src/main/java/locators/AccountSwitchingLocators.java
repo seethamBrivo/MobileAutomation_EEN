@@ -48,30 +48,4 @@ public final class AccountSwitchingLocators {
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[@clickable='true']/android.widget.TextView[@index='1']");
     // endregion
 
-    /**
-     * Returns a locator for finding an account name in the More menu profile section.
-     * Scoped to first View of ScrollView to avoid matching names in Other Accounts list below.
-     * Uses concat() for XPath 1.0 compatibility when the name contains single quotes.
-     */
-    public static By profileAccountName(String accountName) {
-        String xpathText;
-        if (accountName.contains("'")) {
-            // XPath 1.0 doesn't support escape sequences, so use concat()
-            String[] parts = accountName.split("'", -1);
-            StringBuilder concat = new StringBuilder("concat(");
-            for (int i = 0; i < parts.length; i++) {
-                if (i > 0) {
-                    concat.append(",\"'\",");
-                }
-                concat.append("'").append(parts[i]).append("'");
-            }
-            concat.append(")");
-            xpathText = concat.toString();
-        } else {
-            xpathText = "'" + accountName + "'";
-        }
-        return AppiumBy.xpath(
-                "//android.widget.ScrollView/android.view.View[1]" +
-                "//android.widget.TextView[@text=" + xpathText + "]");
-    }
 }

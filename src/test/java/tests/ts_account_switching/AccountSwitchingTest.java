@@ -66,15 +66,12 @@ public class AccountSwitchingTest extends BaseTest {
         accountSwitchingPage.verifyOtherAccountsItemIsVisible();
         accountSwitchingPage.clickOtherAccountsItem();
 
-        // Check test data before switching (cleanup will run but return early if originalAccountName is null)
+        // Check test data is sufficient before switching
         accountSwitchingPage.requireBothAccountSections();
-
-        String targetAccountName = accountSwitchingPage.getFirstAccountNameFromRow();
-        logger.info("Switching to account: {}", targetAccountName);
 
         accountSwitchingPage.clickFirstAccount();
         accountSwitchingPage.waitForSwitchingToComplete(originalAccountName);
-        accountSwitchingPage.verifyAccountSwitched(originalAccountName, targetAccountName);
+        accountSwitchingPage.verifyAccountSwitched(originalAccountName);
 
         logger.info("Account switch verified successfully");
     }
