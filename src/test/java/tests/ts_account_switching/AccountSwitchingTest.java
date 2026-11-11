@@ -27,8 +27,7 @@ public class AccountSwitchingTest extends BaseTest {
             throw new SkipException("Account switching tests are Android-only (no iOS locators implemented)");
         }
 
-        loginAs(TestDataConstants.RESELLER3_CREDS);
-        accountSwitchingPage = new AccountSwitchingPage(driver);
+        accountSwitchingPage = loginAndCreatePage(TestDataConstants.RESELLER3_CREDS, AccountSwitchingPage::new);
         accountSwitchingPage.verifyLandedOnMoreScreen();
     }
 
@@ -67,7 +66,7 @@ public class AccountSwitchingTest extends BaseTest {
         accountSwitchingPage.verifyOtherAccountsItemIsVisible();
         accountSwitchingPage.clickOtherAccountsItem();
 
-        // Check test data BEFORE any state changes (so cleanup doesn't run if data is incomplete)
+        // Check test data before switching (cleanup will run but return early if originalAccountName is null)
         accountSwitchingPage.requireBothAccountSections();
 
         String targetAccountName = accountSwitchingPage.getFirstAccountNameFromRow();

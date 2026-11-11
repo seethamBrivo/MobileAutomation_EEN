@@ -38,7 +38,7 @@ public final class AccountSwitchingLocators {
      * Must read account name from within this same container to ensure name and click target match.
      */
     public static final By FIRST_ACCOUNT_ROW =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View");
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[@clickable='true']");
 
     /**
      * Account name within the first account row.
@@ -48,19 +48,30 @@ public final class AccountSwitchingLocators {
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='SwitchAccount']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]/android.view.View[@clickable='true']/android.widget.TextView[@index='1']");
     // endregion
 
-    // region Switching Indicators
-    public static final By SWITCHING_LOADER =
-            AppiumBy.xpath("//android.view.View[@content-desc='Loading']");
-    // endregion
-
     /**
      * Returns a locator for finding an account name in the More menu profile section.
      * Scoped to first View of ScrollView to avoid matching names in Other Accounts list below.
+     * Uses concat() for XPath 1.0 compatibility when the name contains single quotes.
      */
     public static By profileAccountName(String accountName) {
-        String escapedName = accountName.replace("'", "\\'");
+        String xpathText;
+        if (accountName.contains("'")) {
+            // XPath 1.0 doesn't support escape sequences, so use concat()
+            String[] parts = accountName.split("'", -1);
+            StringBuilder concat = new StringBuilder("concat(");
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) {
+                    concat.append(",\"'\",");
+                }
+                concat.append("'").append(parts[i]).append("'");
+            }
+            concat.append(")");
+            xpathText = concat.toString();
+        } else {
+            xpathText = "'" + accountName + "'";
+        }
         return AppiumBy.xpath(
                 "//android.widget.ScrollView/android.view.View[1]" +
-                "//android.widget.TextView[@text='" + escapedName + "']");
+                "//android.widget.TextView[@text=" + xpathText + "]");
     }
 }

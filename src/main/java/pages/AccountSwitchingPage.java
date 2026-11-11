@@ -35,7 +35,7 @@ public class AccountSwitchingPage {
     }
 
     public void clickMoreTab() {
-        WaitUtils.click(driver, BottomNavigationLocators.MORE_TAB);
+        BottomNavigationBar.clickMoreTab(driver);
         WaitUtils.waitForVisibility(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM,
                 FrameworkConstants.EXPLICIT_WAIT);
     }
@@ -107,47 +107,33 @@ public class AccountSwitchingPage {
 
     /**
      * Waits for account switching to complete by observing profile name change.
+     * Polls until the profile name differs from the original account name.
+     * Does not verify exact match to target (profile may show abbreviated name).
      * @param originalAccountName the account name before the switch
      */
     public void waitForSwitchingToComplete(String originalAccountName) {
-        // Wait for More tab to be visible (indicates app reloaded after switch)
-        WaitUtils.waitForVisibility(
-                driver,
-                BottomNavigationLocators.MORE_TAB,
-                FrameworkConstants.EXPLICIT_WAIT
-        );
+        // Navigate to More to observe profile name change
+        BottomNavigationBar.clickMoreTab(driver);
 
-        // Poll for profile name to change (observable change, not just loader disappearing)
-        clickMoreTab();
-        for (int attempt = 0; attempt < 5; attempt++) {
+        // Poll for profile name to change from original (profile may show abbreviated name)
+        org.openqa.selenium.support.ui.WebDriverWait wait = new org.openqa.selenium.support.ui.WebDriverWait(
+                driver, FrameworkConstants.EXPLICIT_WAIT);
+        wait.until(driver -> {
             String currentName = getCurrentProfileAccountName();
-            if (!currentName.equals(originalAccountName)) {
-                logger.info("Account switch complete: profile changed from '{}' to '{}'",
-                        originalAccountName, currentName);
-                return;
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Interrupted while waiting for account switch", e);
-            }
-        }
-        Assert.fail(String.format(
-                "Account name did not change after switch. Still showing: '%s'", originalAccountName));
+            return !currentName.equals(originalAccountName);
+        });
+
+        String newAccountName = getCurrentProfileAccountName();
+        logger.info("Account switch complete: profile changed from '{}' to '{}'",
+                originalAccountName, newAccountName);
     }
 
     /**
      * Verifies that the account switched from originalAccountName to expectedAccountName.
      * Ensures the switch actually happened by comparing before and after.
+     * Assumes More menu is already open (waitForSwitchingToComplete navigates there).
      */
     public void verifyAccountSwitched(String originalAccountName, String expectedAccountName) {
-        // Navigate to More menu if not already there
-        if (!WaitUtils.isVisible(driver, AccountSwitchingLocators.OTHER_ACCOUNTS_ITEM,
-                TimeoutConstants.SHORT_TIMEOUT)) {
-            clickMoreTab();
-        }
-
         // Get current profile name
         String currentProfileName = getCurrentProfileAccountName();
 
@@ -165,33 +151,19 @@ public class AccountSwitchingPage {
     }
 
     /**
-     * Attempts to navigate back to the More tab/Dashboard from any screen.
-     * Tries pressing back up to 3 times until More tab is visible.
+     * Attempts to navigate back to the dashboard from any screen.
+     * Delegates to DevicesPage.recoverToDashboard() for consistent recovery behavior.
      */
     public void recoverToDashboard() {
-        int maxAttempts = 3;
-        for (int attempt = 0; attempt < maxAttempts; attempt++) {
-            if (WaitUtils.isVisible(driver, BottomNavigationLocators.MORE_TAB,
-                    TimeoutConstants.SHORT_TIMEOUT)) {
-                logger.info("Already on dashboard");
-                return;
-            }
-            logger.info("Navigating back to dashboard (attempt {})", attempt + 1);
-            driver.navigate().back();
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        logger.warn("Could not recover to dashboard after {} attempts", maxAttempts);
+        DevicesPage devicesPage = new DevicesPage(driver);
+        devicesPage.recoverToDashboard();
     }
 
     /**
      * Cleanup helper: switches back by clicking the first account in Other Accounts list.
      * Simple approach - just clicks the first account row.
      *
-     * @param originalAccountName the original account name (for logging only)
+     * @param originalAccountName the original account name to restore to
      */
     public void switchBackToFirstAccount(String originalAccountName) {
         try {
@@ -203,20 +175,28 @@ public class AccountSwitchingPage {
                 return;
             }
 
-            logger.info("Cleanup: switching from '{}' back by clicking first account", currentAccount);
+            logger.info("Cleanup: switching from '{}' back to '{}'", currentAccount, originalAccountName);
 
             // Click Other Accounts
             clickOtherAccountsItem();
 
-            // Click first account row
+            // Get target account name before clicking (for verification only)
+            String targetAccountName = getFirstAccountNameFromRow();
+
+            // Click first account row and wait for switch from currentAccount
             WaitUtils.click(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW);
             waitForSwitchingToComplete(currentAccount);
 
+            // Verify we restored to the expected account
             String restoredAccount = getCurrentProfileAccountName();
-            logger.info("Cleanup: switched to account '{}'", restoredAccount);
-
-        } catch (Exception e) {
-            logger.info("Cleanup: failed to switch back: {}", e.getMessage());
+            if (!restoredAccount.equals(originalAccountName)) {
+                logger.warn("Cleanup: restored to '{}' but expected '{}' - first account may not be the original",
+                        restoredAccount, originalAccountName);
+            } else {
+                logger.info("Cleanup: successfully restored to account '{}'", restoredAccount);
+            }
+        } catch (Throwable t) {
+            logger.warn("Cleanup: failed to switch back: {}", t.getMessage());
         }
     }
 }
