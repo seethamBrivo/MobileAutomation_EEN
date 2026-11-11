@@ -16,6 +16,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
+import org.openqa.selenium.remote.RemoteWebElement;
 
 public final class GestureUtils {
 
@@ -163,6 +164,12 @@ public final class GestureUtils {
         swipeSequence.addAction(finger.createPointerMove(TimeoutConstants.SWIPE_MOVE, PointerInput.Origin.viewport(), endX, endY));
         swipeSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
         driver.perform(List.of(swipeSequence));
+    }
+
+    /** iOS: XCUITest's own swipe on {@code element} ("left" or "right": where the finger moves); it pages a pager. */
+    public static void swipeElementIos(AppiumDriver driver, WebElement element, String direction) {
+        driver.executeScript("mobile: swipe", Map.of("elementId", ((RemoteWebElement) element).getId(),
+                "direction", direction));
     }
 
     /**
