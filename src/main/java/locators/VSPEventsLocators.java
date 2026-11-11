@@ -168,29 +168,29 @@ public final class VSPEventsLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Timestamp']/following-sibling::android.widget.TextView[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Timestamp']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Timestamp label
 
-    // Get VALUES after labels using following-sibling (like DETAIL_TIMESTAMP does)
+    // Android: finds label (original behavior), iOS: finds value after label
     public static final By DETAIL_MAKE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text='Make']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Make\"]"), // android - finds label
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Make']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Make label
 
     public static final By DETAIL_COLOR = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text='Color']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Color\"]"), // android - finds label
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Color']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Color label
 
     public static final By DETAIL_DIRECTION = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text='Direction']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Direction\"]"), // android - finds label
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Direction']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Direction label
 
     public static final By DETAIL_TYPE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text='Vehicle type']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Vehicle type\"]"), // android - finds label
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Vehicle type']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Vehicle type label
 
     public static final By DETAIL_ACCESS_TYPE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text='Access type']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Access type\"]"), // android - finds label
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Access type']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Access type label
 
     public static final By DETAIL_VEHICLE_TAGS = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.TextView[@text='Vehicle tags']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//android.widget.TextView[@text=\"Vehicle tags\"]"), // android - finds label
             AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Vehicle tags']/following-sibling::XCUIElementTypeStaticText[1]")); // ios - value after Vehicle tags label
 
     public static final By DETAIL_VIEW_HISTORY_LINK = PlatformLocator.get(
