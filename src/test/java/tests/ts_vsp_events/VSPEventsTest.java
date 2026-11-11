@@ -33,7 +33,7 @@ public class VSPEventsTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-37646: POS-VSP-Verify Event Cards in the VSP events page",
-          groups = {"regression", "vsp", "events"})
+          groups = {"regression", "vsp", "events", "ios"})
     public void verifyEventCardsInVSPEventsPage() {
         vspEventsPage.navigateToVSPEvents();
         vspEventsPage.verifyEventCardsDisplayed();
@@ -50,7 +50,7 @@ public class VSPEventsTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-37714: POS-VSP-Verify the More info detail page",
-          groups = {"regression", "vsp", "events"})
+          groups = {"regression", "vsp", "events", "ios"})
     public void verifyVSPEventDetailPage() {
         myProfilePage = devicesPage.navigateToMyProfile();
         myProfilePage.clickProfileSection();

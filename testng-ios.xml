@@ -100,6 +100,18 @@
             <class name="tests.ts_history.HistoryBrowserTest"/>
         </classes>
     </test>
+    <!-- VSPEventsTest signs in as TS02 (like CameraContextMenuTest and MyProfileTest), so it runs on its own after them
+         to avoid parallel sign-ins with the same account. -->
+    <test name="iOS VSP Events">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_vsp_events.VSPEventsTest"/>
+        </classes>
+    </test>
     <!-- Video Search signs in as the end user too, so it gets a <test> of its own at the end and never overlaps the
          end-user classes above. -->
     <test name="iOS Video Search">

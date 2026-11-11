@@ -1,7 +1,9 @@
 # iOS Configuration
 automationName=XCUITest
-deviceName=iPhone 15
-platformVersion=27
+# Device configuration for VSP Events tests - iPhone 17 has better card layout detection
+deviceName=iPhone 17
+platformVersion=26
+# Only needed for local execution (ignored for BrowserStack); see 'xcodes'/idevice_id to obtain one.
 udid=YOUR_IOS_DEVICE_UDID
 
 # Application Setup
