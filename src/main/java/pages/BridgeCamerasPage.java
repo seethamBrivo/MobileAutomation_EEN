@@ -4,6 +4,7 @@ import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import locators.BridgeCamerasLocators;
 import locators.BridgesLocators;
+import org.testng.Assert;
 import org.testng.SkipException;
 import utils.PlatformLocator;
 import utils.WaitUtils;
@@ -49,6 +50,19 @@ public class BridgeCamerasPage {
             throw new SkipException("The first bridge needs at least 1 camera but shows 0");
         }
         WaitUtils.assertVisible(driver, BridgeCamerasLocators.FIRST_CAMERA_IN_LIST, "Camera list should be displayed");
+    }
+
+    /**
+     * Test case step "the bridge name is in the header". The iOS header only reads "Cameras" and names no bridge: the
+     * list is scoped by a "Bridges 1" filter chip, so that chip is verified instead. Android's header is not pinned
+     * down by the test case, so nothing is asserted there.
+     */
+    public void verifyListScopedToOneBridge() {
+        if (!PlatformLocator.isIos()) {
+            return;
+        }
+        Assert.assertEquals(WaitUtils.waitForVisibility(driver, BridgeCamerasLocators.IOS_BRIDGES_CHIP_COUNT).getText(),
+                "1", "The cameras list opened from a bridge should be scoped to exactly 1 bridge");
     }
 
     // ---- step-level groups ----------------------------------------------------------------

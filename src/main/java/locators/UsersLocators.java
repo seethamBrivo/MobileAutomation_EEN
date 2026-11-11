@@ -34,7 +34,7 @@ public final class UsersLocators {
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/img_custom']"
                     + " | "+"//androidx.compose.ui.platform.ComposeView[@content-desc='UsersMainScreen']//android.widget.TextView[@text='Users']"
                     + "/following-sibling::android.view.View[@clickable='true'][last()]"), // android
-            AppiumBy.accessibilityId("navigationBar_customButton")); // ios
+            NavigationLocators.iosTopBarButton("add")); // ios: the label is the lower-case icon name
 
     public static final By USERS_SEARCH_FILTER_ICON =
             AppiumBy.id("com.een.vms.android:id/img_search");
@@ -66,7 +66,8 @@ public final class UsersLocators {
     public static final By ADD_BUTTON = PlatformLocator.get(
             AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/btn_text']"
                     + " | //android.widget.TextView[@text='New user']/following-sibling::android.view.View[@clickable='true'][last()]"), // android
-            USERS_ADD_ICON_AT_THE_TOP_RIGHT_CORNER); // ios
+            // iOS: the form's top-bar button is labelled "Add"; the list's "+" icon is the lower-case "add"
+            NavigationLocators.iosTopBarButton("Add")); // ios
 
     public static final By FIRST_NAME_TEXT_FIELD = PlatformLocator.get(
             AppiumBy.xpath("//*[@content-desc='first_name_text_field']"
@@ -133,5 +134,11 @@ public final class UsersLocators {
     public static By iosUserRowName(String email) {
         return AppiumBy.xpath(IOS_ROW + "[." + iosSubtitleOf(email) + "]"
                 + "//XCUIElementTypeStaticText[contains(@name, '_users_name')]");
+    }
+
+    /** iOS: the validation message shown inside a New user form field ("email", "name" or "lastName"). */
+    public static By iosFieldError(String cellName, String message) {
+        return AppiumBy.xpath("//XCUIElementTypeCell[@name='" + cellName + "']"
+                + "//XCUIElementTypeStaticText[@name='" + message + "']");
     }
 }

@@ -30,6 +30,8 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
     public void verifyBridgeCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.BRIDGE_VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
+        // Step 6: The cameras of the selected bridge are listed
+        bridgeCamerasPage.verifyListScopedToOneBridge();
         String initialCount = bridgeCamerasPage.cameraSearchFilter().captureCounterAndVerifyFormat();
         // Step 7: Tap on the search bar
         bridgeCamerasPage.cameraSearchFilter().tapSearchBarAndVerify();

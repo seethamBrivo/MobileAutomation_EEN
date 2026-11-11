@@ -51,4 +51,8 @@ public final class BridgeCamerasLocators {
     public static final By EMPTY_STATE_MESSAGE = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text=\"" + UiTextConstants.EMPTY_STATE_MESSAGE + "\"]"), // android
             CamerasLocators.EMPTY_STATE_MESSAGE); // ios
+
+    /** iOS only: the number in the "Bridges" filter chip, the one place the header says which bridges are listed. */
+    public static final By IOS_BRIDGES_CHIP_COUNT = AppiumBy.xpath(
+            "//XCUIElementTypeStaticText[@name='Bridges']/following::XCUIElementTypeStaticText[1]");
 }

@@ -106,12 +106,25 @@ public class UsersPage {
         WaitUtils.assertVisible(driver, UsersLocators.EMAIL_PLUS_HINT, "Email plus hint should be displayed");
     }
 
-    public void verifyAddButtonDisabledForInvalidEmail() {
-        if (PlatformLocator.isIos()) {
-            logger.info("iOS: Add is enabled with an invalid email; not asserted");
+    /**
+     * Android keeps Add disabled for an invalid e-mail. iOS keeps it enabled instead: tapping it stays on the form
+     * and marks the e-mail and the still-empty name fields.
+     */
+    public void verifyInvalidEmailRejected() {
+        if (!PlatformLocator.isIos()) {
+            verifyAddButtonDisabled();
             return;
         }
-        verifyAddButtonDisabled();
+        clickAddButton();
+        WaitUtils.assertVisible(driver,
+                UsersLocators.iosFieldError("email", UiTextConstants.IOS_INVALID_EMAIL_MESSAGE),
+                "An invalid e-mail should show '" + UiTextConstants.IOS_INVALID_EMAIL_MESSAGE + "' under the e-mail");
+        WaitUtils.assertVisible(driver,
+                UsersLocators.iosFieldError("name", UiTextConstants.FIELD_REQUIRED_MESSAGE),
+                "The empty first name should show '" + UiTextConstants.FIELD_REQUIRED_MESSAGE + "'");
+        WaitUtils.assertVisible(driver,
+                UsersLocators.iosFieldError("lastName", UiTextConstants.FIELD_REQUIRED_MESSAGE),
+                "The empty last name should show '" + UiTextConstants.FIELD_REQUIRED_MESSAGE + "'");
     }
 
     /** The "user was added" snackbar shows; on iOS its text is read as well. */

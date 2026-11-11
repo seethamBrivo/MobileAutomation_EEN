@@ -129,7 +129,8 @@ public class BridgeSettingsPage {
     public void verifyBridgeRestartedMessageDisplayed() {
         if (PlatformLocator.isIos()) {
             Assert.assertTrue(WaitUtils.pollUntil(driver, TimeoutConstants.LIST_LOAD_TIMEOUT,
-                            () -> WaitUtils.isPresent(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE)),
+                            () -> WaitUtils.isVisible(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE,
+                                    TimeoutConstants.SHORT_TIMEOUT)),
                     "Bridge restarted confirmation message should be displayed after confirming the restart");
             return;
         }
