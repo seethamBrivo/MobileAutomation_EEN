@@ -79,8 +79,10 @@ public final class UsersLocators {
                     + " | //android.widget.TextView[@text='Last name']/following-sibling::android.widget.EditText[1]"), // android
             AppiumBy.xpath("//XCUIElementTypeCell[@name='lastName']//XCUIElementTypeTextField")); // ios
 
-    public static final By EMAIL_PLUS_HINT = AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/emailPlusHint']"
-            + " | //android.widget.TextView[starts-with(@text,'The + alias is no longer required')]");
+    public static final By EMAIL_PLUS_HINT = PlatformLocator.get(
+            AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/emailPlusHint']"
+                    + " | //android.widget.TextView[starts-with(@text,'The + alias is no longer required')]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[starts-with(@name,'The + alias is no longer required')]")); // ios
 
     // New UI: the snackbar is a plain TextView with this text. The old positional Compose path is kept in the union.
     public static final By SNACKBAR_TEXT = AppiumBy.xpath("//android.widget.TextView[@text='"

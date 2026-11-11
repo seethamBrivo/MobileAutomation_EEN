@@ -3,6 +3,8 @@ package pages;
 import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumDriver;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import locators.BridgesLocators;
 import locators.UsersLocators;
@@ -99,16 +101,13 @@ public class UsersPage {
     }
 
     public void verifyEmailPlusHintDisplayed() {
-        if (PlatformLocator.isIos()) {
-            logger.info("iOS: the + alias hint is not in the accessibility tree; not asserted");
-            return;
-        }
         WaitUtils.assertVisible(driver, UsersLocators.EMAIL_PLUS_HINT, "Email plus hint should be displayed");
     }
 
     /**
      * Android keeps Add disabled for an invalid e-mail. iOS keeps it enabled instead: tapping it stays on the form
-     * and marks the e-mail and the still-empty name fields.
+     * and marks the e-mail and the still-empty name fields. All three messages are checked before failing, so one
+     * broken field does not hide the others.
      */
     public void verifyInvalidEmailRejected() {
         if (!PlatformLocator.isIos()) {
@@ -116,15 +115,20 @@ public class UsersPage {
             return;
         }
         clickAddButton();
-        WaitUtils.assertVisible(driver,
-                UsersLocators.iosFieldError("email", UiTextConstants.IOS_INVALID_EMAIL_MESSAGE),
-                "An invalid e-mail should show '" + UiTextConstants.IOS_INVALID_EMAIL_MESSAGE + "' under the e-mail");
-        WaitUtils.assertVisible(driver,
-                UsersLocators.iosFieldError("name", UiTextConstants.FIELD_REQUIRED_MESSAGE),
-                "The empty first name should show '" + UiTextConstants.FIELD_REQUIRED_MESSAGE + "'");
-        WaitUtils.assertVisible(driver,
-                UsersLocators.iosFieldError("lastName", UiTextConstants.FIELD_REQUIRED_MESSAGE),
-                "The empty last name should show '" + UiTextConstants.FIELD_REQUIRED_MESSAGE + "'");
+        List<String> missing = new ArrayList<>();
+        collectIfMissing(missing, "email", UiTextConstants.IOS_INVALID_EMAIL_MESSAGE);
+        collectIfMissing(missing, "name", UiTextConstants.FIELD_REQUIRED_MESSAGE);
+        collectIfMissing(missing, "lastName", UiTextConstants.FIELD_REQUIRED_MESSAGE);
+        Assert.assertTrue(missing.isEmpty(),
+                "Tapping Add with an invalid e-mail and empty names should show a message under each field, "
+                        + "but these were missing: " + missing);
+    }
+
+    private void collectIfMissing(List<String> missing, String formField, String message) {
+        if (!WaitUtils.isVisible(
+                driver, UsersLocators.iosFieldError(formField, message), TimeoutConstants.SHORT_TIMEOUT)) {
+            missing.add(formField + " -> '" + message + "'");
+        }
     }
 
     /** The "user was added" snackbar shows; on iOS its text is read as well. */
@@ -284,11 +288,6 @@ public class UsersPage {
     }
 
     private void tapUserRow(String email) {
-        if (PlatformLocator.isIos()) {
-            WaitUtils.findPresent(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT)
-                    .get(0).click();
-            return;
-        }
         WaitUtils.click(driver, UsersLocators.userRowEndIcon(email));
     }
 
@@ -296,31 +295,26 @@ public class UsersPage {
         if (!PlatformLocator.isIos()) {
             return Optional.empty();
         }
-        return Optional.of(WaitUtils.findPresent(
-                driver, UsersLocators.iosUserRowName(email), TimeoutConstants.SHORT_TIMEOUT).get(0).getText());
+        return Optional.of(WaitUtils.retryOnStale(() -> WaitUtils.findPresent(
+                driver, UsersLocators.iosUserRowName(email), TimeoutConstants.SHORT_TIMEOUT).get(0).getText()));
     }
 
     /** iOS: the last check before a delete, so a row that moved under the tap never deletes another user. */
     private void verifyDetailsAreOfRow(Optional<String> rowName, String email) {
-        rowName.ifPresent(name -> Assert.assertEquals(
-                WaitUtils.waitForVisibility(driver, UsersLocators.IOS_DETAILS_TITLE).getText(), name,
-                "The details screen should belong to the user that was opened (" + email + ")"));
+        rowName.ifPresent(name -> {
+            WaitUtils.assertVisible(driver, UsersLocators.IOS_DETAILS_TITLE, TimeoutConstants.DETAILS_LOAD_TIMEOUT,
+                    "The details title should be shown for '" + name + "' (" + email + ")");
+            Assert.assertEquals(WaitUtils.waitForVisibility(driver, UsersLocators.IOS_DETAILS_TITLE).getText(), name,
+                    "The details screen should belong to the user that was opened (" + email + ")");
+        });
     }
 
     private boolean isRowShown(String email) {
-        if (PlatformLocator.isIos()) {
-            return WaitUtils.isPresent(driver, UsersLocators.userRowEndIcon(email));
-        }
         return WaitUtils.isVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT);
     }
 
     private void waitForRow(String email) {
-        if (PlatformLocator.isIos()) {
-            Assert.assertTrue(WaitUtils.pollUntil(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT,
-                    () -> isRowShown(email)), "User row should be listed again: " + email);
-            return;
-        }
-        WaitUtils.waitForVisibility(
-                driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
+        WaitUtils.assertVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT,
+                "User row should be listed again: " + email);
     }
 }

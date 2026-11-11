@@ -2,14 +2,20 @@ package pages;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.util.List;
 import locators.BridgeCamerasLocators;
 import locators.BridgesLocators;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.By;
 import org.testng.Assert;
 import org.testng.SkipException;
 import utils.PlatformLocator;
 import utils.WaitUtils;
 
 public class BridgeCamerasPage {
+
+    private static final Logger logger = LogManager.getLogger(BridgeCamerasPage.class);
 
     private final AppiumDriver driver;
     private final CameraSearchFilter cameraSearchFilter;
@@ -44,9 +50,12 @@ public class BridgeCamerasPage {
         // First verify we're on camera screen (search placeholder is unique to camera screen)
         WaitUtils.assertVisible(driver, BridgeCamerasLocators.SEARCH_PLACEHOLDER,
                 "Camera screen should be displayed (search placeholder visible)");
-        if (!WaitUtils.isVisible(driver, BridgeCamerasLocators.FIRST_CAMERA_IN_LIST, TimeoutConstants.LIST_LOAD_TIMEOUT)
-                && WaitUtils.isVisible(
-                        driver, BridgeCamerasLocators.EMPTY_STATE_MESSAGE, TimeoutConstants.SHORT_TIMEOUT)) {
+        // One shared budget for both outcomes: a bridge without cameras shows the empty state instead of a row, so
+        // waiting for the row first and only then probing the empty state could miss it at the boundary.
+        By shown = WaitUtils.waitForFirstVisible(driver,
+                List.of(BridgeCamerasLocators.FIRST_CAMERA_IN_LIST, BridgeCamerasLocators.EMPTY_STATE_MESSAGE),
+                TimeoutConstants.LIST_LOAD_TIMEOUT).orElse(null);
+        if (BridgeCamerasLocators.EMPTY_STATE_MESSAGE.equals(shown)) {
             throw new SkipException("The first bridge needs at least 1 camera but shows 0");
         }
         WaitUtils.assertVisible(driver, BridgeCamerasLocators.FIRST_CAMERA_IN_LIST, "Camera list should be displayed");
@@ -75,6 +84,11 @@ public class BridgeCamerasPage {
         CameraContextMenu.dismiss(driver);
     }
 
+    /**
+     * Leaves the cameras screen. On Android the bridge context menu the screen was opened from can still be showing
+     * after Back, which hides the bridge list from the next step, so it is dismissed. That is an app quirk, not
+     * something to hide: it is logged every time it happens.
+     */
     public void clickBackButton() {
         if (PlatformLocator.isIos()) {
             WaitUtils.tryClickOptionalElement(
@@ -83,6 +97,7 @@ public class BridgeCamerasPage {
         WaitUtils.click(driver, BridgeCamerasLocators.BACK_BUTTON);
         if (!PlatformLocator.isIos()
                 && WaitUtils.isVisible(driver, BridgeCamerasLocators.CAMERAS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {
+            logger.warn("Android: the bridge context menu was still open after Back; dismissing it");
             CameraContextMenu.dismiss(driver);
         }
     }
