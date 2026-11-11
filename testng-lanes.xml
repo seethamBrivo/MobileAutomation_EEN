@@ -38,6 +38,7 @@
             <class name="tests.ts_vsp_events.VSPEventsTest"/>
             <class name="tests.ts_live.LiveViewTest"/>
             <class name="tests.ts_archive.ArchiveTest"/>
+            <class name="tests.ts_downloads.DownloadsTest"/>
             <class name="tests.ts_video_search.VideoSearchTest"/>
         </classes>
     </test>
