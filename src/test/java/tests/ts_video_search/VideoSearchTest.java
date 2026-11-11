@@ -40,9 +40,15 @@ public class VideoSearchTest extends BaseTest {
           groups = {"regression", "video_search", "ios"})
     public void verifyVideoSearchByContent() {
         videoSearchPage.openSearchFieldAndVerifyAutosuggestions();
+        videoSearchPage.verifyRecentSearchNotListed(VIDEO_SEARCH_PHRASE);
         videoSearchPage.searchForText(VIDEO_SEARCH_TERM);
         videoSearchPage.closeSearchField();
-        videoSearchPage.verifyPhraseListedAsRecentSearch(VIDEO_SEARCH_PHRASE);
+        videoSearchPage.openSearchField();
+        videoSearchPage.searchForPhrase(VIDEO_SEARCH_PHRASE);
+        videoSearchPage.closeSearchField();
+        videoSearchPage.openSearchField();
+        videoSearchPage.verifyRecentSearchListed(VIDEO_SEARCH_PHRASE);
+        videoSearchPage.closeSearchField();
     }
 
     @Test(description = "EEPD-TC-5227: POS-Video Search - showing the key image of camera" +

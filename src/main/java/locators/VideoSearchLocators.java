@@ -137,7 +137,7 @@ public final class VideoSearchLocators {
     private static final String KEY_IMAGE_OVERLAY_BASE =
             "//android.widget.ImageView[@resource-id='com.een.vms.android:id/overlay']";
 
-    public static final By CAMERA_PREVIEW_FIRST = PlatformLocator.get(
+    public static final By FIRST_EVENT_PREVIEW = PlatformLocator.get(
             AppiumBy.xpath("(" + KEY_IMAGE_OVERLAY_BASE + ")[1]"), // android
             AppiumBy.xpath(IOS_FIRST_PERSON_CARD)); // ios
 
@@ -163,26 +163,29 @@ public final class VideoSearchLocators {
 
     public static By suggestionByText(String text) {
         return PlatformLocator.isIos()
-                ? AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND visible == 1 AND name == '"
-                        + text + "'")
+                ? iosVisibleTextNamed(text)
                 : AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(text) + "]");
     }
 
     public static By appliedSearchTerm(String term) {
         return PlatformLocator.isIos()
-                ? AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND visible == 1 AND name == '"
-                        + term + "'")
+                ? iosVisibleTextNamed(term)
                 : AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/chip_group']//*[@text="
                         + XPathUtils.xpathLiteral(term) + "]");
     }
 
     public static By recentSearch(String phrase) {
         return PlatformLocator.isIos()
-                ? AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND visible == 1 AND name == '"
-                        + phrase + "'")
+                ? iosVisibleTextNamed(phrase)
                 : AppiumBy.xpath("//*[@resource-id='com.een.vms.android:id/search_history']"
                         + "//*[@resource-id='com.een.vms.android:id/title' and @text="
                         + XPathUtils.xpathLiteral(phrase) + "]");
+    }
+
+    /** iOS: a static text on screen whose name is exactly {@code name}. */
+    private static By iosVisibleTextNamed(String name) {
+        return AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND visible == 1 AND name == '"
+                + name.replace("'", "\\'") + "'");
     }
 
     /** iOS: a static text whose name matches {@code regex}, optionally only while it is on screen. */

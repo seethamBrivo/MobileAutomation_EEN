@@ -5,6 +5,7 @@ import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import locators.VideoSearchLocators;
@@ -49,7 +51,9 @@ public class VideoSearchPage {
             Pattern.compile(PlatformLocator.isIos() ? "\\d+ / \\d+" : "\\d+/\\d+");
 
     /** "145/146" on Android, "48 / 48" on iOS. */
-    private static final Pattern EVENT_POSITION = Pattern.compile("(\\d+)\\s*/\\s*(\\d+)");
+    private static final Pattern EVENT_POSITION = Pattern.compile("(\\d{1,6})\\s*/\\s*(\\d{1,6})");
+
+    private static final long SECONDS_PER_DAY = 24 * 60 * 60;
 
     private static final Logger logger = LogManager.getLogger(VideoSearchPage.class);
 
@@ -204,20 +208,24 @@ public class VideoSearchPage {
 
     private void submitSearch() {
         if (PlatformLocator.isIos()) {
+            WaitUtils.assertVisible(driver, VideoSearchLocators.KEYBOARD_SEARCH_KEY, TimeoutConstants.SHORT_TIMEOUT,
+                    "The keyboard should be open to submit the search");
             WaitUtils.click(driver, VideoSearchLocators.KEYBOARD_SEARCH_KEY);
         } else {
             ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.ENTER));
         }
     }
 
-    private void verifySearchModeActive(String searchText) {
+    private void verifySearchModeActive() {
         WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON,
                 TimeoutConstants.SHORT_TIMEOUT,
                 "Search mode should be active (back button visible)");
+    }
+
+    private void verifyAppliedSearchTerm(String searchText) {
         WaitUtils.assertVisible(driver, VideoSearchLocators.appliedSearchTerm(searchText),
                 TimeoutConstants.LIST_LOAD_TIMEOUT,
                 "The results should show '" + searchText + "' as the applied search term");
-        verifyResultsShown(searchText);
     }
 
     private void clickSearchBackButton() {
@@ -231,28 +239,22 @@ public class VideoSearchPage {
                 "The results for '" + searchText + "' should list at least one event");
     }
 
-    /** A suggestion such as "Person" is applied as a tag and is not kept as a recent search, so this needs a phrase. */
-    public void verifyPhraseListedAsRecentSearch(String phrase) {
-        clickSearchIcon();
-        verifySearchFieldOpened();
-        WebElement searchField = enterSearchText(phrase);
-        verifySearchTextEntered(searchField, phrase);
-        submitSearch();
-        // The chip shows the app's own reading of the phrase, not the typed text, so only the results are checked.
-        WaitUtils.assertVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON, TimeoutConstants.SHORT_TIMEOUT,
-                "Search mode should be active (back button visible)");
-        verifyResultsShown(phrase);
-        closeSearchField();
-        clickSearchIcon();
-        verifySearchFieldOpened();
+    /** Run with the suggestions on screen, so an absent phrase is not just a list that has not loaded yet. */
+    public void verifyRecentSearchNotListed(String phrase) {
+        WaitUtils.assertNotVisible(driver, VideoSearchLocators.recentSearch(phrase), TimeoutConstants.SHORT_TIMEOUT,
+                "'" + phrase + "' should not be a recent search before it has been searched");
+    }
+
+    public void verifyRecentSearchListed(String phrase) {
         WaitUtils.assertVisible(driver, VideoSearchLocators.recentSearch(phrase), TimeoutConstants.SHORT_TIMEOUT,
                 "'" + phrase + "' should be listed as a recent search");
-        closeSearchField();
     }
 
     private void verifySearchFieldCancelled() {
         WaitUtils.assertNotVisible(driver, VideoSearchLocators.SEARCH_HINT_FIELD, TimeoutConstants.SHORT_TIMEOUT,
                 "Search field should be closed after clicking back");
+        WaitUtils.assertNotVisible(driver, VideoSearchLocators.SEARCH_BACK_BUTTON, TimeoutConstants.SHORT_TIMEOUT,
+                "Search mode should be left after clicking back");
         WaitUtils.assertVisible(driver, VideoSearchLocators.LATEST_EVENTS_HEADLINE, TimeoutConstants.SHORT_TIMEOUT,
                 "The Video Search home should show again after the search is cancelled");
     }
@@ -262,17 +264,33 @@ public class VideoSearchPage {
         verifyVideoSearchPageDisplayed();
     }
 
-    public void openSearchFieldAndVerifyAutosuggestions() {
+    public void openSearchField() {
         clickSearchIcon();
         verifySearchFieldOpened();
+    }
+
+    public void openSearchFieldAndVerifyAutosuggestions() {
+        openSearchField();
         verifyAutosuggestionOptions();
     }
 
+    /** A suggestion such as "Person" is applied as a tag chip and is not kept as a recent search. */
     public void searchForText(String searchText) {
         WebElement searchField = enterSearchText(searchText);
         verifySearchTextEntered(searchField, searchText);
         submitSearch();
-        verifySearchModeActive(searchText);
+        verifySearchModeActive();
+        verifyAppliedSearchTerm(searchText);
+        verifyResultsShown(searchText);
+    }
+
+    /** A free-text phrase: the chip shows the app's own reading of it, not the typed text, so only the results show. */
+    public void searchForPhrase(String phrase) {
+        WebElement searchField = enterSearchText(phrase);
+        verifySearchTextEntered(searchField, phrase);
+        submitSearch();
+        verifySearchModeActive();
+        verifyResultsShown(phrase);
     }
 
     public void closeSearchField() {
@@ -281,7 +299,7 @@ public class VideoSearchPage {
     }
 
     public void clickCameraPreview() {
-        WaitUtils.click(driver, VideoSearchLocators.CAMERA_PREVIEW_FIRST);
+        WaitUtils.click(driver, VideoSearchLocators.FIRST_EVENT_PREVIEW);
     }
 
     private void verifyKeyImageDetailScreen() {
@@ -307,25 +325,29 @@ public class VideoSearchPage {
                 "Timestamp should be HH:mm:ss format without milliseconds but was '" + timestamp + "'");
     }
 
-    private void clickTagIfPresent() {
-        boolean tagShown = WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_TAGS, TimeoutConstants.SHORT_TIMEOUT);
+    private void selectFirstTag() {
         if (PlatformLocator.isIos()) {
             // The event was opened from the Person section, so it has a tag.
-            Assert.assertTrue(tagShown, "The key image should show a relevant tag");
+            WaitUtils.assertVisible(driver, VideoSearchLocators.EVENT_TAGS, TimeoutConstants.SHORT_TIMEOUT,
+                    "The key image should show a relevant tag");
+            WaitUtils.click(driver, VideoSearchLocators.EVENT_TAGS);
+            WaitUtils.assertVisible(driver, VideoSearchLocators.SELECTED_TAG_SEARCH_BUTTON,
+                    TimeoutConstants.SHORT_TIMEOUT, "A tapped tag should show its search button");
+            return;
         }
-        if (tagShown) {
+        if (WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_TAGS, TimeoutConstants.SHORT_TIMEOUT)) {
             WaitUtils.click(driver, VideoSearchLocators.EVENT_TAGS);
             logger.info("Tag clicked");
-            if (PlatformLocator.isIos()) {
-                WaitUtils.assertVisible(driver, VideoSearchLocators.SELECTED_TAG_SEARCH_BUTTON,
-                        TimeoutConstants.SHORT_TIMEOUT, "A tapped tag should show its search button");
-            }
         } else {
             logger.info("No tags detected - AI did not detect Person/Vehicle in this frame");
         }
     }
 
-    /** iOS keeps the neighbouring key images in the hierarchy off-screen, so only the time inside the screen counts. */
+    /**
+     * iOS keeps the neighbouring key images in the hierarchy off-screen, so only the time inside the screen counts.
+     * It looks the texts up directly: it runs inside a poll, and {@code WaitUtils.findElements} would wait the full
+     * explicit wait and throw when there is nothing yet.
+     */
     private Optional<String> findShownTime() {
         if (!PlatformLocator.isIos()) {
             return WaitUtils.isVisible(driver, VideoSearchLocators.EVENT_TIME, TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)
@@ -334,7 +356,11 @@ public class VideoSearchPage {
         }
         int width = driver.manage().window().getSize().width;
         List<String> times = driver.findElements(VideoSearchLocators.KEY_IMAGE_TEXTS).stream()
-                .filter(text -> text.getRect().getX() >= 0 && text.getRect().getX() < width)
+                .filter(text -> {
+                    Rectangle rect = text.getRect();
+                    int centreX = rect.getX() + rect.getWidth() / 2;
+                    return centreX >= 0 && centreX < width;
+                })
                 .map(WebElement::getText)
                 .filter(text -> EVENT_TIME_FORMAT.matcher(text).matches())
                 .toList();
@@ -342,26 +368,29 @@ public class VideoSearchPage {
     }
 
     private String readShownTime() {
-        String[] shown = new String[1];
+        AtomicReference<String> shown = new AtomicReference<>();
         boolean found = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
             Optional<String> time = findShownTime();
-            time.ifPresent(value -> shown[0] = value);
+            time.ifPresent(shown::set);
             return time.isPresent();
         });
         Assert.assertTrue(found, "The key image should show one time of day");
-        return shown[0];
+        return shown.get();
     }
 
-    private int[] readEventPosition() {
+    private record EventPosition(int current, int total) {}
+
+    private EventPosition readEventPosition() {
         String counter = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_COUNTER).getText();
         Matcher matcher = EVENT_POSITION.matcher(counter);
         Assert.assertTrue(matcher.matches(), "Event counter should read 'current/total' but was '" + counter + "'");
-        return new int[] {Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2))};
+        return new EventPosition(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)));
     }
 
-    private String swipeKeyImageAndVerify(boolean towardsLeft, int[] before, String timeBefore, String cameraName) {
+    private String swipeKeyImageAndVerify(boolean towardsLeft, EventPosition before, String timeBefore,
+            String cameraName) {
         String direction = towardsLeft ? "left" : "right";
-        int expectedCurrent = before[0] + (towardsLeft ? 1 : -1);
+        int expectedCurrent = before.current() + (towardsLeft ? 1 : -1);
 
         WebElement keyImage = WaitUtils.waitForVisibility(driver, VideoSearchLocators.KEY_IMAGE_OVERLAY);
         if (PlatformLocator.isIos()) {
@@ -375,20 +404,25 @@ public class VideoSearchPage {
         }
 
         boolean moved = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
-                () -> readEventPosition()[0] == expectedCurrent);
-        Assert.assertTrue(moved, "Counter should read " + expectedCurrent + " of " + before[1] + " after swiping "
-                + direction + " (was " + before[0] + ")");
+                () -> readEventPosition().current() == expectedCurrent);
+        Assert.assertTrue(moved, "Counter should read " + expectedCurrent + " of " + before.total()
+                + " after swiping " + direction + " (was " + before.current() + ")");
         Assert.assertEquals(WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_CAMERA_NAME).getText(),
                 cameraName, "Swiping " + direction + " should stay on the same camera");
-        // Key images can be less than a second apart, so the time may stay the same but must not run backwards.
+        // Key images can be less than a second apart, so the time may stay the same but must not run backwards. The
+        // difference wraps at midnight, so an event that spans it (23:59:58 then 00:00:02) still counts as later.
         String timeAfter = readShownTime();
-        LocalTime shownBefore = LocalTime.parse(timeBefore);
-        LocalTime shownAfter = LocalTime.parse(timeAfter);
-        Assert.assertTrue(towardsLeft ? !shownAfter.isBefore(shownBefore) : !shownAfter.isAfter(shownBefore),
+        long seconds = Duration.between(LocalTime.parse(timeBefore), LocalTime.parse(timeAfter)).getSeconds();
+        if (seconds > SECONDS_PER_DAY / 2) {
+            seconds -= SECONDS_PER_DAY;
+        } else if (seconds < -SECONDS_PER_DAY / 2) {
+            seconds += SECONDS_PER_DAY;
+        }
+        Assert.assertTrue(towardsLeft ? seconds >= 0 : seconds <= 0,
                 "Swiping " + direction + " should show a " + (towardsLeft ? "later" : "earlier")
                         + " (or equal) time than " + timeBefore + " but showed " + timeAfter);
-        logger.info("Swiped {} on key image - {} of {} at {}, was {} at {}", direction, expectedCurrent, before[1],
-                timeAfter, before[0], timeBefore);
+        logger.info("Swiped {} on key image - {} of {} at {}, was {} at {}", direction, expectedCurrent,
+                before.total(), timeAfter, before.current(), timeBefore);
         return timeAfter;
     }
 
@@ -417,20 +451,20 @@ public class VideoSearchPage {
         clickCameraPreview();
         verifyKeyImageDetailScreen();
         verifyTimestampHasNoMilliseconds();
-        clickTagIfPresent();
+        selectFirstTag();
     }
 
     /** The event opens on any position, often the last, so the first swipe goes to the neighbour that exists. */
     public void verifySwipeNavigation() {
-        int[] start = readEventPosition();
-        if (start[1] < 2) {
+        EventPosition start = readEventPosition();
+        if (start.total() < 2) {
             throw new SkipException("The event has one key image only, so there is no neighbour to swipe to");
         }
         String cameraName = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_CAMERA_NAME).getText();
         String startTime = readShownTime();
-        boolean towardsNext = start[0] < start[1];
+        boolean towardsNext = start.current() < start.total();
         String neighbourTime = swipeKeyImageAndVerify(towardsNext, start, startTime, cameraName);
-        int[] neighbour = {start[0] + (towardsNext ? 1 : -1), start[1]};
+        EventPosition neighbour = new EventPosition(start.current() + (towardsNext ? 1 : -1), start.total());
         swipeKeyImageAndVerify(!towardsNext, neighbour, neighbourTime, cameraName);
         Assert.assertTrue(WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
                         () -> findShownTime().map(startTime::equals).orElse(false)),
