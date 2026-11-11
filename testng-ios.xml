@@ -100,4 +100,16 @@
             <class name="tests.ts_history.HistoryBrowserTest"/>
         </classes>
     </test>
+    <!-- VSPEventsTest signs in as TS02 (like CameraContextMenuTest and MyProfileTest), so it runs on its own after them
+         to avoid parallel sign-ins with the same account. -->
+    <test name="iOS VSP Events">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_vsp_events.VSPEventsTest"/>
+        </classes>
+    </test>
 </suite>

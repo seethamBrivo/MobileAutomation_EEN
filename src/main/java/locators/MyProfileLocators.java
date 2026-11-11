@@ -36,10 +36,17 @@ public final class MyProfileLocators {
 
     // --- Time format -----------------------------------------------------------------
 
-    public static final By TIME_FORMAT_OPTION = AppiumBy.xpath("//android.widget.TextView[@text='Time format']");
-    public static final By CURRENT_TIME_FORMAT_VALUE = AppiumBy.xpath("//android.widget.TextView[@text='Time format']/following-sibling::android.widget.TextView[1]");
+    public static final By TIME_FORMAT_OPTION = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Time format']"), // android
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == 'Time format'")); // ios
+
+    public static final By CURRENT_TIME_FORMAT_VALUE = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Time format']/following-sibling::android.widget.TextView[1]"), // android
+            AppiumBy.xpath("//XCUIElementTypeStaticText[@name='Time format']/following-sibling::XCUIElementTypeStaticText[1]")); // ios
 
     public static By timeFormatOption(String format) {
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + format + "']");
+        return PlatformLocator.get(
+                AppiumBy.xpath("//android.widget.TextView[@text='" + format + "']"), // android
+                AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + format + "'")); // ios
     }
 }

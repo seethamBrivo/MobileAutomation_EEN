@@ -1,7 +1,11 @@
 # iOS Configuration
 automationName=XCUITest
-deviceName=iPhone 15
-platformVersion=27
+# BrowserStack device configuration - verify available devices at:
+# https://www.browserstack.com/list-of-browsers-and-platforms/app_automate
+# Note: Device names and iOS versions must match BrowserStack's device matrix exactly
+deviceName=iPhone 17
+platformVersion=26
+# Only needed for local execution (ignored for BrowserStack); see 'xcodes'/idevice_id to obtain one.
 udid=YOUR_IOS_DEVICE_UDID
 
 # Application Setup
