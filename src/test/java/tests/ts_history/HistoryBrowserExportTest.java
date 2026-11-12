@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import pages.ArchivePage;
+import pages.DownloadsPage;
 import pages.HistoryBrowserPage;
 import pages.LayoutsPage;
 
@@ -46,23 +48,27 @@ public class HistoryBrowserExportTest extends BaseTest {
 
     @Test(description = "EEPD-TC-23628: POS-Exports/History Browser - requesting a video export"
                     + " to Archive with default values in VMS mobile app",
-          groups = {"regression", "history_browser", "export"})
+          groups = {"regression", "history_browser", "export", "ios"})
     public void test01_videoExportToArchiveWithValidation() {
         historyBrowserPage.exportToArchiveWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();
         historyBrowserPage.verifyCancelExportFlow();
         historyBrowserPage.verifyFileNameValidation();
-        historyBrowserPage.verifyDefaultFileNameExport();
+        String exportedFileName = historyBrowserPage.verifyDefaultFileNameExport();
+        historyBrowserPage.leaveHistoryBrowser();
+        new ArchivePage(driver).verifyExportedFileListed(exportedFileName);
     }
 
     @Test(description = "EEPD-TC-23629: POS-Exports/History Browser - requesting a video export"
                     + " to Downloads with default values in VMS mobile app",
-          groups = {"regression", "history_browser", "export"})
+          groups = {"regression", "history_browser", "export", "ios"})
     public void test02_videoExportToDownloadsWithValidation() {
         historyBrowserPage.exportToDownloadsWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();
         historyBrowserPage.verifyCancelExportFlowForDownloads();
         historyBrowserPage.verifyFileNameValidation();
-        historyBrowserPage.verifyDefaultFileNameExportForDownloads();
+        String exportedFileName = historyBrowserPage.verifyDefaultFileNameExportForDownloads();
+        historyBrowserPage.leaveHistoryBrowser();
+        new DownloadsPage(driver).verifyExportedFileListed(exportedFileName);
     }
 }

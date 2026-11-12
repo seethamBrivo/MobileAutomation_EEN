@@ -190,8 +190,9 @@ public final class HistoryBrowserLocators {
     // --- Export screen ---------------------------------------------------------
 
     // SAVE TO section
-    public static final By SAVE_TO_SECTION_TITLE =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc='save_destination_header_sub_header']");
+    public static final By SAVE_TO_SECTION_TITLE = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@content-desc='save_destination_header_sub_header']"), // android
+            AppiumBy.accessibilityId("SAVE TO...")); // ios
 
     // Downloads selected indicator (default selection)
     public static final By DOWNLOADS_SELECTED_INDICATOR =
@@ -199,77 +200,102 @@ public final class HistoryBrowserLocators {
 
     // TODO: Unscoped bare @text match - could false-positive on any "Archive" text.
     //       Scope to Export screen parent or request testTag from developers.
-    public static final By ARCHIVE_TEXT =
-            AppiumBy.xpath("//android.widget.TextView[@text='Archive']");
+    public static final By ARCHIVE_TEXT = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Archive']"), // android
+            AppiumBy.accessibilityId("export_to_archive_title")); // ios
 
     // Select button in top right corner of Archive folder picker
     // TODO: Unscoped bare @text match - could false-positive on any "Select" text.
     //       Scope to folder picker parent or request testTag from developers.
-    public static final By SELECT_BUTTON =
-            AppiumBy.xpath("//android.widget.TextView[@text='Select']");
+    public static final By SELECT_BUTTON = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Select']"), // android
+            AppiumBy.iOSNsPredicateString("name == 'navigationBar_customButton' AND label == 'Select'")); // ios
 
     // First folder in the Archive folder picker
     // TODO: Positional XPath is fragile - will break if Compose view hierarchy changes.
     //       Request testTag from developers for stable identification.
-    public static final By FIRST_FOLDER =
+    public static final By FIRST_FOLDER = PlatformLocator.get(
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View"
-                    + "/android.view.View[2]/android.view.View[1]");
+                    + "/android.view.View[2]/android.view.View[1]"), // android
+            AppiumBy.accessibilityId("cell_at_0_archives_title")); // ios
 
     // Selected folder name displayed on Export screen after picking folder
     public static final By SELECTED_FOLDER_NAME =
             AppiumBy.xpath("//android.widget.TextView[@content-desc='archive_destination_row_sub_header']");
 
     // RANGE section
-    public static final By RANGE_SECTION_TITLE =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc=\"duration_header_sub_header\"]");
+    public static final By RANGE_SECTION_TITLE = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@content-desc=\"duration_header_sub_header\"]"), // android
+            AppiumBy.accessibilityId("RANGE")); // ios
 
-    public static final By START_TIME_FIELD =
-            AppiumBy.accessibilityId("start_time_row_header");
+    public static final By START_TIME_FIELD = PlatformLocator.get(
+            AppiumBy.accessibilityId("start_time_row_header"), // android
+            AppiumBy.accessibilityId("export_start_time")); // ios
 
-    public static final By END_TIME_FIELD =
-            AppiumBy.accessibilityId("end_time_row_header");
+    public static final By END_TIME_FIELD = PlatformLocator.get(
+            AppiumBy.accessibilityId("end_time_row_header"), // android
+            AppiumBy.accessibilityId("export_end_time")); // ios
 
     // Download type section
-    public static final By DOWNLOAD_TYPE_HEADING =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc='type_header_sub_header']");
+    public static final By DOWNLOAD_TYPE_HEADING = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@content-desc='type_header_sub_header']"), // android
+            AppiumBy.accessibilityId("DOWNLOAD TYPE")); // ios
 
-    public static final By DOWNLOAD_TYPE_VIDEO =
-            AppiumBy.accessibilityId("video_selection_row_header");
+    public static final By DOWNLOAD_TYPE_VIDEO = PlatformLocator.get(
+            AppiumBy.accessibilityId("video_selection_row_header"), // android
+            AppiumBy.accessibilityId("export_video")); // ios
 
     // Duration field
-    public static final By DURATION_FIELD =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc=\"duration_row_header\"]");
+    public static final By DURATION_FIELD = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@content-desc=\"duration_row_header\"]"), // android
+            AppiumBy.accessibilityId("export_duration")); // ios
 
     // Time Zone value
-    public static final By TIME_ZONE_VALUE =
-            AppiumBy.xpath("//android.widget.TextView[@content-desc='timezone_row_value']");
+    public static final By TIME_ZONE_VALUE = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@content-desc='timezone_row_value']"), // android
+            AppiumBy.accessibilityId("export_timezone_settingValueLabel")); // ios
 
     // File name field for validation tests
-    public static final By FILE_NAME_FIELD =
-            AppiumBy.accessibilityId("file_name_row_text_field");
+    public static final By FILE_NAME_FIELD = PlatformLocator.get(
+            AppiumBy.accessibilityId("file_name_row_text_field"), // android
+            AppiumBy.accessibilityId("export_event_name_textfield")); // ios
 
-    public static final By VALIDATION_ERROR_TEXT =
-            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Should not contain')]");
+    public static final By VALIDATION_ERROR_TEXT = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Should not contain')]"), // android
+            AppiumBy.accessibilityId("toast_text")); // ios
 
     // Export button at bottom of screen
-    public static final By EXPORT_BUTTON =
-            AppiumBy.xpath("//android.widget.Button[@content-desc=\"confirm_button\"]");
+    public static final By EXPORT_BUTTON = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.Button[@content-desc=\"confirm_button\"]"), // android
+            AppiumBy.accessibilityId("buttons_view_done_button")); // ios
 
     // Cancel button at bottom of screen
-    public static final By CANCEL_BUTTON =
-            AppiumBy.accessibilityId("close_button");
+    public static final By CANCEL_BUTTON = PlatformLocator.get(
+            AppiumBy.accessibilityId("close_button"), // android
+            AppiumBy.accessibilityId("buttons_view_cancel_button")); // ios
 
     // Snackbar message after export
-    public static final By SNACKBAR_MESSAGE =
-            AppiumBy.accessibilityId("snackbar_een_text");
+    public static final By SNACKBAR_MESSAGE = PlatformLocator.get(
+            AppiumBy.accessibilityId("snackbar_een_text"), // android
+            AppiumBy.accessibilityId("toast_text")); // ios
 
-    // See progress button on snackbar
+    // See progress button on snackbar. Android only: the iOS toast has no button, so this has no iOS value on purpose.
     public static final By SEE_PROGRESS_BUTTON =
             AppiumBy.xpath("//android.widget.TextView[@content-desc='snackbar_een_button']");
 
     // Progress tab/button
     // TODO: Unscoped bare @text match - could false-positive on any "Progress" text.
     //       Request testTag or content-desc from developers for reliable identification.
-    public static final By PROGRESS_TAB =
-            AppiumBy.xpath("//android.widget.TextView[@text='Progress']");
+    public static final By PROGRESS_TAB = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Progress']"), // android
+            AppiumBy.accessibilityId("Progress")); // ios
+
+    // iOS only, so it has no Android value on purpose: the navigation bar's back button, on the Archive folder picker
+    // and on the history browser.
+    public static final By BACK_BUTTON = AppiumBy.accessibilityId("BackButton");
+
+    // iOS only, so it has no Android value on purpose: the keyboard's Done key, which closes it so the buttons below
+    // the form can be tapped.
+    public static final By KEYBOARD_DONE_KEY =
+            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Done'");
 }

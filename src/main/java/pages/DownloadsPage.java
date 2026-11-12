@@ -1,6 +1,7 @@
 package pages;
 
 import constants.TimeoutConstants;
+import constants.UiTextConstants;
 import io.appium.java_client.AppiumDriver;
 import locators.ArchiveLocators;
 import locators.BottomNavigationLocators;
@@ -8,12 +9,17 @@ import locators.CommonLocators;
 import locators.DownloadsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Page object for Downloads feature.
@@ -22,7 +28,35 @@ import java.util.List;
 public class DownloadsPage {
 
     private static final Logger logger = LogManager.getLogger(DownloadsPage.class);
+
+    /** Big enough to still be downloading when the cancel icon is tapped. */
+    private static final double LARGE_DOWNLOAD_MB = 10;
+
+    /** Size of a download that is meant to finish: long enough to show its progress, short enough to end quickly. */
+    private static final double MEDIUM_DOWNLOAD_MIN_MB = 3;
+
+    private static final double MEDIUM_DOWNLOAD_MAX_MB = 50;
+
+    /** How many folders are opened to find the test data before the test is skipped. */
+    private static final int FOLDERS_TO_SCAN = 6;
+
+    private static final int VIDEOS_TO_SCAN_PER_FOLDER = 6;
+
+    private static final Pattern SIZE = Pattern.compile("([\\d.,]+)\\s*(KB|MB|GB)");
+
     private final AppiumDriver driver;
+
+    private boolean photoLibraryPromptHandled;
+
+    /** A folder row and a video row inside it. */
+    private record Target(int folderRow, int videoRow) {}
+
+    /** The targets found by {@link #findDownloadTargets()}, and the one in use. */
+    private Target mediumTarget = new Target(0, 0);
+
+    private Target largeTarget = new Target(0, 0);
+
+    private Target currentTarget = new Target(0, 0);
 
     public DownloadsPage(AppiumDriver driver) {
         if (driver == null) {
@@ -33,9 +67,20 @@ public class DownloadsPage {
 
     public void navigateToDownloads() {
         clickMoreTab();
-        clickFilesMenu();
+        if (!PlatformLocator.isIos()) { // iOS lists Downloads directly on the More screen
+            clickFilesMenu();
+        }
         clickDownloadsMenu();
         verifyDownloadsScreenDisplayed();
+    }
+
+    /** Waits until an exported file is listed in Downloads. The list writes its time as 02-26-15, not 02:26:15. */
+    public void verifyExportedFileListed(String exportedFileName) {
+        navigateToDownloads();
+        String listedName = exportedFileName.replace(':', '-');
+        WaitUtils.assertVisible(driver, DownloadsLocators.rowByFileName(listedName),
+                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
+                "The exported file '" + listedName + "' should be listed in Downloads once the export is done");
     }
 
     // Shared pattern with ArchivePage - kept duplicated for page object encapsulation
@@ -76,7 +121,7 @@ public class DownloadsPage {
     public void verifyTestDataExists() {
         boolean folderExists = WaitUtils.isVisible(
                 driver,
-                DownloadsLocators.FIRST_FOLDER,
+                DownloadsLocators.folderRow(0),
                 TimeoutConstants.SHORT_TIMEOUT
         );
         if (!folderExists) {
@@ -84,11 +129,15 @@ public class DownloadsPage {
         }
     }
 
-    public void clickFirstFolder() {
-        WaitUtils.click(driver, DownloadsLocators.FIRST_FOLDER);
+    public void openCurrentFolder() {
+        WaitUtils.click(driver, DownloadsLocators.folderRow(currentTarget.folderRow()));
     }
 
     public void navigateBack() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, DownloadsLocators.FOLDER_BACK_BUTTON);
+            return;
+        }
         driver.navigate().back();
     }
 
@@ -105,7 +154,7 @@ public class DownloadsPage {
 
         boolean downloadPresent = WaitUtils.isVisible(
                 driver,
-                DownloadsLocators.FOLDER_ACTION_ICON,
+                folderActionIcon(),
                 TimeoutConstants.SHORT_TIMEOUT
         );
         Assert.assertTrue(downloadPresent,
@@ -115,7 +164,7 @@ public class DownloadsPage {
     public void verifyVideoDownloadOptionsPresent() {
         boolean downloadPresent = WaitUtils.isVisible(
                 driver,
-                DownloadsLocators.VIDEO_ACTION_ICON,
+                videoActionIcon(),
                 TimeoutConstants.SHORT_TIMEOUT
         );
         Assert.assertTrue(downloadPresent,
@@ -123,11 +172,19 @@ public class DownloadsPage {
     }
 
     public void clickDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.FOLDER_ACTION_ICON);
+        WaitUtils.click(driver, folderActionIcon());
     }
 
     public void clickVideoDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.VIDEO_ACTION_ICON);
+        WaitUtils.click(driver, videoActionIcon());
+    }
+
+    private By folderActionIcon() {
+        return DownloadsLocators.folderDownloadIcon(currentTarget.folderRow());
+    }
+
+    private By videoActionIcon() {
+        return DownloadsLocators.videoDownloadIcon(currentTarget.videoRow());
     }
 
     public void verifyDownloadDialogDisplayed() {
@@ -145,6 +202,17 @@ public class DownloadsPage {
 
     public void clickDownloadButtonInDialog() {
         WaitUtils.click(driver, DownloadsLocators.DOWNLOAD_BUTTON_DIALOG);
+        allowPhotoLibraryAccessWhenAsked();
+    }
+
+    /** iOS saves downloads to Photos, so the first download asks for access to the photo library. */
+    private void allowPhotoLibraryAccessWhenAsked() {
+        if (!PlatformLocator.isIos() || photoLibraryPromptHandled) {
+            return; // asking again would only use up the seconds a download needs to be cancelled
+        }
+        photoLibraryPromptHandled = true;
+        WaitUtils.tryClickOptionalElement(driver, List.of(ArchiveLocators.ALLOW_PHOTO_LIBRARY_ACCESS_BUTTON),
+                TimeoutConstants.PERMISSION_PROMPT_TIMEOUT);
     }
 
     public void verifyDownloadingSnackbar() {
@@ -173,41 +241,28 @@ public class DownloadsPage {
     }
 
     public void waitForDownloadComplete() {
-        String snackbarText = WaitUtils.pollText(
-                driver,
-                CommonLocators.SNACKBAR_TEXT,
-                "Saved to Files",
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT
-        );
-        Assert.assertTrue(snackbarText.contains("Saved to Files"),
-            "Success snackbar should show 'Saved to Files' but was: " + snackbarText);
+        waitForSavedMessage(TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
     }
 
     public void waitForVideoDownloadComplete() {
-        String snackbarText = WaitUtils.pollText(
-                driver,
-                CommonLocators.SNACKBAR_TEXT,
-                "Saved to Files",
-                TimeoutConstants.VIDEO_DOWNLOAD_COMPLETE_TIMEOUT
-        );
-        Assert.assertTrue(snackbarText.contains("Saved to Files"),
-            "Success snackbar should show 'Saved to Files' but was: " + snackbarText);
+        waitForSavedMessage(TimeoutConstants.VIDEO_DOWNLOAD_COMPLETE_TIMEOUT);
     }
 
-    /**
-     * Clicks the cancel icon for folder download.
-     * Note: FOLDER_ACTION_ICON is the same locator as download icon - the icon changes state during download.
-     */
+    /** Android saves downloads to Files, iOS to Photos. */
+    private void waitForSavedMessage(java.time.Duration timeout) {
+        String savedMessage = PlatformLocator.isIos()
+                ? UiTextConstants.ARCHIVE_SAVED_MESSAGE_IOS : UiTextConstants.ARCHIVE_SAVED_MESSAGE_ANDROID;
+        String snackbarText = WaitUtils.pollText(driver, CommonLocators.SNACKBAR_TEXT, savedMessage, timeout);
+        Assert.assertTrue(snackbarText.contains(savedMessage),
+            "Success snackbar should show '" + savedMessage + "' but was: " + snackbarText);
+    }
+
     public void clickCancelDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.FOLDER_ACTION_ICON);
+        WaitUtils.click(driver, DownloadsLocators.folderCancelIcon(currentTarget.folderRow()));
     }
 
-    /**
-     * Clicks the cancel icon for video download.
-     * Note: VIDEO_ACTION_ICON is the same locator as download icon - the icon changes state during download.
-     */
     public void clickVideoCancelDownloadIcon() {
-        WaitUtils.click(driver, DownloadsLocators.VIDEO_ACTION_ICON);
+        WaitUtils.click(driver, DownloadsLocators.videoCancelIcon(currentTarget.videoRow()));
     }
 
     public void clickYesCancelButton() {
@@ -253,9 +308,17 @@ public class DownloadsPage {
             return; // No active download
         }
 
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, DownloadsLocators.ANY_CANCEL_ICON);
+            if (WaitUtils.isVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+                clickYesCancelButton();
+            }
+            return;
+        }
+
         // Try to cancel folder download
-        if (WaitUtils.isVisible(driver, DownloadsLocators.FOLDER_ACTION_ICON,
-                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, folderActionIcon(), TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
             clickCancelDownloadIcon();
             if (WaitUtils.isVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON,
                     TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
@@ -268,8 +331,7 @@ public class DownloadsPage {
         }
 
         // Try to cancel video download
-        if (WaitUtils.isVisible(driver, DownloadsLocators.VIDEO_ACTION_ICON,
-                TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
+        if (WaitUtils.isVisible(driver, videoActionIcon(), TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
             clickVideoCancelDownloadIcon();
             if (WaitUtils.isVisible(driver, ArchiveLocators.YES_CANCEL_BUTTON,
                     TimeoutConstants.OPTIONAL_FIELD_TIMEOUT)) {
@@ -279,6 +341,79 @@ public class DownloadsPage {
                         TimeoutConstants.SHORT_TIMEOUT);
             }
         }
+    }
+
+
+    /**
+     * Finds a medium folder with a medium video, for the downloads that must finish, and a large video, for the cancel
+     * step. Most items on the account are clips of 1 to 2 MB that finish in under two seconds. Sizes show only inside
+     * a folder, so the first folders are opened. Skips the test, with the reason, when either is missing. Selects the
+     * medium target.
+     */
+    public void findDownloadTargets() {
+        Target medium = null;
+        Target large = null;
+        for (int folder = 0; folder < FOLDERS_TO_SCAN && (medium == null || large == null); folder++) {
+            if (!WaitUtils.isVisible(driver, DownloadsLocators.folderRow(folder), TimeoutConstants.SHORT_TIMEOUT)) {
+                break;
+            }
+            WaitUtils.click(driver, DownloadsLocators.folderRow(folder));
+            WaitUtils.waitForAny(driver, List.of(DownloadsLocators.SIZE_LINES, DownloadsLocators.EMPTY_FOLDER_TEXT),
+                    TimeoutConstants.LIST_LOAD_TIMEOUT);
+            List<String> sizeLines = WaitUtils.textsOfOrEmpty(driver, DownloadsLocators.SIZE_LINES,
+                    TimeoutConstants.OPTIONAL_FIELD_TIMEOUT);
+            double folderMb = 0;
+            int mediumVideoRow = -1;
+            for (int video = 0; video < Math.min(sizeLines.size(), VIDEOS_TO_SCAN_PER_FOLDER); video++) {
+                double megabytes = sizeInMegabytes(sizeLines.get(video));
+                folderMb += megabytes;
+                boolean isMedium = megabytes >= MEDIUM_DOWNLOAD_MIN_MB && megabytes <= MEDIUM_DOWNLOAD_MAX_MB;
+                if (isMedium && mediumVideoRow < 0) {
+                    mediumVideoRow = video;
+                }
+                if (megabytes >= LARGE_DOWNLOAD_MB && large == null) {
+                    large = new Target(folder, video);
+                }
+            }
+            if (medium == null && mediumVideoRow >= 0 && folderMb <= MEDIUM_DOWNLOAD_MAX_MB) {
+                medium = new Target(folder, mediumVideoRow);
+            }
+            navigateBack();
+        }
+        if (medium == null || large == null) {
+            throw new SkipException("Test data missing: the first " + FOLDERS_TO_SCAN + " Downloads folders need a"
+                    + " folder of at most " + MEDIUM_DOWNLOAD_MAX_MB + " MB holding a video of "
+                    + MEDIUM_DOWNLOAD_MIN_MB + " to " + MEDIUM_DOWNLOAD_MAX_MB + " MB, and a video of "
+                    + LARGE_DOWNLOAD_MB + " MB or more; found medium=" + medium + ", large=" + large);
+        }
+        mediumTarget = medium;
+        largeTarget = large;
+        logger.info("Download targets: medium {}, large {}", mediumTarget, largeTarget);
+        selectMediumDownloadTarget();
+    }
+
+    /** The next download steps use the medium target. */
+    public void selectMediumDownloadTarget() {
+        currentTarget = mediumTarget;
+    }
+
+    /** The next download steps use the large target. */
+    public void selectLargeDownloadTarget() {
+        currentTarget = largeTarget;
+    }
+
+    /** "46.53 MB \u2022 Expires ..." is 46.53, "735.85 KB \u2022 ..." is 0.72, anything unreadable is 0. */
+    static double sizeInMegabytes(String sizeLine) {
+        Matcher matcher = SIZE.matcher(sizeLine);
+        if (!matcher.find()) {
+            return 0;
+        }
+        double amount = Double.parseDouble(matcher.group(1).replace(",", ""));
+        return switch (matcher.group(2).toUpperCase(Locale.ROOT)) {
+            case "KB" -> amount / 1024;
+            case "GB" -> amount * 1024;
+            default -> amount;
+        };
     }
 
 }
