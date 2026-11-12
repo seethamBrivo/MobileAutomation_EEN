@@ -194,19 +194,23 @@ public final class BridgesLocators {
 
     // --- Bridge settings screen: restart ---------------------------------------
 
-    public static final By RESTART_BRIDGE_BUTTON =
-            AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']");
+    public static final By RESTART_BRIDGE_BUTTON = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']"), // android
+            AppiumBy.xpath("//XCUIElementTypeButton[@name='Restart bridge']")); // ios
 
-    public static final By RESTART_CONFIRMATION_DIALOG =
-            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]");
+    public static final By RESTART_CONFIRMATION_DIALOG = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'restart') or contains(@text, 'reboot')]"), // android
+            AppiumBy.xpath("//XCUIElementTypeAlert[@name='Restart bridge']")); // ios
 
-    public static final By CONFIRM_RESTART_BUTTON =
-            AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']");
+    public static final By CONFIRM_RESTART_BUTTON = PlatformLocator.get(
+            AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']"), // android
+            AppiumBy.xpath("//XCUIElementTypeAlert[@name='Restart bridge']//XCUIElementTypeButton[@name='Restart']")); // ios
 
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: the post-restart confirmation snackbar carries no content-desc/testTag yet.
-    public static final By BRIDGE_RESTARTED_MESSAGE =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View");
+    public static final By BRIDGE_RESTARTED_MESSAGE = PlatformLocator.get(
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DevicesMainScreen\"]/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View"), // android
+            CommonLocators.SNACKBAR_TEXT); // ios
 
     public static By contextMenuOption(String text) {
         return PlatformLocator.get(
@@ -239,6 +243,11 @@ public final class BridgesLocators {
     /** iOS: the keyboard key that confirms the name typed into the bridge settings. */
     public static final By KEYBOARD_DONE_KEY =
             AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Done'"); // ios
+
+    /** iOS: the three dots of the first online bridge: the button just before its "Online" label. */
+    public static final By FIRST_ONLINE_BRIDGE_THREE_DOTS = AppiumBy.xpath(
+            "(//XCUIElementTypeStaticText[@name='Online'])[1]"
+                    + "/preceding-sibling::XCUIElementTypeButton[@name='ic_contextMenu'][1]"); // ios
 
     /** The name field of the settings screen, found by the name it holds. */
     public static By nameFieldHolding(String name) {

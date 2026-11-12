@@ -28,4 +28,10 @@ public final class UiTextConstants {
     /** Fragments of the Archive snackbar, compared in lower case. */
     public static final String ARCHIVE_DOWNLOADING_MESSAGE = "downloading";
     public static final String ARCHIVE_CANCELLED_MESSAGE = "download cancelled";
+
+    public static final String USER_ADDED_MESSAGE = "User was added";
+
+    // iOS New user form: what Add shows under the e-mail and the empty name fields (BrowserStack iOS hierarchy).
+    public static final String IOS_INVALID_EMAIL_MESSAGE = "Please enter valid data";
+    public static final String FIELD_REQUIRED_MESSAGE = "Field is required";
 }

@@ -18,7 +18,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         devicesPage = loginAndOpenDevicesDashboard(TestDataConstants.ENDUSER_CREDS);
         devicesPage.clickBridgesTab();
         devicesPage.verifyBridgeListDisplayed();
-        devicesPage.clickBridgeThreeDotsButton();
+        devicesPage.openFirstOnlineBridgeContextMenu();
         bridgeCamerasPage = new BridgeCamerasPage(driver);
         bridgeCamerasPage.verifyCamerasOptionDisplayed();
         bridgeCamerasPage.clickCamerasOption();
@@ -26,10 +26,12 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-53382: POS-Bridges - Filter for respective bridge cameras by search term in Dashboard in VMS mobile app",
-          groups = {"regression", "bridges"})
+          groups = {"regression", "bridges", "ios"})
     public void verifyBridgeCameraSearchFilterFunctionality() {
         String validSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.BRIDGE_VALID_SEARCH_TERM);
         String invalidSearchTerm = JsonDataReader.getSearchFilterValue(TestDataConstants.INVALID_SEARCH_TERM);
+        // Step 6: The cameras of the selected bridge are listed
+        bridgeCamerasPage.verifyListScopedToOneBridge();
         String initialCount = bridgeCamerasPage.cameraSearchFilter().captureCounterAndVerifyFormat();
         // Step 7: Tap on the search bar
         bridgeCamerasPage.cameraSearchFilter().tapSearchBarAndVerify();

@@ -18,7 +18,7 @@ public class BridgeRestartTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-8898: POS-Bridge Settings - Restart the Bridge in mobile VMS app from Dashboard section",
-          groups = {"regression", "bridges"})
+          groups = {"regression", "bridges", "ios"})
     public void restartBridgeFromDashboard() {
         BridgeSettingsPage settings = new BridgeSettingsPage(driver);
         DevicesPage devicesPage = new DevicesPage(driver);
