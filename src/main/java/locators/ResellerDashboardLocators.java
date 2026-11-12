@@ -234,8 +234,9 @@ public final class ResellerDashboardLocators {
             AppiumBy.xpath("//android.widget.TextView[@text=\"Reseller dashboard\"]"), // android
             AppiumBy.accessibilityId("Reseller dashboard")); // ios
 
-    public static final By LAYOUTS_SCREEN =
-            AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]");
+    public static final By LAYOUTS_SCREEN = PlatformLocator.get(
+            AppiumBy.xpath("(//android.widget.TextView[@text=\"Layouts\"])[2]"), // android
+            AppiumBy.xpath("//XCUIElementTypeNavigationBar[@name='Layouts']")); // ios
 
     public static final By LOGOUT_OPTION =
             AppiumBy.xpath("//android.widget.TextView[@text=\"Log out\"]");
@@ -248,8 +249,9 @@ public final class ResellerDashboardLocators {
 
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
     // Positional: the first account row in the list carries no content-desc/testTag yet.
-    public static final By FIRST_ACCOUNT_WITH_BRIDGES =
-            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]");
+    public static final By FIRST_ACCOUNT_WITH_BRIDGES = PlatformLocator.get(
+            AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc='ResellerDashboardMainScreen']/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[3]/android.view.View[1]"), // android
+            AppiumBy.xpath("(//XCUIElementTypeStaticText[following-sibling::XCUIElementTypeButton[@name='ic_contextMenu']])[1]")); // ios
 
     /** Matches the list header "11 accounts" / "1 account" (not the "Filter by account name" hint). */
     public static final By ACCOUNTS_COUNT_LABEL =
