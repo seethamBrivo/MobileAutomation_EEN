@@ -124,4 +124,37 @@
             <class name="tests.ts_video_search.VideoSearchTest"/>
         </classes>
     </test>
+    <!-- End user account, shared with the classes above: its own <test> so they never overlap. -->
+    <test name="iOS Bridge Cameras">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_bridges.BridgeCameraSearchFilterTest"/>
+        </classes>
+    </test>
+    <!-- Reseller account, shared with ResellerDashboardTest: its own <test> so the two never overlap. -->
+    <test name="iOS Users">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_users.AddUserTest"/>
+        </classes>
+    </test>
+    <!-- Last: it leaves the app inside the reseller's first account, which a later reseller class would not expect. -->
+    <test name="iOS Bridge Restart">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_bridges.BridgeRestartTest"/>
+        </classes>
+    </test>
 </suite>

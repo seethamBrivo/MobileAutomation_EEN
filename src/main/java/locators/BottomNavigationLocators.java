@@ -36,9 +36,11 @@ public final class BottomNavigationLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"), // android
             AppiumBy.accessibilityId("dashboard_button")); // ios
 
+    // iOS names the button "Users" on first load and "users_button" after a screen has been opened and closed.
     public static final By USERS_TAB = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Users']"), // android
-            AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Users'")); // ios
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeButton' AND (name == 'Users' OR name == 'users_button')")); // ios
 
     public static final By BUSINESS_PORTAL_TAB = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Business Portal']"), // android
