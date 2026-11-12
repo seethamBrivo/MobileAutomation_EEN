@@ -6,10 +6,10 @@ import io.appium.java_client.AppiumDriver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import locators.BridgesLocators;
 import locators.UsersLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.TimeoutException;
 import org.testng.Assert;
 import utils.PlatformLocator;
 import utils.TestDataGenerator;
@@ -137,7 +137,8 @@ public class UsersPage {
             Snackbar.waitUntilSays(driver, UiTextConstants.USER_ADDED_MESSAGE, TimeoutConstants.LIST_LOAD_TIMEOUT);
             return;
         }
-        WaitUtils.assertVisible(driver, UsersLocators.SNACKBAR_TEXT, "Snackbar should be displayed after adding user");
+        WaitUtils.assertVisible(driver, UsersLocators.SNACKBAR_TEXT,
+                "Snackbar should show '" + UiTextConstants.USER_ADDED_MESSAGE + "' after adding user");
     }
 
     /**
@@ -205,10 +206,7 @@ public class UsersPage {
 
     /** Navigates back from search screen to the main users list. */
     private void returnToUsersList() {
-        if (PlatformLocator.isIos()) {
-            WaitUtils.tryClickOptionalElement(
-                    driver, java.util.List.of(BridgesLocators.CLOSE_FILTER_BUTTON), TimeoutConstants.SHORT_TIMEOUT);
-        }
+        SearchFilterBar.closeIfOpenOnIos(driver);
         // The old UI had a separate search screen with its own back button; the new one does not.
         if (WaitUtils.isPresent(driver, UsersLocators.BACK_BUTTON)) {
             clickBackButton();
@@ -262,15 +260,24 @@ public class UsersPage {
      * Opens the details screen of the listed row until its delete option shows. The details of a
      * just-created user can stay on loading skeletons indefinitely (BrowserStack build #9), so a
      * screen that does not finish loading is closed and the row re-opened instead of waiting longer.
+     * The server-side filter can also be slow to bring the row back after Back (~12s in build #14), so an attempt
+     * that finds no row filters again on the next one. A details screen of another user is never retried: it fails.
      */
     private void openUserDetailsWithDelete(String email) {
+        String lastProblem = "the delete option never appeared on the details screen";
         for (int attempt = 1; attempt <= DETAILS_OPEN_ATTEMPTS; attempt++) {
+            if (!ensureRowListed(email)) {
+                lastProblem = "the row was not listed after filtering";
+                logger.warn("Row of {} is not listed (attempt {}/{})", email, attempt, DETAILS_OPEN_ATTEMPTS);
+                continue;
+            }
             Optional<String> rowName = iosRowName(email);
             tapUserRow(email);
             if (WaitUtils.isVisible(driver, UsersLocators.DELETE_USER_OPTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT)) {
                 verifyDetailsAreOfRow(rowName, email);
                 return;
             }
+            lastProblem = "the delete option never appeared on the details screen";
             logger.warn("Details of {} did not finish loading (attempt {}/{})", email, attempt, DETAILS_OPEN_ATTEMPTS);
             if (attempt < DETAILS_OPEN_ATTEMPTS) {
                 if (PlatformLocator.isIos()) {
@@ -278,13 +285,10 @@ public class UsersPage {
                 } else {
                     driver.navigate().back();
                 }
-                if (!isRowShown(email)) {
-                    filterForUsersSearchbar(email);
-                    waitForRow(email);
-                }
             }
         }
-        Assert.fail("Delete option never appeared on the details screen of " + email);
+        Assert.fail("Could not open the details of " + email + " in " + DETAILS_OPEN_ATTEMPTS + " attempts: "
+                + lastProblem);
     }
 
     private void tapUserRow(String email) {
@@ -295,16 +299,26 @@ public class UsersPage {
         if (!PlatformLocator.isIos()) {
             return Optional.empty();
         }
-        return Optional.of(WaitUtils.retryOnStale(() -> WaitUtils.findPresent(
-                driver, UsersLocators.iosUserRowName(email), TimeoutConstants.SHORT_TIMEOUT).get(0).getText()));
+        // A row that is gone cannot be opened, so unlike a details screen that is slow to load this is not retried.
+        try {
+            return Optional.of(WaitUtils.retryOnStale(() -> WaitUtils.findPresent(
+                    driver, UsersLocators.iosUserRowName(email), TimeoutConstants.SHORT_TIMEOUT).get(0).getText()));
+        } catch (TimeoutException e) {
+            throw new AssertionError("The row of " + email + " should be listed before it is opened", e);
+        }
     }
 
     /** iOS: the last check before a delete, so a row that moved under the tap never deletes another user. */
     private void verifyDetailsAreOfRow(Optional<String> rowName, String email) {
         rowName.ifPresent(name -> {
-            WaitUtils.assertVisible(driver, UsersLocators.IOS_DETAILS_TITLE, TimeoutConstants.DETAILS_LOAD_TIMEOUT,
-                    "The details title should be shown for '" + name + "' (" + email + ")");
-            Assert.assertEquals(WaitUtils.waitForVisibility(driver, UsersLocators.IOS_DETAILS_TITLE).getText(), name,
+            String title;
+            try {
+                title = WaitUtils.waitForVisibility(
+                        driver, UsersLocators.IOS_DETAILS_TITLE, TimeoutConstants.DETAILS_LOAD_TIMEOUT).getText();
+            } catch (TimeoutException e) {
+                throw new AssertionError("The details title should be shown for '" + name + "' (" + email + ")", e);
+            }
+            Assert.assertEquals(title, name,
                     "The details screen should belong to the user that was opened (" + email + ")");
         });
     }
@@ -313,8 +327,12 @@ public class UsersPage {
         return WaitUtils.isVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.SHORT_TIMEOUT);
     }
 
-    private void waitForRow(String email) {
-        WaitUtils.assertVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT,
-                "User row should be listed again: " + email);
+    /** True once the row is listed; filters for the e-mail again when Back left the list without it. */
+    private boolean ensureRowListed(String email) {
+        if (isRowShown(email)) {
+            return true;
+        }
+        filterForUsersSearchbar(email);
+        return WaitUtils.isVisible(driver, UsersLocators.userRowEndIcon(email), TimeoutConstants.FILTER_RESULT_TIMEOUT);
     }
 }

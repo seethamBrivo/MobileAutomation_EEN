@@ -3,8 +3,8 @@ package pages;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.util.List;
+import java.util.Optional;
 import locators.BridgeCamerasLocators;
-import locators.BridgesLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -52,13 +52,16 @@ public class BridgeCamerasPage {
                 "Camera screen should be displayed (search placeholder visible)");
         // One shared budget for both outcomes: a bridge without cameras shows the empty state instead of a row, so
         // waiting for the row first and only then probing the empty state could miss it at the boundary.
-        By shown = WaitUtils.waitForFirstVisible(driver,
+        Optional<By> shown = WaitUtils.waitForFirstVisible(driver,
                 List.of(BridgeCamerasLocators.FIRST_CAMERA_IN_LIST, BridgeCamerasLocators.EMPTY_STATE_MESSAGE),
-                TimeoutConstants.LIST_LOAD_TIMEOUT).orElse(null);
-        if (BridgeCamerasLocators.EMPTY_STATE_MESSAGE.equals(shown)) {
+                TimeoutConstants.LIST_LOAD_TIMEOUT);
+        if (shown.isEmpty()) {
+            Assert.fail("Neither a camera nor the empty state was displayed within "
+                    + TimeoutConstants.LIST_LOAD_TIMEOUT.toSeconds() + "s of opening the cameras screen");
+        }
+        if (BridgeCamerasLocators.EMPTY_STATE_MESSAGE.equals(shown.get())) {
             throw new SkipException("The first bridge needs at least 1 camera but shows 0");
         }
-        WaitUtils.assertVisible(driver, BridgeCamerasLocators.FIRST_CAMERA_IN_LIST, "Camera list should be displayed");
     }
 
     /**
@@ -90,10 +93,7 @@ public class BridgeCamerasPage {
      * something to hide: it is logged every time it happens.
      */
     public void clickBackButton() {
-        if (PlatformLocator.isIos()) {
-            WaitUtils.tryClickOptionalElement(
-                    driver, java.util.List.of(BridgesLocators.CLOSE_FILTER_BUTTON), TimeoutConstants.SHORT_TIMEOUT);
-        }
+        SearchFilterBar.closeIfOpenOnIos(driver);
         WaitUtils.click(driver, BridgeCamerasLocators.BACK_BUTTON);
         if (!PlatformLocator.isIos()
                 && WaitUtils.isVisible(driver, BridgeCamerasLocators.CAMERAS_OPTION, TimeoutConstants.SHORT_TIMEOUT)) {

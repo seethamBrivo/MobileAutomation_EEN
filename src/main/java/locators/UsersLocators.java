@@ -4,6 +4,7 @@ import constants.UiTextConstants;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 import utils.PlatformLocator;
+import utils.XPathUtils;
 
 /**
  * Locators for the Users screens: the users list, the new-user form and the user details / delete flow.
@@ -21,8 +22,8 @@ public final class UsersLocators {
 
     // iOS: the e-mail is in the label ("e-mail . status"); the name is only an id.
     private static String iosSubtitleOf(String email) {
-        return "//XCUIElementTypeStaticText[contains(@name, '_users_subtitle') and starts-with(@label, '"
-                + email + " ')]";
+        return "//XCUIElementTypeStaticText[contains(@name, '_users_subtitle') and starts-with(@label, "
+                + XPathUtils.xpathLiteral(email + " ") + ")]";
     }
 
     // --- Users list and navigation ----------------------------------------------
@@ -84,10 +85,10 @@ public final class UsersLocators {
                     + " | //android.widget.TextView[starts-with(@text,'The + alias is no longer required')]"), // android
             AppiumBy.xpath("//XCUIElementTypeStaticText[starts-with(@name,'The + alias is no longer required')]")); // ios
 
-    // New UI: the snackbar is a plain TextView with this text. The old positional Compose path is kept in the union.
+    // New UI: the snackbar is a plain TextView with this text. Matched by text only: a positional path would also
+    // match a different snackbar (e.g. an error) at the same position and let the test pass on the wrong message.
     public static final By SNACKBAR_TEXT = AppiumBy.xpath("//android.widget.TextView[@text='"
-            + UiTextConstants.USER_ADDED_MESSAGE + "']"
-            + " | //androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View[3]");
+            + UiTextConstants.USER_ADDED_MESSAGE + "']");
 
     // --- Delete flow ------------------------------------------------------------
 
@@ -114,7 +115,7 @@ public final class UsersLocators {
         if (PlatformLocator.isIos()) {
             return AppiumBy.xpath(IOS_ROW + iosSubtitleOf(email));
         }
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']");
+        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(email) + "]");
     }
 
     /**
@@ -125,11 +126,11 @@ public final class UsersLocators {
         if (PlatformLocator.isIos()) {
             return AppiumBy.xpath(IOS_ROW + "[." + iosSubtitleOf(email) + "]");
         }
-        return AppiumBy.xpath("//android.widget.TextView[@text='" + email + "']"
+        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(email) + "]"
                 + "/ancestor::*[.//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']][1]"
                 + "//android.widget.ImageView[@content-desc='" + END_ICON_DESC + "']"
                 // New UI: the whole row is the clickable target.
-                + " | //android.widget.TextView[@text='" + email + "']"
+                + " | //android.widget.TextView[@text=" + XPathUtils.xpathLiteral(email) + "]"
                 + "/ancestor::android.view.View[@clickable='true'][1]");
     }
 
@@ -140,7 +141,7 @@ public final class UsersLocators {
 
     /** iOS: the validation message shown inside a New user form field ("email", "name" or "lastName"). */
     public static By iosFieldError(String cellName, String message) {
-        return AppiumBy.xpath("//XCUIElementTypeCell[@name='" + cellName + "']"
-                + "//XCUIElementTypeStaticText[@name='" + message + "']");
+        return AppiumBy.xpath("//XCUIElementTypeCell[@name=" + XPathUtils.xpathLiteral(cellName) + "]"
+                + "//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(message) + "]");
     }
 }
