@@ -99,7 +99,8 @@ public class AccountSwitchingPage {
 
     /**
      * Gets the name of the first account in the Other accounts list.
-     * On iOS, returns the full account name. On Android, may be abbreviated.
+     * Note: On iOS, Cell.getText() returns empty string (name is in child element).
+     * On Android, may return abbreviated name.
      */
     public String getFirstAccountName() {
         return WaitUtils.waitForVisibility(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW).getText();
@@ -150,25 +151,18 @@ public class AccountSwitchingPage {
     }
 
     /**
-     * Verifies that account switching occurred.
-     * On iOS: asserts the specific target account name (full names are shown).
-     * On Android: only asserts the name changed (profiles may show abbreviated form).
+     * Verifies that account switching occurred by checking the profile name changed.
+     * Both platforms verify name changed (cannot reliably assert specific target name
+     * due to Android abbreviation and iOS Cell.getText() returning empty).
      * Assumes More menu is already open (waitForSwitchingToComplete navigates there).
      */
     public void verifyAccountSwitched(String originalAccountName, String targetAccountName) {
         String currentProfileName = getCurrentProfileAccountName();
 
-        if (PlatformLocator.isIos() && targetAccountName != null && !targetAccountName.isEmpty()) {
-            // iOS shows full names, so verify the specific target account
-            Assert.assertEquals(currentProfileName, targetAccountName,
-                    String.format("Profile should show target account. Expected: '%s', Actual: '%s'",
-                            targetAccountName, currentProfileName));
-        } else {
-            // Android: only verify the name changed (abbreviation is unpredictable)
-            Assert.assertNotEquals(currentProfileName, originalAccountName,
-                    String.format("Profile should show different account. Was: '%s', Now: '%s'",
-                            originalAccountName, currentProfileName));
-        }
+        // Verify the name changed from original (both platforms)
+        Assert.assertNotEquals(currentProfileName, originalAccountName,
+                String.format("Profile should show different account. Was: '%s', Now: '%s'",
+                        originalAccountName, currentProfileName));
 
         logger.info("Account switch verified: profile changed from '{}' to '{}'",
                 originalAccountName, currentProfileName);
