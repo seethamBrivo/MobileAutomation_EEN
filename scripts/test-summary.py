@@ -27,6 +27,8 @@ cut short by a failure: that skip is a consequence. A skip a test chose itself (
 would only skip again.
 """
 import os
+import re
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -45,8 +47,13 @@ def find_results(args):
     return existing[:1] if not args else existing
 
 
+HASH_CODE = re.compile("@[0-9a-fA-F]{4,}")
+
+
 def params_of(method):
-    return "|".join((value.text or "").strip() for value in method.iter("value"))
+    """The data-provider row of a test. An object without its own toString prints as Class@1a2b3c, which differs
+    between attempts, so the hash is dropped: a retry and its final result must land in one group."""
+    return HASH_CODE.sub("@", "|".join((value.text or "").strip() for value in method.iter("value")))
 
 
 def first_line(text):
@@ -66,6 +73,11 @@ def cell(text):
 
 def escape_annotation(text):
     return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def escape_property(text):
+    """A value after title= : GitHub also wants the colon and the comma escaped there."""
+    return escape_annotation(text).replace(":", "%3A").replace(",", "%2C")
 
 
 def human(ms):
@@ -125,7 +137,9 @@ def judge(block):
     for (cls, method, _params), entries in groups.items():
         fails = [e for e in entries if e["status"] == "FAIL"]
         passes = [e for e in entries if e["status"] == "PASS"]
-        retried = [e for e in entries if e["status"] == "SKIP" and e["exception"] != OWN_SKIP]
+        # A SKIP in a class whose setup failed was skipped by that failure; it is not an attempt that was retried.
+        retried = [e for e in entries
+                   if e["status"] == "SKIP" and e["exception"] != OWN_SKIP and cls not in config_failed_classes]
         own_skips = [e for e in entries if e["status"] == "SKIP" and e["exception"] == OWN_SKIP]
         name = f"{cls}.{method}"
         if fails or passes:
@@ -164,6 +178,12 @@ def check_rerun(list_file, blocks):
     return problems
 
 
+def keep_rerun_list(rerun_list, folder):
+    """A re-run that did not run what it was asked to run gives no verdict on those tests: hand the same list to the
+    next attempt, so it neither runs the full suite nor loses what failed."""
+    shutil.copyfile(rerun_list, Path(folder) / RERUN_FILE)
+
+
 def write_rerun_list(results_path, tests):
     target = results_path.parent / RERUN_FILE
     if tests:
@@ -183,6 +203,8 @@ def main():
     paths = find_results(sys.argv[1:])
     if not paths:
         out.write("### Test results\n\nNo TestNG results were found: the run stopped before the tests started.\n")
+        if rerun_list:
+            keep_rerun_list(rerun_list, Path(DEFAULT_RESULTS[0]).parent)
         return failing_exit
 
     blocks, readable = [], []
@@ -196,6 +218,8 @@ def main():
     if not readable:
         out.write("### Test results\n\nThe TestNG results file could not be read (the run probably stopped while "
                   "writing it), so there is no per-suite summary and no list of tests to re-run.\n")
+        if rerun_list:
+            keep_rerun_list(rerun_list, paths[0].parent)
         return failing_exit
 
     totals = {"passed": 0, "flaky": 0, "failed": 0, "skipped": 0}
@@ -254,12 +278,15 @@ def main():
         lines += ["#### ❌ This re-run did not run what it was asked to run", ""] + [f"- {p}" for p in problems] + [""]
     out.write("\n".join(lines) + "\n")
 
-    write_rerun_list(readable[0], to_rerun)
+    if problems:
+        keep_rerun_list(rerun_list, readable[0].parent)
+    else:
+        write_rerun_list(readable[0], to_rerun)
 
     annotations = [(suite, f"{name}: setup failed {times}x: {clip(message)}") for suite, name, times, message in setup]
     annotations += [(suite, f"{name}: {clip(message)}") for suite, name, message, _retried in failed]
     for suite, text in annotations[:MAX_ANNOTATIONS]:
-        print(f"::error title={escape_annotation(suite)}::{escape_annotation(text)}")
+        print(f"::error title={escape_property(suite)}::{escape_annotation(text)}")
     if len(annotations) > MAX_ANNOTATIONS:
         print(f"::notice::{len(annotations) - MAX_ANNOTATIONS} more problems are listed in the job summary")
     for problem in problems:

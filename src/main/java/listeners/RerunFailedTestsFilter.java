@@ -6,7 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.IMethodInstance;
@@ -36,6 +38,8 @@ public class RerunFailedTestsFilter implements IMethodInterceptor {
 
     static final String PROPERTY = "rerunTests";
 
+    private static final Map<String, Set<String>> LISTS = new ConcurrentHashMap<>();
+
     private static final Logger logger = LogManager.getLogger(RerunFailedTestsFilter.class);
 
     @Override
@@ -44,7 +48,8 @@ public class RerunFailedTestsFilter implements IMethodInterceptor {
         if (file.isEmpty()) {
             return methods;
         }
-        Set<String> listed = readListedTests(Path.of(file));
+        // Read once per file, not once per <test> block of the suite (an iOS run has 15 of them).
+        Set<String> listed = LISTS.computeIfAbsent(file, path -> readListedTests(Path.of(path)));
         List<IMethodInstance> kept = methods.stream().filter(m -> listed.contains(keyOf(m))).toList();
         kept.stream().filter(m -> m.getMethod().getMethodsDependedUpon().length > 0)
                 .forEach(m -> logger.warn("{} depends on other methods, which are not re-run unless listed too",
@@ -55,7 +60,9 @@ public class RerunFailedTestsFilter implements IMethodInterceptor {
     }
 
     static String keyOf(IMethodInstance method) {
-        return method.getMethod().getRealClass().getName() + "#" + method.getMethod().getMethodName();
+        // The class that is run, as TestNG writes it to testng-results.xml: for a test inherited from a base class that
+        // is the subclass, whereas getRealClass() is the class that declares the method.
+        return method.getMethod().getTestClass().getRealClass().getName() + "#" + method.getMethod().getMethodName();
     }
 
     /** An unreadable or empty file throws: a wrong path must not turn a re-run into the whole suite, or into none. */

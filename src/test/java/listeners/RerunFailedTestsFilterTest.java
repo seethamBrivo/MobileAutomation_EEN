@@ -2,6 +2,7 @@ package listeners;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertThrows;
+import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -14,6 +15,9 @@ import java.util.Set;
 import org.testng.TestNG;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.testng.xml.XmlClass;
+import org.testng.xml.XmlSuite;
+import org.testng.xml.XmlTest;
 
 /**
  * Runs two small test classes through a real TestNG, so it also proves what the CI relies on: the filter is picked
@@ -58,7 +62,27 @@ public class RerunFailedTestsFilterTest {
         }
     }
 
+    /** A test that two subclasses inherit: the filter must tell the two copies apart. */
+    public static class BaseWithTest {
+        @Test
+        public void inherited() {
+            RAN.add(getClass().getSimpleName() + ".inherited");
+        }
+    }
+
+    public static class ChildOne extends BaseWithTest {}
+
+    public static class ChildTwo extends BaseWithTest {}
+
     private static List<String> runWith(String rerunFile) {
+        return runWith(rerunFile, FirstClass.class, SecondClass.class);
+    }
+
+    private static List<String> runWith(String rerunFile, Class<?>... classes) {
+        return run(rerunFile, testng -> testng.setTestClasses(classes));
+    }
+
+    private static List<String> run(String rerunFile, java.util.function.Consumer<TestNG> setUp) {
         RAN.clear();
         String before = System.getProperty(RerunFailedTestsFilter.PROPERTY);
         try {
@@ -69,7 +93,7 @@ public class RerunFailedTestsFilterTest {
             }
             TestNG testng = new TestNG(false);
             testng.setUseDefaultListeners(false);
-            testng.setTestClasses(new Class[] {FirstClass.class, SecondClass.class});
+            setUp.accept(testng);
             testng.run();
         } finally {
             if (before == null) {
@@ -114,6 +138,45 @@ public class RerunFailedTestsFilterTest {
 
         assertEquals(Set.copyOf(ran), Set.of("FirstClass.beforeClass", "FirstClass.one", "SecondClass.beforeClass",
                 "SecondClass.three"), "The listed method of each class should run: " + ran);
+    }
+
+    @Test
+    public void aTestInheritedByTwoClassesRunsOnlyInTheListedOne() throws IOException {
+        List<String> ran = runWith(listOf(name(ChildOne.class) + "#inherited"), ChildOne.class, ChildTwo.class);
+
+        assertEquals(ran, List.of("ChildOne.inherited"), "Only the listed subclass should run its inherited test");
+    }
+
+    @Test
+    public void theClassNameTheFilterUsesIsTheOneTestNgWritesToTheResultsFile() throws Exception {
+        Path reports = Files.createTempDirectory("rerun-reports");
+        run(null, testng -> {
+            testng.setTestClasses(new Class[] {ChildOne.class});
+            testng.setUseDefaultListeners(true);
+            testng.setOutputDirectory(reports.toString());
+        });
+
+        String results = Files.readString(reports.resolve("testng-results.xml"));
+        assertTrue(results.contains("<class name=\"" + name(ChildOne.class) + "\""),
+                "scripts/test-summary.py lists tests by the class name in the results, which should be "
+                        + name(ChildOne.class) + " for an inherited test, but the file was: " + results);
+    }
+
+    @Test
+    public void aSuiteWithSeveralTestBlocksRunsTheListedTestAndLeavesTheEmptyBlockAlone() throws IOException {
+        List<String> ran = run(listOf(name(FirstClass.class) + "#one"), testng -> {
+            XmlSuite suite = new XmlSuite();
+            suite.setName("two blocks");
+            for (Class<?> cls : List.of(FirstClass.class, SecondClass.class)) {
+                XmlTest block = new XmlTest(suite);
+                block.setName("block of " + cls.getSimpleName());
+                block.setXmlClasses(List.of(new XmlClass(cls)));
+            }
+            testng.setXmlSuites(List.of(suite));
+        });
+
+        assertEquals(ran, List.of("FirstClass.beforeClass", "FirstClass.one"),
+                "The block with the listed test should run it, and the block with none should run nothing");
     }
 
     @Test
