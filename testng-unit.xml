@@ -10,6 +10,7 @@
             <class name="utils.EventFilterPageSourceTest"/>
             <class name="utils.CameraCardPageSourceTest"/>
             <class name="utils.BrowserStackStatusTest"/>
+            <class name="utils.FileSizeUtilsTest"/>
             <class name="base.SessionScopeTest"/>
             <class name="base.AuthSessionTest"/>
             <class name="base.BrowserStackReporterTest"/>

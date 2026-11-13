@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -43,6 +44,14 @@ public class HistoryBrowserPage {
     private static final int MAX_LEVEL_MINUTES = TIMELINE_LEVEL_MINUTES.get(TIMELINE_LEVEL_MINUTES.size() - 1);
     private static final int SECONDS_PER_DAY = 24 * 60 * 60;
     private static final DateTimeFormatter CURSOR_POSITION_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    /** A time of day for an account that uses 12-hour time: "01:18:50 AM". */
+    private static final DateTimeFormatter TIME_12_HOUR =
+            DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH);
+
+    /** The same date and time as {@link #CURSOR_POSITION_FORMAT}, for an account that uses 12-hour time. */
+    private static final DateTimeFormatter CURSOR_POSITION_FORMAT_12_HOUR =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a", Locale.ENGLISH);
     private static final String FRAME_TIME_PREFIX = "header:";
     private static final DateTimeFormatter FRAME_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final List<By> TIMELINE_CONTROLS = List.of(
@@ -75,13 +84,19 @@ public class HistoryBrowserPage {
     /** A long camera name is cut with three dots or the ellipsis character. */
     private static final Pattern NAME_CUT_MARK = Pattern.compile("(\\.\\.\\.|\\u2026)$");
 
-    /** The calendar picker shows the cursor as a full 24-hour date and time. */
-    private static final Pattern CALENDAR_TIMESTAMP = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
+    /** The calendar picker shows the cursor as a full date and time, with AM/PM on a 12-hour account. */
+    private static final Pattern CALENDAR_TIMESTAMP =
+            Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?: [AaPp][Mm])?");
 
     private static final String MULTI_WINDOWS_SETTING = "enableMultiWindows";
 
     /** Characters the export file name must reject: the validation message names the allowed pattern. */
     private static final String INVALID_FILE_NAME = "test^file/name*";
+
+    /** Android "video Camera 2026-11-04 02-26-15", iOS "Video Camera 2026-11-04 02:26:15". */
+    private static final Pattern DEFAULT_FILE_NAME = Pattern.compile(PlatformLocator.isIos()
+            ? "^Video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
+            : "^video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}$");
 
     private static final List<By> CONTEXT_MENU_OPTIONS = List.of(
             CamerasLocators.CAMERA_SETTINGS_OPTION, CamerasLocators.HISTORY_BROWSER_OPTION,
@@ -163,6 +178,22 @@ public class HistoryBrowserPage {
             return;
         }
 
+        if (PlatformLocator.isIos()) {
+            boolean leftExportFlow = false;
+            if (WaitUtils.isVisible(driver, HistoryBrowserLocators.SELECT_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+                WaitUtils.click(driver, HistoryBrowserLocators.BACK_BUTTON); // back to the export screen
+                leftExportFlow = true;
+            }
+            if (WaitUtils.isVisible(driver, HistoryBrowserLocators.CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+                WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
+                leftExportFlow = true;
+            }
+            if (leftExportFlow) {
+                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
+            }
+            return;
+        }
+
         if (WaitUtils.isVisible(driver, HistoryBrowserLocators.CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
             WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
             WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
@@ -200,6 +231,10 @@ public class HistoryBrowserPage {
      * events shown count, and the history browser opens at the newest recording, so the ones shown precede the cursor.
      */
     public void requireEventsOnTimeline() {
+        requireEventsOnTimeline(MIN_EVENTS_FOR_STEPPING);
+    }
+
+    public void requireEventsOnTimeline(int minimumEvents) {
         LocalDateTime cursor = readCursorPosition();
         int earlierEvents = 0;
         if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_EVENT_TIMES, TimeoutConstants.SHORT_TIMEOUT)) {
@@ -213,8 +248,8 @@ public class HistoryBrowserPage {
                 return count;
             });
         }
-        if (earlierEvents < MIN_EVENTS_FOR_STEPPING) {
-            throw new SkipException("The first camera needs at least " + MIN_EVENTS_FOR_STEPPING
+        if (earlierEvents < minimumEvents) {
+            throw new SkipException("The first camera needs at least " + minimumEvents
                     + " events before the cursor to step between events but " + earlierEvents + " are shown");
         }
     }
@@ -518,21 +553,32 @@ public class HistoryBrowserPage {
         return gapSeconds / 60;
     }
 
+    /** Accepts the 24-hour and the 12-hour format. */
     private static LocalTime parseTimeLabel(String label) {
         try {
             return LocalTime.parse(label.trim());
-        } catch (DateTimeParseException e) {
-            throw new AssertionError("Timeline row label '" + label + "' is not a 24-hour HH:mm:ss time; "
-                    + "check the account's time format", e);
+        } catch (DateTimeParseException twentyFourHourFailure) {
+            try {
+                return LocalTime.parse(label.trim().toUpperCase(Locale.ROOT), TIME_12_HOUR);
+            } catch (DateTimeParseException e) {
+                throw new AssertionError("Timeline row label '" + label + "' is neither 'HH:mm:ss' nor "
+                        + "'hh:mm:ss AM/PM'", e);
+            }
         }
     }
 
+    /** Accepts the 24-hour and the 12-hour format. */
     private static LocalDateTime parseCursorLabel(String label) {
         try {
             return LocalDateTime.parse(label.trim(), CURSOR_POSITION_FORMAT);
-        } catch (DateTimeParseException e) {
-            throw new AssertionError("Cursor time '" + label + "' is not in the expected 24-hour "
-                    + "'yyyy-MM-dd HH:mm:ss' format; check the account's time format", e);
+        } catch (DateTimeParseException twentyFourHourFailure) {
+            try {
+                return LocalDateTime.parse(label.trim().toUpperCase(Locale.ROOT),
+                        CURSOR_POSITION_FORMAT_12_HOUR);
+            } catch (DateTimeParseException e) {
+                throw new AssertionError("Cursor time '" + label + "' is neither 'yyyy-MM-dd HH:mm:ss' nor "
+                        + "'yyyy-MM-dd hh:mm:ss AM/PM'", e);
+            }
         }
     }
 
@@ -629,7 +675,8 @@ public class HistoryBrowserPage {
         String calendarTimestamp = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CURRENT_POSITION)
                 .getText();
         Assert.assertTrue(CALENDAR_TIMESTAMP.matcher(calendarTimestamp).matches(),
-                "Calendar picker should show a 'YYYY-MM-DD HH:MM:SS' timestamp but showed '" + calendarTimestamp + "'");
+                "Calendar picker should show a 'YYYY-MM-DD HH:MM:SS [AM/PM]' timestamp but showed '"
+                        + calendarTimestamp + "'");
         verifyFilterButtonEnabledWhenEventsShown();
     }
 
@@ -968,7 +1015,14 @@ public class HistoryBrowserPage {
         logger.info("Export screen opened successfully");
     }
 
+    /** Android only: the iOS selection icon has no accessibility id. */
     public void verifyDownloadsSelectedAsDefault() {
+        if (PlatformLocator.isIos()) {
+            logger.info("Not asserted on iOS: that Downloads is the selected destination, its icon has no id");
+            WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOADS_DESTINATION_ROW,
+                    TimeoutConstants.SHORT_TIMEOUT, "Downloads should be offered as a save destination");
+            return;
+        }
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOADS_SELECTED_INDICATOR,
                 TimeoutConstants.SHORT_TIMEOUT,
                 "Downloads should be selected as default save destination");
@@ -984,7 +1038,14 @@ public class HistoryBrowserPage {
                 "Archive folder picker should be opened with Select button visible");
     }
 
+    /** Android only: on iOS a tap opens the folder, and Select alone picks the Archive root the manual asks for. */
     public void pickFirstFolder() {
+        if (PlatformLocator.isIos()) {
+            logger.info("Not done on iOS: no folder is opened, Select picks the Archive root");
+            WaitUtils.assertVisible(driver, HistoryBrowserLocators.FIRST_FOLDER, TimeoutConstants.SHORT_TIMEOUT,
+                    "The Archive folder picker should list its folders");
+            return;
+        }
         WaitUtils.click(driver, HistoryBrowserLocators.FIRST_FOLDER);
     }
 
@@ -996,6 +1057,12 @@ public class HistoryBrowserPage {
         // Wait for Export screen to reload after folder selection
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SAVE_TO_SECTION_TITLE,
                 FrameworkConstants.EXPLICIT_WAIT);
+        if (PlatformLocator.isIos()) {
+            logger.info("Not asserted on iOS: the selected folder's name, the export screen does not show it");
+            WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_TEXT, TimeoutConstants.SHORT_TIMEOUT,
+                    "The export screen should offer the Archive again after Select");
+            return;
+        }
         String folderName = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SELECTED_FOLDER_NAME)
                 .getText();
         Assert.assertFalse(folderName.isEmpty(),
@@ -1046,18 +1113,11 @@ public class HistoryBrowserPage {
     }
 
     public void verifyExportingSnackbar() {
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
-                "Snackbar message should be displayed after clicking Export");
-        String message = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE).getText();
-        Assert.assertTrue(message.contains("Exporting"),
-                "Snackbar should contain 'Exporting' but was: " + message);
+        Snackbar.verifyContainsAnyOf(driver, TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT, "Exporting");
     }
 
-    public void verifyExportingSnackbarAndClickSeeProgress() {
-        // Snackbar is transient - must click while still visible
-        WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
+    public void clickSeeProgress() {
+        // The snackbar is gone within seconds, so the button is clicked at once; it exists only while the snackbar shows.
         WaitUtils.click(driver, HistoryBrowserLocators.SEE_PROGRESS_BUTTON);
     }
 
@@ -1078,15 +1138,28 @@ public class HistoryBrowserPage {
     }
 
     public void enterFileName(String fileName) {
+        if (PlatformLocator.isIos()) {
+            // The message shows for about a second, so the typing must end on the first '/': what comes before it is
+            // typed as given (the app drops the other rejected characters without a message), then the '/' alone.
+            int slash = fileName.indexOf('/');
+            if (slash < 0) {
+                throw new IllegalArgumentException("The file name must contain a '/': " + fileName);
+            }
+            WaitUtils.clearAndType(driver, HistoryBrowserLocators.FILE_NAME_FIELD, fileName.substring(0, slash));
+            WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD).sendKeys("/");
+            return;
+        }
         WaitUtils.clearAndType(driver, HistoryBrowserLocators.FILE_NAME_FIELD, fileName);
     }
 
     public void verifyValidationError() {
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT,
-                TimeoutConstants.SHORT_TIMEOUT,
-                "Validation error message should be displayed for special characters");
-        String errorMessage = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT)
-                .getText();
+        // One read: the toast is gone after about two seconds. On iOS it sits behind the keyboard and is reported
+        // as not visible, so it is read by presence.
+        String errorMessage = PlatformLocator.isIos()
+                ? WaitUtils.attributeOfPresent(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT, "label",
+                        TimeoutConstants.SHORT_TIMEOUT)
+                : WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT,
+                        TimeoutConstants.SHORT_TIMEOUT).getText();
         Assert.assertTrue(errorMessage.contains("[^/]*"),
                 "Error message should contain '[^/]*' but was: " + errorMessage);
     }
@@ -1104,7 +1177,12 @@ public class HistoryBrowserPage {
 
     public void completeExportWithProgress() {
         clickExportButtonAtBottom();
-        verifyExportingSnackbarAndClickSeeProgress();
+        if (PlatformLocator.isIos()) {
+            verifyExportingSnackbar();
+            verifyReturnedToHistoryBrowser();
+            return;
+        }
+        clickSeeProgress();
         verifyProgressTabOpened();
         driver.navigate().back();
         verifyReturnedToHistoryBrowser();
@@ -1123,32 +1201,36 @@ public class HistoryBrowserPage {
         reopenExportScreen();
         enterFileName(INVALID_FILE_NAME);
         verifyValidationError();
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, HistoryBrowserLocators.KEYBOARD_DONE_KEY); // the keyboard covers the Cancel button
+        }
         clickCancelButton();
         verifyReturnedToHistoryBrowser();
     }
 
-    public void verifyDefaultFileNameExport() {
+    public String verifyDefaultFileNameExport() {
         reopenExportScreen();
-        verifyDefaultFileNamePattern();
+        String fileName = verifyDefaultFileNamePattern();
         selectArchiveDestination();
         pickFirstFolder();
         clickSelectButton();
         clickExportButtonAtBottom();
         verifyExportingSnackbar();
+        return fileName;
     }
 
-    public void verifyDefaultFileNamePattern() {
+    /** Returns the file name shown, after checking its pattern. */
+    public String verifyDefaultFileNamePattern() {
         WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
-        String fileName = fileNameField.getAttribute("text");
+        String fileName = fileNameField.getAttribute(PlatformLocator.isIos() ? "value" : "text");
 
         // Verify file name follows pattern: video <camera_name> YYYY-MM-DD HH-MM-SS
         Assert.assertNotNull(fileName, "File name attribute should not be null");
         Assert.assertFalse(fileName.isEmpty(), "File name should not be empty");
 
-        // Pattern: "video " + camera_name + " " + YYYY-MM-DD + " " + HH-MM-SS
-        // Example: "video Dm08 2026-11-04 02-26-15"
-        Assert.assertTrue(fileName.matches("^video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}$"),
-                "File name should match pattern 'video <camera_name> YYYY-MM-DD HH-MM-SS' but was: " + fileName);
+        Assert.assertTrue(DEFAULT_FILE_NAME.matcher(fileName).matches(),
+                "File name should match the pattern '" + DEFAULT_FILE_NAME + "' but was: " + fileName);
+        return fileName;
     }
 
     // Downloads export flows (EEPD-TC-23629)
@@ -1163,11 +1245,20 @@ public class HistoryBrowserPage {
         verifyReturnedToHistoryBrowser();
     }
 
-    public void verifyDefaultFileNameExportForDownloads() {
+    public String verifyDefaultFileNameExportForDownloads() {
         reopenExportScreen();
-        verifyDefaultFileNamePattern();
+        String fileName = verifyDefaultFileNamePattern();
         clickExportButtonAtBottom();
         verifyExportingSnackbar();
+        return fileName;
+    }
+
+    public void leaveHistoryBrowser() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, HistoryBrowserLocators.BACK_BUTTON);
+            return;
+        }
+        driver.navigate().back();
     }
 
     /**
@@ -1175,7 +1266,7 @@ public class HistoryBrowserPage {
      * which is what the export range starts from. Leaves the export screen open with Downloads selected.
      */
     private void openExportScreenAtPreviousEvent() {
-        requireEventsOnTimeline();
+        requireEventsOnTimeline(1);
         clickPreviousEventAndVerifyCursorMoved();
         verifyExportButtonVisible();
         clickExportButton();
@@ -1189,5 +1280,4 @@ public class HistoryBrowserPage {
         clickExportButton();
         verifyExportScreenOpened();
     }
-
 }

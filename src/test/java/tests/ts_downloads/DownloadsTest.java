@@ -4,18 +4,19 @@ import base.BaseTest;
 import constants.TestDataConstants;
 import constants.TimeoutConstants;
 import locators.BottomNavigationLocators;
-import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.BottomNavigationBar;
 import pages.DownloadsPage;
-import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**
  * Test suite for Downloads functionality.
- * NOTE: These tests use Android-only locators and are only verified on Android platform.
+ * The downloads that must finish use a medium folder and video, the cancel step a large video. Both tests look for
+ * them first and skip, with the reason, when the account has none. A medium download can end before its progress is
+ * visible, so "Downloading", "in progress" and the progress bar are checked in the cancel step, whose download is
+ * still running.
  */
 public class DownloadsTest extends BaseTest {
 
@@ -23,9 +24,6 @@ public class DownloadsTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setupDownloadsTest() {
-        if (PlatformLocator.isIos()) {
-            throw new SkipException("Downloads tests are Android-only (no iOS locators implemented)");
-        }
         loginAs(TestDataConstants.TS02_CREDS);
         downloadsPage = new DownloadsPage(driver);
         // Verify we landed on the expected screen with More tab visible
@@ -46,7 +44,7 @@ public class DownloadsTest extends BaseTest {
 
             // Navigate back until bottom navigation bar is showing (up to 3 backs)
             for (int i = 0; i < 3 && !BottomNavigationBar.isShowing(driver); i++) {
-                driver.navigate().back();
+                downloadsPage.navigateBack();
             }
 
             // Log if we couldn't reach the main screen
@@ -59,10 +57,10 @@ public class DownloadsTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-13330: POS-Downloads - downloading a folder in mobile app",
-          groups = {"regression", "downloads"})
+          groups = {"regression", "downloads", "ios"})
     public void test01_folderDownloadWithCancellation() {
-        // Complete folder download flow
         downloadsPage.navigateToDownloads();
+        downloadsPage.findDownloadTargets();
         downloadsPage.verifyFilesTabIsVisible();
         downloadsPage.verifyProgressTabIsVisible();
         downloadsPage.verifyTestDataExists();
@@ -70,11 +68,10 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.clickDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
-        downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadInProgress();
         downloadsPage.waitForDownloadComplete();
 
         // Folder cancellation flow
+        downloadsPage.selectLargeDownloadTarget();
         downloadsPage.verifyFilesTabIsVisible();
         downloadsPage.clickDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
@@ -89,24 +86,23 @@ public class DownloadsTest extends BaseTest {
 
     // Note: "Full video type" refers to the video format, not a user-selectable option in the app
     @Test(description = "EEPD-TC-13207: POS-Downloads - downloading a video - Full video type in mobile app",
-          groups = {"regression", "downloads"})
+          groups = {"regression", "downloads", "ios"})
     public void test02_videoDownloadWithCancellation() {
-        // Complete video download flow
         downloadsPage.navigateToDownloads();
+        downloadsPage.findDownloadTargets();
         downloadsPage.verifyTestDataExists();
-        downloadsPage.clickFirstFolder();
+        downloadsPage.openCurrentFolder();
         downloadsPage.verifyVideoDownloadOptionsPresent();
         downloadsPage.clickVideoDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
-        downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadProgressBar();
         downloadsPage.waitForVideoDownloadComplete();
         downloadsPage.navigateBack();
 
         // Video cancellation flow
+        downloadsPage.selectLargeDownloadTarget();
         downloadsPage.verifyFilesTabIsVisible();
-        downloadsPage.clickFirstFolder();
+        downloadsPage.openCurrentFolder();
         downloadsPage.clickVideoDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();

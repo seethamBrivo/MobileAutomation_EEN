@@ -33,7 +33,7 @@ public class LiveViewTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-36684: POS-Live Stream - Mechanical Zoom of Auto focus functionality of live stream",
-          groups = {"regression", "live", "liveview", "mechanical-zoom"})
+          groups = {"regression", "live", "liveview", "mechanical-zoom", "ios"})
     public void verifyMechanicalZoomAutoFocusFunctionality() {
         liveViewPage.navigateToLiveView(cameraName);
         liveViewPage.verifyMechanicalZoomButtonInBothOrientationsAndClick();
@@ -42,7 +42,7 @@ public class LiveViewTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-36681: POS-Live Stream - Mechanical Zoom of Zoom In/out functionality of live stream",
-          groups = {"regression", "live", "liveview", "mechanical-zoom"})
+          groups = {"regression", "live", "liveview", "mechanical-zoom", "ios"})
     public void verifyMechanicalZoomInOutFunctionality() {
         liveViewPage.navigateToLiveView(cameraName);
         liveViewPage.verifyMechanicalZoomButtonInBothOrientationsAndClick();

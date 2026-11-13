@@ -262,6 +262,8 @@ Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 | EEPD-TC-19385 | ts_archive.ArchiveTest | POS-Archive - downloading a video - video type in mobile app |
 | EEPD-TC-13330 | ts_downloads.DownloadsTest | POS-Downloads - downloading a folder in mobile app |
 | EEPD-TC-13207 | ts_downloads.DownloadsTest | POS-Downloads - downloading a video - Full video type in mobile app |
+| EEPD-TC-23628 | ts_history.HistoryBrowserExportTest | POS-Exports/History Browser - requesting a video export to Archive with default values in VMS mobile app |
+| EEPD-TC-23629 | ts_history.HistoryBrowserExportTest | POS-Exports/History Browser - requesting a video export to Downloads with default values in VMS mobile app |
 
 ### Conventions
 
