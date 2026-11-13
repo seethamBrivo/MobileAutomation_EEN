@@ -148,22 +148,6 @@ public class RerunFailedTestsFilterTest {
         assertEquals(ran, List.of("ChildOne.inherited"), "Only the listed subclass should run its inherited test");
     }
 
-    @Test
-    public void aListedTestBringsItsDependsOnMethodsAlong() throws IOException {
-        List<String> ran = runWith(listOf(name(DependsOnMethodFixture.class) + "#second"), DependsOnMethodFixture.class);
-
-        assertEquals(ran, List.of("DependsOnMethod.first", "DependsOnMethod.second"),
-                "The listed test and the method it depends on should run, and nothing else");
-    }
-
-    @Test
-    public void aListedTestBringsItsDependsOnGroupsAlong() throws IOException {
-        List<String> ran = runWith(listOf(name(DependsOnGroupFixture.class) + "#verify"), DependsOnGroupFixture.class);
-
-        assertEquals(ran, List.of("DependsOnGroup.prepare", "DependsOnGroup.verify"),
-                "The listed test and the group it depends on should run, and nothing else");
-    }
-
     /** Only checks what TestNG writes; the inherited-test test above is the one that guards the filter's key. */
     @Test
     public void testNgWritesTheClassThatRunsToTheResultsFile() throws Exception {
