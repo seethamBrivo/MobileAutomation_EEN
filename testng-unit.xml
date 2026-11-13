@@ -6,6 +6,7 @@
         <classes>
             <class name="listeners.RetryAnalyzerTest"/>
             <class name="listeners.RetryTransformerTest"/>
+            <class name="listeners.RerunFailedTestsFilterTest"/>
             <class name="utils.XPathUtilsTest"/>
             <class name="utils.EventFilterPageSourceTest"/>
             <class name="utils.BrowserStackStatusTest"/>
