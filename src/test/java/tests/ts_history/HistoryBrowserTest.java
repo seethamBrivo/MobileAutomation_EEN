@@ -58,17 +58,17 @@ public class HistoryBrowserTest extends BaseTest {
     }
 
     @Test(description = "EEPD-TC-2907: POS-History Browser - User is able to use Players/Controllers in mobile VMS app",
-          groups = {"regression", "history"})
+          groups = {"regression", "history", "ios"})
     public void verifyTimelineControlsMoveRedCursor() {
         historyBrowserPage.openLiveVideoOfFirstCameraPreview();
         historyBrowserPage.openHistoryBrowserFromLiveVideo();
         historyBrowserPage.verifyTimelineControlsDisplayed();
         historyBrowserPage.requireEventsOnTimeline();
         historyBrowserPage.ensurePlaybackPaused();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.clickPreviousFrameAndVerifyCursorMoved();
         historyBrowserPage.clickNextFrameAndVerifyCursorMoved();
-        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
-        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.clickNextEventAndVerifyCursorMoved();
     }
 
