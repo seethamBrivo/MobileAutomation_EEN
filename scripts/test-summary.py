@@ -134,9 +134,18 @@ def main():
         out.write("### Test results\n\nNo TestNG results were found: the run stopped before the tests started.\n")
         return 0
 
-    blocks = []
+    blocks, readable = [], []
     for path in paths:
-        blocks.extend(read_blocks(path))
+        try:
+            blocks.extend(read_blocks(path))
+            readable.append(path)
+        except ET.ParseError as error:
+            # A run that was killed mid-way can leave a cut-off file; report it, keep the others.
+            print(f"::warning::Could not read {path}: {error}")
+    if not readable:
+        out.write("### Test results\n\nThe TestNG results file could not be read (the run probably stopped while "
+                  "writing it), so there is no per-suite summary and no list of tests to re-run.\n")
+        return 0
 
     totals = {"passed": 0, "flaky": 0, "failed": 0, "skipped": 0}
     rows, failed, flaky, to_rerun = [], [], [], set()
@@ -185,7 +194,7 @@ def main():
         lines += [f"**{len(to_rerun)} test(s) to run again:** \"Re-run failed jobs\" on this run runs only these.", ""]
     out.write("\n".join(lines) + "\n")
 
-    write_rerun_list(paths[0], to_rerun)
+    write_rerun_list(readable[0], to_rerun)
 
     for suite, name, message, _retried in failed[:MAX_ANNOTATIONS]:
         print(f"::error title={escape_annotation(suite)}::{escape_annotation(name + ': ' + clip(message))}")
