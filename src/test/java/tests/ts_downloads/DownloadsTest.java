@@ -14,7 +14,9 @@ import utils.WaitUtils;
 /**
  * Test suite for Downloads functionality.
  * The downloads that must finish use a medium folder and video, the cancel step a large video. Both tests look for
- * them first and skip, with the reason, when the account has none.
+ * them first and skip, with the reason, when the account has none. A medium download can end before its progress is
+ * visible, so "Downloading", "in progress" and the progress bar are checked in the cancel step, whose download is
+ * still running.
  */
 public class DownloadsTest extends BaseTest {
 
@@ -66,8 +68,6 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.clickDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
-        downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadInProgress();
         downloadsPage.waitForDownloadComplete();
 
         // Folder cancellation flow
@@ -96,8 +96,6 @@ public class DownloadsTest extends BaseTest {
         downloadsPage.clickVideoDownloadIcon();
         downloadsPage.verifyDownloadDialogDisplayed();
         downloadsPage.clickDownloadButtonInDialog();
-        downloadsPage.verifyDownloadingSnackbar();
-        downloadsPage.verifyDownloadProgressBar();
         downloadsPage.waitForVideoDownloadComplete();
         downloadsPage.navigateBack();
 
