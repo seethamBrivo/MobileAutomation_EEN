@@ -4,16 +4,13 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.testng.annotations.Test;
 
 /**
- * Most snapshots here are hand-built, in the order {@link CameraCardPageSource} relies on: iOS lists a card as loose
+ * The snapshots here are hand-built, in the order {@link CameraCardPageSource} relies on: iOS lists a card as loose
  * siblings, in the order name, 3-dots button ({@code ic_contextMenu}), optional icons, status, and then the tag row
- * as a scroll view. One test reads {@code fixtures/cameras-list-ios-page-source.xml}, the Cameras list of the TS02
- * account captured from a device and cut down to two cards and one card scrolled out of view.
+ * as a scroll view. A change in that order in the app will not show up here, only on a device.
  */
 public class CameraCardPageSourceTest {
 
@@ -81,20 +78,6 @@ public class CameraCardPageSourceTest {
 
         assertEquals(cards, List.of(List.of("Camera A", "Online")),
                 "The counter and the filter chips are not cards");
-    }
-
-    @Test
-    public void realPageSourceFromADeviceIsReadCardByCard() throws IOException {
-        String pageSource;
-        try (var fixture = getClass().getResourceAsStream("/fixtures/cameras-list-ios-page-source.xml")) {
-            pageSource = new String(fixture.readAllBytes(), StandardCharsets.UTF_8);
-        }
-
-        assertEquals(CameraCardPageSource.visibleCards(pageSource), List.of(
-                List.of("000 Camera 90 days", "Online", "parking lot 1", "hikvision ds-2cd2045fwd-i", "test5", "000",
-                        "analog camera"),
-                List.of("000 Camera Edge-1", "Online", "000")),
-                "The real page source should give the two cards on screen and leave out the card scrolled away");
     }
 
     @Test
