@@ -69,8 +69,10 @@ public final class EventFilterPageSource {
 
     private static Document parse(String xml) {
         try {
-            return DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                    .parse(new InputSource(new StringReader(xml)));
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            // A device page source has no DOCTYPE; refusing one keeps external entities out.
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            return factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new IllegalStateException("Could not read the page source of the event filter", e);
         }
