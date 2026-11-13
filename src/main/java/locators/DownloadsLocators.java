@@ -3,6 +3,7 @@ package locators;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 import utils.PlatformLocator;
+import utils.XPathUtils;
 
 /**
  * Locators specific to Downloads feature.
@@ -102,10 +103,10 @@ public final class DownloadsLocators {
     public static By rowByFileName(String fileName) {
         if (PlatformLocator.isIos()) {
             return AppiumBy.iOSNsPredicateString("name ENDSWITH '_downloads_title' AND label CONTAINS[c] "
-                    + utils.XPathUtils.xpathLiteral(fileName));
+                    + XPathUtils.xpathLiteral(fileName));
         }
         return AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView[@content-desc=\"DownloadsMainScreen\"]"
-                + "//android.widget.TextView[contains(@text, " + utils.XPathUtils.xpathLiteral(fileName) + ")]");
+                + "//android.widget.TextView[contains(@text, " + XPathUtils.xpathLiteral(fileName) + ")]");
     }
 
     /** iOS: any cancel icon on the screen, used by the cleanup. */

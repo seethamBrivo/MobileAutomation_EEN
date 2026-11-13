@@ -198,6 +198,10 @@ public final class HistoryBrowserLocators {
     public static final By DOWNLOADS_SELECTED_INDICATOR =
             AppiumBy.accessibilityId("downloads_destination_row_selected_icon");
 
+    // iOS only, so it has no Android value on purpose: the selection icon has no id there, so the row itself is
+    // what the test can check.
+    public static final By DOWNLOADS_DESTINATION_ROW = AppiumBy.accessibilityId("export_to_downloads_title");
+
     // TODO: Unscoped bare @text match - could false-positive on any "Archive" text.
     //       Scope to Export screen parent or request testTag from developers.
     public static final By ARCHIVE_TEXT = PlatformLocator.get(
@@ -274,10 +278,7 @@ public final class HistoryBrowserLocators {
             AppiumBy.accessibilityId("close_button"), // android
             AppiumBy.accessibilityId("buttons_view_cancel_button")); // ios
 
-    // Snackbar message after export
-    public static final By SNACKBAR_MESSAGE = PlatformLocator.get(
-            AppiumBy.accessibilityId("snackbar_een_text"), // android
-            AppiumBy.accessibilityId("toast_text")); // ios
+ // ios
 
     // See progress button on snackbar. Android only: the iOS toast has no button, so this has no iOS value on purpose.
     public static final By SEE_PROGRESS_BUTTON =
