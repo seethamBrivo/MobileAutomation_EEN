@@ -31,10 +31,18 @@ on:
         type: choice
         options: [class, method]
         default: class
+      rerun_failed_from_run:
+        description: 'Run only the tests that did not pass in an earlier run: its run id (the number in the run URL; its newest attempt counts). The normal suite of the platform is used, filtered to those tests, so the same classes still never overlap. Needs the platform chosen above to match that run. "Re-run failed jobs" on GitHub does this by itself for the earlier attempt of the same run'
+        type: string
+        default: ''
       diagnostics:
         description: 'BrowserStack debug logs, network logs and video (slower sessions). Always on for a merge to main; untick to speed up a manual run. Network logs are never used on iOS: they stop the camera video from loading'
         type: boolean
         default: true
+
+permissions:
+  contents: read
+  actions: read  # rerun_failed_from_run downloads the test reports of an earlier run
 
 # The suite uses 2 BrowserStack sessions and shared test accounts/bridges, so two CI runs must never overlap.
 # A later push waits for the running one instead of cancelling it half-way through its tests.
@@ -80,9 +88,40 @@ jobs:
           esac
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0  # the PR's diff against the base branch is needed to pick the tests
+
+      - name: Pick the failed tests of the earlier attempt
+        # "Re-run failed jobs" starts a new attempt of the same run. The earlier attempt uploaded failed-tests.txt with
+        # its report (scripts/test-summary.py); this attempt runs only those tests, in the normal suite layout
+        # (listeners.RerunFailedTestsFilter). No list (the earlier attempt passed, stopped before the tests, or its
+        # artifact expired) means the full suite. A manual run can name any earlier run with rerun_failed_from_run.
+        id: rerun
+        if: github.run_attempt > 1 || inputs.rerun_failed_from_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.rerun_failed_from_run || github.run_id }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          artifact="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts" --paginate             --jq '.artifacts[] | select(.expired == false) | .name'             | grep -E "^test-reports-${PLATFORM}(-attempt-[0-9]+)?$" | sort -V | tail -n 1 || true)"
+          if [ -n "$artifact" ]; then
+            mkdir -p earlier
+            gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir earlier
+          fi
+          list="$(find earlier -name failed-tests.txt 2>/dev/null | head -n 1 || true)"
+          if [ -n "$list" ] && [ -s "$list" ]; then
+            cp "$list" "$GITHUB_WORKSPACE/rerun-tests.txt"
+            echo "file=$GITHUB_WORKSPACE/rerun-tests.txt" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Re-running only the $(grep -c . "$list") test(s) that did not pass in ${artifact}"
+              echo '```'
+              cat "$list"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### No list of failed tests found (${artifact:-no earlier report}): running the full suite" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Select the tests this pull request affects
         id: select
@@ -96,7 +135,7 @@ jobs:
           echo "has_tests=$([ -n "$selected" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -173,7 +212,7 @@ jobs:
           browserstackUserName=${{ secrets.BROWSERSTACK_USERNAME }}
           browserstackAccessKey=${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           browserstackProjectName=EEN Mobile Automation
-          browserstackBuildName=${{ github.event_name == 'schedule' && 'Daily Regression' || 'CI Build' }} ${{ github.run_number }}${{ matrix.platform == 'ios' && ' (iOS)' || '' }}
+          browserstackBuildName=${{ github.event_name == 'schedule' && 'Daily Regression' || 'CI Build' }} ${{ github.run_number }}${{ github.run_attempt > 1 && format(' attempt {0}', github.run_attempt) || '' }}${{ matrix.platform == 'ios' && ' (iOS)' || '' }}
           browserstackIdleTimeout=120
           # Debug logs, network logs and video are always on for a merge to main (the form input only exists on a manual
           # run). A manual run keeps them on by default and can turn them off. iOS network logs stay off, see below.
@@ -236,13 +275,19 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           BROWSERSTACK_APP_URL: ${{ matrix.platform == 'ios' && secrets.IOS_BROWSERSTACK_APP_URL || secrets.BROWSERSTACK_APP_URL }}
           BROWSERSTACK_BUILD_NUMBER: ${{ github.run_number }}
-        run: mvn test -Dplatform=${{ matrix.platform }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (github.event_name == 'pull_request' && 'testng-pr.xml' || (matrix.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml')) }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }}
+        run: mvn test -Dplatform=${{ matrix.platform }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (github.event_name == 'pull_request' && 'testng-pr.xml' || (matrix.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml')) }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }} ${{ steps.rerun.outputs.file && format('-DrerunTests={0}', steps.rerun.outputs.file) || '' }}
+
+      - name: Summarise test results
+        # Suite-by-suite table, the failed tests with their first error line and the ones that passed only on the
+        # retry, in the job summary; one error annotation per failed test. Never changes the result of the run.
+        if: always() && (github.event_name != 'pull_request' || steps.select.outputs.has_tests == 'true')
+        run: python3 scripts/test-summary.py
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
-          name: test-reports-${{ matrix.platform }}
+          name: test-reports-${{ matrix.platform }}${{ github.run_attempt > 1 && format('-attempt-{0}', github.run_attempt) || '' }}
           path: |
             target/surefire-reports/
             target/page-sources/
@@ -250,8 +295,8 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
-          name: maven-build-${{ matrix.platform }}
+          name: maven-build-${{ matrix.platform }}${{ github.run_attempt > 1 && format('-attempt-{0}', github.run_attempt) || '' }}
           path: target/
           if-no-files-found: warn
