@@ -46,8 +46,8 @@ public class VideoSearchPage {
     private static final DateTimeFormatter TIME_12_HOUR =
             DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH);
 
-    /** The test case says the event time never carries milliseconds. */
-    private static final Pattern EVENT_TIME_FORMAT = Pattern.compile("\\d{2}:\\d{2}:\\d{2}");
+    /** The test case says the event time never carries milliseconds. Accepts both 24-hour and 12-hour AM/PM formats. */
+    private static final Pattern EVENT_TIME_FORMAT = Pattern.compile("\\d{2}:\\d{2}:\\d{2}( (?i)[ap]m)?");
 
     /** Accepts both 24-hour (HH:mm:ss) and 12-hour (hh:mm:ss am/pm) formats. */
     private static LocalTime parseTime(String timeString) {
@@ -366,11 +366,11 @@ public class VideoSearchPage {
 
     private void verifyTimestampHasNoMilliseconds() {
         String timestamp = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
-        // Accept both 24-hour (HH:mm:ss) and 12-hour (hh:mm:ss am/pm) formats
+        // Accept both 24-hour (HH:mm:ss) and 12-hour (hh:mm:ss AM/PM or am/pm) formats
         boolean isValid = Pattern.matches("\\d{2}:\\d{2}:\\d{2}", timestamp) ||
-                Pattern.matches("\\d{2}:\\d{2}:\\d{2} [ap]m", timestamp);
+                Pattern.matches("(?i)\\d{2}:\\d{2}:\\d{2} [ap]m", timestamp);
         Assert.assertTrue(isValid,
-                "Timestamp should be HH:mm:ss or hh:mm:ss am/pm format without milliseconds but was '"
+                "Timestamp should be HH:mm:ss or hh:mm:ss AM/PM format without milliseconds but was '"
                         + timestamp + "'");
     }
 
