@@ -10,13 +10,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import locators.CamerasLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import utils.CameraCardPageSource;
 import utils.GestureUtils;
 import utils.PlatformLocator;
 import utils.WaitUtils;
@@ -49,13 +53,8 @@ public class CamerasPage {
     private static final List<String> CARD_STATUSES = Stream.concat(Arrays.stream(CAMERA_STATUSES),
             Stream.of(STATUS_UNKNOWN, STATUS_NO_PERMISSION)).toList();
 
-    /** The filter chips the test case and the app both have (the app's order and two names differ, see below). */
-    private static final List<String> EXPECTED_FILTER_CHIPS =
-            List.of("Bridges", "Layouts", "Tags", "Sites", "Multi-cameras");
-
-    /** What the test case lists, in its order, to log next to what the app shows. */
-    private static final List<String> TEST_CASE_FILTER_CHIPS = List.of(
-            "Device status", "Camera type", "Bridges", "Layouts", "Tags", "Sites", "Multi-cameras");
+    private static final List<String> FILTER_CHIPS = List.of(
+            "Connection", "Status", "Bridges", "Sites", "Layouts", "Tags", "Multi-cameras");
 
     /** The filter row holds 7 chips and about 5 fit on screen; one swipe reaches the end, more is headroom. */
     private static final int FILTER_ROW_MAX_SWIPES = 4;
@@ -67,6 +66,12 @@ public class CamerasPage {
     /** The menu shows the frame time in the account's time format: 12 hour with AM/PM, or 24 hour. */
     private static final List<DateTimeFormatter> FRAME_TIME_FORMATS = List.of(
             DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH), DateTimeFormatter.ofPattern("HH:mm:ss"));
+
+    private static final int TAG_ROW_MAX_SWIPES = 3;
+    private static final int NEXT_PAGE_MAX_SWIPES = 8;
+    private static final int BACK_SWIPES_PER_SWIPE_UP = 2;
+    private static final int BACK_SWIPES_SPARE = 2;
+    private static final Pattern LOADED_PAGES = Pattern.compile("(\\d+) pages?");
 
     private final AppiumDriver driver;
     private final CameraSearchFilter cameraSearchFilter;
@@ -428,7 +433,7 @@ public class CamerasPage {
     }
 
     /**
-     * Checks every card on screen (Android): a name, then one of the listed statuses. A card scrolled in only
+     * Checks every card on screen: a name, then one of the listed statuses. A card scrolled in only
      * halfway may not have its status yet, so cards with fewer than two texts are skipped, and at least one must
      * be checked. The preview image has no label to find, so it is not checked.
      */
@@ -447,11 +452,12 @@ public class CamerasPage {
 
     /**
      * Reads the filter chips from left to right, scrolling the row until no new chip shows up, and puts it back.
-     * The chips the test case and the app share must be there. The app's order differs from the test case, and its
-     * first two chips are "Connection" and "Status" where the test case says "Device status" and "Camera type";
-     * that is logged, not asserted, until the test case's author says which is right.
      */
-    public void verifyFilterChipsAndLogOrder() {
+    public void verifyFilterChipsInOrder() {
+        if (PlatformLocator.isIos()) {
+            assertChipsInOrder(WaitUtils.textsOf(driver, CamerasLocators.FILTER_CHIP_NAME));
+            return;
+        }
         List<String> chips = new ArrayList<>();
         int rowY = GestureUtils.getElementCenter(
                 WaitUtils.waitForVisibility(driver, CamerasLocators.FILTER_CHIP_NAME)).y;
@@ -482,18 +488,16 @@ public class CamerasPage {
         for (int i = 0; i < swipes; i++) {
             GestureUtils.swipeHorizontal(driver, rowY, FILTER_ROW_SWIPE_END, FILTER_ROW_SWIPE_START);
         }
-        Assert.assertTrue(chips.containsAll(EXPECTED_FILTER_CHIPS),
-                "Filter row should have the chips " + EXPECTED_FILTER_CHIPS + " but had " + chips);
-        logger.info("Filter chips shown by the app: {}; listed by the test case: {}", chips, TEST_CASE_FILTER_CHIPS);
+        assertChipsInOrder(chips);
     }
 
-    /** Whether some camera shows a tag (Android), scrolling down the list to look for one. */
+    /** Whether some camera shows a tag, scrolling down the list to look for one. */
     public boolean hasCameraWithTag() {
         GestureUtils.scrollToTop(driver);
         return scrollUntilElementIsVisible(CamerasLocators.FIRST_TAG);
     }
 
-    /** Taps the first tag on screen (Android) and returns its name. */
+    /** Taps the first tag on screen and returns its name. */
     public String tapFirstTag() {
         String tagName = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_TAG_NAME).getText().trim();
         WaitUtils.click(driver, CamerasLocators.FIRST_TAG);
@@ -532,10 +536,14 @@ public class CamerasPage {
     }
 
     /**
-     * The texts of each card on screen (Android): the name, the status, then the tags. A card scrolled in only
+     * The texts of each card on screen: the name, the status, then the tags. A card scrolled in only
      * halfway may not have its status yet; it has fewer than two texts and is left out.
      */
     private List<List<String>> visibleCardTexts() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_CAMERA_IN_LIST);
+            return CameraCardPageSource.visibleCards(WaitUtils.pageSource(driver));
+        }
         List<List<String>> cards = new ArrayList<>();
         for (WebElement card : WaitUtils.findElements(driver, CamerasLocators.CAMERA_CARD)) {
             List<String> texts = card.findElements(CamerasLocators.TEXTS_IN_CAMERA_CARD).stream()
@@ -554,12 +562,127 @@ public class CamerasPage {
         }
     }
 
-    /** Taps the 3-dots button of the first online camera (Android) and checks its menu. */
+    /** Taps the 3-dots button of the first online camera and checks its menu. */
     public void openMenuWithThreeDotsOfFirstOnlineCameraAndVerifyOptions() {
         verifyFirstOnlineCameraFound();
         WaitUtils.click(driver, CamerasLocators.THREE_DOTS_OF_FIRST_ONLINE_CAMERA);
         verifyContextMenuDisplayed();
         verifyAllContextMenuOptions(true);
+        if (PlatformLocator.isIos()) {
+            verifyTurnOffIsTheActiveEntry();
+        }
+    }
+
+    public void verifyTagRowScrolls() {
+        if (!PlatformLocator.isIos()) {
+            logger.info("Scrolling a card's tags is automated on iOS only");
+            return;
+        }
+        int screenWidth = driver.manage().window().getSize().width;
+        if (!WaitUtils.isVisible(driver, CamerasLocators.TAG_ROWS, TimeoutConstants.SHORT_TIMEOUT)) {
+            logger.info("No card on screen shows tags; scrolling the tags was not checked");
+            return;
+        }
+        for (WebElement row : WaitUtils.findElements(driver, CamerasLocators.TAG_ROWS)) {
+            if (rightEdgeOfLastTag(row) > screenWidth) {
+                scrollTagRowToEndAndBack(row, screenWidth);
+                return;
+            }
+        }
+        logger.info("No card on screen has tags beyond the screen edge; scrolling the tags was not checked");
+    }
+
+    public void verifyNextPageLoadsOnScroll() {
+        if (!PlatformLocator.isIos()) {
+            logger.info("Loading the next page of cameras is automated on iOS only");
+            return;
+        }
+        List<List<String>> cards = visibleCardTexts();
+        Assert.assertFalse(cards.isEmpty(), "A camera card should be on screen before scrolling for the next page");
+        String firstCamera = cards.get(0).get(0);
+        int pagesBefore = loadedPages();
+        int swipes = 0;
+        while (loadedPages() <= pagesBefore && swipes < NEXT_PAGE_MAX_SWIPES) {
+            GestureUtils.swipeUp(driver);
+            swipes++;
+        }
+        WaitUtils.pollUntil(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT, () -> loadedPages() > pagesBefore);
+        int pagesAfter = loadedPages();
+        Assert.assertTrue(pagesAfter > pagesBefore, "Scrolling down should load the next page of cameras, making the "
+                + "list taller than " + pagesBefore + " screens, but it was " + pagesAfter + " after " + swipes
+                + " swipes");
+        By firstCameraCard = CamerasLocators.cameraCardWithName(firstCamera);
+        int backSwipes = 0;
+        while (backSwipes < swipes * BACK_SWIPES_PER_SWIPE_UP + BACK_SWIPES_SPARE
+                && !WaitUtils.isVisible(driver, firstCameraCard, TimeoutConstants.SHORT_TIMEOUT)) {
+            GestureUtils.swipeDownInList(driver);
+            backSwipes++;
+        }
+        WaitUtils.assertVisible(driver, firstCameraCard, TimeoutConstants.SHORT_TIMEOUT,
+                "The list should be back at its first camera '" + firstCamera + "' after loading the next page");
+        logger.info("The list grew from {} to {} screens after {} swipe(s)", pagesBefore, pagesAfter, swipes);
+    }
+
+    private int loadedPages() {
+        String name = WaitUtils.attributeOfPresent(driver, CamerasLocators.LIST_SCROLL_BAR, "name",
+                TimeoutConstants.SHORT_TIMEOUT);
+        Matcher pages = LOADED_PAGES.matcher(name);
+        Assert.assertTrue(pages.find(),
+                "The list's scroll bar should state its height in pages but was '" + name + "'");
+        return Integer.parseInt(pages.group(1));
+    }
+
+    private void scrollTagRowToEndAndBack(WebElement row, int screenWidth) {
+        Rectangle rowBounds = row.getRect();
+        int rowY = rowBounds.y + rowBounds.height / 2;
+        List<WebElement> tags = row.findElements(CamerasLocators.TAGS_IN_ROW);
+        String lastTag = tags.get(tags.size() - 1).getText().trim();
+        int swipes = 0;
+        boolean lastTagShown = false;
+        while (!lastTagShown && swipes < TAG_ROW_MAX_SWIPES) {
+            GestureUtils.swipeHorizontal(driver, rowY, FILTER_ROW_SWIPE_START, FILTER_ROW_SWIPE_END);
+            swipes++;
+            lastTagShown = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
+                    () -> rightEdgeOfLastTag(row) <= screenWidth);
+        }
+        Assert.assertTrue(lastTagShown, "The last tag '" + lastTag + "' of the card should scroll into view within "
+                + TAG_ROW_MAX_SWIPES + " swipes of its tag row");
+        for (int i = 0; i < swipes; i++) {
+            GestureUtils.swipeHorizontal(driver, rowY, FILTER_ROW_SWIPE_END, FILTER_ROW_SWIPE_START);
+        }
+        Assert.assertTrue(WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
+            List<WebElement> rowTags = row.findElements(CamerasLocators.TAGS_IN_ROW);
+            return !rowTags.isEmpty() && rowTags.get(0).getRect().x >= 0;
+        }),
+                "The tag row should be back at its first tag after swiping it back");
+        logger.info("Scrolled the tag row to its last tag '{}' in {} swipe(s) and back", lastTag, swipes);
+    }
+
+    private int rightEdgeOfLastTag(WebElement row) {
+        return WaitUtils.retryOnStale(() -> {
+            List<WebElement> tags = row.findElements(CamerasLocators.TAGS_IN_ROW);
+            if (tags.isEmpty()) {
+                return -1;
+            }
+            Rectangle bounds = tags.get(tags.size() - 1).getRect();
+            return bounds.x + bounds.width;
+        });
+    }
+
+    private void verifyTurnOffIsTheActiveEntry() {
+        WaitUtils.assertVisible(driver, CamerasLocators.TURN_OFF_CAMERA_OPTION,
+                "'Turn off camera' should be listed in the menu of an online camera");
+        WaitUtils.assertVisible(driver, CamerasLocators.TURN_ON_CAMERA_OPTION,
+                "'Turn on camera' should be listed, greyed out, in the menu of an online camera");
+        Assert.assertTrue(WaitUtils.waitForVisibility(driver, CamerasLocators.TURN_OFF_CAMERA_OPTION).isEnabled(),
+                "'Turn off camera' should be active in the menu of an online camera");
+        Assert.assertFalse(WaitUtils.waitForVisibility(driver, CamerasLocators.TURN_ON_CAMERA_OPTION).isEnabled(),
+                "'Turn on camera' should be greyed out in the menu of an online camera");
+    }
+
+    private void assertChipsInOrder(List<String> chips) {
+        Assert.assertEquals(chips, FILTER_CHIPS,
+                "Filter row should show the chips " + FILTER_CHIPS + " in that order but showed " + chips);
     }
 
 }

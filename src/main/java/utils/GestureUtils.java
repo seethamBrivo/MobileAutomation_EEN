@@ -267,4 +267,12 @@ public final class GestureUtils {
         Dimension size = element.getSize();
         return new Point(location.x + (size.width / 2), location.y + (size.height / 2));
     }
+
+    public static void swipeDownInList(AppiumDriver driver) {
+        Dimension size = driver.manage().window().getSize();
+        int centerX = size.width / 2;
+        int startY = (int) (size.height * GestureConstants.LIST_SWIPE_DOWN_START_PERCENT);
+        int endY = (int) (size.height * GestureConstants.LIST_SWIPE_DOWN_END_PERCENT);
+        swipe(driver, centerX, startY, centerX, endY);
+    }
 }

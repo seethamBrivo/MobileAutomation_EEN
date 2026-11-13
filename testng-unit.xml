@@ -8,6 +8,7 @@
             <class name="listeners.RetryTransformerTest"/>
             <class name="utils.XPathUtilsTest"/>
             <class name="utils.EventFilterPageSourceTest"/>
+            <class name="utils.CameraCardPageSourceTest"/>
             <class name="utils.BrowserStackStatusTest"/>
             <class name="base.SessionScopeTest"/>
             <class name="base.AuthSessionTest"/>

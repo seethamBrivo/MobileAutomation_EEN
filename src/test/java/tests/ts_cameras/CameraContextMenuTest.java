@@ -39,14 +39,13 @@ public class CameraContextMenuTest extends BaseTest {
     }
 
     /**
-     * Android only. Not automated: "status updates in real time (SSE)" (step 4), scrolling a card's tags (step 6, needs
-     * a camera with more tags than fit), the next page and its loading indicator (step 7, the account's cameras all
-     * load at once) and the logout (step 10, done at suite level). Needs an online camera on the TS02 account, and a
-     * camera with a tag for step 9: without one the test skips there, after steps 2 to 8 have run. The tag filter
-     * check covers the cards on screen, not the whole list.
+     * Not automated: "status updates in real time (SSE)", the preview image and the optional icons (step 4), the
+     * loading indicator of the next page (step 7) and the logout (step 10, done at suite level). Needs an online
+     * camera on the TS02 account, and a camera with a tag for step 9: without one the test skips there, after steps
+     * 2 to 8 have run. The tag filter check covers the cards on screen, not the whole list.
      */
     @Test(description = "EEPD-TC-20846: POS-Cameras - Display list of cameras under Cameras item in Dashboard in "
-            + "mobile VMS app", groups = {"regression", "cameras"})
+            + "mobile VMS app", groups = {"regression", "cameras", "ios"})
     public void verifyCamerasListContent() {
         // Step 2: Dashboard via the More menu: All devices lists Bridges, Cameras, Speakers and Switches
         devicesPage.verifyDashboardTabsDisplayed(DashboardTab.BRIDGES, DashboardTab.CAMERAS,
@@ -58,7 +57,11 @@ public class CameraContextMenuTest extends BaseTest {
         camerasPage.verifyCounterShowsCameraCount(camerasOnDashboard);
         camerasPage.verifyVisibleCameraCardsShowNameAndStatus();
         // Step 5: the filter chips
-        camerasPage.verifyFilterChipsAndLogOrder();
+        camerasPage.verifyFilterChipsInOrder();
+        // Step 6: the tags of a card scroll sideways
+        camerasPage.verifyTagRowScrolls();
+        // Step 7: scrolling down loads the next page of cameras
+        camerasPage.verifyNextPageLoadsOnScroll();
         // Step 8: the 3-dots button of a camera opens its menu (closed by cleanup)
         camerasPage.openMenuWithThreeDotsOfFirstOnlineCameraAndVerifyOptions();
         camerasPage.dismissContextMenu();
@@ -78,7 +81,7 @@ public class CameraContextMenuTest extends BaseTest {
     @AfterMethod(alwaysRun = true)
     public void tearDown(ITestResult testResult) {
         try {
-            if (driver != null) {
+            if (driver != null && camerasPage != null) {
                 camerasPage.dismissContextMenu();
             }
         } catch (Throwable t) {
