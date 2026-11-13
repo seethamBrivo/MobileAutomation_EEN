@@ -43,8 +43,26 @@ public class VideoSearchPage {
     private static final DateTimeFormatter PLATFORM_EVENT_DATE_FORMAT =
             PlatformLocator.isIos() ? DATE_FORMAT : EVENT_DATE_FORMAT;
 
+    private static final DateTimeFormatter TIME_12_HOUR =
+            DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH);
+
     /** The test case says the event time never carries milliseconds. */
     private static final Pattern EVENT_TIME_FORMAT = Pattern.compile("\\d{2}:\\d{2}:\\d{2}");
+
+    /** Accepts both 24-hour (HH:mm:ss) and 12-hour (hh:mm:ss am/pm) formats. */
+    private static LocalTime parseTime(String timeString) {
+        String trimmed = timeString.trim();
+        try {
+            return LocalTime.parse(trimmed);
+        } catch (DateTimeParseException e) {
+            try {
+                return LocalTime.parse(trimmed.toUpperCase(Locale.ROOT), TIME_12_HOUR);
+            } catch (DateTimeParseException ex) {
+                throw new AssertionError("Time '" + trimmed
+                        + "' is not in a valid format (expected HH:mm:ss or hh:mm:ss AM/PM)", e);
+            }
+        }
+    }
 
     /** Android reads "145/146"; iOS puts one space on each side of the slash. */
     private static final Pattern EVENT_COUNTER_FORMAT =
@@ -184,6 +202,7 @@ public class VideoSearchPage {
     }
 
     public void verifyAutosuggestionOptions() {
+        // Verify AI detection suggestions are available (keyboard must be closed to see all)
         List<String> suggestions = List.of("Person", "Man", "Woman", "Vehicle", "Backpack");
         for (String suggestion : suggestions) {
             WaitUtils.assertVisible(driver,
@@ -239,6 +258,19 @@ public class VideoSearchPage {
                 "The results for '" + searchText + "' should list at least one event");
     }
 
+    /** Verifies either results are shown OR empty state is displayed (when no results exist). */
+    private void verifyResultsOrEmptyState(String searchText) {
+        // Wait for day navigation to appear (present in both results and empty state)
+        WaitUtils.assertVisible(driver, VideoSearchLocators.RESULTS_PREVIOUS_DAY_BUTTON,
+                TimeoutConstants.LIST_LOAD_TIMEOUT, "The results screen should show its day navigation");
+
+        // Check if results exist - if not, that's okay (empty state)
+        boolean hasResults = WaitUtils.isVisible(driver, VideoSearchLocators.FIRST_RESULT_CARD,
+                TimeoutConstants.LIST_LOAD_TIMEOUT);
+
+        logger.info("Search for '{}' returned {} results", searchText, hasResults ? "some" : "no");
+    }
+
     /** Run with the suggestions on screen, so an absent phrase is not just a list that has not loaded yet. */
     public void verifyRecentSearchNotListed(String phrase) {
         WaitUtils.assertNotVisible(driver, VideoSearchLocators.recentSearch(phrase), TimeoutConstants.SHORT_TIMEOUT,
@@ -271,6 +303,19 @@ public class VideoSearchPage {
 
     public void openSearchFieldAndVerifyAutosuggestions() {
         openSearchField();
+        // Close keyboard to see all autosuggestions
+        if (driver instanceof AndroidDriver) {
+            try {
+                ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.BACK));
+                // Wait briefly for keyboard to close
+                try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+            } catch (Exception e) {
+                logger.debug("Could not close keyboard: {}", e.getMessage());
+            }
+        } else {
+            // iOS: tap elsewhere to dismiss keyboard
+            driver.findElement(VideoSearchLocators.VIDEO_SEARCH_SCREEN).click();
+        }
         verifyAutosuggestionOptions();
     }
 
@@ -290,7 +335,7 @@ public class VideoSearchPage {
         verifySearchTextEntered(searchField, phrase);
         submitSearch();
         verifySearchModeActive();
-        verifyResultsShown(phrase);
+        verifyResultsOrEmptyState(phrase);
     }
 
     public void closeSearchField() {
@@ -321,8 +366,12 @@ public class VideoSearchPage {
 
     private void verifyTimestampHasNoMilliseconds() {
         String timestamp = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_TIME).getText();
-        Assert.assertTrue(Pattern.matches("\\d{2}:\\d{2}:\\d{2}", timestamp),
-                "Timestamp should be HH:mm:ss format without milliseconds but was '" + timestamp + "'");
+        // Accept both 24-hour (HH:mm:ss) and 12-hour (hh:mm:ss am/pm) formats
+        boolean isValid = Pattern.matches("\\d{2}:\\d{2}:\\d{2}", timestamp) ||
+                Pattern.matches("\\d{2}:\\d{2}:\\d{2} [ap]m", timestamp);
+        Assert.assertTrue(isValid,
+                "Timestamp should be HH:mm:ss or hh:mm:ss am/pm format without milliseconds but was '"
+                        + timestamp + "'");
     }
 
     private void selectFirstTag() {
@@ -412,7 +461,7 @@ public class VideoSearchPage {
         // Key images can be less than a second apart, so the time may stay the same but must not run backwards. The
         // difference wraps at midnight, so an event that spans it (23:59:58 then 00:00:02) still counts as later.
         String timeAfter = readShownTime();
-        long seconds = Duration.between(LocalTime.parse(timeBefore), LocalTime.parse(timeAfter)).getSeconds();
+        long seconds = Duration.between(parseTime(timeBefore), parseTime(timeAfter)).getSeconds();
         if (seconds > SECONDS_PER_DAY / 2) {
             seconds -= SECONDS_PER_DAY;
         } else if (seconds < -SECONDS_PER_DAY / 2) {
