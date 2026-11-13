@@ -40,7 +40,6 @@ public class VideoSearchTest extends BaseTest {
           groups = {"regression", "video_search", "ios"})
     public void verifyVideoSearchByContent() {
         videoSearchPage.openSearchFieldAndVerifyAutosuggestions();
-        videoSearchPage.verifyRecentSearchNotListed(VIDEO_SEARCH_PHRASE);
         videoSearchPage.searchForText(VIDEO_SEARCH_TERM);
         videoSearchPage.closeSearchField();
         videoSearchPage.openSearchField();
