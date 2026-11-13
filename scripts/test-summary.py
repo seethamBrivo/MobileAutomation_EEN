@@ -15,16 +15,17 @@ Per <test> block of the suite (the suite-wise view): passed / failed / skipped, 
 retry (flaky), and the time. Below it: failed setup methods, every failed test with its first error line, and the
 flaky ones. Setup and teardown methods are not tests: they are listed apart and not counted in the totals.
 
-A retried attempt is reported by TestNG as SKIP and the attempt that follows as PASS or FAIL, so a FAIL entry is
-always a final result. Nothing here relies on the order of the entries in the file.
+A retried attempt is reported by TestNG as a SKIP with retried="true" and the attempt that follows as PASS or FAIL, so
+a FAIL entry is always a final result. Nothing here relies on the order of the entries in the file.
 
 It also writes failed-tests.txt next to the results file: one "package.Class#method" per test that did not pass.
 The next attempt of a failed CI job passes that file to "mvn test -DrerunTests=<file>" (listeners.RerunFailedTestsFilter)
-so only those tests run again. No file is written when everything passed, so a later re-run is a full run.
+so only those tests run again. The file is empty when everything passed (a later re-run is then a full run) and absent
+when the attempt never reached this step (cancelled, timed out): the next attempt then uses the attempt before it.
 
-A skipped test is listed only when its class had a failed setup method (@BeforeClass, @BeforeMethod) or it was
-cut short by a failure: that skip is a consequence. A skip a test chose itself (SkipException: missing test data)
-would only skip again.
+A skipped test is listed unless it skipped itself (SkipException: missing test data), which would only skip again:
+a skip caused by a failed setup or teardown method means the test never ran. Every test of a class with a failed
+setup or teardown method is listed too, also when none was skipped (a failing @AfterClass, say): the class failed.
 """
 import os
 import re
@@ -107,6 +108,7 @@ def read_blocks(path):
                     "method": method.get("name", "?"),
                     "config": method.get("is-config") == "true",
                     "status": method.get("status", ""),
+                    "retried": method.get("retried") == "true",
                     "params": params_of(method),
                     "exception": exception_class,
                     "message": first_line(message.text if message is not None else "") or exception_class,
@@ -118,9 +120,11 @@ def read_blocks(path):
 def judge(block):
     """Reads one <test> block into: failed setup methods, one result per test, and the tests to run again.
 
-    Per test (class, method, data-provider row): FAIL entries are final results; a SKIP that is not a SkipException is
-    an attempt that was retried. So the order of the entries does not matter, and a test that runs several times
-    (invocationCount) with one failure is reported as failed, not as a retry that passed."""
+    Per test (class, method, data-provider row), using what TestNG writes (checked against a real run): an attempt that
+    is retried is a SKIP with retried="true"; a SKIP caused by a failed @Before/@After method carries that method's
+    exception; a SkipException is the test skipping itself; a FAIL is always a final result. So the order of the
+    entries does not matter, and a test that runs several times (invocationCount) with one failure is reported as
+    failed, not as a retry that passed. A class with a failed setup or teardown method is listed as a whole."""
     setup_failures = {}
     config_failed_classes = set()
     groups = {}
@@ -137,10 +141,9 @@ def judge(block):
     for (cls, method, _params), entries in groups.items():
         fails = [e for e in entries if e["status"] == "FAIL"]
         passes = [e for e in entries if e["status"] == "PASS"]
-        # A SKIP in a class whose setup failed was skipped by that failure; it is not an attempt that was retried.
-        retried = [e for e in entries
-                   if e["status"] == "SKIP" and e["exception"] != OWN_SKIP and cls not in config_failed_classes]
-        own_skips = [e for e in entries if e["status"] == "SKIP" and e["exception"] == OWN_SKIP]
+        skips = [e for e in entries if e["status"] == "SKIP"]
+        retried = [e for e in skips if e["retried"]]
+        own_skips = [e for e in skips if not e["retried"] and e["exception"] == OWN_SKIP]
         name = f"{cls}.{method}"
         if fails or passes:
             flaky = min(len(passes), max(0, len(retried) - len(fails)))
@@ -153,8 +156,11 @@ def judge(block):
                 rerun.add(f"{cls}#{method}")
         else:
             results.append({"kind": "skipped", "name": name})
-            if cls in config_failed_classes or retried or not own_skips:
+            if len(own_skips) < len(skips):  # something other than the test's own SkipException kept it from running
                 rerun.add(f"{cls}#{method}")
+    # A failed setup or teardown method is a failure of its class even when it skipped no test (a driver that would
+    # not quit after the last test): the next attempt runs the class again, or the fault would go unnoticed.
+    rerun |= {f"{cls}#{method}" for (cls, method, _params) in groups if cls in config_failed_classes}
     return setup_failures, results, rerun
 
 
@@ -181,15 +187,16 @@ def check_rerun(list_file, blocks):
 def keep_rerun_list(rerun_list, folder):
     """A re-run that did not run what it was asked to run gives no verdict on those tests: hand the same list to the
     next attempt, so it neither runs the full suite nor loses what failed."""
+    # The folder does not exist when the run died before the first test (an Appium or BrowserStack setup error).
+    Path(folder).mkdir(parents=True, exist_ok=True)
     shutil.copyfile(rerun_list, Path(folder) / RERUN_FILE)
 
 
 def write_rerun_list(results_path, tests):
+    """An empty file means "this attempt finished and nothing failed"; no file means it never got this far (cancelled,
+    timed out), and the next attempt then looks at the attempt before it."""
     target = results_path.parent / RERUN_FILE
-    if tests:
-        target.write_text("\n".join(sorted(tests)) + "\n", encoding="utf-8")
-    elif target.exists():
-        target.unlink()  # a stale list must not outlive a green run
+    target.write_text("".join(f"{test}\n" for test in sorted(tests)), encoding="utf-8")
 
 
 def main():
@@ -283,7 +290,7 @@ def main():
     else:
         write_rerun_list(readable[0], to_rerun)
 
-    annotations = [(suite, f"{name}: setup failed {times}x: {clip(message)}") for suite, name, times, message in setup]
+    annotations = [(suite, f"{name}: setup or teardown failed {times}x: {clip(message)}") for suite, name, times, message in setup]
     annotations += [(suite, f"{name}: {clip(message)}") for suite, name, message, _retried in failed]
     for suite, text in annotations[:MAX_ANNOTATIONS]:
         print(f"::error title={escape_property(suite)}::{escape_annotation(text)}")

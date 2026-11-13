@@ -1,8 +1,8 @@
 package listeners;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertThrows;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.testng.TestNG;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -82,7 +83,7 @@ public class RerunFailedTestsFilterTest {
         return run(rerunFile, testng -> testng.setTestClasses(classes));
     }
 
-    private static List<String> run(String rerunFile, java.util.function.Consumer<TestNG> setUp) {
+    private static List<String> run(String rerunFile, Consumer<TestNG> setUp) {
         RAN.clear();
         String before = System.getProperty(RerunFailedTestsFilter.PROPERTY);
         try {
@@ -148,7 +149,24 @@ public class RerunFailedTestsFilterTest {
     }
 
     @Test
-    public void theClassNameTheFilterUsesIsTheOneTestNgWritesToTheResultsFile() throws Exception {
+    public void aListedTestBringsItsDependsOnMethodsAlong() throws IOException {
+        List<String> ran = runWith(listOf(name(DependsOnMethodFixture.class) + "#second"), DependsOnMethodFixture.class);
+
+        assertEquals(ran, List.of("DependsOnMethod.first", "DependsOnMethod.second"),
+                "The listed test and the method it depends on should run, and nothing else");
+    }
+
+    @Test
+    public void aListedTestBringsItsDependsOnGroupsAlong() throws IOException {
+        List<String> ran = runWith(listOf(name(DependsOnGroupFixture.class) + "#verify"), DependsOnGroupFixture.class);
+
+        assertEquals(ran, List.of("DependsOnGroup.prepare", "DependsOnGroup.verify"),
+                "The listed test and the group it depends on should run, and nothing else");
+    }
+
+    /** Only checks what TestNG writes; the inherited-test test above is the one that guards the filter's key. */
+    @Test
+    public void testNgWritesTheClassThatRunsToTheResultsFile() throws Exception {
         Path reports = Files.createTempDirectory("rerun-reports");
         run(null, testng -> {
             testng.setTestClasses(new Class[] {ChildOne.class});
@@ -190,17 +208,38 @@ public class RerunFailedTestsFilterTest {
     }
 
     @Test
-    public void aMissingListFailsInsteadOfRunningEverything() {
-        assertThrows(UncheckedIOException.class,
-                () -> RerunFailedTestsFilter.readListedTests(Path.of("no-such-dir", "no-such-file.txt")));
+    public void aListThatIsRewrittenIsReadAgain() throws IOException {
+        Path file = Files.createTempFile("rerun-tests", ".txt");
+        file.toFile().deleteOnExit();
+        Files.write(file, List.of("a.B#one"));
+        assertEquals(RerunFailedTestsFilter.listedTestsOf(file.toString()), Set.of("a.B#one"), "First content");
+
+        Files.write(file, List.of("a.B#two"));
+        file.toFile().setLastModified(file.toFile().lastModified() + 5000);
+
+        assertEquals(RerunFailedTestsFilter.listedTestsOf(file.toString()), Set.of("a.B#two"),
+                "A rewritten list should not be served from the cache");
     }
 
     @Test
-    public void anEmptyListFailsInsteadOfRunningNothing() throws IOException {
+    public void aMissingListFileIsRejectedWhenItIsRead() {
+        UncheckedIOException rejected = expectThrows(UncheckedIOException.class,
+                () -> RerunFailedTestsFilter.readListedTests(Path.of("no-such-dir", "no-such-file.txt")));
+
+        assertTrue(rejected.getMessage().contains("cannot be read"),
+                "A wrong path should say the file cannot be read, but said: " + rejected.getMessage());
+    }
+
+    @Test
+    public void anEmptyListFileIsRejectedWhenItIsRead() throws IOException {
         Path file = Files.createTempFile("rerun-tests", ".txt");
         file.toFile().deleteOnExit();
         Files.write(file, List.of("// nothing failed", ""));
 
-        assertThrows(IllegalStateException.class, () -> RerunFailedTestsFilter.readListedTests(file));
+        IllegalStateException rejected = expectThrows(IllegalStateException.class,
+                () -> RerunFailedTestsFilter.readListedTests(file));
+
+        assertTrue(rejected.getMessage().contains("lists no tests"),
+                "An empty list should say it lists no tests, but said: " + rejected.getMessage());
     }
 }

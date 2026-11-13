@@ -32,7 +32,7 @@ on:
         options: [class, method]
         default: class
       rerun_failed_from_run:
-        description: 'Run only the tests that did not pass in an earlier run: its run id (the number in the run URL; its newest attempt counts). The normal suite of the platform is used, filtered to those tests, so the same classes still never overlap. Needs the platform chosen above to match that run. "Re-run failed jobs" on GitHub does this by itself for the earlier attempt of the same run'
+        description: 'Run only the tests that did not pass in an earlier run: its run id (the number in the run URL; its newest attempt counts). The normal suite of the platform is used, filtered to those tests. The platform chosen above must match that run; the job fails when there is nothing to re-run. "Re-run failed jobs" and "Re-run all jobs" do the same by themselves for the earlier attempt of the same run; a full regression is a new run without this input'
         type: string
         default: ''
       diagnostics:
@@ -40,9 +40,13 @@ on:
         type: boolean
         default: true
 
+# Least privilege, audited step by step: checkout needs contents: read; the step that picks the failed tests of an earlier
+# attempt is the only one that uses the token (gh api / gh run download: actions: read); every other step uses the
+# BrowserStack and test-account secrets, or the artifact service's own credential, and none writes to the repository,
+# the pull request or the checks. A new step that needs more (a PR comment, a check) must add its scope here.
 permissions:
   contents: read
-  actions: read  # rerun_failed_from_run downloads the test reports of an earlier run
+  actions: read
 
 # The suite uses 2 BrowserStack sessions and shared test accounts/bridges, so two CI runs must never overlap.
 # A later push waits for the running one instead of cancelling it half-way through its tests.
@@ -88,47 +92,81 @@ jobs:
           esac
 
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # the PR's diff against the base branch is needed to pick the tests
 
       - name: Pick the failed tests of the earlier attempt
-        # "Re-run failed jobs" starts a new attempt of the same run. The earlier attempt uploaded failed-tests.txt with
-        # its report (scripts/test-summary.py); this attempt runs only those tests, in the normal suite layout
-        # (listeners.RerunFailedTestsFilter). No list (the earlier attempt passed, stopped before the tests, or its
-        # artifact expired) means the full suite. A manual run can name any earlier run with rerun_failed_from_run.
+        # "Re-run failed jobs" and "Re-run all jobs" both start a new attempt of the same run, and in both a platform
+        # whose earlier attempt left failed tests runs only those tests (a job cannot tell which button was pressed). A
+        # platform whose earlier attempt was green, or that has no report, runs the full suite; so does a new run
+        # ("Run workflow" without the input, or a push). The earlier attempt uploaded failed-tests.txt with its report
+        # (scripts/test-summary.py); the tests run in the normal suite layout (listeners.RerunFailedTestsFilter).
+        # A manual run can name any earlier run with rerun_failed_from_run: on its first attempt it must find something
+        # to re-run, otherwise it fails instead of quietly running everything.
         id: rerun
         if: github.run_attempt > 1 || inputs.rerun_failed_from_run != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          SOURCE_RUN: ${{ inputs.rerun_failed_from_run || github.run_id }}
+          INPUT_RUN: ${{ inputs.rerun_failed_from_run }}
           PLATFORM: ${{ matrix.platform }}
         run: |
           # An API error (no permission, rate limit, a wrong run id) must stop the job, not turn into a full-suite run:
-          # only "no report found" falls back to the full suite.
-          names="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts" --paginate \
-            --jq '.artifacts[] | select(.expired == false) | .name')"
-          artifact="$(printf '%s\n' "$names" | grep -E "^test-reports-${PLATFORM}(-attempt-[0-9]+)?$" | sort -V | tail -n 1 || true)"
-          if [ -n "$artifact" ]; then
-            mkdir -p earlier
-            gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir earlier
+          # a plain assignment under "bash -e" aborts the step when the command fails.
+          notes="$RUNNER_TEMP/rerun-notes.txt"
+          : > "$notes"
+          artifact=""
+          list=""
+          # Sets artifact and list from the newest attempt of run $1 that has a failed-tests.txt: empty when that attempt
+          # finished with no failures, absent when it never got as far as its summary (cancelled, timed out): then the
+          # attempt before it decides.
+          find_list() {
+            artifact=""
+            list=""
+            names="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$1/artifacts" --paginate \
+              --jq '.artifacts[] | select(.expired == false) | .name')"
+            candidates="$(printf '%s\n' "$names" | grep -E "^test-reports-${PLATFORM}(-attempt-[0-9]+)?$" | sort -V -r || true)"
+            for candidate in $candidates; do
+              rm -rf earlier
+              mkdir -p earlier
+              gh run download "$1" --repo "$GITHUB_REPOSITORY" --name "$candidate" --dir earlier
+              found="$(find earlier -name failed-tests.txt | head -n 1 || true)"
+              if [ -n "$found" ]; then
+                artifact="$candidate"
+                list="$found"
+                return 0
+              fi
+              echo "- ${candidate} (run $1) has no failed-tests list (that attempt did not reach its summary): using the attempt before it" >> "$notes"
+            done
+          }
+          # The attempt before this one, in this same run, first; the run named in the input only when that gives nothing
+          # (also on attempt 2 of a manual run whose first attempt failed on a bad run id).
+          if [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then
+            find_list "$GITHUB_RUN_ID"
           fi
-          list="$(find earlier -name failed-tests.txt 2>/dev/null | head -n 1 || true)"
-          if [ -n "$list" ] && [ -s "$list" ]; then
-            cp "$list" "$GITHUB_WORKSPACE/rerun-tests.txt"
-            echo "file=$GITHUB_WORKSPACE/rerun-tests.txt" >> "$GITHUB_OUTPUT"
-            {
+          if [ -z "$list" ] && [ -n "$INPUT_RUN" ]; then
+            find_list "$INPUT_RUN"
+          fi
+          if [ -n "$INPUT_RUN" ] && [ "$GITHUB_RUN_ATTEMPT" -eq 1 ] && { [ -z "$list" ] || [ ! -s "$list" ]; }; then
+            echo "::error::Nothing to re-run from run ${INPUT_RUN} on ${PLATFORM}: that run has no failed tests for this platform, was for the other platform, its report expired, or no attempt reached its summary."
+            exit 1
+          fi
+          {
+            if [ -n "$list" ] && [ -s "$list" ]; then
               echo "### Re-running only the $(grep -c . "$list") test(s) that did not pass in ${artifact}"
               echo '```'
               cat "$list"
               echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            if [ -n "$artifact" ]; then
-              echo "### The earlier attempt (${artifact}) had no failed tests: running the full suite" >> "$GITHUB_STEP_SUMMARY"
+            elif [ -n "$list" ]; then
+              echo "### The earlier attempt (${artifact}) had no failed tests: running the full suite"
             else
-              echo "### No report of an earlier attempt found (expired, or none was uploaded): running the full suite" >> "$GITHUB_STEP_SUMMARY"
+              echo "### No usable report of an earlier attempt found (expired, or none got as far as its summary): running the full suite"
             fi
+            cat "$notes"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$list" ] && [ -s "$list" ]; then
+            cp "$list" "$GITHUB_WORKSPACE/rerun-tests.txt"
+            echo "file=$GITHUB_WORKSPACE/rerun-tests.txt" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Select the tests this pull request affects
@@ -143,7 +181,7 @@ jobs:
           echo "has_tests=$([ -n "$selected" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
@@ -297,7 +335,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports-${{ matrix.platform }}${{ github.run_attempt > 1 && format('-attempt-{0}', github.run_attempt) || '' }}
           path: |
@@ -307,7 +345,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: maven-build-${{ matrix.platform }}${{ github.run_attempt > 1 && format('-attempt-{0}', github.run_attempt) || '' }}
           path: target/
