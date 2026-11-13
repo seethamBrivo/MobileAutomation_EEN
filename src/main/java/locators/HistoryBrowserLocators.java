@@ -21,12 +21,13 @@ public final class HistoryBrowserLocators {
 
     private static final String IOS_TIMELINE_TEXTS = "//XCUIElementTypeScrollView//XCUIElementTypeStaticText";
 
-    // The timeline labels are read as 24-hour times (see HistoryBrowserPage.parseTimeLabel).
-    // iOS uses "HH:mm:ss" (8 chars 24-hour) or "hh:mm:ss a" (11 chars 12-hour) for ruler row labels,
+    // iOS uses "HH:mm:ss" (8 chars 24-hour) or "hh:mm:ss am" (11 chars 12-hour) for ruler row labels,
     // and "yyyy-MM-dd HH:mm:ss" (19 chars) for event card times.
-    // They are told apart by length and context (row vs event card location).
+    // They are told apart by length and shape (colon at position 3).
     // TODO: replace with accessibility identifiers once the iOS app has them.
-    private static final String IOS_ROW_TIME_NAME = "(string-length(@name)=8 or string-length(@name)=11)";
+    private static final String IOS_ROW_TIME_NAME =
+            "(string-length(@name)=8 and substring(@name,3,1)=':') or "
+            + "(string-length(@name)=11 and substring(@name,3,1)=':')";
 
     private static final String IOS_DATE_TIME_NAME = "string-length(@name)=19 and substring(@name,5,1)='-'";
 

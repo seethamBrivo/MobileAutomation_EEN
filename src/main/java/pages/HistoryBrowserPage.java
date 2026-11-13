@@ -556,24 +556,25 @@ public class HistoryBrowserPage {
     /** Accepts the 24-hour, 12-hour, and full datetime formats. */
     private static LocalTime parseTimeLabel(String label) {
         String trimmed = label.trim();
-        // Try full datetime format first (19 chars: "yyyy-MM-dd HH:mm:ss")
         if (trimmed.length() == 19 && trimmed.charAt(4) == '-') {
             try {
                 return LocalDateTime.parse(trimmed, CURSOR_POSITION_FORMAT).toLocalTime();
             } catch (DateTimeParseException e) {
-                // Fall through to other formats
+                // Fall through
             }
         }
-        // Try 24-hour time format (8 chars: "HH:mm:ss")
         try {
             return LocalTime.parse(trimmed);
         } catch (DateTimeParseException twentyFourHourFailure) {
-            // Try 12-hour time format (11 chars: "hh:mm:ss am/pm")
             try {
                 return LocalTime.parse(trimmed.toUpperCase(Locale.ROOT), TIME_12_HOUR);
-            } catch (DateTimeParseException e) {
-                throw new AssertionError("Timeline label '" + trimmed + "' is not a valid time format "
-                        + "(expected HH:mm:ss, hh:mm:ss AM/PM, or yyyy-MM-dd HH:mm:ss)", e);
+            } catch (DateTimeParseException twelveHourFailure) {
+                AssertionError error = new AssertionError("Timeline label '" + trimmed
+                        + "' is not a valid time format "
+                        + "(expected HH:mm:ss, hh:mm:ss AM/PM, or yyyy-MM-dd HH:mm:ss)",
+                        twentyFourHourFailure);
+                error.addSuppressed(twelveHourFailure);
+                throw error;
             }
         }
     }
