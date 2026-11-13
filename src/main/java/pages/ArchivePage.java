@@ -45,6 +45,12 @@ public class ArchivePage {
         verifyArchiveScreenDisplayed();
     }
 
+    /** Searches the Archive for an exported file. The list writes its time as 02-26-15, not 02:26:15. */
+    public void verifyExportedFileListed(String exportedFileName) {
+        navigateToArchive();
+        findInSearch(exportedFileName.replace(':', '-'));
+    }
+
     public void clickFilesMenu() {
         WaitUtils.click(driver, ArchiveLocators.FILES_MENU_ITEM);
     }

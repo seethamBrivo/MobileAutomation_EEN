@@ -136,6 +136,29 @@
             <class name="tests.ts_video_search.VideoSearchTest"/>
         </classes>
     </test>
+    <!-- The Downloads and Export tests sign in as TS02 and as the end user, and the exports are written to the
+         Archive and to Downloads that the Archive tests read, so each gets a <test> of its own and never overlaps
+         another class of the same account. -->
+    <test name="iOS Downloads">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_downloads.DownloadsTest"/>
+        </classes>
+    </test>
+    <test name="iOS Exports">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_history.HistoryBrowserExportTest"/>
+        </classes>
+    </test>
     <!-- End user account, shared with the classes above: its own <test> so they never overlap. -->
     <test name="iOS Bridge Cameras">
         <groups>
