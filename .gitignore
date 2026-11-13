@@ -86,10 +86,3 @@ screenshots/
 
 # Generated per pull request by scripts/select-tests.sh
 testng-pr.xml
-
-# App binaries (uploaded to BrowserStack; never commit)
-/src/androidApplication/
-/src/ios Application/
-*.aab
-*.apks
-*.dSYM/
