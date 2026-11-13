@@ -60,16 +60,10 @@ public class AccountSwitchingTest extends BaseTest {
         // Check test data is sufficient before switching
         accountSwitchingPage.requireBothAccountSections();
 
-        // Capture target account name before clicking (may be empty on iOS)
-        String targetAccountName = accountSwitchingPage.getFirstAccountName();
-        if (!targetAccountName.isEmpty()) {
-            logger.info("Target account: {}", targetAccountName);
-        }
-
         accountSwitchingPage.clickFirstAccount();
         accountSwitchingPage.waitForOtherAccountsScreenToClose();
         accountSwitchingPage.waitForSwitchingToComplete(originalAccountName);
-        accountSwitchingPage.verifyAccountSwitched(originalAccountName, targetAccountName);
+        accountSwitchingPage.verifyAccountSwitched(originalAccountName);
 
         logger.info("Account switch verified successfully");
     }

@@ -97,15 +97,6 @@ public class AccountSwitchingPage {
         );
     }
 
-    /**
-     * Gets the name of the first account in the Other accounts list.
-     * Note: On iOS, Cell.getText() returns empty string (name is in child element).
-     * On Android, may return abbreviated name.
-     */
-    public String getFirstAccountName() {
-        return WaitUtils.waitForVisibility(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW).getText();
-    }
-
     public void clickFirstAccount() {
         WaitUtils.click(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW);
     }
@@ -152,11 +143,9 @@ public class AccountSwitchingPage {
 
     /**
      * Verifies that account switching occurred by checking the profile name changed.
-     * Both platforms verify name changed (cannot reliably assert specific target name
-     * due to Android abbreviation and iOS Cell.getText() returning empty).
      * Assumes More menu is already open (waitForSwitchingToComplete navigates there).
      */
-    public void verifyAccountSwitched(String originalAccountName, String targetAccountName) {
+    public void verifyAccountSwitched(String originalAccountName) {
         String currentProfileName = getCurrentProfileAccountName();
 
         // Verify the name changed from original (both platforms)
@@ -166,15 +155,6 @@ public class AccountSwitchingPage {
 
         logger.info("Account switch verified: profile changed from '{}' to '{}'",
                 originalAccountName, currentProfileName);
-    }
-
-    /**
-     * Attempts to navigate back to the dashboard from any screen.
-     * Delegates to DevicesPage.recoverToDashboard() for consistent recovery behavior.
-     */
-    public void recoverToDashboard() {
-        DevicesPage devicesPage = new DevicesPage(driver);
-        devicesPage.recoverToDashboard();
     }
 
     /**
