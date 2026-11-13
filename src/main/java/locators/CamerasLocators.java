@@ -53,12 +53,6 @@ public final class CamerasLocators {
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
 
-    // iOS: the second "Online" label of the list, by position (the rows carry no ids).
-    // TODO: Replace with an accessibility id when the mobile team adds identifiers to the camera rows
-    public static final By SECOND_ONLINE_CAMERA = PlatformLocator.get(
-            AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeStaticText[@name='Online'])[2]")); // ios
-
     // Android only: a camera card is a full-width clickable row; its name and status are its first two TextViews.
     // TODO: Replace with testTag when mobile team adds an identifier to the camera card.
     public static final By CAMERA_CARD = AppiumBy.xpath(

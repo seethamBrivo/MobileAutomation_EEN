@@ -411,15 +411,13 @@ public class CamerasPage {
                 "Cameras list should show the renamed camera '" + name + "'");
     }
 
-    public boolean hasSecondOnlineCamera() {
-        GestureUtils.scrollToTop(driver);
-        return scrollUntilElementIsVisible(CamerasLocators.SECOND_ONLINE_CAMERA);
+    public boolean hasCameraNamed(String name) {
+        return scrollToCameraRow(CamerasLocators.cameraCardWithName(name));
     }
 
-    public void longPressSecondOnlineCameraAndVerifyContextMenu() {
-        GestureUtils.longPressUntilVisible(driver, CamerasLocators.SECOND_ONLINE_CAMERA,
-                CamerasLocators.CONTEXT_MENU_CONTAINER);
-        verifyContextMenuDisplayed();
+    /** For a camera the End User can switch: its menu has Turn on/off, which is checked. */
+    public void longPressCameraNamedAndVerifyContextMenu(String name) {
+        openContextMenuOfCameraNamed(name);
         verifyAllContextMenuOptions(true);
         verifyCameraPreviewDisplayed();
     }

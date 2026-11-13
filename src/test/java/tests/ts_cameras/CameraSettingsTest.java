@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import pages.CameraSettingsPage;
 import pages.CamerasPage;
 import pages.DevicesPage;
+import utils.JsonDataReader;
 
 public class CameraSettingsTest extends BaseTest {
 
@@ -61,8 +62,8 @@ public class CameraSettingsTest extends BaseTest {
     @Test(description = "EEPD-TC-11323: POS-Camera Settings - turning on/off camera in Dashboard (inside Camera "
             + "Settings screen) mobile VMS app", groups = {"regression", "cameras", "ios"})
     public void verifyTurnCameraOffAndOn() {
-        // Step 2: Cameras in Dashboard, long press the second online camera, open Camera settings
-        openSettingsOfSecondOnlineCamera();
+        // Step 2: Cameras in Dashboard, long press an online camera that can be switched, open Camera settings
+        openSettingsOfSwitchableOnlineCamera();
         // Step 3: tap the switch next to Enable to turn the camera off, then on again
         settingsPage.toggleEnableSwitch();
         settingsPage.verifyCameraStatus(CamerasPage.STATUS_TURNED_OFF, originalCameraName);
@@ -81,13 +82,19 @@ public class CameraSettingsTest extends BaseTest {
         settingsPage.verifyCameraPreviewIconDisplayed();
     }
 
-    /** Step 2 of EEPD-TC-11323: the second online camera, so the camera the name test renames is left alone. */
-    private void openSettingsOfSecondOnlineCamera() {
+    /**
+     * Step 2 of EEPD-TC-11323. The camera is picked by name from the test data: the account's simulator camera is
+     * online too, but the End User cannot switch it (no Turn on/off in its menu on Android, a disabled Enable
+     * switch on iOS), and "the first/second online camera" is not the same row on both platforms.
+     */
+    private void openSettingsOfSwitchableOnlineCamera() {
+        String cameraName = JsonDataReader.getSwitchableCameraValue(TestDataConstants.SWITCHABLE_CAMERA_NAME);
         camerasPage.openCamerasList();
-        if (!camerasPage.hasSecondOnlineCamera()) {
-            throw new SkipException("Two online cameras are needed on the End User account; fewer found in the list");
+        if (!camerasPage.hasCameraNamed(cameraName)) {
+            throw new SkipException("The online camera '" + cameraName + "' is needed on the End User account; "
+                    + "not found in the list");
         }
-        camerasPage.longPressSecondOnlineCameraAndVerifyContextMenu();
+        camerasPage.longPressCameraNamedAndVerifyContextMenu(cameraName);
         originalCameraName = settingsPage.openFromContextMenuAndReadName();
         // Not asserted: this camera's header sometimes has no preview icon (the app does not draw it), and the
         // icon has nothing to do with turning the camera off and on. It is asserted in EEPD-TC-8861.
