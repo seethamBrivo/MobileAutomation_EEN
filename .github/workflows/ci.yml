@@ -104,7 +104,11 @@ jobs:
           SOURCE_RUN: ${{ inputs.rerun_failed_from_run || github.run_id }}
           PLATFORM: ${{ matrix.platform }}
         run: |
-          artifact="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts" --paginate             --jq '.artifacts[] | select(.expired == false) | .name'             | grep -E "^test-reports-${PLATFORM}(-attempt-[0-9]+)?$" | sort -V | tail -n 1 || true)"
+          # An API error (no permission, rate limit, a wrong run id) must stop the job, not turn into a full-suite run:
+          # only "no report found" falls back to the full suite.
+          names="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts" --paginate \
+            --jq '.artifacts[] | select(.expired == false) | .name')"
+          artifact="$(printf '%s\n' "$names" | grep -E "^test-reports-${PLATFORM}(-attempt-[0-9]+)?$" | sort -V | tail -n 1 || true)"
           if [ -n "$artifact" ]; then
             mkdir -p earlier
             gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir earlier
@@ -120,7 +124,11 @@ jobs:
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "### No list of failed tests found (${artifact:-no earlier report}): running the full suite" >> "$GITHUB_STEP_SUMMARY"
+            if [ -n "$artifact" ]; then
+              echo "### The earlier attempt (${artifact}) had no failed tests: running the full suite" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "### No report of an earlier attempt found (expired, or none was uploaded): running the full suite" >> "$GITHUB_STEP_SUMMARY"
+            fi
           fi
 
       - name: Select the tests this pull request affects
@@ -278,9 +286,13 @@ jobs:
         run: mvn test -Dplatform=${{ matrix.platform }} -DexecutionProvider=browserstack -Dsuite.file=${{ inputs.suite_file || (github.event_name == 'pull_request' && 'testng-pr.xml' || (matrix.platform == 'ios' && 'testng-ios.xml' || 'testng-parallel.xml')) }} -DsessionScope=${{ inputs.session_scope || 'class' }} ${{ inputs.use_sdk && '-DbrowserstackSdk=true' || '' }} ${{ steps.rerun.outputs.file && format('-DrerunTests={0}', steps.rerun.outputs.file) || '' }}
 
       - name: Summarise test results
-        # Suite-by-suite table, the failed tests with their first error line and the ones that passed only on the
-        # retry, in the job summary; one error annotation per failed test. Never changes the result of the run.
+        # Suite-by-suite table, the failed setup methods, the failed tests with their first error line and the ones that
+        # passed only on the retry, in the job summary; one error annotation per problem. It does not change the result
+        # of a normal run ("mvn test" decides). A re-run is the exception: if a listed test did not show up in the
+        # results, or nothing ran, this step fails, so a re-run that verified nothing is never green.
         if: always() && (github.event_name != 'pull_request' || steps.select.outputs.has_tests == 'true')
+        env:
+          RERUN_LIST: ${{ steps.rerun.outputs.file }}
         run: python3 scripts/test-summary.py
 
       - name: Upload test results

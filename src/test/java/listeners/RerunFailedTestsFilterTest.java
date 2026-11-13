@@ -4,6 +4,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertThrows;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,6 +19,10 @@ import org.testng.annotations.Test;
  * Runs two small test classes through a real TestNG, so it also proves what the CI relies on: the filter is picked
  * up from META-INF/services without being listed in any suite file, only the listed methods run, and a class with
  * no listed method does not even run its {@code @BeforeClass} (which is where a real test opens its device session).
+ *
+ * <p>Not parallel-safe: it sets the JVM-wide {@code rerunTests} property for the length of a nested TestNG run, and a
+ * suite that started a test meanwhile would be filtered by it. Keep it in the serial unit suite, never in a lane that
+ * runs device tests beside it (like RetryAnalyzerTest, it is left out of testng-lanes.xml for the same reason).
  */
 public class RerunFailedTestsFilterTest {
 
@@ -117,12 +122,13 @@ public class RerunFailedTestsFilterTest {
         file.toFile().deleteOnExit();
         Files.write(file, List.of("// the failed tests of attempt 1", "", "  a.B#c  ", "   "));
 
-        assertEquals(RerunFailedTestsFilter.readListedTests(file), Set.of("a.B#c"));
+        assertEquals(RerunFailedTestsFilter.readListedTests(file), Set.of("a.B#c"),
+                "Only the test line should be read, trimmed");
     }
 
     @Test
     public void aMissingListFailsInsteadOfRunningEverything() {
-        assertThrows(java.io.UncheckedIOException.class,
+        assertThrows(UncheckedIOException.class,
                 () -> RerunFailedTestsFilter.readListedTests(Path.of("no-such-dir", "no-such-file.txt")));
     }
 

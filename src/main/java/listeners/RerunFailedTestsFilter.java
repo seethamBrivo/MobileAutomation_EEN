@@ -21,6 +21,13 @@ import org.testng.ITestContext;
  * <p>A class none of whose tests are listed has no test method left, so TestNG does not run its
  * {@code @BeforeClass} and no device session is opened for it. All data-provider rows of a listed method run.
  *
+ * <p>Limits. Methods are matched by class and name only. {@code dependsOnMethods} is not followed (a listed method
+ * whose dependency is not listed is run without it; nothing here uses {@code dependsOnMethods} today, and a warning is
+ * logged if that changes). The listed tests also run against whatever the earlier, passing tests left on the shared
+ * accounts. This filter cannot tell that a listed test matches no method, because a suite with several
+ * {@code <test>} blocks legitimately leaves most blocks empty: {@code scripts/test-summary.py} makes that check from
+ * the results ({@code RERUN_LIST}) and fails the CI step, so a re-run that ran nothing is never green.
+ *
  * <p>Registered through {@code META-INF/services/org.testng.ITestNGListener}, so it applies to every suite file,
  * including the one generated for a pull request. The CI writes the file after each run
  * ({@code scripts/test-summary.py}) and passes it to the next attempt of a failed job.
@@ -39,6 +46,9 @@ public class RerunFailedTestsFilter implements IMethodInterceptor {
         }
         Set<String> listed = readListedTests(Path.of(file));
         List<IMethodInstance> kept = methods.stream().filter(m -> listed.contains(keyOf(m))).toList();
+        kept.stream().filter(m -> m.getMethod().getMethodsDependedUpon().length > 0)
+                .forEach(m -> logger.warn("{} depends on other methods, which are not re-run unless listed too",
+                        keyOf(m)));
         logger.info("Re-running {} of {} test methods of '{}' from {}", kept.size(), methods.size(),
                 context.getCurrentXmlTest().getName(), file);
         return kept;
@@ -48,7 +58,7 @@ public class RerunFailedTestsFilter implements IMethodInterceptor {
         return method.getMethod().getRealClass().getName() + "#" + method.getMethod().getMethodName();
     }
 
-    /** Fails loudly: a wrong path must not turn a "re-run the failed tests" into the whole suite, or into none. */
+    /** An unreadable or empty file throws: a wrong path must not turn a re-run into the whole suite, or into none. */
     static Set<String> readListedTests(Path file) {
         List<String> lines;
         try {
