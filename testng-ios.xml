@@ -112,6 +112,18 @@
             <class name="tests.ts_vsp_events.VSPEventsTest"/>
         </classes>
     </test>
+    <!-- LiveViewTest signs in as TS02 (like CameraContextMenuTest, MyProfileTest and VSPEventsTest), so it runs on its
+         own after them to avoid parallel sign-ins with the same account. Tests mechanical zoom auto focus and zoom in/out. -->
+    <test name="iOS Live View">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_live.LiveViewTest"/>
+        </classes>
+    </test>
     <!-- Video Search signs in as the end user too, so it gets a <test> of its own at the end and never overlaps the
          end-user classes above. -->
     <test name="iOS Video Search">
