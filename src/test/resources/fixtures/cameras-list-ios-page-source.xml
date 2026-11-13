@@ -1,0 +1,78 @@
+<AppiumAUT>
+  <XCUIElementTypeApplication type="XCUIElementTypeApplication" name="Eagle Eye" label="Eagle Eye" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="" processId="1758" bundleId="com.eagleeyenetworks.eagleeye">
+    <XCUIElementTypeWindow type="XCUIElementTypeWindow" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+      <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="1" traits="">
+        <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+          <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+            <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+              <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+                <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+                  <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="1" traits="">
+                    <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+                      <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+                        <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="false" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+                          <XCUIElementTypeScrollView type="XCUIElementTypeScrollView" enabled="true" visible="true" accessible="false" x="0" y="281" width="393" height="571" index="2" traits="">
+                            <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="281" width="393" height="1984" index="0" traits="">
+                              <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="16" y="293" width="377" height="1150" index="0" traits="">
+                                <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="true" accessible="true" x="16" y="293" width="96" height="54" index="0" traits="Image"/>
+                                <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="000 Camera 90 days" name="000 Camera 90 days" label="000 Camera 90 days" enabled="true" visible="true" accessible="true" x="124" y="301" width="142" height="18" index="1" traits="StaticText"/>
+                                <XCUIElementTypeButton type="XCUIElementTypeButton" name="ic_contextMenu" label="ic_contextMenu" enabled="true" visible="true" accessible="true" x="349" y="301" width="44" height="44" index="2" traits="Button">
+                                  <XCUIElementTypeButton type="XCUIElementTypeButton" enabled="true" visible="false" accessible="false" x="349" y="301" width="44" height="44" index="0" traits="Button">
+                                    <XCUIElementTypeImage type="XCUIElementTypeImage" name="ic_contextMenu" label="ic_contextMenu" enabled="true" visible="false" accessible="false" x="349" y="301" width="44" height="44" index="0" traits="Image"/>
+                                  </XCUIElementTypeButton>
+                                </XCUIElementTypeButton>
+                                <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="true" accessible="true" x="124" y="333" width="8" height="8" index="3" traits="Image"/>
+                                <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Online" name="Online" label="Online" enabled="true" visible="true" accessible="true" x="140" y="327" width="43" height="18" index="4" traits="StaticText"/>
+                                <XCUIElementTypeScrollView type="XCUIElementTypeScrollView" enabled="true" visible="true" accessible="false" x="16" y="361" width="377" height="22" index="5" traits="">
+                                  <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="16" y="361" width="621" height="22" index="0" traits="">
+                                    <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="parking lot 1" name="parking lot 1" label="parking lot 1" enabled="true" visible="true" accessible="true" x="16" y="361" width="114" height="22" index="0" traits="StaticText"/>
+                                    <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="hikvision ds-2cd2045fwd-i" name="hikvision ds-2cd2045fwd-i" label="hikvision ds-2cd2045fwd-i" enabled="true" visible="true" accessible="true" x="138" y="361" width="217" height="22" index="1" traits="StaticText"/>
+                                    <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="test5" name="test5" label="test5" enabled="true" visible="true" accessible="true" x="362" y="361" width="67" height="22" index="2" traits="StaticText"/>
+                                    <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="000" name="000" label="000" enabled="true" visible="true" accessible="true" x="436" y="361" width="61" height="22" index="3" traits="StaticText"/>
+                                    <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="analog camera" name="analog camera" label="analog camera" enabled="true" visible="true" accessible="true" x="504" y="361" width="133" height="22" index="4" traits="StaticText"/>
+                                  </XCUIElementTypeOther>
+                                </XCUIElementTypeScrollView>
+                                <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="true" accessible="true" x="16" y="407" width="96" height="55" index="6" traits="Image"/>
+                                <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="000 Camera Edge-1" name="000 Camera Edge-1" label="000 Camera Edge-1" enabled="true" visible="true" accessible="true" x="124" y="416" width="135" height="18" index="7" traits="StaticText"/>
+                                <XCUIElementTypeButton type="XCUIElementTypeButton" name="ic_contextMenu" label="ic_contextMenu" enabled="true" visible="true" accessible="true" x="349" y="415" width="44" height="45" index="8" traits="Button">
+                                  <XCUIElementTypeButton type="XCUIElementTypeButton" enabled="true" visible="false" accessible="false" x="349" y="415" width="44" height="45" index="0" traits="Button">
+                                    <XCUIElementTypeImage type="XCUIElementTypeImage" name="ic_contextMenu" label="ic_contextMenu" enabled="true" visible="false" accessible="false" x="349" y="415" width="44" height="45" index="0" traits="Image"/>
+                                  </XCUIElementTypeButton>
+                                </XCUIElementTypeButton>
+                                <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="true" accessible="true" x="124" y="447" width="8" height="9" index="9" traits="Image"/>
+                                <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Online" name="Online" label="Online" enabled="true" visible="true" accessible="true" x="140" y="442" width="43" height="18" index="10" traits="StaticText"/>
+                                <XCUIElementTypeScrollView type="XCUIElementTypeScrollView" enabled="true" visible="true" accessible="false" x="16" y="476" width="377" height="22" index="11" traits="">
+                                  <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="16" y="476" width="60" height="22" index="0" traits="">
+                                    <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="000" name="000" label="000" enabled="true" visible="true" accessible="true" x="16" y="476" width="60" height="22" index="0" traits="StaticText"/>
+                                  </XCUIElementTypeOther>
+                                </XCUIElementTypeScrollView>
+                                <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="false" accessible="true" x="16" y="1352" width="96" height="55" index="65" traits="Image"/>
+                                <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Camera 01 - EN-CDUZ-004a" name="Camera 01 - EN-CDUZ-004a" label="Camera 01 - EN-CDUZ-004a" enabled="true" visible="false" accessible="true" x="124" y="1361" width="193" height="18" index="66" traits="StaticText"/>
+                                <XCUIElementTypeButton type="XCUIElementTypeButton" name="ic_contextMenu" label="ic_contextMenu" enabled="true" visible="false" accessible="true" x="349" y="1360" width="44" height="45" index="67" traits="Button">
+                                  <XCUIElementTypeButton type="XCUIElementTypeButton" enabled="true" visible="false" accessible="false" x="349" y="1360" width="44" height="45" index="0" traits="Button">
+                                    <XCUIElementTypeImage type="XCUIElementTypeImage" name="ic_contextMenu" label="ic_contextMenu" enabled="true" visible="false" accessible="false" x="349" y="1360" width="44" height="45" index="0" traits="Image"/>
+                                  </XCUIElementTypeButton>
+                                </XCUIElementTypeButton>
+                                <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="false" accessible="true" x="124" y="1392" width="8" height="9" index="68" traits="Image"/>
+                                <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Online" name="Online" label="Online" enabled="true" visible="false" accessible="true" x="140" y="1386" width="43" height="18" index="69" traits="StaticText"/>
+                                <XCUIElementTypeScrollView type="XCUIElementTypeScrollView" enabled="true" visible="false" accessible="false" x="16" y="1421" width="377" height="22" index="70" traits="">
+                                  <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="false" accessible="false" x="16" y="1421" width="132" height="22" index="0" traits="">
+                                    <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="en-cduz-004a" name="en-cduz-004a" label="en-cduz-004a" enabled="true" visible="false" accessible="true" x="16" y="1421" width="132" height="22" index="0" traits="StaticText"/>
+                                  </XCUIElementTypeOther>
+                                </XCUIElementTypeScrollView>
+                              </XCUIElementTypeOther>
+                            </XCUIElementTypeOther>
+                          </XCUIElementTypeScrollView>
+                        </XCUIElementTypeOther>
+                      </XCUIElementTypeOther>
+                    </XCUIElementTypeOther>
+                  </XCUIElementTypeOther>
+                </XCUIElementTypeOther>
+              </XCUIElementTypeOther>
+            </XCUIElementTypeOther>
+          </XCUIElementTypeOther>
+        </XCUIElementTypeOther>
+      </XCUIElementTypeOther>
+    </XCUIElementTypeWindow>
+  </XCUIElementTypeApplication>
+</AppiumAUT>

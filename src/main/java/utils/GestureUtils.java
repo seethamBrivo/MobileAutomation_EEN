@@ -268,6 +268,7 @@ public final class GestureUtils {
         return new Point(location.x + (size.width / 2), location.y + (size.height / 2));
     }
 
+    /** Scrolls a list back up (finger moves down) without starting over the chip row above it. */
     public static void swipeDownInList(AppiumDriver driver) {
         Dimension size = driver.manage().window().getSize();
         int centerX = size.width / 2;

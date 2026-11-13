@@ -237,18 +237,23 @@ public final class CamerasLocators {
             AppiumBy.xpath("//XCUIElementTypeStaticText[following-sibling::XCUIElementTypeImage"
                     + "[@name='ic_down_arrow']][string-length(translate(@name, '0123456789', '')) > 0]")); // ios
 
+    /**
+     * iOS: the tag row of a card is the scroll view that follows the card's 3-dots button as a sibling. The filter
+     * chip row is a scroll view too, but it comes before every card, so no 3-dots button precedes it.
+     */
+    private static final String IOS_TAG_ROW = "//XCUIElementTypeScrollView"
+            + "[preceding-sibling::XCUIElementTypeButton[@name='ic_contextMenu']][@visible='true']";
+
     // Android: a tag under a camera is a clickable chip with a checkbox; the filter chips have none.
     // TODO: Replace with testTag when mobile team adds an identifier to the tag chip.
     public static final By FIRST_TAG = PlatformLocator.get(
             AppiumBy.xpath("(//android.view.View[@clickable='true'][android.widget.CheckBox])[1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeScrollView//XCUIElementTypeScrollView"
-                    + "//XCUIElementTypeStaticText[@visible='true'])[1]")); // ios
+            AppiumBy.xpath("(" + IOS_TAG_ROW + "//XCUIElementTypeStaticText[@visible='true'])[1]")); // ios
 
     public static final By FIRST_TAG_NAME = PlatformLocator.get(
             AppiumBy.xpath("(//android.view.View[@clickable='true'][android.widget.CheckBox])[1]"
                     + "/android.widget.TextView"), // android
-            AppiumBy.xpath("(//XCUIElementTypeScrollView//XCUIElementTypeScrollView"
-                    + "//XCUIElementTypeStaticText[@visible='true'])[1]")); // ios
+            AppiumBy.xpath("(" + IOS_TAG_ROW + "//XCUIElementTypeStaticText[@visible='true'])[1]")); // ios
 
     /** The number next to the "Tags" filter chip while a tag filter is applied. */
     public static final By ACTIVE_TAGS_FILTER_COUNT = PlatformLocator.get(
@@ -261,11 +266,24 @@ public final class CamerasLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Clear filter']"), // android
             AppiumBy.accessibilityId("Clear filter")); // ios
 
-    public static final By TAG_ROWS = AppiumBy.xpath(
-            "//XCUIElementTypeScrollView//XCUIElementTypeScrollView[@visible='true']");
+    /** iOS only, no Android value on purpose: the tag row of every card on screen. */
+    public static final By TAG_ROWS = AppiumBy.xpath(IOS_TAG_ROW);
 
+    /**
+     * iOS only, no Android value on purpose: every tag on screen. iOS also reports a tag that is only partly on
+     * screen as visible, so the caller picks the first one that is whole.
+     */
+    public static final By VISIBLE_TAGS = AppiumBy.xpath(IOS_TAG_ROW + "//XCUIElementTypeStaticText[@visible='true']");
+
+    /** iOS only, no Android value on purpose: the tags inside one tag row. */
     public static final By TAGS_IN_ROW = AppiumBy.xpath(".//XCUIElementTypeStaticText");
 
+    /**
+     * iOS only, no Android value on purpose: the vertical scroll bar of the cameras list, named like
+     * "Vertical scroll bar, 2 pages". Taken from the scroll view that holds the cards' 3-dots buttons, so the
+     * scroll bars of the tag rows, which hold none, cannot match.
+     */
     public static final By LIST_SCROLL_BAR = AppiumBy.xpath(
-            "(//XCUIElementTypeOther[starts-with(@name, 'Vertical scroll bar')])[1]");
+            "//XCUIElementTypeScrollView[.//XCUIElementTypeButton[@name='ic_contextMenu']]"
+                    + "/XCUIElementTypeOther[starts-with(@name, 'Vertical scroll bar')]");
 }

@@ -59,7 +59,7 @@ public class CameraContextMenuTest extends BaseTest {
         // Step 5: the filter chips
         camerasPage.verifyFilterChipsInOrder();
         // Step 6: the tags of a card scroll sideways
-        camerasPage.verifyTagRowScrolls();
+        boolean tagRowChecked = camerasPage.verifyTagRowScrolls();
         // Step 7: scrolling down loads the next page of cameras
         camerasPage.verifyNextPageLoadsOnScroll();
         // Step 8: the 3-dots button of a camera opens its menu (closed by cleanup)
@@ -75,6 +75,11 @@ public class CameraContextMenuTest extends BaseTest {
         String tagName = camerasPage.tapFirstTag();
         camerasPage.verifyCamerasFilteredByTag(tagName, camerasOnDashboard);
         camerasPage.verifyTagsFilterIsActive();
+        // Last, so a missing precondition of step 6 does not hide the result of steps 7 to 9.
+        if (!tagRowChecked) {
+            throw new SkipException("Step 6 did not run: it needs a camera on screen whose tags run past the "
+                    + "screen edge on the TS02 account; steps 2 to 5 and 7 to 9 passed");
+        }
     }
 
     @Override

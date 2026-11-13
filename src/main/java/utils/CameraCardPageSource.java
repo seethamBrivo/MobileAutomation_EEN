@@ -13,6 +13,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+/**
+ * Reads the cards of the iOS Cameras list from one page source. iOS gives no element per card: a card is loose
+ * siblings in the order name, 3-dots button ({@code ic_contextMenu}), optional icons, status, then the tag row as a
+ * scroll view. The 3-dots button is what marks a name as a card, so a change in that order breaks this parser.
+ */
 public final class CameraCardPageSource {
 
     private static final String STATIC_TEXT = "XCUIElementTypeStaticText";
@@ -74,8 +79,10 @@ public final class CameraCardPageSource {
 
     private static Document parse(String xml) {
         try {
-            return DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                    .parse(new InputSource(new StringReader(xml)));
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            // A device page source has no DOCTYPE; refusing one keeps external entities out.
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            return factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new IllegalStateException("Could not read the page source of the camera list", e);
         }

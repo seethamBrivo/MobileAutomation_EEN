@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +18,7 @@ import locators.CamerasLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
@@ -67,9 +69,19 @@ public class CamerasPage {
     private static final List<DateTimeFormatter> FRAME_TIME_FORMATS = List.of(
             DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH), DateTimeFormatter.ofPattern("HH:mm:ss"));
 
+    /** A tag row is a few tags wide; if its last tag is not reached after this many swipes, the row is not moving. */
     private static final int TAG_ROW_MAX_SWIPES = 3;
+
+    /** The next page loads as the end of the list nears; if it has not after this many swipes, it is not coming. */
     private static final int NEXT_PAGE_MAX_SWIPES = 8;
+
+    /**
+     * Swiping back down covers 45% of the screen, a swipe up 60%, and a scroll's momentum differs between the two,
+     * so going back may take about twice as many swipes as going down.
+     */
     private static final int BACK_SWIPES_PER_SWIPE_UP = 2;
+
+    /** Headroom for the list having moved further than the swipes counted, so the first camera is not missed. */
     private static final int BACK_SWIPES_SPARE = 2;
     private static final Pattern LOADED_PAGES = Pattern.compile("(\\d+) pages?");
 
@@ -499,10 +511,30 @@ public class CamerasPage {
 
     /** Taps the first tag on screen and returns its name. */
     public String tapFirstTag() {
+        if (PlatformLocator.isIos()) {
+            return tapFirstWholeTag();
+        }
         String tagName = WaitUtils.waitForVisibility(driver, CamerasLocators.FIRST_TAG_NAME).getText().trim();
         WaitUtils.click(driver, CamerasLocators.FIRST_TAG);
         logger.info("Tapped the tag '{}'", tagName);
         return tagName;
+    }
+
+    /** A tag cut off by a screen edge is tapped on its visible part only, which may miss; take a whole one. */
+    private String tapFirstWholeTag() {
+        Dimension screen = driver.manage().window().getSize();
+        for (WebElement tag : WaitUtils.findElements(driver, CamerasLocators.VISIBLE_TAGS)) {
+            Rectangle bounds = tag.getRect();
+            if (bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= screen.width
+                    && bounds.y + bounds.height <= screen.height) {
+                String tagName = tag.getText().trim();
+                tag.click();
+                logger.info("Tapped the tag '{}'", tagName);
+                return tagName;
+            }
+        }
+        Assert.fail("A tag fully inside the screen should be listed under the cameras on screen");
+        return null;
     }
 
     /** After a tag was tapped: the counter shrank to some cameras and every card on screen carries the tag. */
@@ -573,25 +605,36 @@ public class CamerasPage {
         }
     }
 
-    public void verifyTagRowScrolls() {
+    /**
+     * iOS: swipes the tag row of a card whose tags run past the screen edge to its last tag and back. Returns
+     * false when this platform automates the step but no card on screen has such a row, so the caller can say
+     * the step did not run instead of reporting a pass; Android does not automate it and returns true.
+     */
+    public boolean verifyTagRowScrolls() {
         if (!PlatformLocator.isIos()) {
             logger.info("Scrolling a card's tags is automated on iOS only");
-            return;
+            return true;
         }
         int screenWidth = driver.manage().window().getSize().width;
         if (!WaitUtils.isVisible(driver, CamerasLocators.TAG_ROWS, TimeoutConstants.SHORT_TIMEOUT)) {
-            logger.info("No card on screen shows tags; scrolling the tags was not checked");
-            return;
+            logger.warn("No card on screen shows tags; scrolling the tags was not checked");
+            return false;
         }
         for (WebElement row : WaitUtils.findElements(driver, CamerasLocators.TAG_ROWS)) {
             if (rightEdgeOfLastTag(row) > screenWidth) {
                 scrollTagRowToEndAndBack(row, screenWidth);
-                return;
+                return true;
             }
         }
-        logger.info("No card on screen has tags beyond the screen edge; scrolling the tags was not checked");
+        logger.warn("No card on screen has tags beyond the screen edge; scrolling the tags was not checked");
+        return false;
     }
 
+    /**
+     * iOS: scrolling down grows the list. The list's scroll bar states its height in pages ("3 pages"), so this
+     * proves the list got taller, not how many cameras were added. The account must have more cameras than fit
+     * one load, or the list never grows and this fails. Then scrolls back to the first camera.
+     */
     public void verifyNextPageLoadsOnScroll() {
         if (!PlatformLocator.isIos()) {
             logger.info("Loading the next page of cameras is automated on iOS only");
@@ -602,15 +645,17 @@ public class CamerasPage {
         String firstCamera = cards.get(0).get(0);
         int pagesBefore = loadedPages();
         int swipes = 0;
-        while (loadedPages() <= pagesBefore && swipes < NEXT_PAGE_MAX_SWIPES) {
+        boolean listGrew = false;
+        while (!listGrew && swipes < NEXT_PAGE_MAX_SWIPES) {
             GestureUtils.swipeUp(driver);
             swipes++;
+            // The next page arrives after the swipe, from the backend: wait for it before swiping on.
+            listGrew = WaitUtils.pollUntil(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT,
+                    () -> readLoadedPages().orElse(0) > pagesBefore);
         }
-        WaitUtils.pollUntil(driver, TimeoutConstants.FILTER_RESULT_TIMEOUT, () -> loadedPages() > pagesBefore);
+        Assert.assertTrue(listGrew, "Scrolling down should load the next page of cameras, making the list taller "
+                + "than " + pagesBefore + " screens, but it did not grow within " + swipes + " swipes");
         int pagesAfter = loadedPages();
-        Assert.assertTrue(pagesAfter > pagesBefore, "Scrolling down should load the next page of cameras, making the "
-                + "list taller than " + pagesBefore + " screens, but it was " + pagesAfter + " after " + swipes
-                + " swipes");
         By firstCameraCard = CamerasLocators.cameraCardWithName(firstCamera);
         int backSwipes = 0;
         while (backSwipes < swipes * BACK_SWIPES_PER_SWIPE_UP + BACK_SWIPES_SPARE
@@ -624,12 +669,17 @@ public class CamerasPage {
     }
 
     private int loadedPages() {
+        OptionalInt pages = readLoadedPages();
+        Assert.assertTrue(pages.isPresent(), "The list's scroll bar should state its height in pages");
+        return pages.getAsInt();
+    }
+
+    /** Empty while the scroll bar is not readable, e.g. mid-animation, so a poll can try again. */
+    private OptionalInt readLoadedPages() {
         String name = WaitUtils.attributeOfPresent(driver, CamerasLocators.LIST_SCROLL_BAR, "name",
                 TimeoutConstants.SHORT_TIMEOUT);
         Matcher pages = LOADED_PAGES.matcher(name);
-        Assert.assertTrue(pages.find(),
-                "The list's scroll bar should state its height in pages but was '" + name + "'");
-        return Integer.parseInt(pages.group(1));
+        return pages.find() ? OptionalInt.of(Integer.parseInt(pages.group(1))) : OptionalInt.empty();
     }
 
     private void scrollTagRowToEndAndBack(WebElement row, int screenWidth) {
