@@ -156,7 +156,7 @@ public class VideoSearchPage {
                         .isDisplayed(),
                 "'View in history browser' button should be displayed on the event page");
         logger.info("Event page: camera '{}', date '{}', time {}, counter {}", cameraName, date, time, counter);
-        return new OpenedEvent(cameraName, eventDate.atTime(LocalTime.parse(time)));
+        return new OpenedEvent(cameraName, eventDate.atTime(parseTime(time)));
     }
 
     public void verifyVideoSearchPageDisplayed() {
