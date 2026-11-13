@@ -65,10 +65,10 @@ public class HistoryBrowserTest extends BaseTest {
         historyBrowserPage.verifyTimelineControlsDisplayed();
         historyBrowserPage.requireEventsOnTimeline();
         historyBrowserPage.ensurePlaybackPaused();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.clickPreviousFrameAndVerifyCursorMoved();
         historyBrowserPage.clickNextFrameAndVerifyCursorMoved();
-        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
-        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.clickNextEventAndVerifyCursorMoved();
     }
 
