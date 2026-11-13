@@ -11,12 +11,13 @@ import org.openqa.selenium.TimeoutException;
 import org.testng.Assert;
 import org.testng.SkipException;
 import utils.GestureUtils;
+import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**
  * Page object for Account Switching feature.
  * Handles switching between multiple accounts (Resellers and End-Users).
- * NOTE: Android-only locators - not verified on iOS.
+ * Supports both Android and iOS platforms.
  */
 public class AccountSwitchingPage {
 
@@ -58,9 +59,14 @@ public class AccountSwitchingPage {
     /**
      * Requires both Resellers and End-Users sections to be present.
      * Throws SkipException if test data is incomplete.
-     * Uses short timeout since these are absence probes.
+     * Waits for list to load first, then probes for both sections.
      */
     public void requireBothAccountSections() {
+        // Wait for list to load first
+        WaitUtils.waitForVisibility(driver, AccountSwitchingLocators.FIRST_ACCOUNT_ROW,
+                TimeoutConstants.LIST_LOAD_TIMEOUT);
+
+        // Now probe for both sections with short timeout
         boolean resellersSectionVisible = WaitUtils.isVisible(
                 driver,
                 AccountSwitchingLocators.RESELLERS_SECTION,
@@ -96,6 +102,19 @@ public class AccountSwitchingPage {
     }
 
     /**
+     * Waits for the "Other accounts" screen to close after clicking an account.
+     * iOS takes longer to process the navigation, so we wait for the screen to disappear
+     * before checking the profile name change.
+     */
+    public void waitForOtherAccountsScreenToClose() {
+        boolean closed = WaitUtils.waitForInvisibility(driver, AccountSwitchingLocators.RESELLERS_SECTION,
+                FrameworkConstants.EXPLICIT_WAIT);
+        if (!closed) {
+            throw new AssertionError("Other accounts screen did not close after switching account");
+        }
+    }
+
+    /**
      * Waits for account switching to complete by observing profile name change.
      * Polls until the profile name differs from the original account name.
      * Does not verify exact match to target (profile may show abbreviated name).
@@ -123,33 +142,19 @@ public class AccountSwitchingPage {
     }
 
     /**
-     * Verifies that account switching occurred by confirming the profile name changed.
-     * Does NOT assert the new account name because:
-     * 1. Profile may show abbreviated form (e.g., "MK-Reseller" → "SR")
-     * 2. Abbreviation rule is not stable/predictable
-     * 3. Original account does NOT reappear in Other Accounts list after switch
-     * The wait already proved a change occurred; this logs the result for test evidence.
+     * Verifies that account switching occurred by checking the profile name changed.
      * Assumes More menu is already open (waitForSwitchingToComplete navigates there).
      */
     public void verifyAccountSwitched(String originalAccountName) {
         String currentProfileName = getCurrentProfileAccountName();
 
-        // Only assertion: name differs from original (wait already guaranteed this)
+        // Verify the name changed from original (both platforms)
         Assert.assertNotEquals(currentProfileName, originalAccountName,
                 String.format("Profile should show different account. Was: '%s', Now: '%s'",
                         originalAccountName, currentProfileName));
 
         logger.info("Account switch verified: profile changed from '{}' to '{}'",
                 originalAccountName, currentProfileName);
-    }
-
-    /**
-     * Attempts to navigate back to the dashboard from any screen.
-     * Delegates to DevicesPage.recoverToDashboard() for consistent recovery behavior.
-     */
-    public void recoverToDashboard() {
-        DevicesPage devicesPage = new DevicesPage(driver);
-        devicesPage.recoverToDashboard();
     }
 
     /**

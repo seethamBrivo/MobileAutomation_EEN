@@ -169,6 +169,18 @@
             <class name="tests.ts_users.AddUserTest"/>
         </classes>
     </test>
+    <!-- Account Switching signs in as RESELLER3 and switches between accounts during the test, so it runs on its own
+         to avoid interference with other reseller tests. -->
+    <test name="iOS Account Switching">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_account_switching.AccountSwitchingTest"/>
+        </classes>
+    </test>
     <!-- Last: it leaves the app inside the reseller's first account, which a later reseller class would not expect. -->
     <test name="iOS Bridge Restart">
         <groups>
