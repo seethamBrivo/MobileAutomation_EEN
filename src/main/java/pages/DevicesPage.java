@@ -462,6 +462,15 @@ public class DevicesPage {
         }
     }
 
+    /** Opens the menu of the first online bridge, which has cameras, unlike an offline one that may sort first. */
+    public void openFirstOnlineBridgeContextMenu() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, BridgesLocators.FIRST_ONLINE_BRIDGE_THREE_DOTS);
+            return;
+        }
+        GestureUtils.longPress(driver, WaitUtils.findElements(driver, BridgesLocators.ONLINE_BRIDGE_ROWS).get(0));
+    }
+
     public void verifyContextMenuOptionDisplayed(String optionText) {
         WaitUtils.assertVisible(driver, BridgesLocators.contextMenuOption(optionText),
                 "Context menu option should be displayed: " + optionText);

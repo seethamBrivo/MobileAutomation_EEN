@@ -100,4 +100,108 @@
             <class name="tests.ts_history.HistoryBrowserTest"/>
         </classes>
     </test>
+    <!-- VSPEventsTest signs in as TS02 (like CameraContextMenuTest and MyProfileTest), so it runs on its own after them
+         to avoid parallel sign-ins with the same account. -->
+    <test name="iOS VSP Events">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_vsp_events.VSPEventsTest"/>
+        </classes>
+    </test>
+    <!-- LiveViewTest signs in as TS02 (like CameraContextMenuTest, MyProfileTest and VSPEventsTest), so it runs on its
+         own after them to avoid parallel sign-ins with the same account. Tests mechanical zoom auto focus and zoom in/out. -->
+    <test name="iOS Live View">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_live.LiveViewTest"/>
+        </classes>
+    </test>
+    <!-- Video Search signs in as the end user too, so it gets a <test> of its own at the end and never overlaps the
+         end-user classes above. -->
+    <test name="iOS Video Search">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_video_search.VideoSearchTest"/>
+        </classes>
+    </test>
+    <!-- The Downloads and Export tests sign in as TS02 and as the end user, and the exports are written to the
+         Archive and to Downloads that the Archive tests read, so each gets a <test> of its own and never overlaps
+         another class of the same account. -->
+    <test name="iOS Downloads">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_downloads.DownloadsTest"/>
+        </classes>
+    </test>
+    <test name="iOS Exports">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_history.HistoryBrowserExportTest"/>
+        </classes>
+    </test>
+    <!-- End user account, shared with the classes above: its own <test> so they never overlap. -->
+    <test name="iOS Bridge Cameras">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_bridges.BridgeCameraSearchFilterTest"/>
+        </classes>
+    </test>
+    <!-- Reseller account, shared with ResellerDashboardTest: its own <test> so the two never overlap. -->
+    <test name="iOS Users">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_users.AddUserTest"/>
+        </classes>
+    </test>
+    <!-- Account Switching signs in as RESELLER3 and switches between accounts during the test, so it runs on its own
+         to avoid interference with other reseller tests. -->
+    <test name="iOS Account Switching">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_account_switching.AccountSwitchingTest"/>
+        </classes>
+    </test>
+    <!-- Last: it leaves the app inside the reseller's first account, which a later reseller class would not expect. -->
+    <test name="iOS Bridge Restart">
+        <groups>
+            <run>
+                <include name="ios"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.ts_bridges.BridgeRestartTest"/>
+        </classes>
+    </test>
 </suite>

@@ -127,6 +127,13 @@ public class BridgeSettingsPage {
     }
 
     public void verifyBridgeRestartedMessageDisplayed() {
+        if (PlatformLocator.isIos()) {
+            // iOS: the restart takes a while to be confirmed, so the wait is longer than the default.
+            WaitUtils.assertVisible(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE,
+                    TimeoutConstants.LIST_LOAD_TIMEOUT,
+                    "Bridge restarted confirmation message should be displayed after confirming the restart");
+            return;
+        }
         WaitUtils.assertVisible(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE,
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }

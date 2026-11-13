@@ -74,11 +74,13 @@ public class HistoryBrowserTest extends BaseTest {
 
     @Test(description = "EEPD-TC-2605: POS-History Browser - Navigate between previews using Previous/Next Frame "
             + "buttons in History Browser in mobile VMS app",
-          groups = {"regression", "history"})
+          groups = {"regression", "history", "ios"})
     public void verifyFrameButtonsNavigateBetweenMoments() {
         historyBrowserPage.openContextMenuOfFirstCameraPreview();
         historyBrowserPage.openHistoryBrowserFromContextMenu();
         historyBrowserPage.verifyTimelineAndControlsDisplayedInPortrait();
+        historyBrowserPage.requireEventsOnTimeline();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.tapPreviousFrameAndVerifyMoment();
         historyBrowserPage.tapNextFrameAndVerifyMoment();
         historyBrowserPage.verifyPlaybackPaused();
@@ -89,6 +91,7 @@ public class HistoryBrowserTest extends BaseTest {
         historyBrowserPage.rotateToLandscapeAndVerifyHistoryBrowser();
         historyBrowserPage.verifyTimelineShowsByDefaultAndClosesInLandscape();
         historyBrowserPage.showTimelineAndVerifyControlsInLandscape();
+        historyBrowserPage.clickPreviousEventAndVerifyCursorMoved();
         historyBrowserPage.tapPreviousFrameAndVerifyMoment();
         historyBrowserPage.tapNextFrameAndVerifyMoment();
         historyBrowserPage.verifyPlaybackPaused();

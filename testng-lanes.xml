@@ -40,6 +40,7 @@
             <class name="tests.ts_archive.ArchiveTest"/>
             <class name="tests.ts_downloads.DownloadsTest"/>
             <class name="tests.ts_video_search.VideoSearchTest"/>
+            <class name="tests.ts_account_switching.AccountSwitchingTest"/>
         </classes>
     </test>
 </suite>

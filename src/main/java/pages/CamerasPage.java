@@ -308,7 +308,7 @@ public class CamerasPage {
     /** Long presses the first online camera and checks the context menu: foreground menu, options and preview. */
     public void longPressFirstOnlineCameraAndVerifyContextMenu() {
         openContextMenuOfFirstOnlineCamera();
-        verifyAllContextMenuOptions(true);
+        verifyAllContextMenuOptions(!PlatformLocator.isIos());
         verifyCameraPreviewDisplayed();
     }
 

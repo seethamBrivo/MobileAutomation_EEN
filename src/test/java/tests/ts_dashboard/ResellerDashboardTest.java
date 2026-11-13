@@ -33,8 +33,10 @@ public class ResellerDashboardTest extends BaseTest {
         resellerDashboardPage.verifyBottomNavigationBar();
     }
 
+    // Disabled: EPD-13231 - deleting an added account returns an internal server error, so the test cannot
+    // clean up after itself and leaves a TC40220_ account behind on every run. Re-enable once that is fixed.
     @Test(description = "EEPD-TC-40220: POS-Reseller Dashboard - Verify the account creation for Admin OR Account access users",
-          groups = {"regression", "dashboard"})
+          groups = {"regression", "dashboard"}, enabled = false)
     public void verifyAccountCreationForAdminOrAccountAccessUsers() {
         resellerDashboardPage.verifyAddAccountFormFields();
         resellerDashboardPage.verifyEditionOptions();

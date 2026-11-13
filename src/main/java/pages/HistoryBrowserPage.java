@@ -9,8 +9,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -22,6 +24,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
@@ -40,6 +44,16 @@ public class HistoryBrowserPage {
     private static final int MAX_LEVEL_MINUTES = TIMELINE_LEVEL_MINUTES.get(TIMELINE_LEVEL_MINUTES.size() - 1);
     private static final int SECONDS_PER_DAY = 24 * 60 * 60;
     private static final DateTimeFormatter CURSOR_POSITION_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    /** A time of day for an account that uses 12-hour time: "01:18:50 AM". */
+    private static final DateTimeFormatter TIME_12_HOUR =
+            DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH);
+
+    /** The same date and time as {@link #CURSOR_POSITION_FORMAT}, for an account that uses 12-hour time. */
+    private static final DateTimeFormatter CURSOR_POSITION_FORMAT_12_HOUR =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a", Locale.ENGLISH);
+    private static final String FRAME_TIME_PREFIX = "header:";
+    private static final DateTimeFormatter FRAME_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final List<By> TIMELINE_CONTROLS = List.of(
             HistoryBrowserLocators.PREVIOUS_FRAME_BUTTON, HistoryBrowserLocators.PREVIOUS_EVENT_BUTTON,
             HistoryBrowserLocators.PLAY_PAUSE_BUTTON, HistoryBrowserLocators.NEXT_EVENT_BUTTON,
@@ -70,13 +84,19 @@ public class HistoryBrowserPage {
     /** A long camera name is cut with three dots or the ellipsis character. */
     private static final Pattern NAME_CUT_MARK = Pattern.compile("(\\.\\.\\.|\\u2026)$");
 
-    /** The calendar picker shows the cursor as a full 24-hour date and time. */
-    private static final Pattern CALENDAR_TIMESTAMP = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
+    /** The calendar picker shows the cursor as a full date and time, with AM/PM on a 12-hour account. */
+    private static final Pattern CALENDAR_TIMESTAMP =
+            Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?: [AaPp][Mm])?");
 
     private static final String MULTI_WINDOWS_SETTING = "enableMultiWindows";
 
     /** Characters the export file name must reject: the validation message names the allowed pattern. */
     private static final String INVALID_FILE_NAME = "test^file/name*";
+
+    /** Android "video Camera 2026-11-04 02-26-15", iOS "Video Camera 2026-11-04 02:26:15". */
+    private static final Pattern DEFAULT_FILE_NAME = Pattern.compile(PlatformLocator.isIos()
+            ? "^Video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
+            : "^video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}$");
 
     private static final List<By> CONTEXT_MENU_OPTIONS = List.of(
             CamerasLocators.CAMERA_SETTINGS_OPTION, CamerasLocators.HISTORY_BROWSER_OPTION,
@@ -94,6 +114,9 @@ public class HistoryBrowserPage {
 
     /** Set while the multi-window setting is on, so cleanup only has to switch it off when a test turned it on. */
     private boolean multiWindowEnabled;
+
+    /** Set once the iOS video overlay with the frame time has been seen on this page. */
+    private boolean frameOverlayChecked;
 
     public HistoryBrowserPage(AppiumDriver driver) {
         this.driver = driver;
@@ -155,6 +178,22 @@ public class HistoryBrowserPage {
             return;
         }
 
+        if (PlatformLocator.isIos()) {
+            boolean leftExportFlow = false;
+            if (WaitUtils.isVisible(driver, HistoryBrowserLocators.SELECT_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+                WaitUtils.click(driver, HistoryBrowserLocators.BACK_BUTTON); // back to the export screen
+                leftExportFlow = true;
+            }
+            if (WaitUtils.isVisible(driver, HistoryBrowserLocators.CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
+                WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
+                leftExportFlow = true;
+            }
+            if (leftExportFlow) {
+                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
+            }
+            return;
+        }
+
         if (WaitUtils.isVisible(driver, HistoryBrowserLocators.CANCEL_BUTTON, TimeoutConstants.SHORT_TIMEOUT)) {
             WaitUtils.click(driver, HistoryBrowserLocators.CANCEL_BUTTON);
             WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
@@ -192,6 +231,10 @@ public class HistoryBrowserPage {
      * events shown count, and the history browser opens at the newest recording, so the ones shown precede the cursor.
      */
     public void requireEventsOnTimeline() {
+        requireEventsOnTimeline(MIN_EVENTS_FOR_STEPPING);
+    }
+
+    public void requireEventsOnTimeline(int minimumEvents) {
         LocalDateTime cursor = readCursorPosition();
         int earlierEvents = 0;
         if (WaitUtils.isVisible(driver, HistoryBrowserLocators.TIMELINE_EVENT_TIMES, TimeoutConstants.SHORT_TIMEOUT)) {
@@ -205,8 +248,8 @@ public class HistoryBrowserPage {
                 return count;
             });
         }
-        if (earlierEvents < MIN_EVENTS_FOR_STEPPING) {
-            throw new SkipException("The first camera needs at least " + MIN_EVENTS_FOR_STEPPING
+        if (earlierEvents < minimumEvents) {
+            throw new SkipException("The first camera needs at least " + minimumEvents
                     + " events before the cursor to step between events but " + earlierEvents + " are shown");
         }
     }
@@ -377,11 +420,16 @@ public class HistoryBrowserPage {
 
     /**
      * The landscape history browser shows the timeline panel by default, with a close icon that hides it. The test
-     * case words this as hidden until the timeline button is tapped; the app's behaviour is what is asserted.
+     * case words this as hidden until the timeline button is tapped; the app's behaviour is what is asserted. The
+     * iOS timeline has no close icon, so there only the default visibility is asserted.
      */
     public void verifyTimelineShowsByDefaultAndClosesInLandscape() {
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
                 "Timeline should be visible by default in landscape");
+        if (PlatformLocator.isIos()) {
+            logger.info("iOS landscape: the timeline has no close icon, so closing it is not exercised");
+            return;
+        }
         WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_CLOSE_BUTTON);
         Assert.assertTrue(WaitUtils.waitForInvisibility(
                         driver, HistoryBrowserLocators.TIMELINE_CONTAINER, TimeoutConstants.SHORT_TIMEOUT),
@@ -389,9 +437,12 @@ public class HistoryBrowserPage {
     }
 
     public void showTimelineAndVerifyControlsInLandscape() {
-        WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_BUTTON);
+        if (!PlatformLocator.isIos()) { // the iOS timeline is never closed, so it has no button to show it again
+            WaitUtils.click(driver, HistoryBrowserLocators.TIMELINE_BUTTON);
+        }
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.TIMELINE_CONTAINER,
-                "Timeline should be displayed after tapping the timeline button");
+                PlatformLocator.isIos() ? "Timeline should be displayed in landscape"
+                        : "Timeline should be displayed after tapping the timeline button");
         verifyTimelineControlsDisplayed();
     }
 
@@ -502,29 +553,43 @@ public class HistoryBrowserPage {
         return gapSeconds / 60;
     }
 
+    /** Accepts the 24-hour, 12-hour, and full datetime formats. */
     private static LocalTime parseTimeLabel(String label) {
-        try {
-            String trimmed = label.trim();
-            // iOS uses full datetime format "yyyy-MM-dd HH:mm:ss" (19 chars), Android uses "HH:mm:ss" (8 chars)
-            if (trimmed.length() == 19 && trimmed.charAt(4) == '-') {
-                // Parse as full datetime and extract time part
-                return LocalDateTime.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).toLocalTime();
-            } else {
-                // Parse as time only (Android format)
-                return LocalTime.parse(trimmed);
+        String trimmed = label.trim();
+        // Try full datetime format first (19 chars: "yyyy-MM-dd HH:mm:ss")
+        if (trimmed.length() == 19 && trimmed.charAt(4) == '-') {
+            try {
+                return LocalDateTime.parse(trimmed, CURSOR_POSITION_FORMAT).toLocalTime();
+            } catch (DateTimeParseException e) {
+                // Fall through to other formats
             }
-        } catch (DateTimeParseException e) {
-            throw new AssertionError("Timeline row label '" + label + "' is not a valid time format; "
-                    + "check the account's time format", e);
+        }
+        // Try 24-hour time format (8 chars: "HH:mm:ss")
+        try {
+            return LocalTime.parse(trimmed);
+        } catch (DateTimeParseException twentyFourHourFailure) {
+            // Try 12-hour time format (11 chars: "hh:mm:ss am/pm")
+            try {
+                return LocalTime.parse(trimmed.toUpperCase(Locale.ROOT), TIME_12_HOUR);
+            } catch (DateTimeParseException e) {
+                throw new AssertionError("Timeline label '" + trimmed + "' is not a valid time format "
+                        + "(expected HH:mm:ss, hh:mm:ss AM/PM, or yyyy-MM-dd HH:mm:ss)", e);
+            }
         }
     }
 
+    /** Accepts the 24-hour and the 12-hour format. */
     private static LocalDateTime parseCursorLabel(String label) {
         try {
             return LocalDateTime.parse(label.trim(), CURSOR_POSITION_FORMAT);
-        } catch (DateTimeParseException e) {
-            throw new AssertionError("Cursor time '" + label + "' is not in the expected 24-hour "
-                    + "'yyyy-MM-dd HH:mm:ss' format; check the account's time format", e);
+        } catch (DateTimeParseException twentyFourHourFailure) {
+            try {
+                return LocalDateTime.parse(label.trim().toUpperCase(Locale.ROOT),
+                        CURSOR_POSITION_FORMAT_12_HOUR);
+            } catch (DateTimeParseException e) {
+                throw new AssertionError("Cursor time '" + label + "' is neither 'yyyy-MM-dd HH:mm:ss' nor "
+                        + "'yyyy-MM-dd hh:mm:ss AM/PM'", e);
+            }
         }
     }
 
@@ -621,7 +686,8 @@ public class HistoryBrowserPage {
         String calendarTimestamp = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CURRENT_POSITION)
                 .getText();
         Assert.assertTrue(CALENDAR_TIMESTAMP.matcher(calendarTimestamp).matches(),
-                "Calendar picker should show a 'YYYY-MM-DD HH:MM:SS' timestamp but showed '" + calendarTimestamp + "'");
+                "Calendar picker should show a 'YYYY-MM-DD HH:MM:SS [AM/PM]' timestamp but showed '"
+                        + calendarTimestamp + "'");
         verifyFilterButtonEnabledWhenEventsShown();
     }
 
@@ -657,17 +723,32 @@ public class HistoryBrowserPage {
      * not seek, so the click is repeated once when the cursor has not moved. A direction assert still follows.
      */
     private void clickAndVerifyCursorMoved(By button, boolean forward, String description) {
-        LocalDateTime before = readCursorPosition();
+        waitForFrameToSettle();
+        LocalDateTime before = readFramePosition();
         LocalDateTime after = clickUntilCursorMoves(button, before, description);
         verifyCursorMoved(before, after, forward, description);
     }
 
-    /** One tap on a frame button: the cursor, the time above the video and so the shown frame all move together. */
+    /**
+     * One tap on a frame button: the cursor, the time above the video and so the shown frame all move together. On
+     * iOS the frame time read for the cursor is the video overlay's, which is the shown frame itself. The time label
+     * above the video stops at whole seconds and stays the same for a step of half a second, so there it is compared
+     * with the overlay time cut to whole seconds instead of with its own earlier value.
+     */
     private void tapStepButtonAndVerifyMoment(By button, boolean forward, String description) {
-        LocalDateTime cursorBefore = readCursorPosition();
-        LocalDateTime previewBefore = readPreviewTime();
+        waitForFrameToSettle();
+        LocalDateTime cursorBefore = readFramePosition();
+        LocalDateTime previewBefore = PlatformLocator.isIos() ? null : readPreviewTime();
         LocalDateTime cursorAfter = clickUntilCursorMoves(button, cursorBefore, description);
         verifyCursorMoved(cursorBefore, cursorAfter, forward, description);
+        if (PlatformLocator.isIos()) {
+            LocalDateTime expectedPreview = cursorAfter.truncatedTo(ChronoUnit.SECONDS);
+            WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
+                    () -> readPreviewTime().equals(expectedPreview));
+            Assert.assertEquals(readPreviewTime(), expectedPreview,
+                    "Preview time above the video should show the second of the frame reached by " + description);
+            return;
+        }
         WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
                 () -> !readPreviewTime().equals(previewBefore));
         LocalDateTime previewAfter = readPreviewTime();
@@ -682,43 +763,79 @@ public class HistoryBrowserPage {
      * it has passed the tap's distance, and the assert then reads it afresh.
      */
     private void longPressStepButtonAndVerifyFastMove(By button, boolean forward, String description) {
-        LocalDateTime start = readCursorPosition();
+        waitForFrameToSettle();
+        LocalDateTime start = readFramePosition();
         LocalDateTime afterTap = clickUntilCursorMoves(button, start, description);
-        long tapSeconds = Math.abs(Duration.between(start, afterTap).getSeconds());
-        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, button));
+        long tapMillis = Math.abs(Duration.between(start, afterTap).toMillis());
+        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, button),
+                PlatformLocator.isIos() ? TimeoutConstants.FRAME_BUTTON_HOLD_IOS : TimeoutConstants.LONG_PRESS);
         WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
-                () -> movedFurther(afterTap, readCursorPosition(), forward, tapSeconds));
-        LocalDateTime afterHold = readCursorPosition();
-        Assert.assertTrue(movedFurther(afterTap, afterHold, forward, tapSeconds),
+                () -> movedFurther(afterTap, readFramePosition(), forward, tapMillis));
+        LocalDateTime afterHold = readFramePosition();
+        Assert.assertTrue(movedFurther(afterTap, afterHold, forward, tapMillis),
                 "Long press on " + description + " should keep moving the cursor " + (forward ? "forward" : "backward")
-                        + " further than one tap (" + tapSeconds + " s) but moved "
-                        + Math.abs(Duration.between(afterTap, afterHold).getSeconds()) + " s from " + afterTap
+                        + " further than one tap (" + tapMillis + " ms) but moved "
+                        + Math.abs(Duration.between(afterTap, afterHold).toMillis()) + " ms from " + afterTap
                         + " to " + afterHold);
     }
 
-    private static boolean movedFurther(LocalDateTime from, LocalDateTime to, boolean forward, long thanSeconds) {
+    private static boolean movedFurther(LocalDateTime from, LocalDateTime to, boolean forward, long thanMillis) {
         boolean inDirection = forward ? to.isAfter(from) : to.isBefore(from);
-        return inDirection && Math.abs(Duration.between(from, to).getSeconds()) > thanSeconds;
+        return inDirection && Math.abs(Duration.between(from, to).toMillis()) > thanMillis;
     }
 
     private void verifyCursorMoved(LocalDateTime before, LocalDateTime after, boolean forward, String description) {
         boolean moved = forward ? after.isAfter(before) : after.isBefore(before);
         Assert.assertTrue(moved,
-                "Red cursor should move to the " + description + " (" + (forward ? "later" : "earlier")
+                "Frame position should move to the " + description + " (" + (forward ? "later" : "earlier")
                         + " than " + before + ") but is at " + after);
     }
 
+    /**
+     * On iOS a step tap sent while the player is still on its last jump was ignored in some runs, so a step starts
+     * once two reads of the frame time in a row agree, and fails when they never do, because a step taken while the
+     * frame is still moving cannot be judged. Android keeps its single read.
+     */
+    private void waitForFrameToSettle() {
+        if (!PlatformLocator.isIos()) {
+            return;
+        }
+        AtomicReference<LocalDateTime> previous = new AtomicReference<>();
+        boolean settled = WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> {
+            LocalDateTime now = readFramePosition();
+            return now.equals(previous.getAndSet(now));
+        });
+        Assert.assertTrue(settled, "Frame time should stop changing before a step but kept changing for "
+                + TimeoutConstants.TIMELINE_SETTLE_TIMEOUT);
+    }
+
     private LocalDateTime clickUntilCursorMoves(By button, LocalDateTime before, String description) {
+        verifyStepButtonEnabled(button, description);
         for (int attempt = 1; attempt <= CONTROL_CLICK_ATTEMPTS; attempt++) {
             WaitUtils.click(driver, button);
             if (WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT,
-                    () -> !readCursorPosition().equals(before))) {
+                    () -> !readFramePosition().equals(before))) {
                 break;
             }
-            logger.warn("Cursor did not move after clicking {} (attempt {} of {})",
+            logger.warn("Frame position did not move after clicking {} (attempt {} of {})",
                     description, attempt, CONTROL_CLICK_ATTEMPTS);
         }
-        return readCursorPosition();
+        return readFramePosition();
+    }
+
+    /**
+     * The frame buttons stay disabled until the app has loaded the camera's video and timeline (a spinner shows
+     * meanwhile, seen on iOS when the first camera's history did not load). Checking that first fails with the reason
+     * instead of a bare "element was not enabled" from the click.
+     */
+    private void verifyStepButtonEnabled(By button, String description) {
+        try {
+            WaitUtils.waitForClickability(driver, button);
+        } catch (TimeoutException e) {
+            throw new AssertionError("The " + description + " button should be enabled once the history has loaded, "
+                    + "but stayed disabled for " + FrameworkConstants.EXPLICIT_WAIT + "; the video or timeline of "
+                    + "the first camera probably did not load", e);
+        }
     }
 
     private LocalDateTime readPreviewTime() {
@@ -729,6 +846,52 @@ public class HistoryBrowserPage {
     private LocalDateTime readCursorPosition() {
         return WaitUtils.retryOnStale(() -> parseCursorLabel(
                 WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.CURRENT_POSITION).getText()));
+    }
+
+    /**
+     * The time of the frame the stepping buttons move, as precise as the screen allows. Frames can be less than a
+     * second apart, so on iOS the cursor label (whole seconds) can stay the same while the frame changes; the video
+     * overlay carries milliseconds. Android has no such overlay and keeps the cursor label.
+     */
+    private LocalDateTime readFramePosition() {
+        if (!PlatformLocator.isIos()) {
+            return readCursorPosition();
+        }
+        verifyFrameOverlayShown();
+        return WaitUtils.retryOnStale(() -> parseFrameTime(
+                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY).getText()));
+    }
+
+    /**
+     * The overlay looks like a debug feature of the iOS build. Without it the steps could only compare whole seconds,
+     * which cannot tell half-second frames apart, so a build that drops it fails here with the reason instead of
+     * quietly running a weaker check. Looked up once per page, with the same wait as the read that follows, because a
+     * video that loads slowly must not fail here before that read has had its time.
+     */
+    private void verifyFrameOverlayShown() {
+        if (frameOverlayChecked) {
+            return;
+        }
+        Assert.assertTrue(WaitUtils.isVisible(
+                        driver, HistoryBrowserLocators.FRAME_TIME_OVERLAY, FrameworkConstants.EXPLICIT_WAIT),
+                "The iOS video overlay with the frame time ('header: yyyy-MM-dd HH:mm:ss.SSS') should be shown; "
+                        + "if the build no longer has it, switch FRAME_TIME_OVERLAY to an accessibility id");
+        frameOverlayChecked = true;
+    }
+
+    /**
+     * A WebDriverException, not an AssertionError, so the polls that read the frame time treat an overlay caught
+     * half-updated as "not yet"; a read outside a poll still fails with this message.
+     */
+    private static LocalDateTime parseFrameTime(String overlayText) {
+        String text = overlayText.trim();
+        String time = text.startsWith(FRAME_TIME_PREFIX) ? text.substring(FRAME_TIME_PREFIX.length()).trim() : text;
+        try {
+            return LocalDateTime.parse(time, FRAME_TIME_FORMAT);
+        } catch (DateTimeParseException e) {
+            throw new WebDriverException("Frame time '" + overlayText + "' is not in the expected "
+                    + "'header: yyyy-MM-dd HH:mm:ss.SSS' format", e);
+        }
     }
 
     private void verifyTimelineLevel(int expectedMinutes) {
@@ -863,7 +1026,14 @@ public class HistoryBrowserPage {
         logger.info("Export screen opened successfully");
     }
 
+    /** Android only: the iOS selection icon has no accessibility id. */
     public void verifyDownloadsSelectedAsDefault() {
+        if (PlatformLocator.isIos()) {
+            logger.info("Not asserted on iOS: that Downloads is the selected destination, its icon has no id");
+            WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOADS_DESTINATION_ROW,
+                    TimeoutConstants.SHORT_TIMEOUT, "Downloads should be offered as a save destination");
+            return;
+        }
         WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOADS_SELECTED_INDICATOR,
                 TimeoutConstants.SHORT_TIMEOUT,
                 "Downloads should be selected as default save destination");
@@ -879,7 +1049,14 @@ public class HistoryBrowserPage {
                 "Archive folder picker should be opened with Select button visible");
     }
 
+    /** Android only: on iOS a tap opens the folder, and Select alone picks the Archive root the manual asks for. */
     public void pickFirstFolder() {
+        if (PlatformLocator.isIos()) {
+            logger.info("Not done on iOS: no folder is opened, Select picks the Archive root");
+            WaitUtils.assertVisible(driver, HistoryBrowserLocators.FIRST_FOLDER, TimeoutConstants.SHORT_TIMEOUT,
+                    "The Archive folder picker should list its folders");
+            return;
+        }
         WaitUtils.click(driver, HistoryBrowserLocators.FIRST_FOLDER);
     }
 
@@ -891,6 +1068,12 @@ public class HistoryBrowserPage {
         // Wait for Export screen to reload after folder selection
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SAVE_TO_SECTION_TITLE,
                 FrameworkConstants.EXPLICIT_WAIT);
+        if (PlatformLocator.isIos()) {
+            logger.info("Not asserted on iOS: the selected folder's name, the export screen does not show it");
+            WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_TEXT, TimeoutConstants.SHORT_TIMEOUT,
+                    "The export screen should offer the Archive again after Select");
+            return;
+        }
         String folderName = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SELECTED_FOLDER_NAME)
                 .getText();
         Assert.assertFalse(folderName.isEmpty(),
@@ -941,18 +1124,11 @@ public class HistoryBrowserPage {
     }
 
     public void verifyExportingSnackbar() {
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT,
-                "Snackbar message should be displayed after clicking Export");
-        String message = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE).getText();
-        Assert.assertTrue(message.contains("Exporting"),
-                "Snackbar should contain 'Exporting' but was: " + message);
+        Snackbar.verifyContainsAnyOf(driver, TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT, "Exporting");
     }
 
-    public void verifyExportingSnackbarAndClickSeeProgress() {
-        // Snackbar is transient - must click while still visible
-        WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SNACKBAR_MESSAGE,
-                TimeoutConstants.DOWNLOAD_COMPLETE_TIMEOUT);
+    public void clickSeeProgress() {
+        // The snackbar is gone within seconds, so the button is clicked at once; it exists only while the snackbar shows.
         WaitUtils.click(driver, HistoryBrowserLocators.SEE_PROGRESS_BUTTON);
     }
 
@@ -973,15 +1149,28 @@ public class HistoryBrowserPage {
     }
 
     public void enterFileName(String fileName) {
+        if (PlatformLocator.isIos()) {
+            // The message shows for about a second, so the typing must end on the first '/': what comes before it is
+            // typed as given (the app drops the other rejected characters without a message), then the '/' alone.
+            int slash = fileName.indexOf('/');
+            if (slash < 0) {
+                throw new IllegalArgumentException("The file name must contain a '/': " + fileName);
+            }
+            WaitUtils.clearAndType(driver, HistoryBrowserLocators.FILE_NAME_FIELD, fileName.substring(0, slash));
+            WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD).sendKeys("/");
+            return;
+        }
         WaitUtils.clearAndType(driver, HistoryBrowserLocators.FILE_NAME_FIELD, fileName);
     }
 
     public void verifyValidationError() {
-        WaitUtils.assertVisible(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT,
-                TimeoutConstants.SHORT_TIMEOUT,
-                "Validation error message should be displayed for special characters");
-        String errorMessage = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT)
-                .getText();
+        // One read: the toast is gone after about two seconds. On iOS it sits behind the keyboard and is reported
+        // as not visible, so it is read by presence.
+        String errorMessage = PlatformLocator.isIos()
+                ? WaitUtils.attributeOfPresent(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT, "label",
+                        TimeoutConstants.SHORT_TIMEOUT)
+                : WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.VALIDATION_ERROR_TEXT,
+                        TimeoutConstants.SHORT_TIMEOUT).getText();
         Assert.assertTrue(errorMessage.contains("[^/]*"),
                 "Error message should contain '[^/]*' but was: " + errorMessage);
     }
@@ -999,7 +1188,12 @@ public class HistoryBrowserPage {
 
     public void completeExportWithProgress() {
         clickExportButtonAtBottom();
-        verifyExportingSnackbarAndClickSeeProgress();
+        if (PlatformLocator.isIos()) {
+            verifyExportingSnackbar();
+            verifyReturnedToHistoryBrowser();
+            return;
+        }
+        clickSeeProgress();
         verifyProgressTabOpened();
         driver.navigate().back();
         verifyReturnedToHistoryBrowser();
@@ -1018,32 +1212,36 @@ public class HistoryBrowserPage {
         reopenExportScreen();
         enterFileName(INVALID_FILE_NAME);
         verifyValidationError();
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, HistoryBrowserLocators.KEYBOARD_DONE_KEY); // the keyboard covers the Cancel button
+        }
         clickCancelButton();
         verifyReturnedToHistoryBrowser();
     }
 
-    public void verifyDefaultFileNameExport() {
+    public String verifyDefaultFileNameExport() {
         reopenExportScreen();
-        verifyDefaultFileNamePattern();
+        String fileName = verifyDefaultFileNamePattern();
         selectArchiveDestination();
         pickFirstFolder();
         clickSelectButton();
         clickExportButtonAtBottom();
         verifyExportingSnackbar();
+        return fileName;
     }
 
-    public void verifyDefaultFileNamePattern() {
+    /** Returns the file name shown, after checking its pattern. */
+    public String verifyDefaultFileNamePattern() {
         WebElement fileNameField = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FILE_NAME_FIELD);
-        String fileName = fileNameField.getAttribute("text");
+        String fileName = fileNameField.getAttribute(PlatformLocator.isIos() ? "value" : "text");
 
         // Verify file name follows pattern: video <camera_name> YYYY-MM-DD HH-MM-SS
         Assert.assertNotNull(fileName, "File name attribute should not be null");
         Assert.assertFalse(fileName.isEmpty(), "File name should not be empty");
 
-        // Pattern: "video " + camera_name + " " + YYYY-MM-DD + " " + HH-MM-SS
-        // Example: "video Dm08 2026-11-04 02-26-15"
-        Assert.assertTrue(fileName.matches("^video .+ \\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}$"),
-                "File name should match pattern 'video <camera_name> YYYY-MM-DD HH-MM-SS' but was: " + fileName);
+        Assert.assertTrue(DEFAULT_FILE_NAME.matcher(fileName).matches(),
+                "File name should match the pattern '" + DEFAULT_FILE_NAME + "' but was: " + fileName);
+        return fileName;
     }
 
     // Downloads export flows (EEPD-TC-23629)
@@ -1058,11 +1256,20 @@ public class HistoryBrowserPage {
         verifyReturnedToHistoryBrowser();
     }
 
-    public void verifyDefaultFileNameExportForDownloads() {
+    public String verifyDefaultFileNameExportForDownloads() {
         reopenExportScreen();
-        verifyDefaultFileNamePattern();
+        String fileName = verifyDefaultFileNamePattern();
         clickExportButtonAtBottom();
         verifyExportingSnackbar();
+        return fileName;
+    }
+
+    public void leaveHistoryBrowser() {
+        if (PlatformLocator.isIos()) {
+            WaitUtils.click(driver, HistoryBrowserLocators.BACK_BUTTON);
+            return;
+        }
+        driver.navigate().back();
     }
 
     /**
@@ -1070,7 +1277,7 @@ public class HistoryBrowserPage {
      * which is what the export range starts from. Leaves the export screen open with Downloads selected.
      */
     private void openExportScreenAtPreviousEvent() {
-        requireEventsOnTimeline();
+        requireEventsOnTimeline(1);
         clickPreviousEventAndVerifyCursorMoved();
         verifyExportButtonVisible();
         clickExportButton();
@@ -1084,5 +1291,4 @@ public class HistoryBrowserPage {
         clickExportButton();
         verifyExportScreenOpened();
     }
-
 }

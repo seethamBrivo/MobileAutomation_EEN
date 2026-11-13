@@ -17,6 +17,10 @@
     "ts02_user_creds": {
       "username": "your_ts02_email@example.com",
       "password": "YourPassword123"
+    },
+    "reseller3_user_creds": {
+      "username": "your_reseller3_email@example.com",
+      "password": "YourPassword123"
     }
   },
   "search_filter": {
