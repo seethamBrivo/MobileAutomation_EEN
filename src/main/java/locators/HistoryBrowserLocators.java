@@ -278,8 +278,6 @@ public final class HistoryBrowserLocators {
             AppiumBy.accessibilityId("close_button"), // android
             AppiumBy.accessibilityId("buttons_view_cancel_button")); // ios
 
- // ios
-
     // See progress button on snackbar. Android only: the iOS toast has no button, so this has no iOS value on purpose.
     public static final By SEE_PROGRESS_BUTTON =
             AppiumBy.xpath("//android.widget.TextView[@content-desc='snackbar_een_button']");

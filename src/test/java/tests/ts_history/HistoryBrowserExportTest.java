@@ -46,10 +46,15 @@ public class HistoryBrowserExportTest extends BaseTest {
             if (historyBrowserPage != null) {
                 historyBrowserPage.recoverFromExportFlow();
                 historyBrowserPage.returnToLiveVideoIfInHistoryBrowser();
-                devicesPage.recoverToDashboard();
             }
         } catch (Throwable e) {
             logger.warn("@AfterMethod: cleanup failed: {}", e.toString());
+        }
+        // The tests end in the Archive or Downloads list, which the steps above do not leave.
+        try {
+            devicesPage.recoverToDashboard();
+        } catch (Throwable e) {
+            logger.warn("@AfterMethod: recovering to the dashboard failed: {}", e.toString());
         }
     }
 

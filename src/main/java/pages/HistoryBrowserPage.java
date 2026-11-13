@@ -5,7 +5,6 @@ import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.time.DateTimeException;
 import java.time.Duration;
-import java.util.Locale;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +12,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -45,10 +45,11 @@ public class HistoryBrowserPage {
     private static final int SECONDS_PER_DAY = 24 * 60 * 60;
     private static final DateTimeFormatter CURSOR_POSITION_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    /** The same, for an account that uses 12-hour time: "2026-11-12 01:18:50 AM". */
+    /** A time of day for an account that uses 12-hour time: "01:18:50 AM". */
     private static final DateTimeFormatter TIME_12_HOUR =
             DateTimeFormatter.ofPattern("hh:mm:ss a", Locale.ENGLISH);
 
+    /** The same date and time as {@link #CURSOR_POSITION_FORMAT}, for an account that uses 12-hour time. */
     private static final DateTimeFormatter CURSOR_POSITION_FORMAT_12_HOUR =
             DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a", Locale.ENGLISH);
     private static final String FRAME_TIME_PREFIX = "header:";
@@ -1017,6 +1018,7 @@ public class HistoryBrowserPage {
     /** Android only: the iOS selection icon has no accessibility id. */
     public void verifyDownloadsSelectedAsDefault() {
         if (PlatformLocator.isIos()) {
+            logger.info("Not asserted on iOS: that Downloads is the selected destination, its icon has no id");
             WaitUtils.assertVisible(driver, HistoryBrowserLocators.DOWNLOADS_DESTINATION_ROW,
                     TimeoutConstants.SHORT_TIMEOUT, "Downloads should be offered as a save destination");
             return;
@@ -1039,6 +1041,7 @@ public class HistoryBrowserPage {
     /** Android only: on iOS a tap opens the folder, and Select alone picks the Archive root the manual asks for. */
     public void pickFirstFolder() {
         if (PlatformLocator.isIos()) {
+            logger.info("Not done on iOS: no folder is opened, Select picks the Archive root");
             WaitUtils.assertVisible(driver, HistoryBrowserLocators.FIRST_FOLDER, TimeoutConstants.SHORT_TIMEOUT,
                     "The Archive folder picker should list its folders");
             return;
@@ -1054,7 +1057,8 @@ public class HistoryBrowserPage {
         // Wait for Export screen to reload after folder selection
         WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.SAVE_TO_SECTION_TITLE,
                 FrameworkConstants.EXPLICIT_WAIT);
-        if (PlatformLocator.isIos()) { // the iOS export screen does not show the selected folder's name
+        if (PlatformLocator.isIos()) {
+            logger.info("Not asserted on iOS: the selected folder's name, the export screen does not show it");
             WaitUtils.assertVisible(driver, HistoryBrowserLocators.ARCHIVE_TEXT, TimeoutConstants.SHORT_TIMEOUT,
                     "The export screen should offer the Archive again after Select");
             return;

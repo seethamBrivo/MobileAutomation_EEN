@@ -204,6 +204,7 @@ public class DownloadsPage {
             WaitUtils.click(driver, ArchiveLocators.ALLOW_PHOTO_LIBRARY_ACCESS_BUTTON);
         }
     }
+
     public void verifyDownloadingSnackbar() {
         // Poll until snackbar text contains "downloading" (not exact match, handles case variations)
         boolean found = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT, () -> {
@@ -244,7 +245,8 @@ public class DownloadsPage {
         AtomicReference<String> lastSeen = new AtomicReference<>("");
         boolean saved = WaitUtils.pollUntil(driver, timeout, () -> {
             dismissPhotoPromptIfShown();
-            List<String> texts = WaitUtils.textsOf(driver, CommonLocators.SNACKBAR_TEXT);
+            List<String> texts = WaitUtils.textsOfOrEmpty(driver, CommonLocators.SNACKBAR_TEXT,
+                    TimeoutConstants.SHORT_TIMEOUT);
             if (!texts.isEmpty()) {
                 lastSeen.set(texts.get(0));
             }

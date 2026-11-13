@@ -28,6 +28,7 @@ public class FileSizeUtilsTest {
     public void readsAThousandsSeparator() {
         assertEquals(FileSizeUtils.toMegabytes("1,234 MB"), 1234, DELTA);
         assertEquals(FileSizeUtils.toMegabytes("1,234.5 MB"), 1234.5, DELTA);
+        assertEquals(FileSizeUtils.toMegabytes("1.234,5 MB"), 1234.5, DELTA);
     }
 
     @Test
