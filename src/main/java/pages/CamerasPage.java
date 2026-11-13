@@ -1,5 +1,6 @@
 package pages;
 
+import constants.GestureConstants;
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import java.time.LocalTime;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -18,7 +20,6 @@ import locators.CamerasLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
@@ -506,7 +507,19 @@ public class CamerasPage {
     /** Whether some camera shows a tag, scrolling down the list to look for one. */
     public boolean hasCameraWithTag() {
         GestureUtils.scrollToTop(driver);
-        return scrollUntilElementIsVisible(CamerasLocators.FIRST_TAG);
+        if (!PlatformLocator.isIos()) {
+            return scrollUntilElementIsVisible(CamerasLocators.FIRST_TAG);
+        }
+        // Looks for the tag that tapFirstTag will take, so a half-visible tag cannot end the search with no tag to tap.
+        for (int swipes = 0; swipes <= GestureConstants.MAX_SCROLL_SWIPES; swipes++) {
+            if (firstWholeTag().isPresent()) {
+                return true;
+            }
+            if (swipes < GestureConstants.MAX_SCROLL_SWIPES) {
+                GestureUtils.swipeUp(driver);
+            }
+        }
+        return false;
     }
 
     /** Taps the first tag on screen and returns its name. */
@@ -522,23 +535,39 @@ public class CamerasPage {
 
     /** A tag cut off by a screen edge is tapped on its visible part only, which may miss; take a whole one. */
     private String tapFirstWholeTag() {
-        Dimension screen = driver.manage().window().getSize();
-        // The tab bar sits over the bottom of the list, so a tag under it is on screen but cannot be tapped.
-        int bottomEdge = WaitUtils.isVisible(driver, CamerasLocators.TAB_BAR, TimeoutConstants.SHORT_TIMEOUT)
-                ? WaitUtils.waitForVisibility(driver, CamerasLocators.TAB_BAR).getRect().y
-                : screen.height;
+        WebElement tag = firstWholeTag().orElseGet(() -> {
+            Assert.fail("A tag fully inside the screen should be listed under the cameras on screen");
+            return null;
+        });
+        String tagName = tag.getText().trim();
+        tag.click();
+        logger.info("Tapped the tag '{}'", tagName);
+        return tagName;
+    }
+
+    /** The first tag on screen that is inside the screen on every side and above the tab bar, if there is one. */
+    private Optional<WebElement> firstWholeTag() {
+        if (!WaitUtils.isVisible(driver, CamerasLocators.VISIBLE_TAGS, TimeoutConstants.SHORT_TIMEOUT)) {
+            return Optional.empty();
+        }
+        int screenWidth = driver.manage().window().getSize().width;
+        int bottomEdge = bottomUsableEdge();
         for (WebElement tag : WaitUtils.findElements(driver, CamerasLocators.VISIBLE_TAGS)) {
             Rectangle bounds = tag.getRect();
-            if (bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= screen.width
+            if (bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= screenWidth
                     && bounds.y + bounds.height <= bottomEdge) {
-                String tagName = tag.getText().trim();
-                tag.click();
-                logger.info("Tapped the tag '{}'", tagName);
-                return tagName;
+                return Optional.of(tag);
             }
         }
-        Assert.fail("A tag fully inside the screen should be listed under the cameras on screen");
-        return null;
+        return Optional.empty();
+    }
+
+    /** The tab bar sits over the bottom of the list, so what is under it is on screen but cannot be touched. */
+    private int bottomUsableEdge() {
+        if (WaitUtils.isVisible(driver, CamerasLocators.TAB_BAR, TimeoutConstants.SHORT_TIMEOUT)) {
+            return WaitUtils.waitForVisibility(driver, CamerasLocators.TAB_BAR).getRect().y;
+        }
+        return driver.manage().window().getSize().height;
     }
 
     /** After a tag was tapped: the counter shrank to some cameras and every card on screen carries the tag. */
@@ -624,8 +653,10 @@ public class CamerasPage {
             logger.warn("No card on screen shows tags; scrolling the tags was not checked");
             return false;
         }
+        int bottomEdge = bottomUsableEdge();
         for (WebElement row : WaitUtils.findElements(driver, CamerasLocators.TAG_ROWS)) {
-            if (rightEdgeOfLastTag(row) > screenWidth) {
+            // A swipe that starts over the tab bar scrolls nothing, so a row under it cannot be checked.
+            if (rowCentreY(row) < bottomEdge && rightEdgeOfLastTag(row) > screenWidth) {
                 scrollTagRowToEndAndBack(row, screenWidth);
                 return true;
             }
@@ -693,10 +724,11 @@ public class CamerasPage {
     }
 
     private void scrollTagRowToEndAndBack(WebElement row, int screenWidth) {
-        Rectangle rowBounds = row.getRect();
-        int rowY = rowBounds.y + rowBounds.height / 2;
-        List<WebElement> tags = row.findElements(CamerasLocators.TAGS_IN_ROW);
-        String lastTag = tags.get(tags.size() - 1).getText().trim();
+        int rowY = rowCentreY(row);
+        String lastTag = WaitUtils.retryOnStale(() -> {
+            List<WebElement> tags = row.findElements(CamerasLocators.TAGS_IN_ROW);
+            return tags.get(tags.size() - 1).getText().trim();
+        });
         int swipes = 0;
         boolean lastTagShown = false;
         while (!lastTagShown && swipes < TAG_ROW_MAX_SWIPES) {
@@ -716,6 +748,13 @@ public class CamerasPage {
         }),
                 "The tag row should be back at its first tag after swiping it back");
         logger.info("Scrolled the tag row to its last tag '{}' in {} swipe(s) and back", lastTag, swipes);
+    }
+
+    private int rowCentreY(WebElement row) {
+        return WaitUtils.retryOnStale(() -> {
+            Rectangle bounds = row.getRect();
+            return bounds.y + bounds.height / 2;
+        });
     }
 
     private int rightEdgeOfLastTag(WebElement row) {
