@@ -25,7 +25,6 @@ public class LiveViewPage {
 
     public void navigateToLiveView(String cameraName) {
         logger.info("Navigating to live view of camera: {}", cameraName);
-        BottomNavigationBar.clickLayoutsTab(driver);
         clickSearchFilter();
         enterCameraSearch(cameraName);
         clickCameraCard(cameraName);
