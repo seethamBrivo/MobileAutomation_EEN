@@ -523,10 +523,14 @@ public class CamerasPage {
     /** A tag cut off by a screen edge is tapped on its visible part only, which may miss; take a whole one. */
     private String tapFirstWholeTag() {
         Dimension screen = driver.manage().window().getSize();
+        // The tab bar sits over the bottom of the list, so a tag under it is on screen but cannot be tapped.
+        int bottomEdge = WaitUtils.isVisible(driver, CamerasLocators.TAB_BAR, TimeoutConstants.SHORT_TIMEOUT)
+                ? WaitUtils.waitForVisibility(driver, CamerasLocators.TAB_BAR).getRect().y
+                : screen.height;
         for (WebElement tag : WaitUtils.findElements(driver, CamerasLocators.VISIBLE_TAGS)) {
             Rectangle bounds = tag.getRect();
             if (bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= screen.width
-                    && bounds.y + bounds.height <= screen.height) {
+                    && bounds.y + bounds.height <= bottomEdge) {
                 String tagName = tag.getText().trim();
                 tag.click();
                 logger.info("Tapped the tag '{}'", tagName);
@@ -632,18 +636,23 @@ public class CamerasPage {
 
     /**
      * iOS: scrolling down grows the list. The list's scroll bar states its height in pages ("3 pages"), so this
-     * proves the list got taller, not how many cameras were added. The account must have more cameras than fit
-     * one load, or the list never grows and this fails. Then scrolls back to the first camera.
+     * proves the list got taller, not how many cameras were added. Returns false, without scrolling, when the
+     * whole list fits one screen: the account then has too few cameras for a next page, which is missing test
+     * data, not a defect. Android does not automate the step and returns true. Scrolls back to the first camera.
      */
-    public void verifyNextPageLoadsOnScroll() {
+    public boolean verifyNextPageLoadsOnScroll() {
         if (!PlatformLocator.isIos()) {
             logger.info("Loading the next page of cameras is automated on iOS only");
-            return;
+            return true;
         }
         List<List<String>> cards = visibleCardTexts();
         Assert.assertFalse(cards.isEmpty(), "A camera card should be on screen before scrolling for the next page");
         String firstCamera = cards.get(0).get(0);
         int pagesBefore = loadedPages();
+        if (pagesBefore <= 1) {
+            logger.warn("The camera list fits one screen; loading the next page was not checked");
+            return false;
+        }
         int swipes = 0;
         boolean listGrew = false;
         while (!listGrew && swipes < NEXT_PAGE_MAX_SWIPES) {
@@ -666,6 +675,7 @@ public class CamerasPage {
         WaitUtils.assertVisible(driver, firstCameraCard, TimeoutConstants.SHORT_TIMEOUT,
                 "The list should be back at its first camera '" + firstCamera + "' after loading the next page");
         logger.info("The list grew from {} to {} screens after {} swipe(s)", pagesBefore, pagesAfter, swipes);
+        return true;
     }
 
     private int loadedPages() {

@@ -61,7 +61,7 @@ public class CameraContextMenuTest extends BaseTest {
         // Step 6: the tags of a card scroll sideways
         boolean tagRowChecked = camerasPage.verifyTagRowScrolls();
         // Step 7: scrolling down loads the next page of cameras
-        camerasPage.verifyNextPageLoadsOnScroll();
+        boolean nextPageChecked = camerasPage.verifyNextPageLoadsOnScroll();
         // Step 8: the 3-dots button of a camera opens its menu (closed by cleanup)
         camerasPage.openMenuWithThreeDotsOfFirstOnlineCameraAndVerifyOptions();
         camerasPage.dismissContextMenu();
@@ -75,10 +75,12 @@ public class CameraContextMenuTest extends BaseTest {
         String tagName = camerasPage.tapFirstTag();
         camerasPage.verifyCamerasFilteredByTag(tagName, camerasOnDashboard);
         camerasPage.verifyTagsFilterIsActive();
-        // Last, so a missing precondition of step 6 does not hide the result of steps 7 to 9.
-        if (!tagRowChecked) {
-            throw new SkipException("Step 6 did not run: it needs a camera on screen whose tags run past the "
-                    + "screen edge on the TS02 account; steps 2 to 5 and 7 to 9 passed");
+        // Last, so a missing precondition of step 6 or 7 does not hide the result of the steps after it.
+        if (!tagRowChecked || !nextPageChecked) {
+            throw new SkipException("Test data missing on the TS02 account: "
+                    + (tagRowChecked ? "" : "step 6 needs a camera on screen whose tags run past the screen edge; ")
+                    + (nextPageChecked ? "" : "step 7 needs more cameras than fit one screen; ")
+                    + "all other steps ran and passed");
         }
     }
 

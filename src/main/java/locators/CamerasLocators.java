@@ -275,6 +275,9 @@ public final class CamerasLocators {
      */
     public static final By VISIBLE_TAGS = AppiumBy.xpath(IOS_TAG_ROW + "//XCUIElementTypeStaticText[@visible='true']");
 
+    /** iOS only, no Android value on purpose: the bottom tab bar, which covers the lowest part of the list. */
+    public static final By TAB_BAR = AppiumBy.className("XCUIElementTypeTabBar");
+
     /** iOS only, no Android value on purpose: the tags inside one tag row. */
     public static final By TAGS_IN_ROW = AppiumBy.xpath(".//XCUIElementTypeStaticText");
 
