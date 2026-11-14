@@ -90,10 +90,7 @@ public class CameraSettingsTest extends BaseTest {
     private void openSettingsOfSwitchableOnlineCamera() {
         String cameraName = JsonDataReader.getSwitchableCameraValue(TestDataConstants.SWITCHABLE_CAMERA_NAME);
         camerasPage.openCamerasList();
-        if (!camerasPage.hasCameraNamed(cameraName)) {
-            throw new SkipException("The online camera '" + cameraName + "' is needed on the End User account; "
-                    + "not found in the list");
-        }
+        camerasPage.reasonCameraUnusable(cameraName).ifPresent(this::skipLocallyFailOnCi);
         camerasPage.longPressCameraNamedAndVerifyContextMenu(cameraName);
         originalCameraName = settingsPage.openFromContextMenuAndReadName();
         // Not asserted: this camera's header sometimes has no preview icon (the app does not draw it), and the

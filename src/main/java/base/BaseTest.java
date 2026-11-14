@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.testng.ITestResult;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -252,6 +253,18 @@ public abstract class BaseTest {
     /** A value from the reseller credentials block of testData.json. */
     protected String getTestDataValue(String key) {
         return JsonDataReader.getCredentialValue(TestDataConstants.RESELLER_CREDS, key);
+    }
+
+    /**
+     * For a test whose precondition lives in the account's data. A local run skips, so a developer without that data
+     * can still run the class; CI (which sets {@code CI=true}) fails, so a mistyped secret or a renamed camera shows
+     * up as a red test and not as a green lane that silently lost the test.
+     */
+    protected void skipLocallyFailOnCi(String reason) {
+        if ("true".equalsIgnoreCase(System.getenv("CI"))) {
+            throw new AssertionError(reason);
+        }
+        throw new SkipException(reason);
     }
 
     // ---- optional system popups ----------------------------------------------------------

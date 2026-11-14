@@ -93,6 +93,22 @@ public final class CamerasLocators {
     }
 
     /**
+     * The card of the camera with this name, only while its status is "Online": a camera left "Turned off" or
+     * "Offline" is listed under the same name but is not the camera the caller needs.
+     * iOS: a row's status label is the first text after the row's name (the context-menu button and icons between
+     * them are not text), so the next row's status cannot be mistaken for it.
+     */
+    public static By onlineCameraCardWithName(String name) {
+        return PlatformLocator.get(
+                AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
+                        + "/ancestor::android.view.View[@clickable='true'][1]"
+                        + "[.//android.widget.TextView[@text='Online']]"), // android
+                AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
+                        + "][following-sibling::*[1][@name='ic_contextMenu']]"
+                        + "[following-sibling::XCUIElementTypeStaticText[1][@name='Online']]")); // ios
+    }
+
+    /**
      * iOS only: the back button of the Cameras list, which returns to All devices (Android goes back with the system
      * back).
      */
