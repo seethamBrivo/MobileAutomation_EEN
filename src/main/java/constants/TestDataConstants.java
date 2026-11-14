@@ -51,6 +51,10 @@ public final class TestDataConstants {
     public static final String MECHANICAL_ZOOM_CAMERA_DATA = "mechanical_zoom_camera_data";
     public static final String MECHANICAL_ZOOM_CAMERA_NAME = "camera_name";
 
+    // Test-data JSON keys (switchable_camera block): an online camera the End User can turn off and on.
+    public static final String SWITCHABLE_CAMERA_DATA = "switchable_camera_data";
+    public static final String SWITCHABLE_CAMERA_NAME = "camera_name";
+
     // Test-data JSON keys (archive_search block).
     public static final String ARCHIVE_SEARCH_DATA = "archive_search_data";
     public static final String ARCHIVE_VALID_SEARCH_TERM = "valid_search_term";

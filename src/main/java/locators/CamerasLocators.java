@@ -53,12 +53,6 @@ public final class CamerasLocators {
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
 
-    // iOS: the second "Online" label of the list, by position (the rows carry no ids).
-    // TODO: Replace with an accessibility id when the mobile team adds identifiers to the camera rows
-    public static final By SECOND_ONLINE_CAMERA = PlatformLocator.get(
-            AppiumBy.xpath("(//android.widget.TextView[@text='Online'])[2]/ancestor::android.view.View[@clickable='true'][1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeStaticText[@name='Online'])[2]")); // ios
-
     // Android only: a camera card is a full-width clickable row; its name and status are its first two TextViews.
     // TODO: Replace with testTag when mobile team adds an identifier to the camera card.
     public static final By CAMERA_CARD = AppiumBy.xpath(
@@ -96,6 +90,22 @@ public final class CamerasLocators {
                         + "/ancestor::android.view.View[@clickable='true'][1]"), // android
                 AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
                         + "][following-sibling::*[1][@name='ic_contextMenu']]")); // ios
+    }
+
+    /**
+     * The card of the camera with this name, only while its status is "Online": a camera left "Turned off" or
+     * "Offline" is listed under the same name but is not the camera the caller needs.
+     * iOS: a row's status label is the first text after the row's name (the context-menu button and icons between
+     * them are not text), so the next row's status cannot be mistaken for it.
+     */
+    public static By onlineCameraCardWithName(String name) {
+        return PlatformLocator.get(
+                AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
+                        + "/ancestor::android.view.View[@clickable='true'][1]"
+                        + "[.//android.widget.TextView[@text='Online']]"), // android
+                AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
+                        + "][following-sibling::*[1][@name='ic_contextMenu']]"
+                        + "[following-sibling::XCUIElementTypeStaticText[1][@name='Online']]")); // ios
     }
 
     /**

@@ -411,15 +411,25 @@ public class CamerasPage {
                 "Cameras list should show the renamed camera '" + name + "'");
     }
 
-    public boolean hasSecondOnlineCamera() {
-        GestureUtils.scrollToTop(driver);
-        return scrollUntilElementIsVisible(CamerasLocators.SECOND_ONLINE_CAMERA);
+    /**
+     * Why the named camera cannot be used, or empty when it is listed and "Online". "Not listed" (wrong name) and
+     * "listed but not Online" (for instance an earlier run left it turned off) are told apart, because they are fixed
+     * in different places.
+     */
+    public Optional<String> reasonCameraUnusable(String name) {
+        if (!scrollToCameraRow(CamerasLocators.cameraCardWithName(name))) {
+            return Optional.of("Camera '" + name + "' is not in the cameras list; check the test-data camera name");
+        }
+        if (!scrollToCameraRow(CamerasLocators.onlineCameraCardWithName(name))) {
+            return Optional.of("Camera '" + name + "' is listed but its status is not '" + STATUS_ONLINE
+                    + "'; an earlier run may have left it turned off");
+        }
+        return Optional.empty();
     }
 
-    public void longPressSecondOnlineCameraAndVerifyContextMenu() {
-        GestureUtils.longPressUntilVisible(driver, CamerasLocators.SECOND_ONLINE_CAMERA,
-                CamerasLocators.CONTEXT_MENU_CONTAINER);
-        verifyContextMenuDisplayed();
+    /** For a camera the End User can switch: its menu has Turn on/off, which is checked. */
+    public void longPressCameraNamedAndVerifyContextMenu(String name) {
+        openContextMenuOfCameraNamed(name);
         verifyAllContextMenuOptions(true);
         verifyCameraPreviewDisplayed();
     }

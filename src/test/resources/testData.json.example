@@ -43,6 +43,9 @@
   "mechanical_zoom_camera_data": {
     "camera_name": "YourCameraWithMechanicalZoom"
   },
+  "switchable_camera_data": {
+    "camera_name": "YourOnlineCameraTheEndUserCanTurnOff"
+  },
   "archive_search_data": {
     "valid_search_term": "test",
     "no_results_search_term": "xyznonexistent12345",

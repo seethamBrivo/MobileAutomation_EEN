@@ -168,6 +168,18 @@ public final class JsonDataReader {
     }
 
     /**
+     * A string value from {@code switchable_camera_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing or null.
+     */
+    public static String getSwitchableCameraValue(String key) {
+        return getBlockValue(
+                TestDataConstants.SWITCHABLE_CAMERA_DATA,
+                TestDataConstants.SWITCHABLE_CAMERA_DATA,
+                key
+        ).getAsString();
+    }
+
+    /**
      * A string value from {@code archive_search_data.<key>}. Fails with the key name
      * instead of a bare NullPointerException when the key is missing or null.
      */
