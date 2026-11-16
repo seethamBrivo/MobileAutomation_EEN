@@ -2,8 +2,11 @@ package pages;
 
 import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import locators.CameraSettingsLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,7 +49,7 @@ public class CameraSettingsPage {
     }
 
     public void verifyStatusIs(String expectedStatus) {
-        String actualStatus = WaitUtils.waitForVisibility(driver, CameraSettingsLocators.STATUS_VALUE).getText().trim();
+        String actualStatus = readStatus();
         Assert.assertEquals(actualStatus, expectedStatus,
                 "Camera status in settings should be '" + expectedStatus + "' but was '" + actualStatus + "'");
     }
@@ -120,8 +123,8 @@ public class CameraSettingsPage {
                         + expectedStatus + "'");
     }
 
-    /** Non-asserting check, so cleanup can ask where the camera ended up. */
-    public boolean isStatusShownWithin(String expectedStatus) {
+    /** Non-asserting check of where the camera ended up. */
+    private boolean isStatusShownWithin(String expectedStatus) {
         return expectedStatus.equals(pollForStatus(expectedStatus));
     }
 
@@ -134,8 +137,15 @@ public class CameraSettingsPage {
 
     /** The last status seen: the expected one, or whatever was shown when the budget ran out. Never null. */
     private String pollForStatus(String expectedStatus) {
-        return WaitUtils.pollText(driver, CameraSettingsLocators.STATUS_VALUE, expectedStatus,
-                TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT);
+        return pollForStatus(expectedStatus, TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT);
+    }
+
+    private String pollForStatus(String expectedStatus, Duration timeout) {
+        return WaitUtils.pollText(driver, CameraSettingsLocators.STATUS_VALUE, expectedStatus, timeout);
+    }
+
+    private String readStatus() {
+        return WaitUtils.waitForVisibility(driver, CameraSettingsLocators.STATUS_VALUE).getText().trim();
     }
 
     private void tapAtCentre(By locator) {
@@ -153,15 +163,10 @@ public class CameraSettingsPage {
         return name;
     }
 
-    /** Counted before the tap, so {@link #isEnableSwitchLeftToggled()} also covers a tap that failed half-way. */
+    /** Counted before the tap, so a tap that failed half-way still tells cleanup that the switch was touched. */
     public void toggleEnableSwitch() {
         enableSwitchTaps++;
         tapEnableSwitch();
-    }
-
-    /** True when an odd number of {@link #toggleEnableSwitch()} taps were made, so the camera needs one more. */
-    public boolean isEnableSwitchLeftToggled() {
-        return enableSwitchTaps % 2 == 1;
     }
 
     public int enableSwitchTapCount() {
@@ -193,7 +198,7 @@ public class CameraSettingsPage {
      * as long as a status change may take. The Enable switch is checked once the status matches.
      */
     private void verifyStatusBecomesOnReopenedScreen(String expectedStatus, String cameraName) {
-        Instant deadline = Instant.now().plus(TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT);
+        Instant deadline = Instant.now().plus(TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT_IOS);
         String seen;
         do {
             reopenFromCamerasList(cameraName);
@@ -206,7 +211,7 @@ public class CameraSettingsPage {
             logger.info("Status of '{}' is '{}', waiting for '{}'", cameraName, seen, expectedStatus);
         } while (Instant.now().isBefore(deadline));
         Assert.fail("Camera status should become '" + expectedStatus + "' after the Enable switch but was '" + seen
-                + "' when " + TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT.toSeconds() + " seconds had passed");
+                + "' when " + TimeoutConstants.CAMERA_STATUS_CHANGE_TIMEOUT_IOS.toSeconds() + " seconds had passed");
     }
 
     private void reopenFromCamerasList(String cameraName) {
@@ -235,5 +240,48 @@ public class CameraSettingsPage {
             }
         }
         return null;
+    }
+
+    /**
+     * The state the camera is in. iOS reads the Enable switch itself and fails when it shows neither state, so a
+     * switch that has not rendered is never taken for "on". Android's switch exposes no state, so the Status line is
+     * read ("Turned off" is the only status of a switched-off camera; Offline or an error mean a camera that is on
+     * but not reachable).
+     */
+    private boolean isCameraTurnedOff() {
+        if (PlatformLocator.isIos()) {
+            Optional<WebElement> enableSwitch = WaitUtils.waitForAny(driver,
+                    List.of(CameraSettingsLocators.ENABLE_SWITCH_ON, CameraSettingsLocators.ENABLE_SWITCH_OFF),
+                    TimeoutConstants.DETAILS_LOAD_TIMEOUT);
+            Assert.assertTrue(enableSwitch.isPresent(),
+                    "The Enable switch should show its state (on or off) on the Camera settings screen");
+            return "0".equals(enableSwitch.get().getAttribute("value"));
+        }
+        return CamerasPage.STATUS_TURNED_OFF.equals(readStatus());
+    }
+
+    /**
+     * Start of EEPD-TC-11323: the test case assumes the camera is on. A camera an earlier run left off is switched on
+     * first and checked to be "Online", so the test starts and ends in the same state. The tap is not counted, because
+     * it is checked here and cleanup has nothing to undo for it.
+     */
+    public void turnCameraOnIfOff(String cameraName) {
+        if (!isCameraTurnedOff()) {
+            return;
+        }
+        logger.info("Camera '{}' is turned off (an earlier run may have left it so); switching it on first",
+                cameraName);
+        tapEnableSwitch();
+        verifyCameraStatus(CamerasPage.STATUS_ONLINE, cameraName);
+    }
+
+    /**
+     * For cleanup, on a freshly opened Camera settings screen. A camera that reads "Online" is left alone at once.
+     * One that reads "Turned off" gets {@link TimeoutConstants#LIST_LOAD_TIMEOUT} to turn "Online" first, because the
+     * status can lag the switch, and tapping again then would switch the camera off.
+     */
+    public boolean isCameraLeftTurnedOff() {
+        return isCameraTurnedOff() && !CamerasPage.STATUS_ONLINE.equals(
+                pollForStatus(CamerasPage.STATUS_ONLINE, TimeoutConstants.LIST_LOAD_TIMEOUT));
     }
 }

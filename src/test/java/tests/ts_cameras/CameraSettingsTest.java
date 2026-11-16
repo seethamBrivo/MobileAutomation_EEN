@@ -56,14 +56,16 @@ public class CameraSettingsTest extends BaseTest {
 
     /**
      * The camera's Status is checked (Android's switch shows no state; on iOS the switch state is checked too). It
-     * takes about 4 minutes, and up to about 8 when the status is slow (each check waits twice: on the open screen,
-     * then on the reopened one).
+     * takes about 3 minutes (measured 2.5 to 3.3), and up to about 5 when the status is slow (each check waits up to
+     * a minute on the open screen, then up to a minute again on the reopened one).
      */
     @Test(description = "EEPD-TC-11323: POS-Camera Settings - turning on/off camera in Dashboard (inside Camera "
             + "Settings screen) mobile VMS app", groups = {"regression", "cameras", "ios"})
     public void verifyTurnCameraOffAndOn() {
         // Step 2: Cameras in Dashboard, long press an online camera that can be switched, open Camera settings
         openSettingsOfSwitchableOnlineCamera();
+        // A camera an earlier run left off is switched on first, so the test starts and ends "Online".
+        settingsPage.turnCameraOnIfOff(originalCameraName);
         // Step 3: tap the switch next to Enable to turn the camera off, then on again
         settingsPage.toggleEnableSwitch();
         settingsPage.verifyCameraStatus(CamerasPage.STATUS_TURNED_OFF, originalCameraName);
@@ -103,7 +105,9 @@ public class CameraSettingsTest extends BaseTest {
     public void tearDown(ITestResult testResult) {
         try {
             boolean restoreName = renamedCameraName != null;
-            boolean restoreSwitch = settingsPage != null && settingsPage.isEnableSwitchLeftToggled();
+            // A passing run has already checked that the camera is back online; only a failed one can leave it off.
+            boolean restoreSwitch = settingsPage != null && settingsPage.enableSwitchTapCount() > 0
+                    && !testResult.isSuccess();
             if (driver == null || devicesPage == null || !(restoreName || restoreSwitch)) {
                 return;
             }
@@ -126,7 +130,7 @@ public class CameraSettingsTest extends BaseTest {
             }
             if (restoreSwitch) {
                 try {
-                    if (settingsPage.isStatusShownWithin(CamerasPage.STATUS_TURNED_OFF)) {
+                    if (settingsPage.isCameraLeftTurnedOff()) {
                         settingsPage.tapEnableSwitch();
                         logger.info("@AfterMethod: turned camera '{}' back on", currentName);
                     } else {

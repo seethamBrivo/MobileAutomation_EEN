@@ -108,6 +108,17 @@ public final class CamerasLocators {
                         + "[following-sibling::XCUIElementTypeStaticText[1][@name='Online']]")); // ios
     }
 
+    /** Like {@link #onlineCameraCardWithName}, for a camera whose status is "Turned off". */
+    public static By turnedOffCameraCardWithName(String name) {
+        return PlatformLocator.get(
+                AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
+                        + "/ancestor::android.view.View[@clickable='true'][1]"
+                        + "[.//android.widget.TextView[@text='Turned off']]"), // android
+                AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
+                        + "][following-sibling::*[1][@name='ic_contextMenu']]"
+                        + "[following-sibling::XCUIElementTypeStaticText[1][@name='Turned off']]")); // ios
+    }
+
     /**
      * iOS only: the back button of the Cameras list, which returns to All devices (Android goes back with the system
      * back).
