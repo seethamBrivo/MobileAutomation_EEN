@@ -226,7 +226,6 @@ framework unit tests (no device).
 
 ## Test Cases
 
-The list of automated test cases (QMetry ID, class, description) is in [docs/TEST-CASES.md](docs/TEST-CASES.md).
 Tests live in `src/test/java/tests/ts_<area>/`, one package per functional area.
 
 ### Conventions
