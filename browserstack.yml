@@ -17,7 +17,7 @@ buildIdentifier: '#${BROWSERSTACK_BUILD_NUMBER}'
 # Same device the direct-capability CI run uses.
 platforms:
   - platformName: android
-    deviceName: Google Pixel 9
+    deviceName: Samsung Galaxy S25 Ultra
     platformVersion: "15.0"
 
 # 1 = sequential, like the default run. The suite shares accounts and one bridge attach ID, so raise

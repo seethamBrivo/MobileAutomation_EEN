@@ -241,7 +241,7 @@ jobs:
           automationName=UiAutomator2
           platformName=ANDROID
           platformVersion=15.0
-          deviceName=Google Pixel 9
+          deviceName=Samsung Galaxy S25 Ultra
           app=${{ secrets.BROWSERSTACK_APP_URL }}
           newCommandTimeout=3600
           noReset=true
@@ -260,8 +260,8 @@ jobs:
           mkdir -p src/main/resources
           cat > src/main/resources/ios.properties << 'EOF'
           automationName=XCUITest
-          deviceName=iPhone 15
-          platformVersion=27
+          deviceName=iPhone 17 Pro Max
+          platformVersion=26
           browserstackApp=${{ secrets.IOS_BROWSERSTACK_APP_URL }}
           bundleId=com.eagleeyenetworks.eagleeye
           noReset=false
