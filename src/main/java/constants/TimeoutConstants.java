@@ -81,6 +81,9 @@ public final class TimeoutConstants {
      */
     public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT = Duration.ofSeconds(60);
 
+    /** iOS keeps the earlier 90 s: it has not been measured with 60 s, and a camera is slow to come back online. */
+    public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT_IOS = Duration.ofSeconds(90);
+
     /** How long to wait for the cancel confirmation after tapping the cancel icon, before tapping it again. */
     public static final Duration CANCEL_CONFIRMATION_CHECK = Duration.ofSeconds(1);
 

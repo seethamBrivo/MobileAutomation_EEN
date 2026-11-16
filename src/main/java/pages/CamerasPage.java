@@ -412,17 +412,18 @@ public class CamerasPage {
     }
 
     /**
-     * Why the named camera cannot be used, or empty when it is listed and "Online". "Not listed" (wrong name) and
-     * "listed but not Online" (for instance an earlier run left it turned off) are told apart, because they are fixed
-     * in different places.
+     * Why the named camera cannot be used, or empty when it is listed and "Online" or "Turned off" (an earlier run
+     * may have left it off; the test switches it on first). "Not listed" (wrong name) and "listed with another
+     * status" (Offline, an error) are told apart, because they are fixed in different places.
      */
     public Optional<String> reasonCameraUnusable(String name) {
         if (!scrollToCameraRow(CamerasLocators.cameraCardWithName(name))) {
             return Optional.of("Camera '" + name + "' is not in the cameras list; check the test-data camera name");
         }
-        if (!scrollToCameraRow(CamerasLocators.onlineCameraCardWithName(name))) {
-            return Optional.of("Camera '" + name + "' is listed but its status is not '" + STATUS_ONLINE
-                    + "'; an earlier run may have left it turned off");
+        if (!scrollToCameraRow(CamerasLocators.onlineCameraCardWithName(name))
+                && !scrollToCameraRow(CamerasLocators.turnedOffCameraCardWithName(name))) {
+            return Optional.of("Camera '" + name + "' is listed but its status is neither '" + STATUS_ONLINE
+                    + "' nor '" + STATUS_TURNED_OFF + "'; the End User cannot switch it from here");
         }
         return Optional.empty();
     }
