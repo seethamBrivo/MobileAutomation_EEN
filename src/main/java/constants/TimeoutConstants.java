@@ -75,8 +75,11 @@ public final class TimeoutConstants {
     /** Max wait for device to stabilize after rotation (detects window size change, not a sleep). */
     public static final Duration ROTATION_STABILIZE = Duration.ofMillis(2000);
 
-    /** The camera status follows the Enable switch 30 to 60 seconds later. */
-    public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT = Duration.ofSeconds(90);
+    /**
+     * The camera status follows the Enable switch 30 to 60 seconds later. Locally it showed within about 40 s; on
+     * BrowserStack the open screen did not update within this budget, so Camera settings is reopened to read it.
+     */
+    public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT = Duration.ofSeconds(60);
 
     /** How long to wait for the cancel confirmation after tapping the cancel icon, before tapping it again. */
     public static final Duration CANCEL_CONFIRMATION_CHECK = Duration.ofSeconds(1);

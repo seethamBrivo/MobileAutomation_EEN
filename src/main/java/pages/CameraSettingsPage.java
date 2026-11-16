@@ -236,4 +236,32 @@ public class CameraSettingsPage {
         }
         return null;
     }
+
+    /**
+     * The state the camera is in before a tap. iOS reads the Enable switch itself; Android's switch exposes no state,
+     * so the Status line is read ("Turned off" is the only status of a camera that is switched off; Offline or error
+     * mean a camera that is on but not reachable).
+     */
+    private boolean isCameraTurnedOff() {
+        if (PlatformLocator.isIos()) {
+            return WaitUtils.isVisible(driver, CameraSettingsLocators.ENABLE_SWITCH_OFF,
+                    TimeoutConstants.SHORT_TIMEOUT);
+        }
+        String status = WaitUtils.waitForVisibility(driver, CameraSettingsLocators.STATUS_VALUE).getText().trim();
+        return CamerasPage.STATUS_TURNED_OFF.equals(status);
+    }
+
+    /**
+     * Reads the camera's state, taps the Enable switch once and returns the status the camera should show next:
+     * "Turned off" when it was on, "Online" when it was off. The test does not have to assume which way the camera
+     * starts (an earlier run may have left it off).
+     */
+    public String toggleEnableSwitchByState() {
+        boolean wasTurnedOff = isCameraTurnedOff();
+        toggleEnableSwitch();
+        String expectedStatus = wasTurnedOff ? CamerasPage.STATUS_ONLINE : CamerasPage.STATUS_TURNED_OFF;
+        logger.info("Camera was {}; Enable switch tapped, expecting status '{}'",
+                wasTurnedOff ? "turned off" : "turned on", expectedStatus);
+        return expectedStatus;
+    }
 }
