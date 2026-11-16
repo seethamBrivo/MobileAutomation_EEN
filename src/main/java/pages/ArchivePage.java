@@ -4,7 +4,6 @@ import constants.TimeoutConstants;
 import constants.UiTextConstants;
 import io.appium.java_client.AppiumDriver;
 import java.util.List;
-import java.util.Locale;
 import locators.ArchiveLocators;
 import locators.CommonLocators;
 import org.apache.logging.log4j.LogManager;
