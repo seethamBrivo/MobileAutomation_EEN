@@ -8,9 +8,14 @@ import org.testng.ITestResult;
 import org.testng.annotations.Test;
 import pages.HistoryBrowserPage;
 import pages.LayoutsPage;
-import utils.JsonDataReader;
 
 public class LayoutsTest extends BaseTest {
+
+    /** The layout the add-layout test creates (also used by the local snackbar probe). */
+    public static final String LAYOUT_NAME = "AutoTest_Layout";
+    public static final String ASPECT_RATIO = "16:9";
+    public static final int MAX_CAMERAS_PER_ROW = 2;
+    public static final boolean SHOW_CAMERA_TITLE_BARS = true;
 
     private LayoutsPage layoutsPage;
     private boolean layoutCreated = false;
@@ -32,16 +37,12 @@ public class LayoutsTest extends BaseTest {
     @Test(description = "EEPD-TC-9005: POS-Layouts - adding New Layout in mobile VMS app",
           groups = {"regression", "layouts", "ios"})
     public void verifyAddNewLayoutFunctionality() {
-        String baseLayoutName = JsonDataReader.getLayoutDataValue(TestDataConstants.LAYOUT_NAME);
-        uniqueLayoutName = utils.TestDataGenerator.generateUniqueName(baseLayoutName);
-        String aspectRatio = JsonDataReader.getLayoutDataValue(TestDataConstants.ASPECT_RATIO);
-        int maxCamerasPerRow = JsonDataReader.getLayoutDataIntValue(TestDataConstants.MAX_CAMERAS_PER_ROW);
-        boolean showCameraTitleBars = JsonDataReader.getLayoutDataBooleanValue(TestDataConstants.SHOW_CAMERA_TITLE_BARS);
+        uniqueLayoutName = utils.TestDataGenerator.generateUniqueName(LAYOUT_NAME);
 
         // Steps 2 and 3: Open the 3-dots menu and choose New Layout
         layoutsPage.openNewLayoutForm();
         // Steps 4 to 7: Name, aspect ratio, max cameras per row and camera title bars
-        layoutsPage.setLayoutDetails(uniqueLayoutName, aspectRatio, maxCamerasPerRow, showCameraTitleBars);
+        layoutsPage.setLayoutDetails(uniqueLayoutName, ASPECT_RATIO, MAX_CAMERAS_PER_ROW, SHOW_CAMERA_TITLE_BARS);
         // Steps 8 and 9: Add a camera and save
         layoutsPage.addFirstCameraAndSave();
         // Step 10: Add the layout

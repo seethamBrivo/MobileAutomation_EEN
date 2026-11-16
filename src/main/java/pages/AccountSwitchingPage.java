@@ -11,7 +11,6 @@ import org.openqa.selenium.TimeoutException;
 import org.testng.Assert;
 import org.testng.SkipException;
 import utils.GestureUtils;
-import utils.PlatformLocator;
 import utils.WaitUtils;
 
 /**

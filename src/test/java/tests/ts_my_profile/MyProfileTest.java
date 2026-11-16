@@ -2,7 +2,6 @@ package tests.ts_my_profile;
 
 import base.BaseTest;
 import constants.TestDataConstants;
-import org.testng.Assert;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -12,9 +11,15 @@ import pages.MyProfilePage;
 import pages.TimeZonePage;
 import pages.VSPEventsPage;
 import pages.VideoSearchPage;
-import utils.JsonDataReader;
 
 public class MyProfileTest extends BaseTest {
+
+    /** The time zone the account is reset to after the test. */
+    private static final String ACCOUNT_TIMEZONE = "Asia/Kolkata";
+    /** The time zone the test sets (EEPD-TC-3920), and the text that finds it in the list. */
+    private static final String TEST_TIMEZONE = "Etc/GMT+12";
+    private static final String TIMEZONE_SEARCH_TERM = "Etc";
+    private static final String INVALID_TIMEZONE_SEARCH_TERM = "XYZ_INVALID_TIMEZONE_12345";
 
     private DevicesPage devicesPage;
     private MyProfilePage myProfilePage;
@@ -34,15 +39,6 @@ public class MyProfileTest extends BaseTest {
     @Test(description = "EEPD-TC-3920: POS-My Profile - setting 'Time zone' in VMS mobile app",
           groups = {"regression", "profile", "ios"})
     public void verifyTimezoneSettingFunctionality() {
-        final String searchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_SEARCH_TERM);
-        final String invalidSearchTerm = JsonDataReader.getTimezoneDataValue(TestDataConstants.TIMEZONE_INVALID_SEARCH_TERM);
-        final String testTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.TEST_TIMEZONE);
-
-        Assert.assertEquals(testTimezone, "Etc/GMT+12",
-                "Test timezone must be Etc/GMT+12 per EEPD-TC-3920 requirements");
-        Assert.assertEquals(searchTerm, "Etc",
-                "Search term must match test timezone prefix to find Etc/GMT+12");
-
         vspEventsPage = new VSPEventsPage(driver);
         vspEventsPage.verifyVSPSectionVisible();
         vspEventsPage.clickEvents();
@@ -61,10 +57,10 @@ public class MyProfileTest extends BaseTest {
         timeZonePage = new TimeZonePage(driver);
         timeZonePage.verifyPopupAndSearchPlaceholder();
         // Step 3: Tap the search bar and type a search term
-        timeZonePage.searchTimezonesAndVerify(searchTerm, invalidSearchTerm);
+        timeZonePage.searchTimezonesAndVerify(TIMEZONE_SEARCH_TERM, INVALID_TIMEZONE_SEARCH_TERM);
         // Step 4: Set the time zone by tapping on it
-        timeZonePage.selectTimezone(testTimezone);
-        myProfilePage.verifyTimezoneChanged(testTimezone);
+        timeZonePage.selectTimezone(TEST_TIMEZONE);
+        myProfilePage.verifyTimezoneChanged(TEST_TIMEZONE);
         vspEventsPage.navigateBackFromProfile();
         vspEventsPage.verifyVSPSectionVisible();
         vspEventsPage.clickEvents();
@@ -72,14 +68,14 @@ public class MyProfileTest extends BaseTest {
         vspEventsPage.verifyTimestampChangedAfterTimezoneChange(initialVSPTimestamp);
         videoSearchPage.navigateBackFromVSPEvents();
         videoSearchPage.clickSearch();
-        videoSearchPage.verifyDateFieldMatchesTimezone(testTimezone);
+        videoSearchPage.verifyDateFieldMatchesTimezone(TEST_TIMEZONE);
     }
 
     @AfterMethod(alwaysRun = true)
     public void resetTimezone(ITestResult testResult) {
         try {
             if (driver != null) {
-                final String resetTimezone = JsonDataReader.getTimezoneDataValue(TestDataConstants.VALID_TIMEZONE);
+                final String resetTimezone = ACCOUNT_TIMEZONE;
                 devicesPage = new DevicesPage(driver);
                 devicesPage.recoverToDashboard();
                 devicesPage.goBack(); // Exit Dashboard view to return to main screen with bottom nav

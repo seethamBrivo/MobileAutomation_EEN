@@ -69,51 +69,8 @@ public final class JsonDataReader {
     }
 
     /**
-     * A string value from {@code search_filter.<key>}. Fails with the key name
-     * instead of a bare NullPointerException when the key is missing.
-     */
-    public static String getSearchFilterValue(String key) {
-        return getBlockValue(TestDataConstants.SEARCH_FILTER, "search_filter", key).getAsString();
-    }
-
-    /**
-     * A string value from {@code layout_data.<key>}. Fails with the key name
-     * instead of a bare NullPointerException when the key is missing.
-     */
-    public static String getLayoutDataValue(String key) {
-        JsonElement value = getLayoutDataElement(key);
-        return value.getAsString();
-    }
-
-    /**
-     * An integer value from {@code layout_data.<key>}. Fails with the key name
-     * instead of a bare NullPointerException when the key is missing.
-     */
-    public static int getLayoutDataIntValue(String key) {
-        JsonElement value = getLayoutDataElement(key);
-        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) {
-            throw new IllegalStateException(
-                    "Expected integer for layout_data.'" + key + "' but got: " + value);
-        }
-        return value.getAsInt();
-    }
-
-    /**
-     * A boolean value from {@code layout_data.<key>}. Fails with the key name
-     * instead of a bare NullPointerException when the key is missing.
-     */
-    public static boolean getLayoutDataBooleanValue(String key) {
-        JsonElement value = getLayoutDataElement(key);
-        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean()) {
-            throw new IllegalStateException(
-                    "Expected boolean for layout_data.'" + key + "' but got: " + value);
-        }
-        return value.getAsBoolean();
-    }
-
-    /**
      * Generic helper to retrieve a value from any test data block with consistent validation.
-     * Eliminates duplication across credentials, search_filter, layout_data, etc.
+     * Eliminates duplication across the credentials and the account-data blocks.
      */
     private static JsonElement getBlockValue(String blockConstant, String blockName, String key) {
         JsonObject block = getTestData().getAsJsonObject(blockConstant);
@@ -128,31 +85,6 @@ public final class JsonDataReader {
                     "testData.json is missing key '" + key + "' under " + blockName);
         }
         return value;
-    }
-
-    /**
-     * Helper to retrieve a layout_data element (uses the generic getBlockValue helper).
-     */
-    private static JsonElement getLayoutDataElement(String key) {
-        return getBlockValue(TestDataConstants.LAYOUT_DATA, "layout_data", key);
-    }
-
-    /**
-     * A string value from {@code timezone_data.<key>}. Fails with the key name
-     * instead of a bare NullPointerException when the key is missing.
-     */
-    public static String getTimezoneDataValue(String key) {
-        JsonObject timezoneData = getTestData().getAsJsonObject(TestDataConstants.TIMEZONE_DATA);
-        if (timezoneData == null) {
-            throw new IllegalStateException(
-                    "testData.json has no " + TestDataConstants.TIMEZONE_DATA + " block");
-        }
-        JsonElement value = timezoneData.get(key);
-        if (value == null || value.isJsonNull()) {
-            throw new IllegalStateException(
-                    "testData.json is missing key '" + key + "' under " + TestDataConstants.TIMEZONE_DATA);
-        }
-        return value.getAsString();
     }
 
     /**

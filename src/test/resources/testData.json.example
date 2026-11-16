@@ -23,23 +23,6 @@
       "password": "YourPassword123"
     }
   },
-  "search_filter": {
-    "valid_search_term": "Camera",
-    "invalid_search_term": "XYZ_NO_MATCH_12345",
-    "bridge_valid_search_term": "Camera"
-  },
-  "timezone_data": {
-    "valid_timezone": "Asia/Kolkata",
-    "test_timezone": "Etc/GMT+12",
-    "search_term": "Etc",
-    "invalid_search_term": "XYZ_INVALID_TIMEZONE_12345"
-  },
-  "layout_data": {
-    "layout_name": "AutoTest_Layout",
-    "aspect_ratio": "16:9",
-    "max_cameras_per_row": 2,
-    "show_camera_title_bars": true
-  },
   "mechanical_zoom_camera_data": {
     "camera_name": "YourCameraWithMechanicalZoom"
   },
