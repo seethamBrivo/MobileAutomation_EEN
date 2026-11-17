@@ -32,8 +32,11 @@ public class LiveViewTest extends BaseTest {
         }
     }
 
+    // Skipped: EPD-14419 - Mechanical Zoom tests failing due to camera preview is not loading
+    // https://brivosys.atlassian.net/browse/EPD-14419
     @Test(description = "EEPD-TC-36684: POS-Live Stream - Mechanical Zoom of Auto focus functionality of live stream",
-          groups = {"regression", "live", "liveview", "mechanical-zoom", "ios"})
+          groups = {"regression", "live", "liveview", "mechanical-zoom", "ios"},
+          enabled = false)
     public void verifyMechanicalZoomAutoFocusFunctionality() {
         liveViewPage.navigateToLiveView(cameraName);
         liveViewPage.verifyMechanicalZoomButtonInBothOrientationsAndClick();
@@ -41,8 +44,11 @@ public class LiveViewTest extends BaseTest {
         liveViewPage.verifyMechanicalZoomHideUnhideBehavior();
     }
 
+    // Skipped: EPD-14419 - Mechanical Zoom tests failing due to camera preview is not loading
+    // https://brivosys.atlassian.net/browse/EPD-14419
     @Test(description = "EEPD-TC-36681: POS-Live Stream - Mechanical Zoom of Zoom In/out functionality of live stream",
-          groups = {"regression", "live", "liveview", "mechanical-zoom", "ios"})
+          groups = {"regression", "live", "liveview", "mechanical-zoom", "ios"},
+          enabled = false)
     public void verifyMechanicalZoomInOutFunctionality() {
         liveViewPage.navigateToLiveView(cameraName);
         liveViewPage.verifyMechanicalZoomButtonInBothOrientationsAndClick();
