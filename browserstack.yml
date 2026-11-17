@@ -11,7 +11,7 @@ framework: testng
 app: ${BROWSERSTACK_APP_URL}
 
 projectName: EEN Mobile Automation
-buildName: CI SDK Build
+buildName: ${BROWSERSTACK_BUILD_NAME:-CI SDK Build}
 buildIdentifier: '#${BROWSERSTACK_BUILD_NUMBER}'
 
 # Same device the direct-capability CI run uses.
@@ -22,7 +22,7 @@ platforms:
 
 # 1 = sequential, like the default run. The suite shares accounts and one bridge attach ID, so raise
 # this only after checking which test blocks can safely overlap (the plan allows 2 parallels).
-parallelsPerPlatform: 1
+parallelsPerPlatform: 2
 
 # Test Reporting & Analytics: smart reporting, failure analysis, debugging.
 testObservability: true
