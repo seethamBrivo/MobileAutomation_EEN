@@ -78,12 +78,6 @@ public class HistoryBrowserPage {
     /** The widest gap between two zones: UTC+14 and UTC-12 are 26 hours apart. */
     private static final long MAX_TIME_ZONE_GAP_SECONDS = 26 * 60 * 60;
 
-    /**
-     * The history browser seeks to the selected event and shows whole seconds, so on BrowserStack it opened 1 s after
-     * the event (gap 48599 s against 48600 s) while a local run landed on it. A wrong event is far more than this away.
-     */
-    private static final int EVENT_SEEK_TOLERANCE_SECONDS = 2;
-
     /** What must be left of a cut camera name before it can stand for a longer one. */
     private static final int MIN_CUT_NAME_PREFIX_LENGTH = 3;
 
@@ -351,8 +345,9 @@ public class HistoryBrowserPage {
      * The history browser opens at the moment of the event that was selected. Video Search shows the account's time
      * and this screen the device's, so on BrowserStack the two read hours apart (16:23:44 against 03:53:44) and an
      * exact match would fail on every run. Both are the same instant in two zones, so their date-times must differ
-     * by a time zone gap: a whole number of {@value #TIME_ZONE_STEP_SECONDS} s steps, at most
-     * {@value #MAX_TIME_ZONE_GAP_SECONDS} s (UTC+14 against UTC-12). That rejects another event more than that apart;
+     * by a time zone gap, within {@value #EVENT_MOMENT_TOLERANCE_SECONDS} s because the cursor may be a second
+     * past the event (48599 s seen against 48600 s): a whole number of {@value #TIME_ZONE_STEP_SECONDS} s steps,
+     * at most {@value #MAX_TIME_ZONE_GAP_SECONDS} s (UTC+14 against UTC-12). That rejects another event more than that apart;
      * an event exactly one day away at the same time of day would still pass, because a day is a whole number of
      * steps and within the limit. The screen may still show its first position while it seeks to the event, so the
      * cursor is polled until the gap is valid, and the value that ended the poll is the one asserted. Both times are
@@ -366,11 +361,11 @@ public class HistoryBrowserPage {
         logger.info("Event time on the event page: {}; history browser cursor: {}; gap {} s",
                 eventTime, cursor, gapSeconds);
         long offSeconds = secondsOffTimeZoneStep(gapSeconds);
-        Assert.assertTrue(offSeconds <= EVENT_SEEK_TOLERANCE_SECONDS,
+        Assert.assertTrue(offSeconds <= EVENT_MOMENT_TOLERANCE_SECONDS,
                 "History browser should open at the selected event (" + eventTime + ") apart from a time zone "
                         + "gap, but the cursor is at " + cursor + ", " + offSeconds + " s off a whole time zone step "
-                        + "(at most " + EVENT_SEEK_TOLERANCE_SECONDS + " s allowed)");
-        Assert.assertTrue(Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS + EVENT_SEEK_TOLERANCE_SECONDS,
+                        + "(at most " + EVENT_MOMENT_TOLERANCE_SECONDS + " s allowed)");
+        Assert.assertTrue(Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS + EVENT_MOMENT_TOLERANCE_SECONDS,
                 "Event time " + eventTime + " and cursor " + cursor + " are " + gapSeconds
                         + " s apart, more than any two time zones");
     }
@@ -409,9 +404,10 @@ public class HistoryBrowserPage {
         return position != null ? position : readCursorPosition();
     }
 
+    /** A pure time zone gap, or one within {@value #EVENT_MOMENT_TOLERANCE_SECONDS} s of it, inside the widest gap. */
     private static boolean isTimeZoneGap(long gapSeconds) {
-        return secondsOffTimeZoneStep(gapSeconds) <= EVENT_SEEK_TOLERANCE_SECONDS
-                && Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS + EVENT_SEEK_TOLERANCE_SECONDS;
+        return secondsOffTimeZoneStep(gapSeconds) <= EVENT_MOMENT_TOLERANCE_SECONDS
+                && Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS + EVENT_MOMENT_TOLERANCE_SECONDS;
     }
 
     /** How far the two times of day are from the nearest whole time zone step: 0 when they differ by a pure gap. */
