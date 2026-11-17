@@ -198,7 +198,7 @@ jobs:
               "camera_name": "${{ secrets.MECHANICAL_ZOOM_CAMERA_NAME || 'EN-CDUB-011a' }}"
             },
             "switchable_camera_data": {
-              "camera_name": "${{ secrets.SWITCHABLE_CAMERA_NAME || 'Dm08' }}"
+              "camera_name": "${{ secrets.SWITCHABLE_CAMERA_NAME || 'on/off camera' }}"
             },
             "archive_search_data": {
               "valid_search_term": "test",
