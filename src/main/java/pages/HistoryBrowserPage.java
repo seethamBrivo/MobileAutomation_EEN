@@ -78,6 +78,12 @@ public class HistoryBrowserPage {
     /** The widest gap between two zones: UTC+14 and UTC-12 are 26 hours apart. */
     private static final long MAX_TIME_ZONE_GAP_SECONDS = 26 * 60 * 60;
 
+    /**
+     * The history browser seeks to the selected event and shows whole seconds, so on BrowserStack it opened 1 s after
+     * the event (gap 48599 s against 48600 s) while a local run landed on it. A wrong event is far more than this away.
+     */
+    private static final int EVENT_SEEK_TOLERANCE_SECONDS = 2;
+
     /** What must be left of a cut camera name before it can stand for a longer one. */
     private static final int MIN_CUT_NAME_PREFIX_LENGTH = 3;
 
@@ -359,10 +365,12 @@ public class HistoryBrowserPage {
         long gapSeconds = Duration.between(cursor, eventTime).getSeconds();
         logger.info("Event time on the event page: {}; history browser cursor: {}; gap {} s",
                 eventTime, cursor, gapSeconds);
-        Assert.assertEquals(Math.floorMod(gapSeconds, (long) TIME_ZONE_STEP_SECONDS), 0L,
+        long offSeconds = secondsOffTimeZoneStep(gapSeconds);
+        Assert.assertTrue(offSeconds <= EVENT_SEEK_TOLERANCE_SECONDS,
                 "History browser should open at the selected event (" + eventTime + ") apart from a time zone "
-                        + "gap, but the cursor is at " + cursor);
-        Assert.assertTrue(Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS,
+                        + "gap, but the cursor is at " + cursor + ", " + offSeconds + " s off a whole time zone step "
+                        + "(at most " + EVENT_SEEK_TOLERANCE_SECONDS + " s allowed)");
+        Assert.assertTrue(Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS + EVENT_SEEK_TOLERANCE_SECONDS,
                 "Event time " + eventTime + " and cursor " + cursor + " are " + gapSeconds
                         + " s apart, more than any two time zones");
     }
@@ -402,15 +410,19 @@ public class HistoryBrowserPage {
     }
 
     private static boolean isTimeZoneGap(long gapSeconds) {
-        return Math.floorMod(gapSeconds, (long) TIME_ZONE_STEP_SECONDS) == 0
-                && Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS;
+        return secondsOffTimeZoneStep(gapSeconds) <= EVENT_SEEK_TOLERANCE_SECONDS
+                && Math.abs(gapSeconds) <= MAX_TIME_ZONE_GAP_SECONDS + EVENT_SEEK_TOLERANCE_SECONDS;
     }
 
     /** How far the two times of day are from the nearest whole time zone step: 0 when they differ by a pure gap. */
     private static long secondsOffTimeZoneGap(LocalTime menuTime, LocalDateTime cursor) {
-        int differenceSeconds = menuTime.toSecondOfDay() - cursor.toLocalTime().toSecondOfDay();
-        int half = TIME_ZONE_STEP_SECONDS / 2;
-        return Math.abs(Math.floorMod(differenceSeconds + half, TIME_ZONE_STEP_SECONDS) - half);
+        return secondsOffTimeZoneStep(menuTime.toSecondOfDay() - cursor.toLocalTime().toSecondOfDay());
+    }
+
+    /** Distance of a gap from the nearest multiple of {@value #TIME_ZONE_STEP_SECONDS} s; 0 for a pure zone gap. */
+    private static long secondsOffTimeZoneStep(long gapSeconds) {
+        long half = TIME_ZONE_STEP_SECONDS / 2;
+        return Math.abs(Math.floorMod(gapSeconds + half, (long) TIME_ZONE_STEP_SECONDS) - half);
     }
 
     public void rotateToLandscapeAndVerifyHistoryBrowser() {
