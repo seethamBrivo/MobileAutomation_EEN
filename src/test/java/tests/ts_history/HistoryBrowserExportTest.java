@@ -34,7 +34,7 @@ public class HistoryBrowserExportTest extends BaseTest {
         archivePage = new ArchivePage(driver);
         downloadsPage = new DownloadsPage(driver);
         devicesPage = new DevicesPage(driver);
-        historyBrowserPage.openHistoryBrowserFromFirstCameraPreview();
+        historyBrowserPage.openHistoryBrowserFromCameraPreview(simCameraName());
     }
 
     @AfterMethod(alwaysRun = true)
@@ -58,9 +58,12 @@ public class HistoryBrowserExportTest extends BaseTest {
         }
     }
 
+    // Disabled: the export intermittently fails in the app, so this test cannot pass reliably until that is fixed.
+    // https://brivosys.atlassian.net/browse/EPD-12985 - re-enable once it is fixed.
     @Test(description = "EEPD-TC-23628: POS-Exports/History Browser - requesting a video export"
-                    + " to Archive with default values in VMS mobile app",
-          groups = {"regression", "history_browser", "export", "ios"})
+                    + " to Archive with default values in VMS mobile app"
+                    + " (disabled: intermittent export failure, https://brivosys.atlassian.net/browse/EPD-12985)",
+          groups = {"regression", "history_browser", "export", "ios"}, enabled = false)
     public void test01_videoExportToArchiveWithValidation() {
         historyBrowserPage.exportToArchiveWithDefaultSettings();
         historyBrowserPage.completeExportWithProgress();

@@ -69,9 +69,9 @@ public class LayoutsTest extends BaseTest {
         layoutsPage.clickAllCamerasTab();
         layoutsPage.verifyCameraPreviewsLoaded();
         // Step 3: Long press on a camera preview: the menu, its options and the preview of the pressed camera
-        String pressedCameraName = layoutsPage.readFirstCameraPreviewName();
-        historyBrowserPage.openContextMenuOfFirstCameraPreview();
-        layoutsPage.verifyContextMenuPreviewShowsCamera(pressedCameraName);
+        String cameraName = simCameraName();
+        historyBrowserPage.openContextMenuOfCameraPreview(cameraName);
+        layoutsPage.verifyContextMenuPreviewShowsCamera(cameraName);
     }
 
     @AfterMethod(alwaysRun = true)

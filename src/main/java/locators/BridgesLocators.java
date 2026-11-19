@@ -94,7 +94,10 @@ public final class BridgesLocators {
 
     public static final By ADD_BRIDGE_BUTTON =
             PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.widget.Button"), // android
+            // Found by its "Add bridge" text: a hint line between the fields and the buttons shifted the positional
+            // path onto the "See how to install" button in the 2026-11-19 build.
+            AppiumBy.xpath("//android.widget.ScrollView/android.view.View[.//android.widget.TextView[@text='Add bridge']]"
+                    + "/android.widget.Button"), // android
             AppiumBy.iOSClassChain("**/XCUIElementTypeButton[`name == 'Add bridge'`]")); // ios
 
     public static final By CONFLICT_ERROR_MESSAGE =
@@ -144,6 +147,12 @@ public final class BridgesLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Restart bridge']"), // android
             AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Restart bridge'")); // ios
 
+    /** Android only: the row of the bridge with this name, bounded to the nearest clickable ancestor of its name. */
+    public static By bridgeRowNamed(String bridgeName) {
+        return AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(bridgeName)
+                + "]/ancestor::android.view.View[@clickable='true'][1]");
+    }
+
     // --- Delete bridge ---------------------------------------------------------
 
     public static final By DELETE_BRIDGE_BUTTON =
@@ -151,17 +160,18 @@ public final class BridgesLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='Delete bridge']"), // android
             AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Delete bridge'")); // ios
 
-    // TODO: Replace with testTag when mobile team adds proper dialog identifiers
-    // Delete confirmation popup button (Compose UI positional path)
+    // Found by the question the dialog asks: the earlier positional path matched any four nested Views.
     public static final By DELETE_CONFIRMATION_DIALOG =
             PlatformLocator.get(
-            AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View"), // android
+            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'delete this bridge')]"), // android
             AppiumBy.iOSClassChain("**/XCUIElementTypeAlert")); // ios
 
-    // TODO: Replace with testTag when mobile team adds proper dialog identifiers
+    // The positional path ("...View/View[2]/Button") matched nothing in the 2026-11-19 build, where the button is a
+    // childless sibling of the question text; found by its "Delete" label inside the dialog instead.
     public static final By DELETE_BUTTON =
             PlatformLocator.get(
-            AppiumBy.xpath("//android.view.ViewGroup/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.widget.Button"), // android
+            AppiumBy.xpath("//android.widget.TextView[contains(@text, 'delete this bridge')]"
+                    + "/following-sibling::android.view.View[@clickable='true'][.//android.widget.TextView[@text='Delete']]"), // android
             AppiumBy.xpath("//XCUIElementTypeAlert//XCUIElementTypeButton[@name='Delete']")); // ios
 
     // --- Bridge settings screen: status and name -------------------------------
@@ -203,7 +213,10 @@ public final class BridgesLocators {
             AppiumBy.xpath("//XCUIElementTypeAlert[@name='Restart bridge']")); // ios
 
     public static final By CONFIRM_RESTART_BUTTON = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']"), // android
+            // The build uploaded on 2026-11-19 has no content-desc on the button and shows "Restart" in a clickable
+            // View, so that View is what gets tapped; the first two alternatives are the earlier build's.
+            AppiumBy.xpath("//android.widget.Button[@content-desc='positive_button'] | //android.widget.TextView[@text='RESTART']"
+                    + " | //android.widget.TextView[@text='Restart']/ancestor::android.view.View[@clickable='true'][1]"), // android
             AppiumBy.xpath("//XCUIElementTypeAlert[@name='Restart bridge']//XCUIElementTypeButton[@name='Restart']")); // ios
 
     // TODO: Replace with testTag when mobile team adds proper Compose testTag attributes.
@@ -258,13 +271,17 @@ public final class BridgesLocators {
     }
 
     /**
-     * What is tapped to focus the name field. Android: the view inside its {@code EditText}, which needs a real
-     * touch. iOS: the inline text field itself.
+     * What is tapped to edit the name. Android: the "Name" row of the settings list, checked to hold {@code name};
+     * the row opens a sheet with the name field (the 2026-11-19 build shows the name as plain text, no longer as an
+     * inline field). iOS: the inline text field itself.
      */
     public static By nameFieldTapTarget(String name) {
         return PlatformLocator.get(
-                AppiumBy.xpath("//android.widget.EditText[@text=" + XPathUtils.xpathLiteral(name)
-                        + "]/android.view.View"), // android
+                AppiumBy.xpath("//android.widget.TextView[@text='Name']/ancestor::android.view.View[@clickable='true'][1]"
+                        + "[.//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]]"), // android
                 nameFieldHolding(name)); // ios
     }
+
+    /** Android: the Save button of the name sheet, which replaces the keyboard's Done key. */
+    public static final By NAME_SAVE_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Save']"); // android
 }

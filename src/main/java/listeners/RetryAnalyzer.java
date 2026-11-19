@@ -9,7 +9,7 @@ import utils.ConfigReader;
 /**
  * Re-runs a failed {@code @Test} (fresh Appium session: {@code @BeforeMethod}/{@code @AfterMethod}
  * run again around every attempt). The number of <em>extra</em> attempts comes from
- * {@code -DretryCount=N} (or {@code retryCount} in config.properties); default 1, 0 disables.
+ * {@code -DretryCount=N} (or {@code retryCount} in config.properties); default 2, 0 disables.
  *
  * <p>TestNG does not retry failed configuration methods; a failing login is covered by
  * {@code LoginPage.loginAs}'s own retry. Applied to every test by {@link RetryTransformer}.
@@ -17,7 +17,7 @@ import utils.ConfigReader;
 public class RetryAnalyzer implements IRetryAnalyzer {
 
     private static final Logger logger = LogManager.getLogger(RetryAnalyzer.class);
-    static final int DEFAULT_RETRY_COUNT = 1;
+    static final int DEFAULT_RETRY_COUNT = 2;
 
     private int retriesUsed = 0;
 

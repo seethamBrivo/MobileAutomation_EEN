@@ -354,14 +354,6 @@ public class LayoutsPage {
                 "Timestamp should match time format (HH:MM AM/PM or HH:MM), got: " + timestampText);
     }
 
-    /** The camera the next long press selects: the name on the first preview card. */
-    public String readFirstCameraPreviewName() {
-        String name = WaitUtils.retryOnStale(
-                () -> WaitUtils.waitForVisibility(driver, LayoutsLocators.FIRST_CAMERA_PREVIEW_NAME).getText()).trim();
-        Assert.assertFalse(name.isEmpty(), "The first camera preview should show the camera's name");
-        return name;
-    }
-
     /**
      * The preview in the context menu is the camera that was pressed, not another one of the screen behind.
      * Android reads the name on the menu's preview card. iOS shows the camera name twice: as the first entry of the

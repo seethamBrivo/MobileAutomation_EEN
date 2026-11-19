@@ -9,7 +9,8 @@ import pages.DevicesPage;
 
 public class BridgeCameraSearchFilterTest extends BaseTest {
 
-    private static final String VALID_SEARCH_TERM = "Camera";
+    // Matches one of the four cameras of the multi-camera bridge by name, so the list has to shrink.
+    private static final String VALID_SEARCH_TERM = "Fisheye";
     private static final String INVALID_SEARCH_TERM = "XYZ_NO_MATCH_12345";
 
     private DevicesPage devicesPage;
@@ -20,7 +21,7 @@ public class BridgeCameraSearchFilterTest extends BaseTest {
         devicesPage = loginAndOpenDevicesDashboard(TestDataConstants.ENDUSER_CREDS);
         devicesPage.clickBridgesTab();
         devicesPage.verifyBridgeListDisplayed();
-        devicesPage.openFirstOnlineBridgeContextMenu();
+        devicesPage.openBridgeContextMenuByName(multiCameraBridgeName());
         bridgeCamerasPage = new BridgeCamerasPage(driver);
         bridgeCamerasPage.verifyCamerasOptionDisplayed();
         bridgeCamerasPage.clickCamerasOption();

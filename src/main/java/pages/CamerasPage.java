@@ -323,13 +323,6 @@ public class CamerasPage {
         verifyTimestampDisplayed();
     }
 
-    /** Long presses the first online camera and checks the context menu: foreground menu, options and preview. */
-    public void longPressFirstOnlineCameraAndVerifyContextMenu() {
-        openContextMenuOfFirstOnlineCamera();
-        verifyAllContextMenuOptions(!PlatformLocator.isIos());
-        verifyCameraPreviewDisplayed();
-    }
-
     private void openContextMenuOfFirstOnlineCamera() {
         verifyFirstOnlineCameraFound();
         longPressFirstOnlineCamera();
@@ -391,11 +384,6 @@ public class CamerasPage {
         }
         GestureUtils.scrollToTop(driver);
         return WaitUtils.isVisible(driver, card, TimeoutConstants.SHORT_TIMEOUT) || scrollUntilElementIsVisible(card);
-    }
-
-    public boolean hasOnlineCamera() {
-        GestureUtils.scrollToTop(driver);
-        return scrollToFirstOnlineCamera();
     }
 
     /**

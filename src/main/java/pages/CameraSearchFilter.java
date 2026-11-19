@@ -227,9 +227,18 @@ public final class CameraSearchFilter {
                 .orElse(null));
     }
 
+    private boolean visibleCamerasAllContain(String searchTerm) {
+        return WaitUtils.retryOnStale(() -> {
+            List<WebElement> names = driver.findElements(CamerasLocators.ALL_VISIBLE_CAMERAS);
+            return !names.isEmpty() && names.stream()
+                    .allMatch(name -> name.getText().toLowerCase().contains(searchTerm.toLowerCase()));
+        });
+    }
+
     /**
      * True once the list has visibly reacted to the typed (or cleared) text: the empty state appeared, or the counter
-     * changed, or, when the empty state was already showing, the search field now holds {@code expectedSearchText}.
+     * changed, or, when the list could not change (empty state already showing, or every camera already matches), the
+     * search field now holds {@code expectedSearchText}.
      */
     private boolean waitForListToUpdate(String previousCount, boolean wasEmptyStateVisible, String expectedSearchText) {
         try {
@@ -242,8 +251,10 @@ public final class CameraSearchFilter {
                 if (currentCount != null && !currentCount.equals(previousCount)) {
                     return true;
                 }
-                if (isEmptyStateVisible) {
-                    // Empty state before and after, with a different term: the text in the field is the only sign.
+                if (isEmptyStateVisible || visibleCamerasAllContain(expectedSearchText)) {
+                    // Nothing else can change: the empty state was already showing, or every camera in the list
+                    // already matched the term (a bridge with one camera keeps "1 camera"). The text now in the
+                    // field is then the only sign that the term was entered.
                     WebElement searchField = d.findElement(searchBar);
                     String currentSearchText = searchField.getText();
                     if (currentSearchText == null) {

@@ -3,7 +3,6 @@ package tests.ts_cameras;
 import base.BaseTest;
 import constants.TestDataConstants;
 import org.testng.ITestResult;
-import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -36,8 +35,8 @@ public class CameraSettingsTest extends BaseTest {
     @Test(description = "EEPD-TC-8861: POS-Camera Settings - changing the name and checking the status of Camera in "
             + "camera settings in mobile VMS app", groups = {"regression", "cameras", "ios"})
     public void verifyChangeCameraNameAndCheckStatus() {
-        // Step 2: Cameras in Dashboard, long press the first online camera, open Camera settings
-        openSettingsOfFirstOnlineCamera();
+        // Step 2: Cameras in Dashboard, long press the camera found by name, open Camera settings
+        openSettingsOfSimCamera();
         // Step 3: the status in section "Status" is "Online" (the camera was picked from an "Online" card)
         settingsPage.verifyStatusIs(CamerasPage.STATUS_ONLINE);
         // Step 4: tap the Name option and fill the field
@@ -74,12 +73,11 @@ public class CameraSettingsTest extends BaseTest {
     }
 
     /** Step 2 of EEPD-TC-8861. */
-    private void openSettingsOfFirstOnlineCamera() {
+    private void openSettingsOfSimCamera() {
+        String cameraName = simCameraName();
         camerasPage.openCamerasList();
-        if (!camerasPage.hasOnlineCamera()) {
-            throw new SkipException("An online camera is needed on the End User account; none found in the list");
-        }
-        camerasPage.longPressFirstOnlineCameraAndVerifyContextMenu();
+        camerasPage.reasonCameraUnusable(cameraName).ifPresent(this::skipLocallyFailOnCi);
+        camerasPage.longPressCameraNamedAndVerifyContextMenu(cameraName);
         originalCameraName = settingsPage.openFromContextMenuAndReadName();
         settingsPage.verifyCameraPreviewIconDisplayed();
     }

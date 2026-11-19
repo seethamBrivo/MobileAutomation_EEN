@@ -76,10 +76,11 @@ public final class TimeoutConstants {
     public static final Duration ROTATION_STABILIZE = Duration.ofMillis(2000);
 
     /**
-     * The camera status follows the Enable switch 30 to 60 seconds later. Locally it showed within about 40 s; on
-     * BrowserStack the open screen did not update within this budget, so Camera settings is reopened to read it.
+     * The camera status follows the Enable switch 30 to 90 seconds later. Locally it showed within about 40 s; on
+     * BrowserStack the open screen did not update within 60 s (2026-11-19 build, "Off Camera"), so the budget is 90 s
+     * like iOS, and Camera settings is reopened to read the status if it still has not changed.
      */
-    public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT = Duration.ofSeconds(60);
+    public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT = Duration.ofSeconds(90);
 
     /** iOS keeps the earlier 90 s: it has not been measured with 60 s, and a camera is slow to come back online. */
     public static final Duration CAMERA_STATUS_CHANGE_TIMEOUT_IOS = Duration.ofSeconds(90);

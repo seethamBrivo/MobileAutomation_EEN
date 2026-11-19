@@ -4,12 +4,6 @@ import constants.TimeoutConstants;
 import io.appium.java_client.AppiumDriver;
 import locators.BridgesLocators;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import org.openqa.selenium.Point;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.PointerInput;
-import org.openqa.selenium.interactions.Sequence;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.PlatformLocator;
@@ -61,26 +55,11 @@ public class BridgeSettingsPage {
     // ---- rename ---------------------------------------------------------------------------
 
     /**
-     * Taps the name field located by its own text: the child view of {@code EditText[@text=<name>]}. Used on the
-     * settings screen to reach the name field of the bridge called {@code name}, in place of tapping the "Name" row.
+     * Opens the name editor of the bridge called {@code name} from the settings screen: Android taps the "Name" row
+     * (which opens a sheet with the field), iOS taps the inline field.
      */
     public void clickNameField(String name) {
-        if (PlatformLocator.isIos()) {
-            WaitUtils.click(driver, BridgesLocators.nameFieldTapTarget(name)); // the value is an inline text field
-            return;
-        }
-        WebElement element = WaitUtils.waitForClickability(driver, BridgesLocators.nameFieldTapTarget(name));
-        // A real touch at the centre of the field, like a finger tap. Done with a standard W3C pointer action: the
-        // "mobile: clickGesture" command is not available on BrowserStack's Appium.
-        Point centre = GestureUtils.getElementCenter(element);
-        PointerInput finger =
-                new PointerInput(PointerInput.Kind.TOUCH, "finger");
-        Sequence tap = new Sequence(finger, 1);
-        tap.addAction(finger.createPointerMove(Duration.ZERO,
-                PointerInput.Origin.viewport(), centre.x, centre.y));
-        tap.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
-        tap.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
-        driver.perform(List.of(tap));
+        WaitUtils.click(driver, BridgesLocators.nameFieldTapTarget(name));
     }
 
     public String getCurrentBridgeNameFromEditField() {
@@ -100,12 +79,10 @@ public class BridgeSettingsPage {
     }
 
 
+    /** Confirms the name: iOS uses the keyboard's Done key, Android the Save button of the name sheet. */
     public void clickDoneOnKeyboard() {
-        if (PlatformLocator.isIos()) {
-            WaitUtils.click(driver, BridgesLocators.KEYBOARD_DONE_KEY);
-            return;
-        }
-        driver.executeScript("mobile: performEditorAction", Map.of("action", "done"));
+        WaitUtils.click(driver, PlatformLocator.isIos() ? BridgesLocators.KEYBOARD_DONE_KEY
+                : BridgesLocators.NAME_SAVE_BUTTON);
     }
 
     // ---- restart --------------------------------------------------------------------------
@@ -127,14 +104,10 @@ public class BridgeSettingsPage {
     }
 
     public void verifyBridgeRestartedMessageDisplayed() {
-        if (PlatformLocator.isIos()) {
-            // iOS: the restart takes a while to be confirmed, so the wait is longer than the default.
-            WaitUtils.assertVisible(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE,
-                    TimeoutConstants.LIST_LOAD_TIMEOUT,
-                    "Bridge restarted confirmation message should be displayed after confirming the restart");
-            return;
-        }
+        // The restart takes a while to be confirmed (iOS, and Android on BrowserStack, where the default 20 s ran
+        // out with the settings screen still showing), so the wait is longer than the default on both platforms.
         WaitUtils.assertVisible(driver, BridgesLocators.BRIDGE_RESTARTED_MESSAGE,
+                TimeoutConstants.LIST_LOAD_TIMEOUT,
                 "Bridge restarted confirmation message should be displayed after confirming the restart");
     }
 

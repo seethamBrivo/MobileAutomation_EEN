@@ -51,7 +51,7 @@ public class HistoryBrowserTest extends BaseTest {
             + "in History Browser in mobile VMS app",
           groups = {"regression", "history", "ios"})
     public void verifyPinchChangesTimelineLevel() {
-        historyBrowserPage.openHistoryBrowserFromFirstCameraPreview();
+        historyBrowserPage.openHistoryBrowserFromCameraPreview(simCameraName());
         historyBrowserPage.verifyDefaultTimelineLevel();
         historyBrowserPage.pinchInAndVerifyMaxTimelineLevel();
         historyBrowserPage.pinchOutAndVerifyMinTimelineLevel();
@@ -60,7 +60,7 @@ public class HistoryBrowserTest extends BaseTest {
     @Test(description = "EEPD-TC-2907: POS-History Browser - User is able to use Players/Controllers in mobile VMS app",
           groups = {"regression", "history", "ios"})
     public void verifyTimelineControlsMoveRedCursor() {
-        historyBrowserPage.openLiveVideoOfFirstCameraPreview();
+        historyBrowserPage.openLiveVideoOfCameraPreview(simCameraName());
         historyBrowserPage.openHistoryBrowserFromLiveVideo();
         historyBrowserPage.verifyTimelineControlsDisplayed();
         historyBrowserPage.requireEventsOnTimeline();
@@ -76,7 +76,7 @@ public class HistoryBrowserTest extends BaseTest {
             + "buttons in History Browser in mobile VMS app",
           groups = {"regression", "history", "ios"})
     public void verifyFrameButtonsNavigateBetweenMoments() {
-        historyBrowserPage.openContextMenuOfFirstCameraPreview();
+        historyBrowserPage.openContextMenuOfCameraPreview(simCameraName());
         historyBrowserPage.openHistoryBrowserFromContextMenu();
         historyBrowserPage.verifyTimelineAndControlsDisplayedInPortrait();
         historyBrowserPage.requireEventsOnTimeline();
@@ -104,7 +104,7 @@ public class HistoryBrowserTest extends BaseTest {
             + "Browser in mobile VMS app",
           groups = {"regression", "history"})
     public void verifyFilterEventsUsingMultiselection() {
-        historyBrowserPage.openContextMenuOfFirstCameraPreview();
+        historyBrowserPage.openContextMenuOfCameraPreview(simCameraName());
         historyBrowserPage.openHistoryBrowserFromContextMenu();
         List<String> onTimeline = eventFilterPage.eventTypesOnTimeline();
         historyBrowserPage.verifyFilterButtonWithoutIndication();
@@ -141,7 +141,7 @@ public class HistoryBrowserTest extends BaseTest {
         devicesPage.navigateToDashboard();
         devicesPage.verifyAllDevicesSectionIsDisplayed();
         camerasPage.openCamerasList();
-        camerasPage.longPressFirstOnlineCameraAndVerifyContextMenu();
+        camerasPage.longPressCameraNamedAndVerifyContextMenu(simCameraName());
         String cameraName = camerasPage.readCameraNameInContextMenu();
         LocalTime frameTime = camerasPage.readFrameTimeInContextMenu();
         historyBrowserPage.openHistoryBrowserFromContextMenu();

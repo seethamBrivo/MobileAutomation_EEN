@@ -35,6 +35,10 @@ public final class TestDataConstants {
     public static final String SWITCHABLE_CAMERA_DATA = "switchable_camera_data";
     public static final String SWITCHABLE_CAMERA_NAME = "camera_name";
 
+    // Test-data JSON keys (sim_camera block): the camera the per-camera tests open, found by name.
+    public static final String SIM_CAMERA_DATA = "sim_camera_data";
+    public static final String SIM_CAMERA_NAME = "camera_name";
+
     // Test-data JSON keys (archive_search block).
     public static final String ARCHIVE_SEARCH_DATA = "archive_search_data";
     public static final String ARCHIVE_VALID_SEARCH_TERM = "valid_search_term";
@@ -42,4 +46,9 @@ public final class TestDataConstants {
     // A large, old Archive folder and the video in it (1.5 MB): found by search, and used only to cancel a download.
     public static final String ARCHIVE_CANCEL_FOLDER_SEARCH_TERM = "cancel_folder_search_term";
     public static final String ARCHIVE_CANCEL_FILE_SEARCH_TERM = "cancel_file_search_term";
+
+    // Test-data JSON keys (multi_camera_bridge block): a bridge with several cameras, so a camera search can narrow
+    // its list; the first online bridge may have only one.
+    public static final String MULTI_CAMERA_BRIDGE_DATA = "multi_camera_bridge_data";
+    public static final String MULTI_CAMERA_BRIDGE_NAME = "bridge_name";
 }

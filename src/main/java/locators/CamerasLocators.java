@@ -44,9 +44,14 @@ public final class CamerasLocators {
             AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText'"
                     + " AND name == 'Online' AND visible == 1")); // ios
 
+    /**
+     * The name line of every camera card. {@code descendant::...[1]} is the first text inside the card; a plain
+     * {@code //TextView[1]} also matched the first text of the small id/site chips on the card ("en-cdum-008b-3"),
+     * which are not the camera name.
+     */
     public static final By ALL_VISIBLE_CAMERAS = PlatformLocator.get(
             AppiumBy.xpath(
-            "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]//android.widget.TextView[1]"
+            "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]/descendant::android.widget.TextView[1]"
             ), // android
             AppiumBy.xpath("//XCUIElementTypeStaticText[@visible='true'][following-sibling::*[1][@name='ic_contextMenu']]")); // ios
 
