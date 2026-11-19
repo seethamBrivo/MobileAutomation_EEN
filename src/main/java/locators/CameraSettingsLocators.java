@@ -15,16 +15,26 @@ public final class CameraSettingsLocators {
             AppiumBy.xpath("//android.widget.TextView[@text='General']"), // android
             AppiumBy.accessibilityId("GENERAL")); // ios
 
+    // The 2026-11-19 build wraps the list in two Views, so its header is a sibling of the grandparent; the second
+    // path is the earlier build's, where the header followed the ScrollView directly.
+    private static final String HEADER_ANDROID =
+            "//android.widget.ScrollView[.//android.widget.TextView[@text='General']]"
+                    + "/parent::android.view.View/parent::android.view.View/following-sibling::android.view.View[1]";
+    private static final String HEADER_ANDROID_EARLIER =
+            "//android.widget.ScrollView[.//android.widget.TextView[@text='General']]"
+                    + "/following-sibling::android.view.View[1]";
+
     public static final By HEADER_TITLE = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='General']]"
-                    + "/following-sibling::android.view.View[1]/android.widget.TextView"), // android
+            AppiumBy.xpath(HEADER_ANDROID + "/android.view.View/android.view.View[2]/android.widget.TextView"
+                    + " | " + HEADER_ANDROID_EARLIER + "/android.widget.TextView"), // android
             AppiumBy.iOSClassChain("**/XCUIElementTypeNavigationBar/XCUIElementTypeStaticText")); // ios
 
     // Android: positional, the clickable View inside the last child of the header.
     // TODO: Replace with testTag when mobile team adds an identifier to the preview icon.
     public static final By PREVIEW_ICON = PlatformLocator.get(
-            AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='General']]"
-                    + "/following-sibling::android.view.View[1]/android.view.View[last()]"
+            AppiumBy.xpath(HEADER_ANDROID + "/android.view.View/android.view.View[last()]"
+                    + "/android.view.View[@clickable='true']"
+                    + " | " + HEADER_ANDROID_EARLIER + "/android.view.View[last()]"
                     + "/android.view.View[@clickable='true']"), // android
             AppiumBy.accessibilityId("navigationBar_cameraPreview")); // ios
 
@@ -41,6 +51,20 @@ public final class CameraSettingsLocators {
     public static final By NAME_FIELD = PlatformLocator.get(
             AppiumBy.xpath("(//android.widget.EditText)[1]"), // android
             AppiumBy.xpath("(//XCUIElementTypeTextField)[1]")); // ios
+
+    /**
+     * Android: the Name value on the settings list. The 2026-11-19 build shows it as plain text; tapping its row opens
+     * a sheet whose single EditText is {@link #NAME_FIELD}.
+     */
+    public static final By NAME_VALUE = AppiumBy.xpath(
+            "//android.widget.TextView[@text='Name']/following-sibling::android.widget.TextView[1]"); // android
+
+    /** Android: the Name row that opens the name sheet. */
+    public static final By NAME_ROW = AppiumBy.xpath(
+            "//android.widget.TextView[@text='Name']/ancestor::android.view.View[@clickable='true'][1]"); // android
+
+    /** Android: the Save button of the name sheet, which replaces the keyboard's Done key. */
+    public static final By NAME_SAVE_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Save']"); // android
 
     // --- Enable switch ---------------------------------------------------------
 

@@ -112,6 +112,27 @@ public final class JsonDataReader {
     }
 
     /**
+     * A string value from {@code sim_camera_data.<key>}. Fails with the key name
+     * instead of a bare NullPointerException when the key is missing or null.
+     */
+    public static String getSimCameraValue(String key) {
+        return getBlockValue(
+                TestDataConstants.SIM_CAMERA_DATA,
+                TestDataConstants.SIM_CAMERA_DATA,
+                key
+        ).getAsString();
+    }
+
+    /** A string value from {@code multi_camera_bridge_data.<key>}; fails with the key name when it is missing. */
+    public static String getMultiCameraBridgeValue(String key) {
+        return getBlockValue(
+                TestDataConstants.MULTI_CAMERA_BRIDGE_DATA,
+                TestDataConstants.MULTI_CAMERA_BRIDGE_DATA,
+                key
+        ).getAsString();
+    }
+
+    /**
      * A string value from {@code archive_search_data.<key>}. Fails with the key name
      * instead of a bare NullPointerException when the key is missing or null.
      */

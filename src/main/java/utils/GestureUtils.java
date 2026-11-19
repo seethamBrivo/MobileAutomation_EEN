@@ -40,9 +40,12 @@ public final class GestureUtils {
             return;
         }
         Point center = getElementCenter(element);
+        // Never lower than LONG_PRESS_LOWEST_POINT_PERCENT of the screen, but still inside the element.
+        int lowest = (int) (driver.manage().window().getSize().height * GestureConstants.LONG_PRESS_LOWEST_POINT_PERCENT);
+        int pressY = Math.max(element.getLocation().getY() + 1, Math.min(center.y, lowest));
         PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
         Sequence longPressSequence = new Sequence(finger, 1);
-        longPressSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), center.x, center.y));
+        longPressSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), center.x, pressY));
         longPressSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
         longPressSequence.addAction(new Pause(finger, holdDuration));
         longPressSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
@@ -236,6 +239,18 @@ public final class GestureUtils {
 
     public static void pinchOut(AppiumDriver driver, WebElement target) {
         pinch(driver, target, GestureConstants.PINCH_NARROW_SPREAD_PERCENT, GestureConstants.PINCH_WIDE_SPREAD_PERCENT);
+    }
+
+    /**
+     * Pinch through UiAutomator2's own gesture instead of two hand-built pointer sequences. Used only as a fallback
+     * when the pointer-sequence pinch changed nothing (seen on a Realme phone, where it is ignored).
+     *
+     * @param pinchIn true to move the fingers together ("close"), false to spread them ("open")
+     */
+    public static void nativePinch(AppiumDriver driver, WebElement target, boolean pinchIn) {
+        driver.executeScript(pinchIn ? "mobile: pinchCloseGesture" : "mobile: pinchOpenGesture", Map.of(
+                "elementId", ((RemoteWebElement) target).getId(),
+                "percent", GestureConstants.NATIVE_PINCH_PERCENT));
     }
 
     private static void pinch(AppiumDriver driver, WebElement target, double startSpreadPercent,

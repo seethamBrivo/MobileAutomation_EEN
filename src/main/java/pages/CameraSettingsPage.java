@@ -5,7 +5,6 @@ import io.appium.java_client.AppiumDriver;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import locators.CameraSettingsLocators;
 import org.apache.logging.log4j.LogManager;
@@ -55,7 +54,8 @@ public class CameraSettingsPage {
     }
 
     public String readName() {
-        return WaitUtils.waitForVisibility(driver, CameraSettingsLocators.NAME_FIELD).getText().trim();
+        By nameLocator = PlatformLocator.isIos() ? CameraSettingsLocators.NAME_FIELD : CameraSettingsLocators.NAME_VALUE;
+        return WaitUtils.waitForVisibility(driver, nameLocator).getText().trim();
     }
 
     public void clickNameField() {
@@ -63,7 +63,7 @@ public class CameraSettingsPage {
             WaitUtils.click(driver, CameraSettingsLocators.NAME_FIELD);
             return;
         }
-        tapAtCentre(CameraSettingsLocators.NAME_FIELD);
+        WaitUtils.click(driver, CameraSettingsLocators.NAME_ROW);
     }
 
     public void enterName(String name) {
@@ -73,13 +73,10 @@ public class CameraSettingsPage {
         Assert.assertEquals(seen, name, "The typed name should be in the Name field before it is saved");
     }
 
-    /** The screen has no Save button; the keyboard's Done saves the name. */
+    /** iOS saves the name with the keyboard's Done key; Android has a Save button on the name sheet. */
     public void saveName() {
-        if (PlatformLocator.isIos()) {
-            WaitUtils.click(driver, CameraSettingsLocators.KEYBOARD_DONE_KEY);
-            return;
-        }
-        driver.executeScript("mobile: performEditorAction", Map.of("action", "done"));
+        WaitUtils.click(driver, PlatformLocator.isIos() ? CameraSettingsLocators.KEYBOARD_DONE_KEY
+                : CameraSettingsLocators.NAME_SAVE_BUTTON);
     }
 
     public void goBack() {

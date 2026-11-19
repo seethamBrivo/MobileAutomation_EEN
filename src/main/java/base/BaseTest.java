@@ -255,6 +255,16 @@ public abstract class BaseTest {
         return JsonDataReader.getCredentialValue(TestDataConstants.RESELLER_CREDS, key);
     }
 
+    /** The name of the camera the per-camera tests open, from the sim_camera block of testData.json. */
+    protected String simCameraName() {
+        return JsonDataReader.getSimCameraValue(TestDataConstants.SIM_CAMERA_NAME);
+    }
+
+    /** The name of the bridge that has several cameras, from the multi_camera_bridge block of testData.json. */
+    protected String multiCameraBridgeName() {
+        return JsonDataReader.getMultiCameraBridgeValue(TestDataConstants.MULTI_CAMERA_BRIDGE_NAME);
+    }
+
     /**
      * For a test whose precondition lives in the account's data. A local run skips, so a developer without that data
      * can still run the class; CI (which sets {@code CI=true}) fails, so a mistyped secret or a renamed camera shows

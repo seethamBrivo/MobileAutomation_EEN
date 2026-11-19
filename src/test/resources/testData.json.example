@@ -29,8 +29,14 @@
   "switchable_camera_data": {
     "camera_name": "YourOnlineCameraTheEndUserCanTurnOff"
   },
+  "sim_camera_data": {
+    "camera_name": "YourCameraTheTestsOpenByName"
+  },
+  "multi_camera_bridge_data": {
+    "bridge_name": "YourBridgeWithSeveralCameras"
+  },
   "archive_search_data": {
-    "valid_search_term": "test",
+    "valid_search_term": "Sim Camera",
     "no_results_search_term": "xyznonexistent12345",
     "cancel_folder_search_term": "<text that finds one large, old Archive folder>",
     "cancel_file_search_term": "<text that finds one video of 1 MB or more>"

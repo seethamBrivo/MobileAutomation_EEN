@@ -118,12 +118,16 @@ public class HistoryBrowserPage {
     /** Set once the iOS video overlay with the frame time has been seen on this page. */
     private boolean frameOverlayChecked;
 
+    /** Set once the two-finger pointer pinch changed nothing on this phone, so the native pinch is used from then on. */
+    private boolean pointerPinchIgnored;
+
     public HistoryBrowserPage(AppiumDriver driver) {
         this.driver = driver;
     }
 
-    public void openHistoryBrowserFromFirstCameraPreview() {
-        WaitUtils.click(driver, HistoryBrowserLocators.FIRST_PREVIEW_THREE_DOTS);
+    public void openHistoryBrowserFromCameraPreview(String cameraName) {
+        scrollToPreviewOf(cameraName);
+        WaitUtils.click(driver, HistoryBrowserLocators.previewThreeDotsNamed(cameraName));
         WaitUtils.click(driver, CamerasLocators.HISTORY_BROWSER_OPTION);
         verifyHistoryBrowserDisplayed();
     }
@@ -148,8 +152,9 @@ public class HistoryBrowserPage {
      * The app reopens a camera in the mode it was last viewed in, and sessions run noReset, so a previous test that
      * ended in the history browser makes this tap open the history browser instead of the live video.
      */
-    public void openLiveVideoOfFirstCameraPreview() {
-        WaitUtils.click(driver, HistoryBrowserLocators.FIRST_PREVIEW_CARD);
+    public void openLiveVideoOfCameraPreview(String cameraName) {
+        scrollToPreviewOf(cameraName);
+        WaitUtils.click(driver, HistoryBrowserLocators.previewCardNamed(cameraName));
         List<By> screens = List.of(
                 HistoryBrowserLocators.LIVE_STREAM_SCREEN, HistoryBrowserLocators.HISTORY_BROWSER_SCREEN);
         By opened = WaitUtils.waitForFirstVisible(driver, screens, FrameworkConstants.EXPLICIT_WAIT)
@@ -270,17 +275,19 @@ public class HistoryBrowserPage {
     }
 
     /**
-     * Long press on the first camera preview: the context menu with the camera's options appears. The menu is a
+     * Long press on the named camera's preview: the context menu with the camera's options appears. The menu is a
      * popup window, and UiAutomator2 reports only the app window (so the menu is invisible on BrowserStack) unless
      * multi-window is on; it stays on until the menu has been used, and is switched off at the end of every test by
      * {@link #resetMultiWindowSetting()}, so a failure in between cannot leave it on for the rest of the session.
      */
-    public void openContextMenuOfFirstCameraPreview() {
+    public void openContextMenuOfCameraPreview(String cameraName) {
+        scrollToPreviewOf(cameraName);
         if (!PlatformLocator.isIos()) { // iOS reports the menu without this setting
             multiWindowEnabled = true;
             driver.setSetting(MULTI_WINDOWS_SETTING, true);
         }
-        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.FIRST_PREVIEW_CARD));
+        GestureUtils.longPress(driver,
+                WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.previewCardNamed(cameraName)));
         for (By option : CONTEXT_MENU_OPTIONS) {
             WaitUtils.assertVisible(driver, option, "Context menu option " + option + " should be displayed");
         }
@@ -929,19 +936,36 @@ public class HistoryBrowserPage {
         int current = readLevelMinutes();
         levels.add(current);
         for (int pinches = 0; current != targetMinutes && pinches < TIMELINE_LEVEL_MINUTES.size(); pinches++) {
-            WebElement timeline = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_LIST);
-            if (pinchIn) {
-                GestureUtils.pinchIn(driver, timeline);
-            } else {
-                GestureUtils.pinchOut(driver, timeline);
-            }
             int previous = current;
-            WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> readLevelMinutes() != previous);
-            current = readLevelMinutes();
+            if (!pointerPinchIgnored) {
+                WebElement timeline = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_LIST);
+                if (pinchIn) {
+                    GestureUtils.pinchIn(driver, timeline);
+                } else {
+                    GestureUtils.pinchOut(driver, timeline);
+                }
+                current = readLevelAfterChangeFrom(previous);
+            }
+            if (current == previous) {
+                // Some phones ignore the two-finger pointer sequence; UiAutomator2's own pinch is used instead, and
+                // for the rest of this test, so the settle wait is not paid on every step.
+                logger.warn("Pinch {} left the timeline at {} minute(s); using the native pinch gesture",
+                        pinchIn ? "in" : "out", previous);
+                pointerPinchIgnored = true;
+                WebElement timeline = WaitUtils.waitForVisibility(driver, HistoryBrowserLocators.TIMELINE_LIST);
+                GestureUtils.nativePinch(driver, timeline, pinchIn);
+                current = readLevelAfterChangeFrom(previous);
+            }
             levels.add(current);
         }
         logger.info("Timeline levels read while pinching {}: {}", pinchIn ? "in" : "out", levels);
         return levels;
+    }
+
+    /** Waits for the level to leave {@code previous}, then reads it fresh; unchanged if the gesture did nothing. */
+    private int readLevelAfterChangeFrom(int previous) {
+        WaitUtils.pollUntil(driver, TimeoutConstants.TIMELINE_SETTLE_TIMEOUT, () -> readLevelMinutes() != previous);
+        return readLevelMinutes();
     }
 
     private int readLevelMinutes() {
@@ -1299,5 +1323,11 @@ public class HistoryBrowserPage {
         recoverFromExportFlow();
         clickExportButton();
         verifyExportScreenOpened();
+    }
+
+    /** Scrolls the Layouts screen until the named camera's preview is on it, as the camera is found by name. */
+    private void scrollToPreviewOf(String cameraName) {
+        Assert.assertTrue(GestureUtils.scrollUntilPresent(driver, HistoryBrowserLocators.previewCardNamed(cameraName)),
+                "Camera '" + cameraName + "' should have a preview on the Layouts screen");
     }
 }

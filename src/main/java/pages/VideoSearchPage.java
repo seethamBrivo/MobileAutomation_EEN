@@ -503,7 +503,11 @@ public class VideoSearchPage {
         selectFirstTag();
     }
 
-    /** The event opens on any position, often the last, so the first swipe goes to the neighbour that exists. */
+    /**
+     * The event opens on any position, often the last. The first swipe goes to the previous key image whenever there
+     * is one, because the newest images can still be arriving on a live camera and move the counter while the swipe
+     * runs; it goes to the next one only when the event opens on its first image.
+     */
     public void verifySwipeNavigation() {
         EventPosition start = readEventPosition();
         if (start.total() < 2) {
@@ -511,7 +515,7 @@ public class VideoSearchPage {
         }
         String cameraName = WaitUtils.waitForVisibility(driver, VideoSearchLocators.EVENT_CAMERA_NAME).getText();
         String startTime = readShownTime();
-        boolean towardsNext = start.current() < start.total();
+        boolean towardsNext = start.current() == 1;
         String neighbourTime = swipeKeyImageAndVerify(towardsNext, start, startTime, cameraName);
         EventPosition neighbour = new EventPosition(start.current() + (towardsNext ? 1 : -1), start.total());
         swipeKeyImageAndVerify(!towardsNext, neighbour, neighbourTime, cameraName);

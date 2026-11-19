@@ -77,8 +77,11 @@ public class LoginPage {
             while (System.nanoTime() < deadline) {
                 try {
                     lastSeenLength = countTypedCharacters(field, emptyFieldValue);
-                    if (lastSeenLength >= text.length()) {
+                    if (lastSeenLength == text.length()) {
                         return;
+                    }
+                    if (lastSeenLength > text.length()) {
+                        break; // something was already in the field and the new text was added after it
                     }
                 } catch (org.openqa.selenium.StaleElementReferenceException e) {
                     break; // the page re-rendered; type again into the fresh element
@@ -90,7 +93,8 @@ public class LoginPage {
                     return;
                 }
             }
-            logger.warn("Only part of the text reached the field (attempt {}/{}); typing it again", attempt, TYPE_ATTEMPTS);
+            logger.warn("The field does not hold exactly the typed text (attempt {}/{}); clearing and typing it again",
+                    attempt, TYPE_ATTEMPTS);
         }
         // Not fatal: a field can report fewer characters than were typed even when it holds all of them (masked or
         // trimmed text, a trailing space or line break in the stored credential), and failing here stopped every login

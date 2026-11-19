@@ -3,6 +3,7 @@ package locators;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 import utils.PlatformLocator;
+import utils.XPathUtils;
 
 /**
  * Locators for opening the History browser from a camera preview or the live video, and for its timeline,
@@ -41,15 +42,31 @@ public final class HistoryBrowserLocators {
 
     // --- Camera preview --------------------------------------------------------
 
-    // btn_more carries no content-desc, so it is addressed by resource-id inside the first card's content-desc.
-    public static final By FIRST_PREVIEW_THREE_DOTS = PlatformLocator.get(
-            AppiumBy.xpath("//*[@content-desc='cell_at_0_preview_view_preview_card']"
-                    + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/btn_more']"), // android
-            AppiumBy.accessibilityId("cell_at_0_preview_view_moreButton")); // ios
+    // Android: a card's content-desc is "cell_at_<n>_preview_view_preview_card" and its name is the preview_name
+    // text inside it, so a card is found by the name without knowing its row.
+    private static String androidPreviewCardNamed(String cameraName) {
+        return "//*[contains(@content-desc, '_preview_view_preview_card')]"
+                + "[.//android.widget.TextView[@resource-id='com.een.vms.android:id/preview_name'"
+                + " and @text=" + XPathUtils.xpathLiteral(cameraName) + "]]";
+    }
 
-    public static final By FIRST_PREVIEW_CARD = PlatformLocator.get(
-            AppiumBy.accessibilityId("cell_at_0_preview_view_preview_card"), // android
-            AppiumBy.accessibilityId("cell_at_0_preview_view")); // ios
+    public static By previewCardNamed(String cameraName) {
+        return PlatformLocator.get(
+                AppiumBy.xpath(androidPreviewCardNamed(cameraName)), // android
+                AppiumBy.xpath("//XCUIElementTypeStaticText[contains(@name, '_preview_view_name') and @label="
+                        + XPathUtils.xpathLiteral(cameraName) + "]")); // ios
+    }
+
+    // btn_more carries no content-desc, so it is addressed by resource-id inside the named card.
+    // iOS: the first more button after the name label, which is the one of the same card.
+    public static By previewThreeDotsNamed(String cameraName) {
+        return PlatformLocator.get(
+                AppiumBy.xpath(androidPreviewCardNamed(cameraName)
+                        + "//android.widget.ImageView[@resource-id='com.een.vms.android:id/btn_more']"), // android
+                AppiumBy.xpath("(//XCUIElementTypeStaticText[contains(@name, '_preview_view_name') and @label="
+                        + XPathUtils.xpathLiteral(cameraName) + "]"
+                        + "/following::XCUIElementTypeButton[contains(@name, '_preview_view_moreButton')])[1]")); // ios
+    }
 
     // --- Live video ------------------------------------------------------------
 

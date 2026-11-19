@@ -198,10 +198,16 @@ jobs:
               "camera_name": "${{ secrets.MECHANICAL_ZOOM_CAMERA_NAME || 'EN-CDUB-011a' }}"
             },
             "switchable_camera_data": {
-              "camera_name": "${{ secrets.SWITCHABLE_CAMERA_NAME || 'on/off camera' }}"
+              "camera_name": "${{ secrets.SWITCHABLE_CAMERA_NAME || 'Off Camera' }}"
+            },
+            "sim_camera_data": {
+              "camera_name": "${{ secrets.SIM_CAMERA_NAME || 'Sim Camera' }}"
+            },
+            "multi_camera_bridge_data": {
+              "bridge_name": "${{ secrets.MULTI_CAMERA_BRIDGE_NAME || 'Special Cameras Bridge' }}"
             },
             "archive_search_data": {
-              "valid_search_term": "test",
+              "valid_search_term": "Sim Camera",
               "no_results_search_term": "xyznonexistent12345",
               "cancel_folder_search_term": "2026-07-16 07-23-09.177 AM preview",
               "cancel_file_search_term": "2026-07-16 07-23-08.mp4"

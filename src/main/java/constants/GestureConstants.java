@@ -22,4 +22,12 @@ public final class GestureConstants {
     /** Finger distance from the pinch centre as a share of the target's height: apart / together. */
     public static final double PINCH_WIDE_SPREAD_PERCENT = 0.35;
     public static final double PINCH_NARROW_SPREAD_PERCENT = 0.08;
+    /** Size of the native pinch as a share of the element, for the UiAutomator2 fallback gesture. */
+    public static final double NATIVE_PINCH_PERCENT = 0.7;
+    /**
+     * Lowest point, as a share of the screen height, where an Android long press is made. The centre of a card at
+     * the bottom of a list (a switched-off camera sorts last) is about 95% down, and a press there opens nothing
+     * (measured on BrowserStack, Samsung Galaxy S25 Ultra); the same card pressed at 93% opens its menu.
+     */
+    public static final double LONG_PRESS_LOWEST_POINT_PERCENT = 0.93;
 }

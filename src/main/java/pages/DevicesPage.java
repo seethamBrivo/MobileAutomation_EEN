@@ -462,13 +462,16 @@ public class DevicesPage {
         }
     }
 
-    /** Opens the menu of the first online bridge, which has cameras, unlike an offline one that may sort first. */
-    public void openFirstOnlineBridgeContextMenu() {
+    /**
+     * Opens the menu of the bridge with this name. Android only: on iOS the first online bridge is used, because the
+     * name-based three-dots locator is not verified there.
+     */
+    public void openBridgeContextMenuByName(String bridgeName) {
         if (PlatformLocator.isIos()) {
             WaitUtils.click(driver, BridgesLocators.FIRST_ONLINE_BRIDGE_THREE_DOTS);
             return;
         }
-        GestureUtils.longPress(driver, WaitUtils.findElements(driver, BridgesLocators.ONLINE_BRIDGE_ROWS).get(0));
+        GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, BridgesLocators.bridgeRowNamed(bridgeName)));
     }
 
     public void verifyContextMenuOptionDisplayed(String optionText) {
