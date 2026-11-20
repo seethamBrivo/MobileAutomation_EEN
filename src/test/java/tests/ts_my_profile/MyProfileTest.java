@@ -11,6 +11,7 @@ import pages.MyProfilePage;
 import pages.TimeZonePage;
 import pages.VSPEventsPage;
 import pages.VideoSearchPage;
+import utils.JsonDataReader;
 
 public class MyProfileTest extends BaseTest {
 
@@ -20,11 +21,11 @@ public class MyProfileTest extends BaseTest {
     private static final String TEST_TIMEZONE = "Etc/GMT+12";
     private static final String TIMEZONE_SEARCH_TERM = "Etc";
     private static final String INVALID_TIMEZONE_SEARCH_TERM = "XYZ_INVALID_TIMEZONE_12345";
-    /** Wrong password for negative testing (EPD-TC-1326). */
+    /** Wrong password for negative testing (EEPD-TC-1326). */
     private static final String WRONG_PASSWORD = "WrongPassword123";
-    /** Test email for login email change test (EPD-TC-1326, EPD-TC-1327). */
-    private static final String TEST_NEW_EMAIL = "test.new@brivo.com";
-    /** Wrong authentication code for negative testing (EPD-TC-1327). */
+    /** Test email for login email change test (EEPD-TC-1326, EEPD-TC-1327). */
+    private static final String TEST_NEW_EMAIL = "test.new@example.com";
+    /** Wrong authentication code for negative testing (EEPD-TC-1327). */
     private static final String WRONG_AUTH_CODE = "0000";
 
     private DevicesPage devicesPage;
@@ -42,24 +43,24 @@ public class MyProfileTest extends BaseTest {
         myProfilePage = devicesPage.navigateToMyProfile();
     }
 
-    @Test(description = "EPD-TC-1254: POS - My Profile - swiping down to refresh the data under the My Profile screen in VMS",
+    @Test(description = "EEPD-TC-1254: POS - My Profile - swiping down to refresh the data under the My Profile screen in VMS",
           groups = {"regression", "profile"})
     public void verifyPullToRefreshInMyProfile() {
         myProfilePage.verifyMyProfileScreenDisplayed();
         myProfilePage.clickProfileSection();
         myProfilePage.pullToRefresh();
-        myProfilePage.isLoadingIndicatorVisible();
-        myProfilePage.isSkeletonLoaderVisible();
+        myProfilePage.verifyLoadingIndicatorAppears();
         myProfilePage.verifyDataRefreshed();
     }
 
-    @Test(description = "EPD-TC-1326: NEG-My Profile - Try to change login email when wrong verification password is provided in mobile VMS app",
+    @Test(description = "EEPD-TC-1326: NEG-My Profile - Try to change login email when wrong verification password is provided in mobile VMS app",
           groups = {"regression", "profile"})
     public void verifyLoginEmailChangeWithWrongPassword() {
         myProfilePage.verifyMyProfileScreenDisplayed();
         myProfilePage.clickProfileSection();
         myProfilePage.clickProfileDetailsOption();
         myProfilePage.clickLoginEmailOption();
+        myProfilePage.verifyNextButtonDisabled();
         myProfilePage.enterVerifyPassword(WRONG_PASSWORD);
         myProfilePage.enterNewEmail(TEST_NEW_EMAIL);
         myProfilePage.verifyNextButtonEnabled();
@@ -67,15 +68,16 @@ public class MyProfileTest extends BaseTest {
         myProfilePage.verifyPasswordErrorMessage();
     }
 
-    @Test(description = "EPD-TC-1327: NEG-My Profile - Try to change login email when wrong authentication code is provided in mobile VMS app",
+    @Test(description = "EEPD-TC-1327: NEG-My Profile - Try to change login email when wrong authentication code is provided in mobile VMS app",
           groups = {"regression", "profile"})
-    public void verifyLoginEmailChangeWithWrongAuthCode() throws Exception {
-        String correctPassword = utils.JsonDataReader.getCredentialValue(TestDataConstants.TS02_CREDS, "password");
+    public void verifyLoginEmailChangeWithWrongAuthCode() {
+        String correctPassword = JsonDataReader.getCredentialValue(TestDataConstants.TS02_CREDS, "password");
 
         myProfilePage.verifyMyProfileScreenDisplayed();
         myProfilePage.clickProfileSection();
         myProfilePage.clickProfileDetailsOption();
         myProfilePage.clickLoginEmailOption();
+        myProfilePage.verifyNextButtonDisabled();
         myProfilePage.enterVerifyPassword(correctPassword);
         myProfilePage.enterNewEmail(TEST_NEW_EMAIL);
         myProfilePage.verifyNextButtonEnabled();

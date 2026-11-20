@@ -50,17 +50,11 @@ public final class MyProfileLocators {
                 AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + format + "'")); // ios
     }
 
-    // --- Pull-to-refresh indicators --------------------------------------------------
+    // --- Pull-to-refresh indicators (Android only) ----------------------------------
 
-    public static final By LOADING_INDICATOR = PlatformLocator.get(
-            AppiumBy.className("android.widget.ProgressBar"),
-            AppiumBy.className("XCUIElementTypeActivityIndicator"));
+    public static final By LOADING_INDICATOR = AppiumBy.className("android.widget.ProgressBar");
 
-    public static final By SKELETON_LOADER = PlatformLocator.get(
-            AppiumBy.xpath("//android.view.View[@content-desc='skeleton' or contains(@content-desc, 'loading') or contains(@content-desc, 'placeholder')]"),
-            AppiumBy.xpath("//XCUIElementTypeOther[@name='skeleton' or contains(@name, 'loading') or contains(@name, 'placeholder')]"));
-
-    // --- Profile Details Option ------------------------------------------------------
+    // --- Profile Details Option (Android only) --------------------------------------
 
     public static final By PROFILE_DETAILS_OPTION = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.view.View/android.view.View");
 
@@ -74,9 +68,11 @@ public final class MyProfileLocators {
 
     public static final By NEXT_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Next']");
 
+    public static final By NEXT_BUTTON_CLICKABLE = AppiumBy.xpath("//android.widget.TextView[@text='Next']/..");
+
     public static final By PASSWORD_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Password is not correct.']");
 
-    // --- Confirmation Screen (Android only - EPD-TC-1327) ---------------------------
+    // --- Confirmation Screen (Android only - EEPD-TC-1327) --------------------------
 
     public static final By AUTH_CODE_INPUT = AppiumBy.xpath("//android.widget.EditText");
 

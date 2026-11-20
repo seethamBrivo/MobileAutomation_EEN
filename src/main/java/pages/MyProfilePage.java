@@ -97,27 +97,25 @@ public class MyProfilePage {
                 "Time format should be '" + expectedFormat + "' but was: " + actualFormat);
     }
 
+    public void verifyMyProfileScreenDisplayed() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PROFILE_SECTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                "My Profile screen should be displayed");
+    }
+
     public void pullToRefresh() {
         GestureUtils.swipeDown(driver);
     }
 
-    public boolean isLoadingIndicatorVisible() {
-        return WaitUtils.isVisible(driver, MyProfileLocators.LOADING_INDICATOR, TimeoutConstants.SHORT_TIMEOUT);
-    }
-
-    public boolean isSkeletonLoaderVisible() {
-        return WaitUtils.isVisible(driver, MyProfileLocators.SKELETON_LOADER, TimeoutConstants.SHORT_TIMEOUT);
+    public void verifyLoadingIndicatorAppears() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.LOADING_INDICATOR, TimeoutConstants.SHORT_TIMEOUT),
+                "Loading indicator should appear after pull-to-refresh");
     }
 
     public void verifyDataRefreshed() {
-        WaitUtils.waitForInvisibility(driver, MyProfileLocators.LOADING_INDICATOR, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
-        WaitUtils.waitForVisibility(driver, MyProfileLocators.PROFILE_DETAILS_HEADING, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
-    }
-
-    public void verifyMyProfileScreenDisplayed() {
-        WaitUtils.waitForVisibility(driver, MyProfileLocators.PROFILE_SECTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
-        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PROFILE_SECTION, TimeoutConstants.SHORT_TIMEOUT),
-                "My Profile screen should be displayed");
+        boolean loadingDisappeared = WaitUtils.waitForInvisibility(driver, MyProfileLocators.LOADING_INDICATOR, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
+        Assert.assertTrue(loadingDisappeared, "Loading indicator should disappear after refresh completes");
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PROFILE_DETAILS_HEADING, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                "Profile details should be visible after refresh");
     }
 
     public void clickProfileDetailsOption() {
@@ -141,11 +139,16 @@ public class MyProfilePage {
     }
 
     public boolean isNextButtonEnabled() {
-        return WaitUtils.waitForVisibility(driver, MyProfileLocators.NEXT_BUTTON).isEnabled();
+        return WaitUtils.waitForVisibility(driver, MyProfileLocators.NEXT_BUTTON_CLICKABLE).isEnabled();
+    }
+
+    public void verifyNextButtonDisabled() {
+        Assert.assertFalse(isNextButtonEnabled(),
+                "Next button should be disabled when fields are empty");
     }
 
     public void verifyPasswordErrorMessage() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PASSWORD_ERROR_MESSAGE, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PASSWORD_ERROR_MESSAGE, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
                 "Password error message should be visible");
     }
 
@@ -165,7 +168,7 @@ public class MyProfilePage {
     }
 
     public void verifyAuthCodeErrorMessage() {
-        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.AUTH_CODE_ERROR_MESSAGE, TimeoutConstants.SHORT_TIMEOUT),
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.AUTH_CODE_ERROR_MESSAGE, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
                 "Authentication code error message should be visible");
     }
 }
