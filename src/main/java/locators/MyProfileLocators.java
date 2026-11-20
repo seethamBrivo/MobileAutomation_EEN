@@ -72,7 +72,7 @@ public final class MyProfileLocators {
 
     public static final By PASSWORD_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Password is not correct.']");
 
-    // --- Confirmation Screen (Android only - EEPD-TC-1327) --------------------------
+    // --- Confirmation Screen (Android only - EPD-TC-1327) ---------------------------
 
     public static final By AUTH_CODE_INPUT = AppiumBy.xpath("//android.widget.EditText");
 
