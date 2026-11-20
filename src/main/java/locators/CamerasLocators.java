@@ -29,9 +29,17 @@ public final class CamerasLocators {
             AppiumBy.xpath("//androidx.compose.ui.platform.ComposeView"), // android
             AppiumBy.accessibilityId("Filter by camera")); // ios
 
+    /**
+     * iOS: the name text of a camera card. A card is loose siblings in the order thumbnail, name, status dot (and the
+     * shared icon), status, 3-dots button, tag row, so the name is the text that follows the thumbnail, a wide image
+     * (the status dot and the shared icon are narrow). The text before the 3-dots button is the status, not the name.
+     */
+    private static final String IOS_CARD_NAME =
+            "XCUIElementTypeStaticText[preceding-sibling::*[1][self::XCUIElementTypeImage][number(@width) > 60]]";
+
     public static final By FIRST_CAMERA_IN_LIST = PlatformLocator.get(
             AppiumBy.xpath("(//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]])[1]"), // android
-            AppiumBy.xpath("(//XCUIElementTypeStaticText[@visible='true'][following-sibling::*[1][@name='ic_contextMenu']])[1]")); // ios
+            AppiumBy.xpath("(//" + IOS_CARD_NAME + "[@visible='true'])[1]")); // ios
 
     public static final By FIRST_OFFLINE_OR_ERROR_CAMERA = PlatformLocator.get(
             AppiumBy.xpath("(//android.widget.TextView[@text='Offline' or @text='Camera error'])[1]/ancestor::android.view.View[@clickable='true'][1]"), // android
@@ -53,7 +61,7 @@ public final class CamerasLocators {
             AppiumBy.xpath(
             "//android.view.View[@clickable='true'][.//android.widget.TextView[contains(@text, 'Online') or contains(@text, 'Offline') or contains(@text, 'error') or contains(@text, 'Invalid') or contains(@text, 'Turned off')]]/descendant::android.widget.TextView[1]"
             ), // android
-            AppiumBy.xpath("//XCUIElementTypeStaticText[@visible='true'][following-sibling::*[1][@name='ic_contextMenu']]")); // ios
+            AppiumBy.xpath("//" + IOS_CARD_NAME + "[@visible='true']")); // ios
 
     /** Android only: the "Offline" label inside a camera card, to tell an offline camera from one in error. */
     public static final By OFFLINE_STATUS_IN_CAMERA_CARD = AppiumBy.xpath(".//android.widget.TextView[@text='Offline']");
@@ -74,7 +82,7 @@ public final class CamerasLocators {
                     + "/ancestor::android.view.View[@clickable='true'][1]"
                     + "/android.view.View[@clickable='true'][last()]"), // android
             AppiumBy.xpath("(//XCUIElementTypeStaticText[@name='Online' and @visible='true'])[1]"
-                    + "/preceding-sibling::XCUIElementTypeButton[@name='ic_contextMenu'][1]")); // ios
+                    + "/following-sibling::XCUIElementTypeButton[@name='ic_contextMenu'][1]")); // ios
 
     /**
      * The Cameras tile on the Dashboard lists the cameras per status; their sum is the total.
@@ -93,23 +101,21 @@ public final class CamerasLocators {
         return PlatformLocator.get(
                 AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
                         + "/ancestor::android.view.View[@clickable='true'][1]"), // android
-                AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
-                        + "][following-sibling::*[1][@name='ic_contextMenu']]")); // ios
+                AppiumBy.xpath("//" + IOS_CARD_NAME + "[@name=" + XPathUtils.xpathLiteral(name) + "]")); // ios
     }
 
     /**
      * The card of the camera with this name, only while its status is "Online": a camera left "Turned off" or
      * "Offline" is listed under the same name but is not the camera the caller needs.
-     * iOS: a row's status label is the first text after the row's name (the context-menu button and icons between
-     * them are not text), so the next row's status cannot be mistaken for it.
+     * iOS: a row's status label is the first text after the row's name (the icons between them are not text), so the
+     * next row's status cannot be mistaken for it.
      */
     public static By onlineCameraCardWithName(String name) {
         return PlatformLocator.get(
                 AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
                         + "/ancestor::android.view.View[@clickable='true'][1]"
                         + "[.//android.widget.TextView[@text='Online']]"), // android
-                AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
-                        + "][following-sibling::*[1][@name='ic_contextMenu']]"
+                AppiumBy.xpath("//" + IOS_CARD_NAME + "[@name=" + XPathUtils.xpathLiteral(name) + "]"
                         + "[following-sibling::XCUIElementTypeStaticText[1][@name='Online']]")); // ios
     }
 
@@ -119,8 +125,7 @@ public final class CamerasLocators {
                 AppiumBy.xpath("//android.widget.TextView[@text=" + XPathUtils.xpathLiteral(name) + "]"
                         + "/ancestor::android.view.View[@clickable='true'][1]"
                         + "[.//android.widget.TextView[@text='Turned off']]"), // android
-                AppiumBy.xpath("//XCUIElementTypeStaticText[@name=" + XPathUtils.xpathLiteral(name)
-                        + "][following-sibling::*[1][@name='ic_contextMenu']]"
+                AppiumBy.xpath("//" + IOS_CARD_NAME + "[@name=" + XPathUtils.xpathLiteral(name) + "]"
                         + "[following-sibling::XCUIElementTypeStaticText[1][@name='Turned off']]")); // ios
     }
 
@@ -181,11 +186,14 @@ public final class CamerasLocators {
             AppiumBy.xpath("//android.widget.ScrollView[.//android.widget.TextView[@text='Camera settings']]"
                     + "/preceding-sibling::android.view.View[1]/android.widget.TextView[2]");
 
-    // iOS: the timestamp exists in the hierarchy but is reported as not visible, so it is checked for presence.
+    // iOS: the timestamp exists in the hierarchy but is reported as not visible, so it is checked for presence. The
+    // preview floats in its own layer, and on iOS 26 (iPhone 17 Pro Max) its texts are plain "Other" elements, not
+    // static texts, so both types are accepted.
     public static final By TIMESTAMP = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[contains(@text, ':')]"), // android
             AppiumBy.iOSNsPredicateString(
-                    "type == 'XCUIElementTypeStaticText' AND name MATCHES '^[0-9]{2}:[0-9]{2}:[0-9]{2}$'")); // ios
+                    "(type == 'XCUIElementTypeStaticText' OR type == 'XCUIElementTypeOther')"
+                            + " AND name MATCHES '^[0-9]{2}:[0-9]{2}:[0-9]{2}$'")); // ios
 
     // --- Status labels ---------------------------------------------------------
 

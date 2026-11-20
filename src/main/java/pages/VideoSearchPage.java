@@ -28,6 +28,7 @@ import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
 import utils.GestureUtils;
+import utils.KeyboardUtils;
 import utils.PlatformLocator;
 import utils.WaitUtils;
 
@@ -313,8 +314,8 @@ public class VideoSearchPage {
                 logger.debug("Could not close keyboard: {}", e.getMessage());
             }
         } else {
-            // iOS: tap elsewhere to dismiss keyboard
-            driver.findElement(VideoSearchLocators.VIDEO_SEARCH_SCREEN).click();
+            // iOS: the screen has no id to tap on, so close the keyboard the way the other pages do
+            KeyboardUtils.hideKeyboard(driver);
         }
         verifyAutosuggestionOptions();
     }
@@ -427,6 +428,14 @@ public class VideoSearchPage {
         return shown.get();
     }
 
+    /**
+     * The key image swipe starts and ends 1/parts of the image's width from its edges: Android 1/4 (a half-width swipe),
+     * iOS 1/20 (a 90% flick). The key image is almost the full screen width (440 points on the iPhone 17 Pro Max), so
+     * the iOS start is about 22 points in, clear of the 20 point strip at the screen edge that iOS keeps for gestures.
+     */
+    private static final int ANDROID_KEY_IMAGE_SWIPE_PARTS = 4;
+    private static final int IOS_KEY_IMAGE_SWIPE_PARTS = 20;
+
     private record EventPosition(int current, int total) {}
 
     private EventPosition readEventPosition() {
@@ -442,15 +451,16 @@ public class VideoSearchPage {
         int expectedCurrent = before.current() + (towardsLeft ? 1 : -1);
 
         WebElement keyImage = WaitUtils.waitForVisibility(driver, VideoSearchLocators.KEY_IMAGE_OVERLAY);
-        if (PlatformLocator.isIos()) {
-            GestureUtils.swipeElementIos(driver, keyImage, direction);
-        } else {
-            Rectangle rect = keyImage.getRect();
-            int startX = towardsLeft ? rect.getX() + (rect.getWidth() * 3 / 4) : rect.getX() + (rect.getWidth() / 4);
-            int endX = towardsLeft ? rect.getX() + (rect.getWidth() / 4) : rect.getX() + (rect.getWidth() * 3 / 4);
-            int y = rect.getY() + (rect.getHeight() / 2);
-            GestureUtils.swipe(driver, startX, y, endX, y);
-        }
+        // Across the middle of the key image. iOS pages only when the drag covers most of the width (a half-width
+        // drag left the counter unchanged on the iPhone 17 Pro Max while a 90% flick moved it), Android pages with half.
+        Rectangle rect = keyImage.getRect();
+        int parts = PlatformLocator.isIos() ? IOS_KEY_IMAGE_SWIPE_PARTS : ANDROID_KEY_IMAGE_SWIPE_PARTS;
+        int nearEdge = rect.getWidth() / parts;
+        int farEdge = rect.getWidth() * (parts - 1) / parts;
+        int startX = rect.getX() + (towardsLeft ? farEdge : nearEdge);
+        int endX = rect.getX() + (towardsLeft ? nearEdge : farEdge);
+        int y = rect.getY() + (rect.getHeight() / 2);
+        GestureUtils.swipe(driver, startX, y, endX, y);
 
         boolean moved = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
                 () -> readEventPosition().current() == expectedCurrent);

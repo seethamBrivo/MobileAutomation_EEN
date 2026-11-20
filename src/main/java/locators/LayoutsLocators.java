@@ -165,10 +165,14 @@ public final class LayoutsLocators {
 
     /**
      * iOS only: the camera name inside the preview that the menu shows above its options. The preview floats in its
-     * own layer and is reported as not visible, so it is checked for presence, and its name is read from the value.
+     * own layer, so it is checked for presence, and its name is read from the element's name. On iOS 26 (iPhone 17
+     * Pro Max) it has no id of its own: it is an unnamed-parent "Other" whose name is the camera's name, the first
+     * named element inside the "Preview" element (the time of the frame comes after it).
+     * TODO: Replace with an accessibility id when the mobile team adds one to the preview's camera name; a new named
+     * element before the name would break this positional lookup.
      */
-    public static final By CONTEXT_MENU_PREVIEW_CAMERA_NAME =
-            AppiumBy.accessibilityId("context_menu_preview_view_name"); // ios
+    public static final By CONTEXT_MENU_PREVIEW_CAMERA_NAME = AppiumBy.xpath(
+            "(//XCUIElementTypeOther[@name='Preview']//XCUIElementTypeOther[@name])[1]"); // ios
 
     // --- Dynamic locators ------------------------------------------------------
 

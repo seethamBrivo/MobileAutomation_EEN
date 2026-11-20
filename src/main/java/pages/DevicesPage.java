@@ -468,7 +468,7 @@ public class DevicesPage {
      */
     public void openBridgeContextMenuByName(String bridgeName) {
         if (PlatformLocator.isIos()) {
-            WaitUtils.click(driver, BridgesLocators.FIRST_ONLINE_BRIDGE_THREE_DOTS);
+            WaitUtils.click(driver, BridgesLocators.threeDotsOfBridgeNamed(bridgeName));
             return;
         }
         GestureUtils.longPress(driver, WaitUtils.waitForVisibility(driver, BridgesLocators.bridgeRowNamed(bridgeName)));

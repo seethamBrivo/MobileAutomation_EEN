@@ -169,12 +169,6 @@ public final class GestureUtils {
         driver.perform(List.of(swipeSequence));
     }
 
-    /** iOS: XCUITest's own swipe on {@code element} ("left" or "right": where the finger moves); it pages a pager. */
-    public static void swipeElementIos(AppiumDriver driver, WebElement element, String direction) {
-        driver.executeScript("mobile: swipe", Map.of("elementId", ((RemoteWebElement) element).getId(),
-                "direction", direction));
-    }
-
     /**
      * Swipes along the row at {@code y} from one fraction of the window's width to another (0.0 is the left edge,
      * 1.0 the right), so the gesture does not depend on the screen size or start in an edge-back zone.

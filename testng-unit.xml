@@ -9,6 +9,7 @@
             <class name="listeners.RerunFailedTestsFilterTest"/>
             <class name="utils.XPathUtilsTest"/>
             <class name="utils.EventFilterPageSourceTest"/>
+            <class name="utils.CameraCardPageSourceTest"/>
             <class name="utils.BrowserStackStatusTest"/>
             <class name="utils.FileSizeUtilsTest"/>
             <class name="base.SessionScopeTest"/>

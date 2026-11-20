@@ -32,9 +32,12 @@ public final class BottomNavigationLocators {
     // id or container to scope to (the end user's bar is the native bottom_navigation widget). MORE_TAB is shared by
     // both bars and is unscoped on Android for the same reason.
 
+    // iOS names the button "Dashboard" on a fresh screen (seen on iPhone 17 Pro Max, iOS 26, in every attempt of
+    // ResellerDashboardTest) and "dashboard_button" after a screen has been opened and closed, like the Users tab.
     public static final By DASHBOARD_TAB = PlatformLocator.get(
             AppiumBy.xpath("//android.widget.TextView[@text='Dashboard']"), // android
-            AppiumBy.accessibilityId("dashboard_button")); // ios
+            AppiumBy.iOSNsPredicateString(
+                    "type == 'XCUIElementTypeButton' AND (name == 'Dashboard' OR name == 'dashboard_button')")); // ios
 
     // iOS names the button "Users" on first load and "users_button" after a screen has been opened and closed.
     public static final By USERS_TAB = PlatformLocator.get(
