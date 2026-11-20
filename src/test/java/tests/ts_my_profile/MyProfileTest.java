@@ -11,6 +11,7 @@ import pages.MyProfilePage;
 import pages.TimeZonePage;
 import pages.VSPEventsPage;
 import pages.VideoSearchPage;
+import utils.JsonDataReader;
 
 public class MyProfileTest extends BaseTest {
 
@@ -20,6 +21,12 @@ public class MyProfileTest extends BaseTest {
     private static final String TEST_TIMEZONE = "Etc/GMT+12";
     private static final String TIMEZONE_SEARCH_TERM = "Etc";
     private static final String INVALID_TIMEZONE_SEARCH_TERM = "XYZ_INVALID_TIMEZONE_12345";
+    /** Wrong password for negative testing (EPD-TC-1326). */
+    private static final String WRONG_PASSWORD = "WrongPassword123";
+    /** Test email for login email change test (EPD-TC-1326, EPD-TC-1327). */
+    private static final String TEST_NEW_EMAIL = "test.new@example.com";
+    /** Wrong authentication code for negative testing (EPD-TC-1327). */
+    private static final String WRONG_AUTH_CODE = "0000";
 
     private DevicesPage devicesPage;
     private MyProfilePage myProfilePage;
@@ -36,8 +43,52 @@ public class MyProfileTest extends BaseTest {
         myProfilePage = devicesPage.navigateToMyProfile();
     }
 
+    @Test(description = "EPD-TC-1254: POS - My Profile - swiping down to refresh the data under the My Profile screen in VMS",
+          groups = {"regression", "profile"})
+    public void verifyPullToRefreshInMyProfile() {
+        myProfilePage.verifyMyProfileScreenDisplayed();
+        myProfilePage.clickProfileSection();
+        myProfilePage.pullToRefresh();
+        myProfilePage.verifyLoadingIndicatorAppears();
+        myProfilePage.verifyDataRefreshed();
+    }
+
+    @Test(description = "EPD-TC-1326: NEG-My Profile - Try to change login email when wrong verification password is provided in mobile VMS app",
+          groups = {"regression", "profile"})
+    public void verifyLoginEmailChangeWithWrongPassword() {
+        myProfilePage.verifyMyProfileScreenDisplayed();
+        myProfilePage.clickProfileSection();
+        myProfilePage.clickProfileDetailsOption();
+        myProfilePage.clickLoginEmailOption();
+        myProfilePage.verifyNextButtonDisabled();
+        myProfilePage.enterVerifyPassword(WRONG_PASSWORD);
+        myProfilePage.enterNewEmail(TEST_NEW_EMAIL);
+        myProfilePage.verifyNextButtonEnabled();
+        myProfilePage.clickNextButton();
+        myProfilePage.verifyPasswordErrorMessage();
+    }
+
+    @Test(description = "EPD-TC-1327: NEG-My Profile - Try to change login email when wrong authentication code is provided in mobile VMS app",
+          groups = {"regression", "profile"})
+    public void verifyLoginEmailChangeWithWrongAuthCode() {
+        String correctPassword = JsonDataReader.getCredentialValue(TestDataConstants.TS02_CREDS, "password");
+
+        myProfilePage.verifyMyProfileScreenDisplayed();
+        myProfilePage.clickProfileSection();
+        myProfilePage.clickProfileDetailsOption();
+        myProfilePage.clickLoginEmailOption();
+        myProfilePage.verifyNextButtonDisabled();
+        myProfilePage.enterVerifyPassword(correctPassword);
+        myProfilePage.enterNewEmail(TEST_NEW_EMAIL);
+        myProfilePage.verifyNextButtonEnabled();
+        myProfilePage.clickNextButton();
+        myProfilePage.enterAuthenticationCode(WRONG_AUTH_CODE);
+        myProfilePage.clickConfirmButton();
+        myProfilePage.verifyAuthCodeErrorMessage();
+    }
+
     @Test(description = "EEPD-TC-3920: POS-My Profile - setting 'Time zone' in VMS mobile app",
-          groups = {"regression", "profile", "ios"})
+          groups = {"regression", "profile", "ios", "timezone"})
     public void verifyTimezoneSettingFunctionality() {
         vspEventsPage = new VSPEventsPage(driver);
         vspEventsPage.verifyVSPSectionVisible();
@@ -71,7 +122,7 @@ public class MyProfileTest extends BaseTest {
         videoSearchPage.verifyDateFieldMatchesTimezone(TEST_TIMEZONE);
     }
 
-    @AfterMethod(alwaysRun = true)
+    @AfterMethod(alwaysRun = true, onlyForGroups = {"timezone"})
     public void resetTimezone(ITestResult testResult) {
         try {
             if (driver != null) {

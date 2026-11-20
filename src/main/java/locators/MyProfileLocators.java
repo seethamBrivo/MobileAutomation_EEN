@@ -49,4 +49,34 @@ public final class MyProfileLocators {
                 AppiumBy.xpath("//android.widget.TextView[@text='" + format + "']"), // android
                 AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + format + "'")); // ios
     }
+
+    // --- Pull-to-refresh indicators (Android only) ----------------------------------
+
+    public static final By LOADING_INDICATOR = AppiumBy.className("android.widget.ProgressBar");
+
+    // --- Profile Details Option (Android only) --------------------------------------
+
+    public static final By PROFILE_DETAILS_OPTION = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.view.View/android.view.View");
+
+    // --- Login Email Change (Android only) ------------------------------------------
+
+    public static final By LOGIN_EMAIL_OPTION = AppiumBy.xpath("//android.widget.TextView[@text='Login email']");
+
+    public static final By VERIFY_PASSWORD_INPUT = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.widget.EditText");
+
+    public static final By NEW_EMAIL_INPUT = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
+
+    public static final By NEXT_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Next']");
+
+    public static final By NEXT_BUTTON_CLICKABLE = AppiumBy.xpath("//android.widget.TextView[@text='Next']/..");
+
+    public static final By PASSWORD_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Password is not correct.']");
+
+    // --- Confirmation Screen (Android only - EPD-TC-1327) ---------------------------
+
+    public static final By AUTH_CODE_INPUT = AppiumBy.xpath("//android.widget.EditText");
+
+    public static final By CONFIRM_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Confirm']");
+
+    public static final By AUTH_CODE_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Security code is not correct.']");
 }

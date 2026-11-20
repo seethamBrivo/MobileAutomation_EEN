@@ -5,6 +5,7 @@ import io.appium.java_client.AppiumDriver;
 import locators.MyProfileLocators;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import utils.GestureUtils;
 import utils.PlatformLocator;
@@ -94,5 +95,80 @@ public class MyProfilePage {
         String actualFormat = getCurrentTimeFormat();
         Assert.assertEquals(actualFormat, expectedFormat,
                 "Time format should be '" + expectedFormat + "' but was: " + actualFormat);
+    }
+
+    public void verifyMyProfileScreenDisplayed() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PROFILE_SECTION, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                "My Profile screen should be displayed");
+    }
+
+    public void pullToRefresh() {
+        GestureUtils.swipeDown(driver);
+    }
+
+    public void verifyLoadingIndicatorAppears() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.LOADING_INDICATOR, TimeoutConstants.SHORT_TIMEOUT),
+                "Loading indicator should appear after pull-to-refresh");
+    }
+
+    public void verifyDataRefreshed() {
+        boolean loadingDisappeared = WaitUtils.waitForInvisibility(driver, MyProfileLocators.LOADING_INDICATOR, TimeoutConstants.DETAILS_LOAD_TIMEOUT);
+        Assert.assertTrue(loadingDisappeared, "Loading indicator should disappear after refresh completes");
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PROFILE_DETAILS_HEADING, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                "Profile details should be visible after refresh");
+    }
+
+    public void clickProfileDetailsOption() {
+        WaitUtils.click(driver, MyProfileLocators.PROFILE_DETAILS_OPTION);
+    }
+
+    public void clickLoginEmailOption() {
+        WaitUtils.click(driver, MyProfileLocators.LOGIN_EMAIL_OPTION);
+    }
+
+    public void enterVerifyPassword(String password) {
+        WaitUtils.waitForVisibility(driver, MyProfileLocators.VERIFY_PASSWORD_INPUT).sendKeys(password);
+    }
+
+    public void enterNewEmail(String email) {
+        WaitUtils.waitForVisibility(driver, MyProfileLocators.NEW_EMAIL_INPUT).sendKeys(email);
+    }
+
+    public void clickNextButton() {
+        WaitUtils.click(driver, MyProfileLocators.NEXT_BUTTON);
+    }
+
+    public boolean isNextButtonEnabled() {
+        return WaitUtils.waitForVisibility(driver, MyProfileLocators.NEXT_BUTTON_CLICKABLE).isEnabled();
+    }
+
+    public void verifyNextButtonDisabled() {
+        Assert.assertFalse(isNextButtonEnabled(),
+                "Next button should be disabled when fields are empty");
+    }
+
+    public void verifyPasswordErrorMessage() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PASSWORD_ERROR_MESSAGE, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                "Password error message should be visible");
+    }
+
+    public void verifyNextButtonEnabled() {
+        Assert.assertTrue(isNextButtonEnabled(),
+                "Next button should be enabled after entering required fields");
+    }
+
+    public void enterAuthenticationCode(String code) {
+        WebElement authCodeField = WaitUtils.waitForVisibility(driver, MyProfileLocators.AUTH_CODE_INPUT);
+        authCodeField.click();
+        authCodeField.sendKeys(code);
+    }
+
+    public void clickConfirmButton() {
+        WaitUtils.click(driver, MyProfileLocators.CONFIRM_BUTTON);
+    }
+
+    public void verifyAuthCodeErrorMessage() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.AUTH_CODE_ERROR_MESSAGE, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                "Authentication code error message should be visible");
     }
 }
