@@ -72,6 +72,8 @@ public final class MyProfileLocators {
 
     public static final By PASSWORD_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Password is not correct.']");
 
+    public static final By EMAIL_VALIDATION_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Enter a valid email address']");
+
     // --- Confirmation Screen (Android only - EPD-TC-1327) ---------------------------
 
     public static final By AUTH_CODE_INPUT = AppiumBy.xpath("//android.widget.EditText");
@@ -79,4 +81,12 @@ public final class MyProfileLocators {
     public static final By CONFIRM_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Confirm']");
 
     public static final By AUTH_CODE_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Security code is not correct.']");
+
+    // --- Contact us / Call Support (Android only - EPD-TC-1329) ---------------------
+
+    public static final By SUPPORT_PIN_OPTION = AppiumBy.xpath("//android.widget.TextView[@text='Support PIN']");
+
+    public static final By CALL_SUPPORT_OPTION = AppiumBy.xpath("//android.widget.TextView[@text='Call Support']");
+
+    public static final By PHONE_PERMISSION_ICON = AppiumBy.xpath("//android.widget.ImageView[@resource-id='com.android.permissioncontroller:id/permission_icon']");
 }

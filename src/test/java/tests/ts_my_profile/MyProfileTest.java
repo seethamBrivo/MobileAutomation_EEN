@@ -27,6 +27,8 @@ public class MyProfileTest extends BaseTest {
     private static final String TEST_NEW_EMAIL = "test.new@example.com";
     /** Wrong authentication code for negative testing (EPD-TC-1327). */
     private static final String WRONG_AUTH_CODE = "0000";
+    /** Invalid email for email validation testing (EPD-TC-1328). */
+    private static final String INVALID_EMAIL = "invalidemail";
 
     private DevicesPage devicesPage;
     private MyProfilePage myProfilePage;
@@ -85,6 +87,23 @@ public class MyProfileTest extends BaseTest {
         myProfilePage.enterAuthenticationCode(WRONG_AUTH_CODE);
         myProfilePage.clickConfirmButton();
         myProfilePage.verifyAuthCodeErrorMessage();
+    }
+
+    @Test(description = "EPD-TC-1328: NEG-My Profile - Try to change login email when invalid email provided in mobile VMS app",
+          groups = {"regression", "profile"})
+    public void verifyLoginEmailChangeWithInvalidEmail() {
+        String correctPassword = JsonDataReader.getCredentialValue(TestDataConstants.TS02_CREDS, "password");
+
+        myProfilePage.verifyMyProfileScreenDisplayed();
+        myProfilePage.clickProfileSection();
+        myProfilePage.clickProfileDetailsOption();
+        myProfilePage.clickLoginEmailOption();
+        myProfilePage.verifyNextButtonDisabled();
+        myProfilePage.enterVerifyPassword(correctPassword);
+        myProfilePage.enterNewEmail(INVALID_EMAIL);
+        myProfilePage.verifyNextButtonEnabled();
+        myProfilePage.clickNextButton();
+        myProfilePage.verifyEmailValidationError();
     }
 
     @Test(description = "EEPD-TC-3920: POS-My Profile - setting 'Time zone' in VMS mobile app",

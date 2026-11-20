@@ -152,6 +152,11 @@ public class MyProfilePage {
                 "Password error message should be visible");
     }
 
+    public void verifyEmailValidationError() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.EMAIL_VALIDATION_ERROR_MESSAGE, TimeoutConstants.SHORT_TIMEOUT),
+                "Email validation error message should be visible");
+    }
+
     public void verifyNextButtonEnabled() {
         Assert.assertTrue(isNextButtonEnabled(),
                 "Next button should be enabled after entering required fields");
@@ -170,5 +175,24 @@ public class MyProfilePage {
     public void verifyAuthCodeErrorMessage() {
         Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.AUTH_CODE_ERROR_MESSAGE, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
                 "Authentication code error message should be visible");
+    }
+
+    public void scrollDownInProfile() {
+        GestureUtils.swipeUp(driver);
+        GestureUtils.swipeUp(driver);
+        GestureUtils.swipeUp(driver);
+    }
+
+    public void clickSupportPin() {
+        WaitUtils.click(driver, MyProfileLocators.SUPPORT_PIN_OPTION);
+    }
+
+    public void clickCallSupport() {
+        WaitUtils.click(driver, MyProfileLocators.CALL_SUPPORT_OPTION);
+    }
+
+    public void verifyPhonePermissionDialogDisplayed() {
+        Assert.assertTrue(WaitUtils.isVisible(driver, MyProfileLocators.PHONE_PERMISSION_ICON, TimeoutConstants.DETAILS_LOAD_TIMEOUT),
+                "Phone permission dialog should be displayed after clicking Call Support");
     }
 }
