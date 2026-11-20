@@ -339,10 +339,11 @@ public class CamerasPage {
      * ("07:15:10 AM" or "19:15:10").
      */
     public LocalTime readFrameTimeInContextMenu() {
-        // iOS: the time is in the hierarchy but reported as not visible, so it is read without a visibility wait.
+        // iOS: the time is in the hierarchy but reported as not visible, so it is read without a visibility wait. It
+        // is read from the name: on iOS 26 the element is an "Other" with no value, and the name is the time itself.
         String shown = (PlatformLocator.isIos()
                 ? WaitUtils.attributeOfPresent(
-                        driver, CamerasLocators.TIMESTAMP, "value", TimeoutConstants.SHORT_TIMEOUT)
+                        driver, CamerasLocators.TIMESTAMP, "name", TimeoutConstants.SHORT_TIMEOUT)
                 : WaitUtils.waitForVisibility(driver, CamerasLocators.CAMERA_FRAME_TIME_IN_PREVIEW).getText())
                 .trim();
         for (DateTimeFormatter format : FRAME_TIME_FORMATS) {

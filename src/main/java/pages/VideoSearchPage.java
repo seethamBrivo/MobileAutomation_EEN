@@ -28,6 +28,7 @@ import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.SkipException;
 import utils.GestureUtils;
+import utils.KeyboardUtils;
 import utils.PlatformLocator;
 import utils.WaitUtils;
 
@@ -313,8 +314,8 @@ public class VideoSearchPage {
                 logger.debug("Could not close keyboard: {}", e.getMessage());
             }
         } else {
-            // iOS: tap elsewhere to dismiss keyboard
-            driver.findElement(VideoSearchLocators.VIDEO_SEARCH_SCREEN).click();
+            // iOS: the screen has no id to tap on, so close the keyboard the way the other pages do
+            KeyboardUtils.hideKeyboard(driver);
         }
         verifyAutosuggestionOptions();
     }
@@ -442,15 +443,15 @@ public class VideoSearchPage {
         int expectedCurrent = before.current() + (towardsLeft ? 1 : -1);
 
         WebElement keyImage = WaitUtils.waitForVisibility(driver, VideoSearchLocators.KEY_IMAGE_OVERLAY);
-        if (PlatformLocator.isIos()) {
-            GestureUtils.swipeElementIos(driver, keyImage, direction);
-        } else {
-            Rectangle rect = keyImage.getRect();
-            int startX = towardsLeft ? rect.getX() + (rect.getWidth() * 3 / 4) : rect.getX() + (rect.getWidth() / 4);
-            int endX = towardsLeft ? rect.getX() + (rect.getWidth() / 4) : rect.getX() + (rect.getWidth() * 3 / 4);
-            int y = rect.getY() + (rect.getHeight() / 2);
-            GestureUtils.swipe(driver, startX, y, endX, y);
-        }
+        // Across the middle of the key image. iOS pages only when the drag covers most of the width (a half-width
+        // drag left the counter unchanged on the iPhone 17 Pro Max while a 90% flick moved it), Android pages with half.
+        Rectangle rect = keyImage.getRect();
+        int nearEdge = PlatformLocator.isIos() ? rect.getWidth() / 20 : rect.getWidth() / 4;
+        int farEdge = PlatformLocator.isIos() ? rect.getWidth() * 19 / 20 : rect.getWidth() * 3 / 4;
+        int startX = rect.getX() + (towardsLeft ? farEdge : nearEdge);
+        int endX = rect.getX() + (towardsLeft ? nearEdge : farEdge);
+        int y = rect.getY() + (rect.getHeight() / 2);
+        GestureUtils.swipe(driver, startX, y, endX, y);
 
         boolean moved = WaitUtils.pollUntil(driver, TimeoutConstants.SHORT_TIMEOUT,
                 () -> readEventPosition().current() == expectedCurrent);
