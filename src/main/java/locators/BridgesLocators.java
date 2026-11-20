@@ -266,15 +266,6 @@ public final class BridgesLocators {
     public static final By KEYBOARD_DONE_KEY =
             AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeButton' AND name == 'Done'"); // ios
 
-    /**
-     * iOS: the three dots of the first online bridge: the first button after its "Online" label. A bridge card is
-     * the icon, the name, the status, its counters, then the 3-dots button, so the button before the label belongs
-     * to the card above (and there is none before the first card).
-     */
-    public static final By FIRST_ONLINE_BRIDGE_THREE_DOTS = AppiumBy.xpath(
-            "(//XCUIElementTypeStaticText[@name='Online'])[1]"
-                    + "/following-sibling::XCUIElementTypeButton[@name='ic_contextMenu'][1]"); // ios
-
     /** The name field of the settings screen, found by the name it holds. */
     public static By nameFieldHolding(String name) {
         return PlatformLocator.get(
