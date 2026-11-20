@@ -49,4 +49,38 @@ public final class MyProfileLocators {
                 AppiumBy.xpath("//android.widget.TextView[@text='" + format + "']"), // android
                 AppiumBy.iOSNsPredicateString("type == 'XCUIElementTypeStaticText' AND name == '" + format + "'")); // ios
     }
+
+    // --- Pull-to-refresh indicators --------------------------------------------------
+
+    public static final By LOADING_INDICATOR = PlatformLocator.get(
+            AppiumBy.className("android.widget.ProgressBar"),
+            AppiumBy.className("XCUIElementTypeActivityIndicator"));
+
+    public static final By SKELETON_LOADER = PlatformLocator.get(
+            AppiumBy.xpath("//android.view.View[@content-desc='skeleton' or contains(@content-desc, 'loading') or contains(@content-desc, 'placeholder')]"),
+            AppiumBy.xpath("//XCUIElementTypeOther[@name='skeleton' or contains(@name, 'loading') or contains(@name, 'placeholder')]"));
+
+    // --- Profile Details Option ------------------------------------------------------
+
+    public static final By PROFILE_DETAILS_OPTION = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[3]/android.view.View/android.view.View");
+
+    // --- Login Email Change (Android only) ------------------------------------------
+
+    public static final By LOGIN_EMAIL_OPTION = AppiumBy.xpath("//android.widget.TextView[@text='Login email']");
+
+    public static final By VERIFY_PASSWORD_INPUT = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[1]/android.widget.EditText");
+
+    public static final By NEW_EMAIL_INPUT = AppiumBy.xpath("//android.widget.ScrollView/android.view.View[2]/android.widget.EditText");
+
+    public static final By NEXT_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Next']");
+
+    public static final By PASSWORD_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Password is not correct.']");
+
+    // --- Confirmation Screen (Android only - EPD-TC-1327) ---------------------------
+
+    public static final By AUTH_CODE_INPUT = AppiumBy.xpath("//android.widget.EditText");
+
+    public static final By CONFIRM_BUTTON = AppiumBy.xpath("//android.widget.TextView[@text='Confirm']");
+
+    public static final By AUTH_CODE_ERROR_MESSAGE = AppiumBy.xpath("//android.widget.TextView[@text='Security code is not correct.']");
 }
