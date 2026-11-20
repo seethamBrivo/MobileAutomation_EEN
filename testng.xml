@@ -68,6 +68,7 @@
     <test name="My Profile Tests">
         <classes>
             <class name="tests.ts_my_profile.MyProfileTest"/>
+            <class name="tests.ts_my_profile.MyProfileResellerTest"/>
         </classes>
     </test>
 
